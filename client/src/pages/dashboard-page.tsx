@@ -8,6 +8,7 @@ import { TodaysWorkout } from "@/components/dashboard/todays-workout";
 import { WeeklyProgress } from "@/components/dashboard/weekly-progress";
 import { RecentActivities } from "@/components/dashboard/recent-activities";
 import { EnergyLevelCard } from "@/components/dashboard/energy-level-card";
+import { MotivationalQuoteCard, DailyMotivation } from "@/components/dashboard/motivational-quote";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -39,6 +40,14 @@ export default function DashboardPage() {
               </Button>
             </Link>
           </div>
+        </div>
+        
+        {/* Daily Motivation Banner */}
+        <DailyMotivation />
+        
+        {/* Motivational Quote */}
+        <div className="mb-6">
+          <MotivationalQuoteCard />
         </div>
 
         {/* Current Goal Banner */}
