@@ -167,53 +167,131 @@ export default function HealthMetricsPage() {
   };
 
   const calculateEnergyLevel = (metric: HealthMetric) => {
-    // Enhanced algorithm to calculate energy level from health metrics
-    // Based on HRV, resting HR, and sleep quality as requested
-    let energyScore = 50; // Base score
+    // Base score starts at 50 (neutral)
+    let energyScore = 50;
+    let factorsUsed = 0;
     
-    // HRV is a primary indicator of recovery (typically 20-100+ range)
+    // HRV contribution (higher is better) - most significant physiological indicator
     if (metric.hrv_score) {
-      // Higher HRV scores indicate better recovery
-      // For a typical scale where 50 is average, adjust score based on deviation
-      // Weight: 40% of total score
-      const hrvFactor = (metric.hrv_score - 50) * 0.4;
-      energyScore += hrvFactor;
+      // Weight: 35% of the total calculation
+      factorsUsed++;
+      
+      // Normalize HRV score based on typical ranges:
+      // Below 30: Poor recovery
+      // 30-50: Below average
+      // 50-70: Average to good
+      // 70-90: Very good
+      // 90+: Excellent
+      
+      let hrvNormalized;
+      if (metric.hrv_score < 30) {
+        hrvNormalized = 20 + (metric.hrv_score / 30) * 20; // 20-40 range
+      } else if (metric.hrv_score < 50) {
+        hrvNormalized = 40 + ((metric.hrv_score - 30) / 20) * 20; // 40-60 range
+      } else if (metric.hrv_score < 70) {
+        hrvNormalized = 60 + ((metric.hrv_score - 50) / 20) * 20; // 60-80 range
+      } else if (metric.hrv_score < 90) {
+        hrvNormalized = 80 + ((metric.hrv_score - 70) / 20) * 15; // 80-95 range
+      } else {
+        hrvNormalized = 95 + ((metric.hrv_score - 90) / 30) * 5; // 95-100 range (caps at 100)
+      }
+      
+      energyScore += (hrvNormalized - 50) * 0.35;
     }
     
-    // Resting heart rate is inversely correlated with recovery
+    // Resting heart rate contribution (lower is better)
     if (metric.resting_heart_rate) {
-      // Lower resting HR is generally better for athletes
-      // Using 60 bpm as a baseline reference point 
-      // Weight: 30% of total score
-      const restingHrFactor = (60 - metric.resting_heart_rate) * 0.5;
-      energyScore += restingHrFactor;
+      // Weight: 25% of the total calculation
+      factorsUsed++;
+      
+      // RHR ranges:
+      // Elite athletes: 40-50
+      // Good fitness: 50-60
+      // Average: 60-70
+      // Below average: 70-80
+      // Poor: 80+
+      
+      let rhrScore;
+      if (metric.resting_heart_rate <= 40) {
+        rhrScore = 95; // Elite, but potentially too low (overtraining)
+      } else if (metric.resting_heart_rate <= 50) {
+        rhrScore = 90; // Elite to excellent
+      } else if (metric.resting_heart_rate <= 60) {
+        rhrScore = 75; // Very good
+      } else if (metric.resting_heart_rate <= 70) {
+        rhrScore = 55; // Average
+      } else if (metric.resting_heart_rate <= 80) {
+        rhrScore = 35; // Below average
+      } else if (metric.resting_heart_rate <= 90) {
+        rhrScore = 20; // Poor
+      } else {
+        rhrScore = 10; // Very poor / concerning
+      }
+      
+      energyScore += (rhrScore - 50) * 0.25;
     }
     
-    // Sleep quality has significant impact on recovery
+    // Sleep quality contribution (higher is better, scale 1-10)
     if (metric.sleep_quality) {
-      // Scale of 1-10, with 10 being excellent sleep
-      // Weight: 30% of total score
-      const sleepQualityFactor = (metric.sleep_quality - 5) * 4;
-      energyScore += sleepQualityFactor;
+      // Weight: 20% of the total calculation
+      factorsUsed++;
+      
+      // Direct mapping: scale 1-10 to 10-100
+      const sleepQualityNormalized = metric.sleep_quality * 10;
+      energyScore += (sleepQualityNormalized - 50) * 0.2;
     }
     
-    // Sleep duration affects recovery
+    // Sleep duration contribution (optimal around 7-9 hours)
     if (metric.sleep_duration) {
-      // Optimal sleep time is around 7-8 hours (420-480 minutes)
-      const optimalSleep = 450;
-      const sleepDiff = Math.abs(metric.sleep_duration - optimalSleep);
-      // Penalize more severely for insufficient sleep vs. excess sleep
-      const sleepPenalty = metric.sleep_duration < optimalSleep 
-        ? sleepDiff * 0.15  // More penalty for under-sleeping
-        : sleepDiff * 0.08; // Less penalty for over-sleeping
-      energyScore -= sleepPenalty;
+      // Weight: 10% of the total calculation
+      factorsUsed++;
+      
+      // Sleep duration in hours (assuming input is in minutes)
+      const sleepHours = metric.sleep_duration / 60;
+      
+      let sleepDurationScore;
+      if (sleepHours >= 7 && sleepHours <= 9) {
+        // Optimal sleep range - higher score for closer to 8
+        sleepDurationScore = 100 - Math.abs(sleepHours - 8) * 10;
+      } else if (sleepHours >= 6 && sleepHours < 7) {
+        // Slightly under optimal
+        sleepDurationScore = 65;
+      } else if (sleepHours > 9 && sleepHours <= 10) {
+        // Slightly over optimal
+        sleepDurationScore = 70;
+      } else if (sleepHours >= 5 && sleepHours < 6) {
+        // Moderately under optimal
+        sleepDurationScore = 45;
+      } else if (sleepHours > 10) {
+        // Too much sleep
+        sleepDurationScore = 40;
+      } else {
+        // Significantly under optimal
+        sleepDurationScore = 20;
+      }
+      
+      energyScore += (sleepDurationScore - 50) * 0.1;
     }
     
-    // Stress level impacts recovery capacity
+    // Stress level contribution (lower is better, scale 1-10)
     if (metric.stress_level) {
-      // Lower stress is better (scale of 1-10)
-      const stressFactor = (metric.stress_level - 5) * 2.5;
-      energyScore -= stressFactor;
+      // Weight: 10% of the total calculation
+      factorsUsed++;
+      
+      // Invert stress level (10 is now best, 1 is worst)
+      const stressInverted = 11 - metric.stress_level;
+      // Convert to 0-100 scale
+      const stressNormalized = stressInverted * 10;
+      
+      energyScore += (stressNormalized - 50) * 0.1;
+    }
+    
+    // Adjust if not all factors are present
+    if (factorsUsed > 0 && factorsUsed < 5) {
+      // Make a proportional adjustment based on available factors
+      // More factors = more confidence in the score
+      const missingFactorPenalty = (5 - factorsUsed) * 3;
+      energyScore -= missingFactorPenalty;
     }
     
     // Ensure the score is within 0-100 range
@@ -244,9 +322,10 @@ export default function HealthMetricsPage() {
   const recommendation = energyLevel ? getTrainingRecommendation(energyLevel) : "";
 
   const getEnergyColor = (level: number) => {
-    if (level >= 80) return "text-green-500";
-    if (level >= 60) return "text-yellow-500";
-    if (level >= 40) return "text-orange-500";
+    if (level >= 85) return "text-green-500";
+    if (level >= 70) return "text-yellow-500";
+    if (level >= 55) return "text-orange-500";
+    if (level >= 40) return "text-amber-500";
     return "text-red-500";
   };
 
@@ -588,9 +667,10 @@ export default function HealthMetricsPage() {
                                   key="cell-0" 
                                   fill={
                                     !energyLevel ? "#9ca3af" :
-                                    energyLevel >= 80 ? "#22c55e" :
-                                    energyLevel >= 60 ? "#eab308" :
-                                    energyLevel >= 40 ? "#f97316" :
+                                    energyLevel >= 85 ? "#22c55e" :
+                                    energyLevel >= 70 ? "#eab308" :
+                                    energyLevel >= 55 ? "#f97316" :
+                                    energyLevel >= 40 ? "#d97706" :
                                     "#ef4444"
                                   } 
                                 />
