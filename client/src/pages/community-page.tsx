@@ -1,6 +1,8 @@
 import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -83,84 +85,101 @@ export default function CommunityPage() {
   const [challengeTarget, setChallengeTarget] = useState("");
   const [isPublicChallenge, setIsPublicChallenge] = useState(true);
 
-  // Mock data for groups
-  const groups = [
-    {
-      id: 1,
-      name: "Marathon Maniacs",
-      description: "A group for marathon training and preparation",
-      type: "public",
-      goal_type: "marathon",
-      created_by: "coach_sarah",
-      image: "",
-      member_count: 124,
-      is_member: false,
-    },
-    {
-      id: 2,
-      name: "5K Beginners",
-      description: "For those just starting their running journey with 5K goals",
-      type: "public",
-      goal_type: "5k",
-      created_by: "run_advisor",
-      image: "",
-      member_count: 258,
-      is_member: true,
-    },
-    {
-      id: 3,
-      name: "Trail Runners United",
-      description: "Off-road adventures and trail running techniques",
-      type: "public",
-      goal_type: "trail",
-      created_by: "mountain_runner",
-      image: "",
-      member_count: 95,
-      is_member: false,
-    },
-  ];
+  // Group types mapping for display
+  const goalTypeDisplay = {
+    "5k": "5K",
+    "10k": "10K",
+    "half_marathon": "Half Marathon",
+    "marathon": "Marathon",
+    "trail": "Trail Running",
+    "weight_loss": "Weight Loss",
+    "general": "General Fitness"
+  };
 
-  // Mock data for challenges
-  const challenges = [
-    {
-      id: 1,
-      name: "Summer Run Streak",
-      description: "Run at least 1 mile every day this summer",
-      start_date: "Jun 1, 2023",
-      end_date: "Aug 31, 2023",
-      challenge_type: "streak",
-      target_value: "92 days",
-      participants: 342,
-      is_joined: true,
-      progress: 65,
-    },
-    {
-      id: 2,
-      name: "500 Mile Challenge",
-      description: "Complete 500 miles in the next 3 months",
-      start_date: "Jul 1, 2023",
-      end_date: "Sep 30, 2023",
-      challenge_type: "distance",
-      target_value: "500 miles",
-      participants: 156,
-      is_joined: false,
-      progress: 0,
-    },
-    {
-      id: 3,
-      name: "Elevation Gain Challenge",
-      description: "Climb 10,000 feet in a month",
-      start_date: "Aug 1, 2023",
-      end_date: "Aug 31, 2023",
-      challenge_type: "elevation",
-      target_value: "10,000 ft",
-      participants: 89,
-      is_joined: false,
-      progress: 0,
-    },
-  ];
+  // API data queries
+  const { 
+    data: groupsData = [], 
+    isLoading: isLoadingGroups 
+  } = useQuery({
+    queryKey: ['/api/groups'],
+    refetchOnWindowFocus: false,
+  });
 
-  // Mock data for running buddies
+  const { 
+    data: myGroupsData = [], 
+    isLoading: isLoadingMyGroups 
+  } = useQuery({
+    queryKey: ['/api/groups/me'],
+    refetchOnWindowFocus: false,
+  });
+
+  const { 
+    data: challengesData = [], 
+    isLoading: isLoadingChallenges 
+  } = useQuery({
+    queryKey: ['/api/challenges'],
+    refetchOnWindowFocus: false,
+  });
+
+  const { 
+    data: myChallengesData = [], 
+    isLoading: isLoadingMyChallenges 
+  } = useQuery({
+    queryKey: ['/api/challenges/me'],
+    refetchOnWindowFocus: false,
+  });
+
+  const { 
+    data: buddiesData = [], 
+    isLoading: isLoadingBuddies 
+  } = useQuery({
+    queryKey: ['/api/buddies'],
+    refetchOnWindowFocus: false,
+  });
+
+  const { 
+    data: buddyRequestsData = [], 
+    isLoading: isLoadingBuddyRequests 
+  } = useQuery({
+    queryKey: ['/api/buddies/requests'],
+    refetchOnWindowFocus: false,
+  });
+
+  // Process data to display format
+  const groups = isLoadingGroups ? [] : groupsData.map((group) => {
+    const isMember = myGroupsData.some(myGroup => myGroup.id === group.id);
+    return {
+      ...group,
+      is_member: isMember
+    };
+  });
+  
+  const challenges = isLoadingChallenges ? [] : challengesData.map((challenge) => {
+    const joined = myChallengesData.some(myChallenge => myChallenge.id === challenge.id);
+    // Format dates to display format
+    const startDate = new Date(challenge.start_date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    const endDate = new Date(challenge.end_date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    return {
+      ...challenge,
+      is_joined: joined,
+      start_date: startDate,
+      end_date: endDate,
+      participants: Math.floor(Math.random() * 300) + 50, // Temporary until we implement participant count
+      progress: joined ? Math.floor(Math.random() * 80) + 10 : 0 // Temporary until we implement progress tracking
+    };
+  });
+  
+  // For the buddies, we would need to fetch user profiles as well
+  // For now, use placeholder data but structure it like real data
   const buddies = [
     {
       id: 1,
@@ -225,60 +244,273 @@ export default function CommunityPage() {
     b.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Mutations
+  const createGroupMutation = useMutation({
+    mutationFn: async (groupData: any) => {
+      const res = await fetch('/api/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(groupData),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to create group');
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups/me'] });
+      
+      toast({
+        title: "Group Created",
+        description: `Your group "${groupName}" has been created successfully.`,
+      });
+      
+      setCreateGroupOpen(false);
+      setGroupName("");
+      setGroupDescription("");
+      setGroupType("public");
+      setGroupGoalType("5k");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Creating Group",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createChallengeMutation = useMutation({
+    mutationFn: async (challengeData: any) => {
+      const res = await fetch('/api/challenges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(challengeData),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to create challenge');
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/me'] });
+      
+      toast({
+        title: "Challenge Created",
+        description: `Your challenge "${challengeName}" has been created successfully.`,
+      });
+      
+      setCreateChallengeOpen(false);
+      setChallengeName("");
+      setChallengeDescription("");
+      setChallengeType("distance");
+      setChallengeTarget("");
+      setIsPublicChallenge(true);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Creating Challenge",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const joinGroupMutation = useMutation({
+    mutationFn: async (groupId: number) => {
+      const res = await fetch(`/api/groups/${groupId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to join group');
+      }
+      
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups/me'] });
+      
+      const group = groups.find(g => g.id === variables);
+      
+      toast({
+        title: "Group Joined",
+        description: `You have successfully joined "${group?.name}".`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Joining Group",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const leaveGroupMutation = useMutation({
+    mutationFn: async (groupId: number) => {
+      const res = await fetch(`/api/groups/${groupId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to leave group');
+      }
+      
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups/me'] });
+      
+      const group = groups.find(g => g.id === variables);
+      
+      toast({
+        title: "Left Group",
+        description: `You have left "${group?.name}".`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Leaving Group",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const joinChallengeMutation = useMutation({
+    mutationFn: async (challengeId: number) => {
+      const res = await fetch(`/api/challenges/${challengeId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to join challenge');
+      }
+      
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/me'] });
+      
+      const challenge = challenges.find(c => c.id === variables);
+      
+      toast({
+        title: "Challenge Joined",
+        description: `You have joined the "${challenge?.name}" challenge.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Joining Challenge",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const leaveChallengeeMutation = useMutation({
+    mutationFn: async (challengeId: number) => {
+      const res = await fetch(`/api/challenges/${challengeId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to leave challenge');
+      }
+      
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/me'] });
+      
+      const challenge = challenges.find(c => c.id === variables);
+      
+      toast({
+        title: "Left Challenge",
+        description: `You have left the "${challenge?.name}" challenge.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Leaving Challenge",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Action handlers
   const handleCreateGroup = () => {
-    toast({
-      title: "Group Created",
-      description: `Your group "${groupName}" has been created successfully.`,
+    createGroupMutation.mutate({
+      name: groupName,
+      description: groupDescription,
+      type: groupType,
+      goal_type: groupGoalType,
     });
-    setCreateGroupOpen(false);
-    // Reset form
-    setGroupName("");
-    setGroupDescription("");
-    setGroupType("public");
-    setGroupGoalType("5k");
   };
 
   const handleCreateChallenge = () => {
-    toast({
-      title: "Challenge Created",
-      description: `Your challenge "${challengeName}" has been created successfully.`,
+    const startDateValue = challengeStartDate.toISOString().split('T')[0];
+    const endDateValue = challengeEndDate.toISOString().split('T')[0];
+    
+    createChallengeMutation.mutate({
+      name: challengeName,
+      description: challengeDescription,
+      start_date: startDateValue,
+      end_date: endDateValue,
+      challenge_type: challengeType,
+      target_value: parseFloat(challengeTarget),
+      is_public: isPublicChallenge,
     });
-    setCreateChallengeOpen(false);
-    // Reset form
-    setChallengeName("");
-    setChallengeDescription("");
-    setChallengeType("distance");
-    setChallengeTarget("");
-    setIsPublicChallenge(true);
   };
 
   const handleJoinGroup = (groupId: number, groupName: string) => {
-    toast({
-      title: "Group Joined",
-      description: `You have successfully joined "${groupName}".`,
-    });
+    joinGroupMutation.mutate(groupId);
   };
 
   const handleLeaveGroup = (groupId: number, groupName: string) => {
-    toast({
-      title: "Left Group",
-      description: `You have left "${groupName}".`,
-    });
+    leaveGroupMutation.mutate(groupId);
   };
 
   const handleJoinChallenge = (challengeId: number, challengeName: string) => {
-    toast({
-      title: "Challenge Joined",
-      description: `You have joined the "${challengeName}" challenge.`,
-    });
+    joinChallengeMutation.mutate(challengeId);
   };
 
   const handleLeaveChallenge = (challengeId: number, challengeName: string) => {
-    toast({
-      title: "Left Challenge",
-      description: `You have left the "${challengeName}" challenge.`,
-    });
+    leaveChallengeeMutation.mutate(challengeId);
   };
 
   const handleBuddyAction = (buddyId: number, action: string, buddyName: string) => {
