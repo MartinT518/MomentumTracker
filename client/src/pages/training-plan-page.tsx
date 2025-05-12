@@ -46,10 +46,10 @@ export default function TrainingPlanPage() {
   
   // Fetch available coaches
   const { 
-    data: coaches = [], 
+    data: coaches = [] as Coach[], 
     isLoading: isLoadingCoaches,
     error: coachesError
-  } = useQuery({
+  } = useQuery<Coach[]>({
     queryKey: ['/api/coaches'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/coaches');
@@ -87,7 +87,7 @@ export default function TrainingPlanPage() {
       const activeSession = coachingSessions[0]; // Most recent session
       
       // Find the coach for this session
-      const sessionCoach = coaches.find(c => c.id === activeSession.coach_id);
+      const sessionCoach = coaches.find((c: Coach) => c.id === activeSession.coach_id);
       if (sessionCoach) {
         setSelectedCoach(sessionCoach);
         setCoachSessionId(activeSession.id.toString());
@@ -343,8 +343,8 @@ export default function TrainingPlanPage() {
                 </div>
               ) : (
                 <CoachSelection 
-                  coaches={coaches} 
-                  onCoachSelected={handleCoachSelected} 
+                  onCoachSelected={handleCoachSelected}
+                  subscriptionActive={hasSubscription}
                 />
               )
             ) : (
