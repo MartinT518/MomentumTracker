@@ -68,17 +68,84 @@ const quotes: MotivationalQuote[] = [
     text: "The body achieves what the mind believes.",
     author: "Unknown",
     category: "fitness"
+  },
+  {
+    text: "Motivation is what gets you started. Habit is what keeps you going.",
+    author: "Jim Ryun",
+    category: "persistence"
+  },
+  {
+    text: "I run because if I didn't, I'd be sluggish and glum and spend too much time on the couch.",
+    author: "Pete Magill",
+    category: "running"
+  },
+  {
+    text: "Your body will argue that there is no justifiable reason to continue. Your only recourse is to call on your spirit, which fortunately functions independently of logic.",
+    author: "Tim Noakes",
+    category: "persistence"
+  },
+  {
+    text: "If it doesn't challenge you, it won't change you.",
+    author: "Fred DeVito",
+    category: "fitness"
+  },
+  {
+    text: "Success isn't always about greatness. It's about consistency. Consistent hard work leads to success. Greatness will come.",
+    author: "Dwayne Johnson",
+    category: "persistence"
+  },
+  {
+    text: "Running is alone time that lets my brain unspool the tangles that build up over days.",
+    author: "Rob Haneisen",
+    category: "running"
+  },
+  {
+    text: "The voice inside your head that says you can't do this is a liar.",
+    author: "Unknown",
+    category: "motivation"
+  },
+  {
+    text: "Most people never run far enough on their first wind to find out they've got a second.",
+    author: "William James",
+    category: "running"
+  },
+  {
+    text: "A race is a work of art that people can look at and be affected in as many ways as they're capable of understanding.",
+    author: "Steve Prefontaine",
+    category: "running"
+  },
+  {
+    text: "If you are losing faith in human nature, go out and watch a marathon.",
+    author: "Kathrine Switzer",
+    category: "running"
+  },
+  {
+    text: "To give anything less than your best is to sacrifice the gift.",
+    author: "Steve Prefontaine",
+    category: "motivation"
+  },
+  {
+    text: "Run when you can, walk if you have to, crawl if you must; just never give up.",
+    author: "Dean Karnazes",
+    category: "persistence"
   }
 ];
 
 export function MotivationalQuoteCard() {
   const [currentQuote, setCurrentQuote] = useState<MotivationalQuote>(quotes[0]);
   const [fadeIn, setFadeIn] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<MotivationalQuote['category'] | 'all'>('all');
 
-  // Function to get a random quote
-  const getRandomQuote = () => {
-    const randomIndex = Math.floor(Math.random() * quotes.length);
-    return quotes[randomIndex];
+  // Function to get a random quote, optionally filtered by category
+  const getRandomQuote = (category?: MotivationalQuote['category']) => {
+    const filteredQuotes = category && category !== 'all' 
+      ? quotes.filter(q => q.category === category)
+      : quotes;
+      
+    if (filteredQuotes.length === 0) return quotes[0]; // Fallback
+    
+    const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+    return filteredQuotes[randomIndex];
   };
 
   // Initialize with a random quote
@@ -87,31 +154,62 @@ export function MotivationalQuoteCard() {
   }, []);
 
   // Function to cycle to next quote with fade animation
-  const cycleQuote = () => {
+  const cycleQuote = (category?: MotivationalQuote['category']) => {
+    const targetCategory = category || activeCategory;
+    
     setFadeIn(false);
     setTimeout(() => {
-      setCurrentQuote(getRandomQuote());
+      setCurrentQuote(getRandomQuote(targetCategory === 'all' ? undefined : targetCategory));
       setFadeIn(true);
     }, 300);
   };
+  
+  // Function to change category filter and get a new quote
+  const changeCategory = (category: MotivationalQuote['category'] | 'all') => {
+    setActiveCategory(category);
+    cycleQuote(category);
+  };
 
   return (
-    <Card className="overflow-hidden bg-gradient-to-r from-primary/10 to-primary/5 border-none shadow hover:shadow-md transition-shadow">
-      <CardContent className="p-4 flex items-start">
-        <div className="text-primary/80 mr-3 mt-1">
-          <Quote className="h-5 w-5" />
-        </div>
-        <div className={`flex-1 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-          <p className="text-neutral-darker font-medium text-base italic mb-2">{currentQuote.text}</p>
-          <div className="flex justify-between items-center">
-            <p className="text-neutral-medium text-sm">— {currentQuote.author}</p>
-            <button 
-              onClick={cycleQuote}
-              className="text-primary/70 hover:text-primary transition-colors flex items-center text-xs"
-            >
-              New Quote <ArrowRightCircle className="ml-1 h-3 w-3" />
-            </button>
+    <Card className="overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20 shadow-sm hover:shadow-md transition-all duration-300">
+      <CardContent className="p-5">
+        <div className="flex items-start mb-1">
+          <div className="text-primary mr-4 mt-1 bg-primary/10 p-2 rounded-full">
+            <Quote className="h-5 w-5" />
           </div>
+          <div className={`flex-1 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
+            <p className="text-neutral-darker font-medium text-base italic mb-3 leading-relaxed">{currentQuote.text}</p>
+            <div className="flex justify-between items-center">
+              <p className="text-neutral-medium text-sm font-semibold">— {currentQuote.author}</p>
+              <span className="text-xs px-2 py-0.5 bg-primary/5 text-primary/70 rounded-full capitalize">
+                {currentQuote.category}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-4 flex flex-wrap justify-between items-center">
+          <div className="flex flex-wrap gap-1 text-xs mb-1">
+            {(['all', 'running', 'fitness', 'motivation', 'persistence'] as const).map(category => (
+              <button
+                key={category}
+                onClick={() => changeCategory(category)}
+                className={`px-2.5 py-1 rounded-full transition-colors ${
+                  activeCategory === category 
+                    ? 'bg-primary text-white font-medium' 
+                    : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-500'
+                }`}
+              >
+                {category === 'all' ? 'All Topics' : category.charAt(0).toUpperCase() + category.slice(1)}
+              </button>
+            ))}
+          </div>
+          <button 
+            onClick={() => cycleQuote()}
+            className="text-primary hover:text-primary/80 transition-colors flex items-center text-xs bg-primary/10 px-3 py-1.5 rounded-full"
+          >
+            New Quote <ArrowRightCircle className="ml-1.5 h-3 w-3" />
+          </button>
         </div>
       </CardContent>
     </Card>
@@ -158,11 +256,21 @@ export function DailyMotivation() {
   const todayMotivation = motivationMap[dayOfWeek];
   
   return (
-    <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-4 rounded-xl mb-6 flex items-center">
-      <Sparkles className="h-8 w-8 text-primary mr-4 flex-shrink-0" />
-      <div>
-        <h3 className="font-medium text-lg text-neutral-darker">{todayMotivation.title}</h3>
-        <p className="text-neutral-medium">{todayMotivation.message}</p>
+    <div className="bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent p-5 rounded-xl mb-6 shadow-sm border border-primary/10 overflow-hidden relative">
+      <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M50,10 L90,50 L50,90 L10,50 Z" fill="currentColor" className="text-primary" />
+          <circle cx="50" cy="50" r="20" fill="currentColor" className="text-secondary" />
+        </svg>
+      </div>
+      <div className="flex items-start z-10 relative">
+        <div className="bg-white/80 rounded-full p-3 shadow-sm flex-shrink-0 mr-5">
+          <Sparkles className="h-7 w-7 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-neutral-darker mb-1">{todayMotivation.title}</h3>
+          <p className="text-neutral-medium leading-relaxed">{todayMotivation.message}</p>
+        </div>
       </div>
     </div>
   );
