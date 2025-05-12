@@ -955,6 +955,82 @@ export class MemStorage implements IStorage {
     return updatedPlan;
   }
   
+  // Health metrics methods
+  async getHealthMetrics(userId: number, startDate?: Date, endDate?: Date): Promise<HealthMetric[]> {
+    let query = db.select().from(health_metrics).where(eq(health_metrics.user_id, userId));
+    
+    if (startDate) {
+      query = query.where(gte(health_metrics.metric_date, startDate));
+    }
+    
+    if (endDate) {
+      query = query.where(lte(health_metrics.metric_date, endDate));
+    }
+    
+    return query.orderBy(desc(health_metrics.metric_date));
+  }
+  
+  async createHealthMetric(metric: InsertHealthMetric): Promise<HealthMetric> {
+    const [result] = await db.insert(health_metrics).values(metric).returning();
+    return result;
+  }
+  
+  async updateHealthMetric(id: number, data: Partial<HealthMetric>): Promise<HealthMetric> {
+    const [updated] = await db
+      .update(health_metrics)
+      .set(data)
+      .where(eq(health_metrics.id, id))
+      .returning();
+    return updated;
+  }
+  
+  // Integration connections methods
+  async getIntegrationConnections(userId: number): Promise<IntegrationConnection[]> {
+    return db
+      .select()
+      .from(integration_connections)
+      .where(eq(integration_connections.user_id, userId))
+      .orderBy(desc(integration_connections.created_at));
+  }
+  
+  async getIntegrationConnection(userId: number, platform: string): Promise<IntegrationConnection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(integration_connections)
+      .where(
+        and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        )
+      );
+    return connection;
+  }
+  
+  async createIntegrationConnection(connection: InsertIntegrationConnection): Promise<IntegrationConnection> {
+    const [result] = await db.insert(integration_connections).values(connection).returning();
+    return result;
+  }
+  
+  async updateIntegrationConnection(id: number, data: Partial<IntegrationConnection>): Promise<IntegrationConnection> {
+    const [updated] = await db
+      .update(integration_connections)
+      .set(data)
+      .where(eq(integration_connections.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async removeIntegrationConnection(userId: number, platform: string): Promise<void> {
+    await db
+      .delete(integration_connections)
+      .where(
+        and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        )
+      );
+  }
+  
   async updateUserSubscription(
     userId: number, 
     data: { 
