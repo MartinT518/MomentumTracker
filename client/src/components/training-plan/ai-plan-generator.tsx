@@ -1,394 +1,442 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ArrowRight, Check, Calendar, Trophy, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { BrainCircuit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { TrainingPlan, TrainingPlanParams } from '@/lib/ai-service';
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { generateTrainingPlan, TrainingPlan } from "@/lib/ai-service";
+import { useAuth } from "@/hooks/use-auth";
+
+// Form schema
+const formSchema = z.object({
+  goal: z.string().min(1, { message: "Please select a goal" }),
+  raceDistance: z.string().optional(),
+  currentFitness: z.string().min(1, { message: "Please select your current fitness level" }),
+  weeksToTrain: z.string().transform(val => parseInt(val, 10)),
+  daysPerWeek: z.string().transform(val => parseInt(val, 10)),
+  preferences: z.string().optional(),
+  includeStrengthTraining: z.boolean().default(false),
+  preferredTerrains: z.array(z.string()).optional(),
+  injuries: z.string().optional(),
+  recentRaceTime: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AIPlanGeneratorProps {
   onPlanGenerated: (plan: TrainingPlan) => void;
 }
 
 export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
-  const [activeTab, setActiveTab] = useState("race-goal");
+  const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
-  // Form states
-  const [formData, setFormData] = useState<TrainingPlanParams>({
-    fitnessLevel: 'intermediate',
-    availableDaysPerWeek: 4,
-    timePerSessionMinutes: 60,
-    raceDistance: '10k',
-    targetRace: '',
-    goalTime: '',
-    currentWeeklyMileage: undefined,
-    preferredWorkoutTypes: [],
-    injuries: [],
-    startDate: undefined,
-    endDate: undefined,
-    userAge: undefined,
-    userWeight: undefined,
-    userHeight: undefined
+  // Check if user has active subscription
+  const hasSubscription = user?.subscription_status === 'active';
+  
+  // Initialize form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      goal: "",
+      raceDistance: "",
+      currentFitness: "",
+      weeksToTrain: "8",
+      daysPerWeek: "4",
+      preferences: "",
+      includeStrengthTraining: false,
+      preferredTerrains: [],
+      injuries: "",
+      recentRaceTime: "",
+    },
   });
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleNumberChange = (name: string, value: string) => {
-    const numberValue = value === '' ? undefined : Number(value);
-    setFormData(prev => ({ ...prev, [name]: numberValue }));
-  };
-  
-  const handleMultiSelectChange = (name: string, value: string) => {
-    setFormData(prev => {
-      const current = prev[name as keyof TrainingPlanParams] as string[] || [];
-      if (Array.isArray(current)) {
-        if (current.includes(value)) {
-          return { ...prev, [name]: current.filter(v => v !== value) };
-        } else {
-          return { ...prev, [name]: [...current, value] };
-        }
-      }
-      return prev;
-    });
-  };
-  
-  const nextTab = () => {
-    if (activeTab === "race-goal") setActiveTab("schedule");
-    else if (activeTab === "schedule") setActiveTab("preferences");
-    else if (activeTab === "preferences") generatePlan();
-  };
-  
-  const prevTab = () => {
-    if (activeTab === "preferences") setActiveTab("schedule");
-    else if (activeTab === "schedule") setActiveTab("race-goal");
-  };
-  
-  const generatePlan = async () => {
-    try {
-      setIsGenerating(true);
+  const nextStep = () => {
+    if (step === 1) {
+      const goal = form.getValues("goal");
+      const currentFitness = form.getValues("currentFitness");
       
-      // Validate required fields
-      if (!formData.fitnessLevel || !formData.availableDaysPerWeek) {
-        toast({
-          title: "Missing information",
-          description: "Please complete all required fields",
-          variant: "destructive"
-        });
+      if (!goal || !currentFitness) {
+        form.trigger(["goal", "currentFitness"]);
         return;
       }
-      
-      // Call AI service to generate plan
-      const response = await apiRequest("POST", "/api/generate-training-plan", formData);
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to generate training plan");
-      }
-      
-      const plan = await response.json();
-      onPlanGenerated(plan);
+    }
+    
+    setStep(prev => prev + 1);
+  };
+  
+  const prevStep = () => {
+    setStep(prev => prev - 1);
+  };
+  
+  const onSubmit = async (data: FormValues) => {
+    setIsGenerating(true);
+    
+    try {
+      // Call the AI service to generate plan
+      const plan = await generateTrainingPlan({
+        ...data,
+        userType: hasSubscription ? 'premium' : 'free'
+      });
       
       toast({
-        title: "Training plan generated",
-        description: "Your personalized training plan is ready!",
-        variant: "default"
+        title: "Training Plan Generated",
+        description: "Your personalized training plan has been created successfully",
       });
+      
+      // Notify parent component that plan has been generated
+      onPlanGenerated(plan);
     } catch (error: any) {
       toast({
-        title: "Error generating plan",
-        description: error.message || "Something went wrong",
-        variant: "destructive"
+        title: "Error Generating Plan",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
   };
-  
+
   return (
-    <Card className="w-full">
+    <Card className="max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Create AI Training Plan</CardTitle>
-        <CardDescription>
-          Get a personalized training plan generated by Gemini AI based on your goals and preferences
-        </CardDescription>
+        <div className="flex items-center space-x-2">
+          <BrainCircuit className="h-6 w-6 text-primary" />
+          <div>
+            <CardTitle>AI Training Plan Generator</CardTitle>
+            <CardDescription>
+              Generate a personalized running plan tailored to your goals and preferences
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="race-goal">
-              <Trophy className="h-4 w-4 mr-2" />
-              Race Goal
-            </TabsTrigger>
-            <TabsTrigger value="schedule">
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule
-            </TabsTrigger>
-            <TabsTrigger value="preferences">
-              <Check className="h-4 w-4 mr-2" />
-              Preferences
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="race-goal" className="space-y-4 py-4">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="fitnessLevel">Fitness Level</Label>
-                <Select 
-                  value={formData.fitnessLevel} 
-                  onValueChange={(value) => handleSelectChange('fitnessLevel', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your fitness level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="advanced">Advanced</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="raceDistance">Race Distance</Label>
-                <Select 
-                  value={formData.raceDistance} 
-                  onValueChange={(value) => handleSelectChange('raceDistance', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select race distance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5k">5K</SelectItem>
-                    <SelectItem value="10k">10K</SelectItem>
-                    <SelectItem value="half marathon">Half Marathon</SelectItem>
-                    <SelectItem value="marathon">Marathon</SelectItem>
-                    <SelectItem value="ultra">Ultra</SelectItem>
-                    <SelectItem value="trail">Trail Race</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="targetRace">Target Race (Optional)</Label>
-                <Input 
-                  id="targetRace"
-                  name="targetRace"
-                  placeholder="e.g. Chicago Marathon"
-                  value={formData.targetRace}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="goalTime">Goal Time (Optional)</Label>
-                <Input 
-                  id="goalTime"
-                  name="goalTime"
-                  placeholder="e.g. 3:45:00 or Sub 4 hours"
-                  value={formData.goalTime}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="currentWeeklyMileage">Current Weekly Mileage</Label>
-                <Input 
-                  id="currentWeeklyMileage"
-                  name="currentWeeklyMileage"
-                  type="number"
-                  placeholder="miles per week"
-                  value={formData.currentWeeklyMileage || ''}
-                  onChange={(e) => handleNumberChange('currentWeeklyMileage', e.target.value)}
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <Button onClick={nextTab}>
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="schedule" className="space-y-4 py-4">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="availableDaysPerWeek">Available Days Per Week</Label>
-                <Select 
-                  value={formData.availableDaysPerWeek.toString()} 
-                  onValueChange={(value) => handleNumberChange('availableDaysPerWeek', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select number of days" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 days</SelectItem>
-                    <SelectItem value="4">4 days</SelectItem>
-                    <SelectItem value="5">5 days</SelectItem>
-                    <SelectItem value="6">6 days</SelectItem>
-                    <SelectItem value="7">7 days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="timePerSessionMinutes">Average Time Per Session</Label>
-                <Select 
-                  value={formData.timePerSessionMinutes?.toString() || '60'} 
-                  onValueChange={(value) => handleNumberChange('timePerSessionMinutes', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select time per session" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="45">45 minutes</SelectItem>
-                    <SelectItem value="60">60 minutes</SelectItem>
-                    <SelectItem value="90">90 minutes</SelectItem>
-                    <SelectItem value="120">120 minutes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="startDate">Start Date (Optional)</Label>
-                <Input 
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="endDate">End Date / Race Day (Optional)</Label>
-                <Input 
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={prevTab}>
-                  Back
-                </Button>
-                <Button onClick={nextTab}>
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="preferences" className="space-y-4 py-4">
-            <div className="space-y-4">
-              <div>
-                <Label>Preferred Workout Types</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {['Easy Runs', 'Tempo Runs', 'Intervals', 'Long Runs', 'Hill Training', 'Cross Training'].map(type => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <input 
-                        type="checkbox" 
-                        id={type} 
-                        checked={formData.preferredWorkoutTypes?.includes(type) || false}
-                        onChange={() => handleMultiSelectChange('preferredWorkoutTypes', type)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      <Label htmlFor={type} className="cursor-pointer">{type}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="injuries">Injuries or Limitations (Optional)</Label>
-                <Textarea 
-                  id="injuries"
-                  placeholder="Describe any injuries or limitations"
-                  value={formData.injuries?.join(', ') || ''}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    injuries: e.target.value.split(',').map(item => item.trim()).filter(Boolean)
-                  }))}
-                />
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="userAge">Age (Optional)</Label>
-                  <Input 
-                    id="userAge"
-                    name="userAge"
-                    type="number"
-                    placeholder="Years"
-                    value={formData.userAge || ''}
-                    onChange={(e) => handleNumberChange('userAge', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="userWeight">Weight (Optional)</Label>
-                  <Input 
-                    id="userWeight"
-                    name="userWeight"
-                    type="number"
-                    placeholder="kg"
-                    value={formData.userWeight || ''}
-                    onChange={(e) => handleNumberChange('userWeight', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="userHeight">Height (Optional)</Label>
-                  <Input 
-                    id="userHeight"
-                    name="userHeight"
-                    type="number"
-                    placeholder="cm"
-                    value={formData.userHeight || ''}
-                    onChange={(e) => handleNumberChange('userHeight', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={prevTab}>
-                  Back
-                </Button>
-                <Button onClick={generatePlan} disabled={isGenerating}>
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating Plan...
-                    </>
-                  ) : (
-                    <>Generate Training Plan</>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {step === 1 && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="goal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>What is your primary goal?</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your goal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="race">Race a specific distance</SelectItem>
+                          <SelectItem value="improve_speed">Improve speed</SelectItem>
+                          <SelectItem value="improve_endurance">Improve endurance</SelectItem>
+                          <SelectItem value="weight_loss">Weight loss</SelectItem>
+                          <SelectItem value="general_fitness">General fitness</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
+                />
+                
+                {form.watch("goal") === "race" && (
+                  <FormField
+                    control={form.control}
+                    name="raceDistance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Which distance are you training for?</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select race distance" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="5k">5K</SelectItem>
+                            <SelectItem value="10k">10K</SelectItem>
+                            <SelectItem value="half_marathon">Half Marathon</SelectItem>
+                            <SelectItem value="marathon">Marathon</SelectItem>
+                            <SelectItem value="ultra">Ultra Marathon</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                
+                <FormField
+                  control={form.control}
+                  name="currentFitness"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>What is your current fitness level?</FormLabel>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="beginner" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Beginner (just starting out or returning after a long break)
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="intermediate" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Intermediate (running consistently for 3-12 months)
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="advanced" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Advanced (running consistently for 1+ years)
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch("goal") === "race" && (
+                  <FormField
+                    control={form.control}
+                    name="recentRaceTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Recent race time (optional)
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="e.g., 25:30 for 5K, 1:50:45 for half marathon" 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          This helps calibrate your training paces more accurately
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            )}
+            
+            {step === 2 && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="weeksToTrain"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How many weeks do you want to train?</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select number of weeks" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="4">4 weeks</SelectItem>
+                          <SelectItem value="8">8 weeks</SelectItem>
+                          <SelectItem value="12">12 weeks</SelectItem>
+                          <SelectItem value="16">16 weeks</SelectItem>
+                          <SelectItem value="20">20 weeks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="daysPerWeek"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How many days per week can you train?</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select days per week" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="2">2 days</SelectItem>
+                          <SelectItem value="3">3 days</SelectItem>
+                          <SelectItem value="4">4 days</SelectItem>
+                          <SelectItem value="5">5 days</SelectItem>
+                          <SelectItem value="6">6 days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="includeStrengthTraining"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Include strength training</FormLabel>
+                        <FormDescription>
+                          Add complementary strength workouts to your running plan
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="injuries"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Any current injuries or limitations? (optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="e.g., recovering from knee pain, limited ankle mobility, etc."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+            
+            {step === 3 && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="preferences"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Any specific preferences for your plan? (optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="e.g., prefer morning runs, want to include trail running, need one long run per week, etc."
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Share any preferences or special requests you have for your training plan
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {!hasSubscription && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+                    <p className="font-medium text-yellow-800 mb-1">Free Plan Limitations</p>
+                    <p className="text-yellow-700">
+                      Free users will receive a detailed first week of training plus a brief overview of subsequent weeks. 
+                      Upgrade to premium for the complete training plan with detailed workouts for all weeks.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-2">Plan Summary</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Goal:</span>
+                      <span className="font-medium">
+                        {form.watch("goal") === "race" 
+                          ? `Race (${form.watch("raceDistance")})` 
+                          : form.watch("goal").replace("_", " ")}
+                      </span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Current fitness:</span>
+                      <span className="font-medium">{form.watch("currentFitness")}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Duration:</span>
+                      <span className="font-medium">{form.watch("weeksToTrain")} weeks</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Training days:</span>
+                      <span className="font-medium">{form.watch("daysPerWeek")} days per week</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Strength training:</span>
+                      <span className="font-medium">{form.watch("includeStrengthTraining") ? "Yes" : "No"}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </form>
+        </Form>
       </CardContent>
+      <CardFooter className="flex justify-between">
+        {step > 1 ? (
+          <Button variant="outline" onClick={prevStep}>
+            Previous
+          </Button>
+        ) : (
+          <div></div>
+        )}
+        
+        {step < 3 ? (
+          <Button onClick={nextStep}>
+            Next
+          </Button>
+        ) : (
+          <Button 
+            onClick={form.handleSubmit(onSubmit)} 
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating Plan...
+              </>
+            ) : (
+              "Generate Training Plan"
+            )}
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 }
