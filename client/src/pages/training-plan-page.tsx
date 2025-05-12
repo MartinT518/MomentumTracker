@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookUser, Sparkles, Loader2 } from "lucide-react";
 import { TrainingGoalOverview } from "@/components/training-plan/training-goal-overview";
 import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar-new";
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
+import { AIPlanGenerator } from "@/components/training-plan/ai-plan-generator";
+import { CoachSelection } from "@/components/coaching/coach-selection";
+import { CoachChat } from "@/components/coaching/coach-chat";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from "@/lib/queryClient";
+import { Coach, TrainingPlan } from '@shared/schema';
+import { TrainingPlan as AITrainingPlan } from '@/lib/ai-service';
 
 // Interface for selected workout
 interface Workout {
@@ -17,11 +26,75 @@ interface Workout {
   distance?: string;
   intensity: 'easy' | 'moderate' | 'hard' | 'recovery' | 'race';
   completed: boolean;
+  warmUp?: string;
+  mainSet?: string[];
+  coolDown?: string;
+  notes?: string;
 }
 
 export default function TrainingPlanPage() {
   const [selectedTab, setSelectedTab] = useState<string>("overview");
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [coachView, setCoachView] = useState<'select' | 'chat'>('select');
+  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
+  const [coachSessionId, setCoachSessionId] = useState<string>('');
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [aiPlan, setAiPlan] = useState<AITrainingPlan | null>(null);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Fetch available coaches
+  const { 
+    data: coaches = [], 
+    isLoading: isLoadingCoaches,
+    error: coachesError
+  } = useQuery({
+    queryKey: ['/api/coaches'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/coaches');
+      if (!response.ok) {
+        throw new Error('Failed to fetch coaches');
+      }
+      return response.json();
+    },
+    enabled: selectedTab === 'coach'
+  });
+  
+  // Fetch active coaching sessions
+  const { 
+    data: coachingSessions = [], 
+    isLoading: isLoadingSessions
+  } = useQuery({
+    queryKey: ['/api/coaching-sessions'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/coaching-sessions');
+      if (!response.ok) {
+        if (response.status === 403) {
+          // User doesn't have a subscription
+          return [];
+        }
+        throw new Error('Failed to fetch coaching sessions');
+      }
+      return response.json();
+    },
+    enabled: selectedTab === 'coach' && !!user
+  });
+  
+  // Set up active session if available
+  useEffect(() => {
+    if (coachingSessions.length > 0 && selectedTab === 'coach') {
+      const activeSession = coachingSessions[0]; // Most recent session
+      
+      // Find the coach for this session
+      const sessionCoach = coaches.find(c => c.id === activeSession.coach_id);
+      if (sessionCoach) {
+        setSelectedCoach(sessionCoach);
+        setCoachSessionId(activeSession.id.toString());
+        setCoachView('chat');
+      }
+    }
+  }, [coachingSessions, coaches, selectedTab]);
 
   // Handle workout selection
   const handleWorkoutClick = (workout: Workout) => {
@@ -32,6 +105,34 @@ export default function TrainingPlanPage() {
   const handleBackToCalendar = () => {
     setSelectedWorkout(null);
   };
+  
+  // Handle coach selection
+  const handleCoachSelected = (coach: Coach, sessionId: string) => {
+    setSelectedCoach(coach);
+    setCoachSessionId(sessionId);
+    setCoachView('chat');
+  };
+  
+  // Back to coach selection
+  const handleBackToCoachSelect = () => {
+    setCoachView('select');
+    setSelectedCoach(null);
+    setCoachSessionId('');
+  };
+  
+  // Handle AI training plan generation
+  const handlePlanGenerated = (plan: AITrainingPlan) => {
+    setAiPlan(plan);
+    setIsGeneratingPlan(false);
+    
+    // Switch to schedule tab to show the generated plan
+    setSelectedTab('schedule');
+    
+    // Would normally save the plan to the database here
+  };
+  
+  // Check if user has active subscription
+  const hasSubscription = user?.subscription_status === 'active';
 
   return (
     <div className="flex h-screen max-w-full overflow-hidden">
@@ -59,6 +160,39 @@ export default function TrainingPlanPage() {
               </Button>
             </div>
           )}
+          
+          {selectedTab === "coach" && coachView === 'chat' && (
+            <div className="mt-4 md:mt-0 flex space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={handleBackToCoachSelect}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Coaches
+              </Button>
+            </div>
+          )}
+          
+          {selectedTab !== "ai-plan" && !isGeneratingPlan && (
+            <div className="mt-4 md:mt-0">
+              <Button 
+                onClick={() => setSelectedTab("ai-plan")}
+                className="flex items-center"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate AI Plan
+              </Button>
+            </div>
+          )}
+          
+          {isGeneratingPlan && (
+            <div className="mt-4 md:mt-0">
+              <Button disabled className="flex items-center">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating Plan...
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Training Plan Content */}
@@ -66,6 +200,11 @@ export default function TrainingPlanPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="ai-plan">AI Plan</TabsTrigger>
+            <TabsTrigger value="coach" className="flex items-center">
+              <BookUser className="w-4 h-4 mr-2" />
+              Human Coach
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">
@@ -76,28 +215,29 @@ export default function TrainingPlanPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 bg-green-50 rounded-lg">
                   <div className="text-sm text-green-600 font-medium mb-1">Weekly Mileage</div>
-                  <div className="text-2xl font-bold">32 miles</div>
+                  <div className="text-2xl font-bold">{aiPlan?.overview?.weeklyMileage || "32 miles"}</div>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <div className="text-sm text-blue-600 font-medium mb-1">Workouts Per Week</div>
-                  <div className="text-2xl font-bold">5 sessions</div>
+                  <div className="text-2xl font-bold">{aiPlan?.overview?.workoutsPerWeek || "5"} sessions</div>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <div className="text-sm text-purple-600 font-medium mb-1">Long Run</div>
-                  <div className="text-2xl font-bold">12 miles</div>
+                  <div className="text-2xl font-bold">{aiPlan?.overview?.longRunDistance || "12 miles"}</div>
                 </div>
                 <div className="p-4 bg-yellow-50 rounded-lg">
                   <div className="text-sm text-yellow-600 font-medium mb-1">Quality Workouts</div>
-                  <div className="text-2xl font-bold">2 per week</div>
+                  <div className="text-2xl font-bold">{aiPlan?.overview?.qualityWorkouts || "2"} per week</div>
                 </div>
               </div>
               
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-3">Training Philosophy</h3>
                 <p className="text-neutral-700">
-                  This plan follows a balanced approach with progressive overload to prepare you for your marathon goal.
+                  {aiPlan?.philosophy || 
+                  `This plan follows a balanced approach with progressive overload to prepare you for your marathon goal.
                   It includes a mix of easy running, speed work, tempo runs, and essential long runs, with appropriate recovery 
-                  periods to maximize adaptation while minimizing injury risk.
+                  periods to maximize adaptation while minimizing injury risk.`}
                 </p>
               </div>
             </div>
@@ -108,6 +248,51 @@ export default function TrainingPlanPage() {
               <WorkoutDetailView />
             ) : (
               <TrainingPlanCalendar onWorkoutClick={handleWorkoutClick} />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="ai-plan">
+            <AIPlanGenerator 
+              onPlanGenerated={(plan) => {
+                handlePlanGenerated(plan);
+                setIsGeneratingPlan(true);
+              }} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="coach">
+            {!hasSubscription ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
+                <BookUser className="h-12 w-12 mx-auto text-primary/60 mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Premium Feature</h2>
+                <p className="text-muted-foreground mb-6">
+                  Access to human coaches is available to premium subscribers only. Upgrade your plan to connect with experienced coaches who can provide personalized guidance.
+                </p>
+                <Button 
+                  onClick={() => setSelectedTab("subscription")}
+                  size="lg"
+                >
+                  Upgrade to Premium
+                </Button>
+              </div>
+            ) : coachView === 'select' ? (
+              isLoadingCoaches ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <CoachSelection 
+                  coaches={coaches} 
+                  onCoachSelected={handleCoachSelected} 
+                />
+              )
+            ) : (
+              selectedCoach && coachSessionId && (
+                <CoachChat 
+                  coach={selectedCoach} 
+                  sessionId={coachSessionId} 
+                />
+              )
             )}
           </TabsContent>
         </Tabs>
