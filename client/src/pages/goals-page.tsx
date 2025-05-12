@@ -68,6 +68,10 @@ export default function GoalsPage() {
   const [weightLossAmount, setWeightLossAmount] = useState("");
   const [startingWeight, setStartingWeight] = useState("");
   const [experience, setExperience] = useState("intermediate");
+  
+  // State for goal detail view
+  const [selectedGoal, setSelectedGoal] = useState<any | null>(null);
+  const [showGoalDetail, setShowGoalDetail] = useState(false);
 
   // Mock active goals data
   const activeGoals = [
@@ -121,6 +125,18 @@ export default function GoalsPage() {
       description: `Your new ${newGoalType === "race" ? raceDistance + " race" : "weight loss"} goal has been created.`,
     });
     setCreateGoalOpen(false);
+  };
+  
+  // Handler for viewing goal details
+  const handleViewGoalDetails = (goal: any) => {
+    setSelectedGoal(goal);
+    setShowGoalDetail(true);
+  };
+  
+  // Handler for closing goal details view
+  const handleCloseGoalDetails = () => {
+    setShowGoalDetail(false);
+    setSelectedGoal(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -414,7 +430,13 @@ export default function GoalsPage() {
                     </CardContent>
                     <CardFooter className="pt-2 justify-between">
                       <Button variant="ghost" size="sm">Edit Goal</Button>
-                      <Button variant="outline" size="sm">View Details</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewGoalDetails(goal)}
+                      >
+                        View Details
+                      </Button>
                     </CardFooter>
                   </Card>
                 ))}
@@ -474,7 +496,14 @@ export default function GoalsPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="pt-2">
-                      <Button variant="outline" size="sm" className="w-full">View Details</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleViewGoalDetails(goal)}
+                      >
+                        View Details
+                      </Button>
                     </CardFooter>
                   </Card>
                 ))}
@@ -482,6 +511,204 @@ export default function GoalsPage() {
             )}
           </TabsContent>
         </Tabs>
+        {/* Goal Detail Dialog */}
+        <Dialog open={showGoalDetail} onOpenChange={setShowGoalDetail}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                {selectedGoal && (
+                  <>
+                    {getGoalTypeIcon(selectedGoal.type, "h-5 w-5 mr-2")}
+                    {selectedGoal.type === "race" 
+                      ? `${selectedGoal.distance} Race Goal` 
+                      : selectedGoal.type === "weight" 
+                        ? "Weight Loss Goal" 
+                        : selectedGoal.title}
+                  </>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedGoal && (
+                  <>
+                    {selectedGoal.status && getStatusBadge(selectedGoal.status)}
+                    <span className="ml-2">
+                      {selectedGoal.type === "race" 
+                        ? `Target: ${selectedGoal.targetTime}` 
+                        : selectedGoal.type === "weight" 
+                          ? `Target: ${selectedGoal.targetWeight}` 
+                          : selectedGoal.target}
+                    </span>
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedGoal && (
+              <div className="py-4">
+                {/* Goal stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                  <div className="bg-neutral-50 rounded-lg p-3">
+                    <div className="text-sm text-neutral-500 mb-1">Status</div>
+                    <div className="font-semibold flex items-center">
+                      {selectedGoal.status === "on-track" && <ThumbsUp className="w-4 h-4 mr-1 text-green-500" />}
+                      {selectedGoal.status === "at-risk" && <Clock className="w-4 h-4 mr-1 text-yellow-500" />}
+                      {selectedGoal.status === "behind" && <ThumbsUp className="w-4 h-4 mr-1 text-red-500" />}
+                      {selectedGoal.status === "achieved" && <Award className="w-4 h-4 mr-1 text-blue-500" />}
+                      {selectedGoal.status === "exceeded" && <Trophy className="w-4 h-4 mr-1 text-purple-500" />}
+                      {selectedGoal.status.charAt(0).toUpperCase() + selectedGoal.status.slice(1).replace('-', ' ')}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-neutral-50 rounded-lg p-3">
+                    <div className="text-sm text-neutral-500 mb-1">
+                      {selectedGoal.completedDate ? "Completed" : "Target Date"}
+                    </div>
+                    <div className="font-semibold">
+                      {selectedGoal.completedDate || selectedGoal.targetDate}
+                    </div>
+                  </div>
+                  
+                  {selectedGoal.progress !== undefined && (
+                    <div className="bg-neutral-50 rounded-lg p-3">
+                      <div className="text-sm text-neutral-500 mb-1">Progress</div>
+                      <div className="font-semibold">{selectedGoal.progress}%</div>
+                    </div>
+                  )}
+                  
+                  {selectedGoal.type === "race" && (
+                    <div className="bg-neutral-50 rounded-lg p-3">
+                      <div className="text-sm text-neutral-500 mb-1">
+                        {selectedGoal.actualTime ? "Actual Time" : "Target Time"}
+                      </div>
+                      <div className="font-semibold">
+                        {selectedGoal.actualTime || selectedGoal.targetTime}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedGoal.type === "weight" && (
+                    <>
+                      <div className="bg-neutral-50 rounded-lg p-3">
+                        <div className="text-sm text-neutral-500 mb-1">Starting Weight</div>
+                        <div className="font-semibold">{selectedGoal.startingWeight}</div>
+                      </div>
+                      
+                      <div className="bg-neutral-50 rounded-lg p-3">
+                        <div className="text-sm text-neutral-500 mb-1">Current Weight</div>
+                        <div className="font-semibold">{selectedGoal.currentWeight}</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Training plan section for active race goals */}
+                {selectedGoal.type === "race" && selectedGoal.trainingPlan && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-3">Training Plan</h3>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-md">{selectedGoal.trainingPlan}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-neutral-medium">
+                          Your personalized training plan to help you reach your race goal. 
+                          Includes a mix of easy runs, tempo work, and long runs to build endurance and speed.
+                        </p>
+                        <Button variant="outline" size="sm" className="mt-3">
+                          <Bookmark className="w-4 h-4 mr-2" />
+                          View Full Plan
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+                
+                {/* Progress charts or related activities would go here */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3">Related Activities</h3>
+                  {selectedGoal.type === "race" ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">Long Run</div>
+                          <div className="text-sm text-neutral-500">Jul 23, 2023</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">10.2 miles</div>
+                          <div className="text-sm text-neutral-500">1:32:45</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">Tempo Run</div>
+                          <div className="text-sm text-neutral-500">Jul 19, 2023</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">6 miles</div>
+                          <div className="text-sm text-neutral-500">48:12</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">Weight Check-in</div>
+                          <div className="text-sm text-neutral-500">Jul 28, 2023</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">157 lbs</div>
+                          <div className="text-sm text-neutral-500">-2 lbs (week)</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">Weight Check-in</div>
+                          <div className="text-sm text-neutral-500">Jul 21, 2023</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">159 lbs</div>
+                          <div className="text-sm text-neutral-500">-1.5 lbs (week)</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Notes and recommendations */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3">Coach's Notes</h3>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-sm">
+                        {selectedGoal.type === "race" ? (
+                          selectedGoal.status === "achieved" || selectedGoal.status === "exceeded" ? (
+                            "Congratulations on completing your race goal! You've shown great dedication and progress in your training. Consider setting a more challenging goal for your next race."
+                          ) : (
+                            "Your training is progressing well. Continue to focus on consistent weekly mileage and don't forget to incorporate recovery days. Your long runs are key to building endurance for race day."
+                          )
+                        ) : (
+                          selectedGoal.status === "achieved" || selectedGoal.status === "exceeded" ? (
+                            "Great job reaching your weight loss target! Focus now on maintaining your progress with a sustainable nutrition and exercise routine."
+                          ) : (
+                            "You're making steady progress toward your weight loss goal. Remember that consistency is key - both with your running schedule and nutrition choices."
+                          )
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseGoalDetails}>Close</Button>
+              {selectedGoal && !selectedGoal.completedDate && (
+                <Button>Edit Goal</Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
