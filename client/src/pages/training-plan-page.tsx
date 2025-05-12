@@ -3,14 +3,35 @@ import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, List } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { TrainingGoalOverview } from "@/components/training-plan/training-goal-overview";
-import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar";
+import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar-new";
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
+
+// Interface for selected workout
+interface Workout {
+  id: number;
+  type: string;
+  description: string;
+  duration: string;
+  distance?: string;
+  intensity: 'easy' | 'moderate' | 'hard' | 'recovery' | 'race';
+  completed: boolean;
+}
 
 export default function TrainingPlanPage() {
   const [selectedTab, setSelectedTab] = useState<string>("overview");
-  const [showWorkoutDetail, setShowWorkoutDetail] = useState<boolean>(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+
+  // Handle workout selection
+  const handleWorkoutClick = (workout: Workout) => {
+    setSelectedWorkout(workout);
+  };
+
+  // Return to calendar view
+  const handleBackToCalendar = () => {
+    setSelectedWorkout(null);
+  };
 
   return (
     <div className="flex h-screen max-w-full overflow-hidden">
@@ -27,13 +48,14 @@ export default function TrainingPlanPage() {
             <p className="text-neutral-medium mt-1">View and manage your personalized training schedule</p>
           </div>
           
-          {selectedTab === "schedule" && (
+          {selectedTab === "schedule" && selectedWorkout && (
             <div className="mt-4 md:mt-0 flex space-x-3">
               <Button 
                 variant="outline" 
-                onClick={() => setShowWorkoutDetail(!showWorkoutDetail)}
+                onClick={handleBackToCalendar}
               >
-                {showWorkoutDetail ? "Back to Schedule" : "View Example Workout"}
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Schedule
               </Button>
             </div>
           )}
@@ -82,10 +104,10 @@ export default function TrainingPlanPage() {
           </TabsContent>
           
           <TabsContent value="schedule">
-            {showWorkoutDetail ? (
+            {selectedWorkout ? (
               <WorkoutDetailView />
             ) : (
-              <TrainingPlanCalendar />
+              <TrainingPlanCalendar onWorkoutClick={handleWorkoutClick} />
             )}
           </TabsContent>
         </Tabs>
