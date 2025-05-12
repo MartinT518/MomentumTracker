@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -16,12 +16,18 @@ import {
   subscription_plans,
   users,
   health_metrics,
-  integration_connections
+  integration_connections,
+  nutrition_preferences,
+  food_items,
+  meal_plans,
+  meals,
+  meal_food_items,
+  nutrition_logs
 } from "@shared/schema";
 import { z } from "zod";
 import Stripe from "stripe";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, like, desc } from "drizzle-orm";
 import { WebSocketServer } from "ws";
 import ws from "ws";
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -266,6 +272,30 @@ async function syncPolarData(connection: any, userId: number) {
     console.error("Error syncing Polar data:", error);
     throw new Error(`Failed to sync Polar data: ${error.message}`);
   }
+}
+
+// Authentication and subscription middleware
+function isAuthenticated(req: Request, res: Response, next: Function) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: "Authentication required" });
+}
+
+function isSubscribed(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  
+  // Check if user has an active subscription
+  if (req.user.subscription_status === 'active') {
+    return next();
+  }
+  
+  res.status(403).json({ 
+    error: "Subscription required", 
+    message: "This feature requires an active subscription" 
+  });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
