@@ -44,6 +44,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Quadriceps", "Hamstrings", "Glutes", "Core"],
     duration: "5-10 minutes",
+    youtubeId: "YaXPRqUwItQ",
     steps: [
       "Stand with feet shoulder-width apart",
       "Keep your chest up and back straight",
@@ -68,6 +69,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Chest", "Shoulders", "Triceps", "Core"],
     duration: "3-8 minutes",
+    youtubeId: "IODxDxX7oi4",
     steps: [
       "Start in a plank position with hands slightly wider than shoulders",
       "Keep body in a straight line from head to heels",
@@ -91,6 +93,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Abdominals", "Lower Back", "Shoulders"],
     duration: "1-5 minutes",
+    youtubeId: "F-nQ_KJgfCY",
     steps: [
       "Start in push-up position with forearms on the ground",
       "Elbows should be directly beneath your shoulders",
@@ -114,6 +117,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Glutes", "Lower Back", "Hamstrings"],
     duration: "3-8 minutes",
+    youtubeId: "wPM8icPu6H8",
     steps: [
       "Lie on your back with knees bent, feet flat on floor",
       "Place feet hip-width apart, arms at sides",
@@ -137,6 +141,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Core", "Shoulders", "Hip Flexors", "Quads"],
     duration: "2-4 minutes",
+    youtubeId: "nmwgirgXLYM",
     steps: [
       "Start in push-up position with arms straight",
       "Keep your body in a straight line from head to heels",
@@ -160,6 +165,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Quadriceps", "Hamstrings", "Glutes", "Calves"],
     duration: "5-10 minutes",
+    youtubeId: "3XDriUn0udo",
     steps: [
       "Stand with feet hip-width apart",
       "Step forward with one leg",
@@ -183,6 +189,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Lower Back", "Glutes", "Upper Back"],
     duration: "3-6 minutes",
+    youtubeId: "cc6UVRS7PW4",
     steps: [
       "Lie face down with arms extended overhead",
       "Simultaneously lift arms, chest, and legs off the floor",
@@ -206,6 +213,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Core", "Lower Back", "Shoulders", "Glutes"],
     duration: "3-8 minutes",
+    youtubeId: "wiFNA3sqjCA",
     steps: [
       "Start on hands and knees in tabletop position",
       "Extend opposite arm and leg simultaneously",
@@ -229,6 +237,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Calves"],
     duration: "2-5 minutes",
+    youtubeId: "gwLzBJYoWlI",
     steps: [
       "Stand with feet hip-width apart",
       "Raise heels off the ground by pushing through the balls of your feet",
@@ -252,6 +261,7 @@ const exercisesData: Exercise[] = [
     equipment: "none",
     muscleGroups: ["Hip Flexors", "Glutes", "Adductors"],
     duration: "5-10 minutes",
+    youtubeId: "NG9qbvAN3gQ",
     steps: [
       "Start with gentle hip circles in both directions",
       "Move to standing hip swings forward and backward",
@@ -459,15 +469,21 @@ export default function StrengthExercisesPage() {
                     </div>
                   </div>
                   
-                  {selectedExercise.videoUrl && (
+                  {selectedExercise.youtubeId && (
                     <div className="mt-6">
                       <h3 className="text-lg font-medium mb-3">Video Demonstration</h3>
-                      <div className="bg-neutral-800 rounded-lg h-56 flex items-center justify-center">
-                        <Button size="sm" className="flex items-center gap-2">
-                          <Play className="h-4 w-4" />
-                          Watch Demo
-                        </Button>
+                      <div className="rounded-lg overflow-hidden aspect-video">
+                        <iframe 
+                          className="w-full h-full"
+                          src={`https://www.youtube.com/embed/${selectedExercise.youtubeId}`}
+                          title={`${selectedExercise.name} demonstration`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
                       </div>
+                      <p className="text-xs text-neutral-500 mt-2">
+                        Video content freely available to all users without subscription
+                      </p>
                     </div>
                   )}
                 </div>

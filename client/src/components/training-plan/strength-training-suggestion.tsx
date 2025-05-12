@@ -120,12 +120,15 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
         </div>
       </CardContent>
       
-      <CardFooter className="bg-neutral-50 border-t border-neutral-200 gap-3 flex-wrap">
-        <Button asChild className="flex-1">
+      <CardFooter className="bg-neutral-50 border-t border-neutral-200 gap-3 flex-wrap flex-col">
+        <Button asChild className="w-full">
           <Link to="/strength-exercises">
             <Dumbbell className="h-4 w-4 mr-2" /> View Recommended Exercises
           </Link>
         </Button>
+        <p className="text-xs text-neutral-medium text-center w-full mt-2">
+          Free video demonstrations available for all users without subscription
+        </p>
       </CardFooter>
     </Card>
   );
