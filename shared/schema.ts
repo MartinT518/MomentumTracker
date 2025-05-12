@@ -226,6 +226,45 @@ export const coaching_sessions = pgTable("coaching_sessions", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// External fitness platform integrations
+export const integration_connections = pgTable("integration_connections", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(), // strava, garmin, polar
+  access_token: text("access_token").notNull(),
+  refresh_token: text("refresh_token"),
+  token_expires_at: timestamp("token_expires_at"),
+  athlete_id: varchar("athlete_id", { length: 100 }), // External platform's user ID
+  is_active: boolean("is_active").default(true),
+  last_sync_at: timestamp("last_sync_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: unique().on(table.user_id, table.platform),
+  };
+});
+
+// Health metrics (HRV, resting HR, sleep quality)
+export const health_metrics = pgTable("health_metrics", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  metric_date: date("metric_date").notNull(),
+  hrv_score: integer("hrv_score"), // Heart rate variability score
+  resting_heart_rate: integer("resting_heart_rate"), // BPM
+  sleep_quality: integer("sleep_quality"), // 1-10 scale
+  sleep_duration: integer("sleep_duration"), // In minutes
+  energy_level: integer("energy_level"), // 1-10 scale
+  stress_level: integer("stress_level"), // 1-10 scale
+  source: varchar("source", { length: 50 }).default("manual"), // manual, strava, garmin, polar
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: unique().on(table.user_id, table.metric_date),
+  };
+});
+
 // Subscription plans
 export const subscription_plans = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),
@@ -321,6 +360,18 @@ export const insertCoachingSessionSchema = createInsertSchema(coaching_sessions)
   updated_at: true,
 });
 
+export const insertIntegrationConnectionSchema = createInsertSchema(integration_connections).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  last_sync_at: true,
+});
+
+export const insertHealthMetricsSchema = createInsertSchema(health_metrics).omit({
+  id: true,
+  created_at: true,
+});
+
 export const insertSubscriptionPlanSchema = createInsertSchema(subscription_plans).omit({
   id: true,
   created_at: true,
@@ -355,3 +406,7 @@ export type Coach = typeof coaches.$inferSelect;
 export type InsertCoach = z.infer<typeof insertCoachSchema>;
 export type CoachingSession = typeof coaching_sessions.$inferSelect;
 export type InsertCoachingSession = z.infer<typeof insertCoachingSessionSchema>;
+export type IntegrationConnection = typeof integration_connections.$inferSelect;
+export type InsertIntegrationConnection = z.infer<typeof insertIntegrationConnectionSchema>;
+export type HealthMetric = typeof health_metrics.$inferSelect;
+export type InsertHealthMetric = z.infer<typeof insertHealthMetricsSchema>;
