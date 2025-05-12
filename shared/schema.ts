@@ -17,6 +17,11 @@ export const users = pgTable("users", {
   experience_level: varchar("experience_level", { length: 20 }), // beginner, intermediate, advanced
   bio: text("bio"),
   profile_image: text("profile_image"),
+  // Subscription information
+  stripe_customer_id: text("stripe_customer_id"),
+  stripe_subscription_id: text("stripe_subscription_id"),
+  subscription_status: varchar("subscription_status", { length: 20 }).default("free"), // free, active, canceled, past_due
+  subscription_end_date: timestamp("subscription_end_date"),
 });
 
 // Training goals
@@ -221,6 +226,20 @@ export const coaching_sessions = pgTable("coaching_sessions", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Subscription plans
+export const subscription_plans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  description: text("description"),
+  price: decimal("price").notNull(),
+  billing_interval: varchar("billing_interval", { length: 20 }).notNull().default("month"), // month, year
+  stripe_price_id: text("stripe_price_id"),
+  features: json("features"), // Array of features included in this plan
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for validations
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -302,9 +321,18 @@ export const insertCoachingSessionSchema = createInsertSchema(coaching_sessions)
   updated_at: true,
 });
 
+export const insertSubscriptionPlanSchema = createInsertSchema(subscription_plans).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  is_active: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SubscriptionPlan = typeof subscription_plans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type Activity = typeof activities.$inferSelect;

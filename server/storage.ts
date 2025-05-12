@@ -73,6 +73,21 @@ export interface IStorage {
   createCoachingSession(session: InsertCoachingSession): Promise<CoachingSession>;
   updateCoachingSession(id: number, data: Partial<CoachingSession>): Promise<CoachingSession>;
   
+  // Subscriptions
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan>;
+  updateUserSubscription(
+    userId: number, 
+    data: { 
+      stripeCustomerId?: string, 
+      stripeSubscriptionId?: string, 
+      status?: string, 
+      endDate?: Date 
+    }
+  ): Promise<User>;
+  
   sessionStore: session.SessionStore;
 }
 
