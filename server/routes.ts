@@ -22,6 +22,15 @@ import { WebSocketServer } from "ws";
 import ws from "ws";
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Extended types for expanded Stripe resources
+interface ExpandedInvoice extends Omit<Stripe.Invoice, 'payment_intent'> {
+  payment_intent?: Stripe.PaymentIntent | string | null;
+}
+
+interface ExpandedSubscription extends Omit<Stripe.Subscription, 'latest_invoice'> {
+  latest_invoice?: ExpandedInvoice | string | null;
+}
+
 // Initialize Google AI for generating training plans
 if (!process.env.GOOGLE_AI_API_KEY) {
   console.warn('Missing GOOGLE_AI_API_KEY environment variable. AI features will not work.');
@@ -973,16 +982,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // If the user already has a subscription, retrieve it
       if (user.stripe_subscription_id) {
-        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
+        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id, {
+          expand: ['latest_invoice.payment_intent']
+        }) as ExpandedSubscription;
         
-        const paymentIntent = subscription.latest_invoice?.payment_intent;
         let clientSecret = null;
+        const latestInvoice = subscription.latest_invoice;
         
-        if (typeof paymentIntent === 'string') {
-          const pi = await stripe.paymentIntents.retrieve(paymentIntent);
-          clientSecret = pi.client_secret;
-        } else if (paymentIntent) {
-          clientSecret = paymentIntent.client_secret;
+        if (latestInvoice && typeof latestInvoice !== 'string') {
+          const paymentIntent = latestInvoice.payment_intent;
+          
+          if (typeof paymentIntent === 'string') {
+            const pi = await stripe.paymentIntents.retrieve(paymentIntent);
+            clientSecret = pi.client_secret;
+          } else if (paymentIntent) {
+            clientSecret = paymentIntent.client_secret;
+          }
         }
         
         res.send({
@@ -1067,7 +1082,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         payment_behavior: 'default_incomplete',
         payment_settings: { save_default_payment_method: 'on_subscription' },
         expand: ['latest_invoice.payment_intent'],
-      });
+      }) as ExpandedSubscription;
       
       // Update the user record with subscription info
       await storage.updateUserSubscription(user.id, {
@@ -1076,12 +1091,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Get the client secret to complete the payment
-      const invoice = subscription.latest_invoice as Stripe.Invoice;
-      const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+      let clientSecret = null;
+      const latestInvoice = subscription.latest_invoice;
+      
+      if (latestInvoice && typeof latestInvoice !== 'string') {
+        const paymentIntent = latestInvoice.payment_intent;
+        
+        if (typeof paymentIntent === 'string') {
+          const pi = await stripe.paymentIntents.retrieve(paymentIntent);
+          clientSecret = pi.client_secret;
+        } else if (paymentIntent) {
+          clientSecret = paymentIntent.client_secret;
+        }
+      }
       
       res.send({
         subscriptionId: subscription.id,
-        clientSecret: paymentIntent.client_secret
+        clientSecret: clientSecret || undefined
       });
     } catch (error: any) {
       console.error("Error creating subscription:", error);
