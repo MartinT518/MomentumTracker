@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,18 +13,26 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, ChevronRight } from "lucide-react";
 
-// Extended schemas with validation
-const loginSchema = insertUserSchema.pick({
-  username: true,
-  password: true,
+// Login form schema
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
+type LoginValues = z.infer<typeof loginSchema>;
+
+// Registration form schema
+const registerSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Please enter a valid email address").min(1, "Email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
+
+type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { toast } = useToast();
@@ -41,7 +48,7 @@ export default function AuthPage() {
   }, [user, setLocation]);
 
   // Login form
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
+  const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
@@ -50,22 +57,38 @@ export default function AuthPage() {
   });
 
   // Register form
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
+  const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
-    await loginMutation.mutateAsync(values);
+  const onLoginSubmit = async (values: LoginValues) => {
+    try {
+      await loginMutation.mutateAsync({
+        username: values.username,
+        password: values.password,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
-  const onRegisterSubmit = async (values: z.infer<typeof registerSchema>) => {
-    const { confirmPassword, ...userData } = values;
-    await registerMutation.mutateAsync(userData);
+  const onRegisterSubmit = async (values: RegisterValues) => {
+    try {
+      const { confirmPassword, ...userData } = values;
+      await registerMutation.mutateAsync({
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
   };
 
   if (isLoading) {
@@ -160,6 +183,19 @@ export default function AuthPage() {
                           <FormLabel>Username</FormLabel>
                           <FormControl>
                             <Input placeholder="Choose a username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="Enter your email address" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
