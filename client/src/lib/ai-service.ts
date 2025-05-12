@@ -240,3 +240,58 @@ export async function generateTrainingPlan(userData: {
     throw new Error(`Failed to generate training plan: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+
+/**
+ * Generates training plan adjustments based on user feedback or changes in conditions
+ * @param originalPlan The original training plan to adjust
+ * @param adjustmentReason The reason for making adjustments to the plan
+ * @param additionalDetails Any additional details to consider for the adjustment
+ * @returns A promise that resolves to the adjusted training plan
+ */
+export async function generateTrainingPlanAdjustments(
+  originalPlan: TrainingPlan,
+  adjustmentReason: string,
+  additionalDetails?: string
+): Promise<PlanAdjustment> {
+  try {
+    if (!genAI) {
+      throw new Error("Google AI not initialized");
+    }
+    
+    const systemPrompt = `You are an expert running coach with decades of experience training all levels of runners. 
+    Your task is to adjust an existing training plan based on the user's feedback, changes in conditions, or other factors.
+    When adjusting a plan, consider:
+    1. What aspects of the original plan should be preserved
+    2. What needs to be modified based on the reason provided
+    3. How to ensure the adjusted plan is still progressive and prevents injury
+    4. How to incorporate the user's feedback while maintaining training effectiveness
+    Always prioritize athlete safety and sustainable training.`;
+    
+    // Create the prompt with the original plan and adjustment reason
+    const prompt = `I need to adjust a training plan for the following reason: ${adjustmentReason}
+    
+    ${additionalDetails ? `Additional details: ${additionalDetails}` : ''}
+    
+    Here is the original training plan:
+    
+    ${originalPlan.planText}
+    
+    Please provide an adjusted training plan that addresses the reason for adjustment while maintaining the overall training structure and goals.`;
+    
+    // Generate the adjusted plan
+    const adjustedPlanText = await generateText(prompt, systemPrompt);
+    
+    // Return the adjusted plan
+    return {
+      planText: adjustedPlanText,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        adjustmentReason: adjustmentReason,
+        originalPlanId: originalPlan.metadata?.goal // Using goal as a simple ID for now
+      }
+    };
+  } catch (error) {
+    console.error("Error generating training plan adjustments:", error);
+    throw new Error(`Failed to generate training plan adjustments: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
