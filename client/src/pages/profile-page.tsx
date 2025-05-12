@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Save, ExternalLink, Mail, Bell, User as UserIcon, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, Save, ExternalLink, Mail, Bell, User as UserIcon, Settings as SettingsIcon, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -87,6 +88,14 @@ export default function ProfilePage() {
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
+            <div className="flex items-center mb-2">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="mr-2 px-1">
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
             <h1 className="text-2xl font-bold font-heading text-neutral-darker">Profile & Settings</h1>
             <p className="text-neutral-medium mt-1">Manage your personal details, connections, and preferences</p>
           </div>
