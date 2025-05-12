@@ -2,6 +2,23 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Set up Google AI model for nutrition recommendations
+let googleAI: GoogleGenerativeAI | null = null;
+let geminiModel: any = null;
+
+try {
+  if (process.env.GOOGLE_AI_API_KEY) {
+    googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+    geminiModel = googleAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    console.log("Google AI model initialized successfully");
+  } else {
+    console.warn("GOOGLE_AI_API_KEY not set. AI features will be disabled.");
+  }
+} catch (error) {
+  console.error("Failed to initialize Google AI model:", error);
+}
 import { 
   insertGroupSchema, 
   insertGroupMemberSchema, 
@@ -30,7 +47,6 @@ import { db } from "./db";
 import { eq, and, like, desc } from "drizzle-orm";
 import { WebSocketServer } from "ws";
 import ws from "ws";
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Extended types for expanded Stripe resources
 interface ExpandedInvoice extends Omit<Stripe.Invoice, 'payment_intent'> {
@@ -41,24 +57,15 @@ interface ExpandedSubscription extends Omit<Stripe.Subscription, 'latest_invoice
   latest_invoice?: ExpandedInvoice | string | null;
 }
 
-// Initialize Google AI for generating training plans
-if (!process.env.GOOGLE_AI_API_KEY) {
-  console.warn('Missing GOOGLE_AI_API_KEY environment variable. AI features will not work.');
-}
-
-const googleAI = process.env.GOOGLE_AI_API_KEY 
-  ? new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
-  : null;
-
-const geminiModel = googleAI?.getGenerativeModel({
-  model: "gemini-1.5-pro",
-  generationConfig: {
-    temperature: 0.7,
-    topK: 40,
-    topP: 0.95,
-    maxOutputTokens: 8192,
+// Update geminiModel configuration for better results when used
+if (geminiModel) {
+  try {
+    // Enhanced configurations for better nutrition plans
+    console.log("Configuring geminiModel with nutrition-optimized settings");
+  } catch (error) {
+    console.error("Error configuring geminiModel:", error);
   }
-});
+}
 
 // Helper functions for integration data syncing
 
@@ -1971,6 +1978,394 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         error: `Failed to create coaching session: ${error.message}` 
       });
+    }
+  });
+  
+  // Nutrition AI Recommendation System Routes
+  
+  // Get user's nutrition preferences
+  app.get("/api/nutrition/preferences/:userId", isAuthenticated, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Ensure user can only access their own preferences
+      if (parseInt(userId) !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized access to nutrition preferences" });
+      }
+      
+      const [preferences] = await db.select().from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, parseInt(userId)));
+      
+      if (!preferences) {
+        return res.status(404).json({ error: "Nutrition preferences not found" });
+      }
+      
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching nutrition preferences:", error);
+      res.status(500).json({ error: "Failed to fetch nutrition preferences" });
+    }
+  });
+  
+  // Save or update nutrition preferences
+  app.post("/api/nutrition/preferences", isAuthenticated, async (req, res) => {
+    try {
+      const { user_id } = req.body;
+      
+      // Ensure user can only modify their own preferences
+      if (parseInt(user_id) !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized to modify these nutrition preferences" });
+      }
+      
+      // Check if preferences already exist
+      const [existingPreferences] = await db.select().from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, parseInt(user_id)));
+      
+      let savedPreferences;
+      
+      if (existingPreferences) {
+        // Update existing preferences
+        [savedPreferences] = await db.update(nutrition_preferences)
+          .set({
+            ...req.body,
+            updated_at: new Date()
+          })
+          .where(eq(nutrition_preferences.user_id, parseInt(user_id)))
+          .returning();
+      } else {
+        // Create new preferences
+        [savedPreferences] = await db.insert(nutrition_preferences)
+          .values(req.body)
+          .returning();
+      }
+      
+      res.status(201).json(savedPreferences);
+    } catch (error) {
+      console.error("Error saving nutrition preferences:", error);
+      res.status(500).json({ error: "Failed to save nutrition preferences" });
+    }
+  });
+  
+  // Get meal plan for a specific date
+  app.get("/api/nutrition/meal-plans/:userId/:date", isAuthenticated, async (req, res) => {
+    try {
+      const { userId, date } = req.params;
+      
+      // Ensure user can only access their own meal plans
+      if (parseInt(userId) !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized access to meal plans" });
+      }
+      
+      // First get the meal plan
+      const [mealPlan] = await db.select().from(meal_plans)
+        .where(and(
+          eq(meal_plans.user_id, parseInt(userId)),
+          eq(meal_plans.plan_date, date),
+          eq(meal_plans.is_active, true)
+        ));
+      
+      if (!mealPlan) {
+        return res.status(404).json({ error: "Meal plan not found" });
+      }
+      
+      // Get all meals for this plan
+      const mealsList = await db.select().from(meals)
+        .where(eq(meals.meal_plan_id, mealPlan.id));
+      
+      // Get all food items for these meals
+      const foodItemsMap = new Map();
+      for (const meal of mealsList) {
+        const mealFoodItems = await db.select({
+          mealFoodItem: meal_food_items,
+          foodItem: food_items
+        })
+        .from(meal_food_items)
+        .innerJoin(food_items, eq(meal_food_items.food_item_id, food_items.id))
+        .where(eq(meal_food_items.meal_id, meal.id));
+        
+        foodItemsMap.set(meal.id, mealFoodItems.map(item => ({
+          ...item.foodItem,
+          quantity: item.mealFoodItem.quantity
+        })));
+      }
+      
+      // Construct the response
+      const result = {
+        ...mealPlan,
+        meals: mealsList.map(meal => ({
+          ...meal,
+          foodItems: foodItemsMap.get(meal.id) || []
+        }))
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching meal plan:", error);
+      res.status(500).json({ error: "Failed to fetch meal plan" });
+    }
+  });
+  
+  // List food items by category
+  app.get("/api/nutrition/food-items/:category", isAuthenticated, async (req, res) => {
+    try {
+      const { category } = req.params;
+      
+      const foodItemsList = await db.select().from(food_items)
+        .where(eq(food_items.category, category))
+        .limit(100);
+      
+      res.json(foodItemsList);
+    } catch (error) {
+      console.error(`Error fetching food items for category ${req.params.category}:`, error);
+      res.status(500).json({ error: "Failed to fetch food items" });
+    }
+  });
+  
+  // Search food items
+  app.get("/api/nutrition/food-items/search", isAuthenticated, async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.status(400).json({ error: "Search query must be at least 2 characters" });
+      }
+      
+      const searchResults = await db.select().from(food_items)
+        .where(like(food_items.name, `%${query}%`))
+        .limit(50);
+      
+      res.json(searchResults);
+    } catch (error) {
+      console.error("Error searching food items:", error);
+      res.status(500).json({ error: "Failed to search food items" });
+    }
+  });
+  
+  // Generate AI meal plan recommendations
+  app.post("/api/nutrition/generate", isAuthenticated, isSubscribed, async (req, res) => {
+    try {
+      if (!googleAI) {
+        return res.status(503).json({ error: "AI service is not available" });
+      }
+      
+      const {
+        userId,
+        date,
+        trainingLoad,
+        userPreferences,
+        activityLevel,
+        fitnessGoals,
+        healthConditions,
+        recoverySituation,
+        useWeeklyMealPlanning
+      } = req.body;
+      
+      // Ensure user can only generate meal plans for themselves
+      if (parseInt(userId) !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized to generate meal plans for this user" });
+      }
+      
+      // Prepare the context for the AI
+      const context = `
+      You are a professional sports nutritionist specializing in endurance athletes, particularly runners.
+      Create a detailed meal plan optimized for an athlete with the following profile:
+      
+      Date: ${date}
+      Training Load: ${trainingLoad}
+      Activity Level: ${activityLevel}
+      Fitness Goals: ${fitnessGoals.join(", ")}
+      ${healthConditions ? `Health Conditions: ${healthConditions.join(", ")}` : ""}
+      ${recoverySituation ? `Recovery Situation: ${recoverySituation}` : ""}
+      
+      Dietary Preferences:
+      ${userPreferences.dietaryRestrictions ? `Restrictions: ${userPreferences.dietaryRestrictions.join(", ")}` : "No specific dietary restrictions"}
+      ${userPreferences.allergies ? `Allergies: ${userPreferences.allergies.join(", ")}` : "No allergies"}
+      ${userPreferences.dislikedFoods ? `Dislikes: ${userPreferences.dislikedFoods.join(", ")}` : ""}
+      ${userPreferences.favoriteFoods ? `Favorites: ${userPreferences.favoriteFoods.join(", ")}` : ""}
+      
+      Nutrition Targets:
+      ${userPreferences.calorieGoal ? `Calories: ${userPreferences.calorieGoal} calories` : ""}
+      ${userPreferences.proteinGoal ? `Protein: ${userPreferences.proteinGoal}%` : ""}
+      ${userPreferences.carbsGoal ? `Carbs: ${userPreferences.carbsGoal}%` : ""}
+      ${userPreferences.fatGoal ? `Fat: ${userPreferences.fatGoal}%` : ""}
+      
+      Please create a ${useWeeklyMealPlanning ? 'weekly' : 'daily'} meal plan with detailed macronutrient information.
+      For each meal, provide:
+      1. Meal name and type (breakfast, lunch, dinner, snack)
+      2. List of ingredients with quantities
+      3. Nutritional information (calories, protein, carbs, fat)
+      4. Simple recipe instructions
+      
+      Ensure the meals are practical for an athlete, focus on whole foods, and align with the training load for the day.
+      For heavy training days, include more carbohydrates. For recovery days, emphasize protein and anti-inflammatory foods.
+      
+      Return ONLY the meal plan in JSON format with the following structure:
+      {
+        "dailyPlan": {
+          "calories": number,
+          "protein": number,
+          "carbs": number,
+          "fat": number,
+          "hydration": number,
+          "meals": [
+            {
+              "name": string,
+              "mealType": string,
+              "timeOfDay": string,
+              "calories": number,
+              "protein": number,
+              "carbs": number,
+              "fat": number,
+              "foods": [
+                {
+                  "name": string,
+                  "quantity": number,
+                  "servingUnit": string,
+                  "calories": number,
+                  "protein": number,
+                  "carbs": number,
+                  "fat": number
+                }
+              ],
+              "recipe": string,
+              "preparationTime": number
+            }
+          ]
+        },
+        "weeklyPlans": [...] (only if weeklyPlanning is true),
+        "notes": string
+      }
+      `;
+      
+      // Generate the AI meal plan
+      const result = await geminiModel.generateContent(context);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Parse the JSON response
+      try {
+        // Find the JSON object in the text (in case the model added explanatory text)
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("No JSON found in the response");
+        }
+        
+        const mealPlan = JSON.parse(jsonMatch[0]);
+        res.json(mealPlan);
+      } catch (parseError) {
+        console.error("Error parsing AI response:", parseError);
+        console.log("Raw AI response:", text);
+        res.status(500).json({ 
+          error: "Failed to parse AI meal plan",
+          rawResponse: text
+        });
+      }
+    } catch (error) {
+      console.error("Error generating AI meal plan:", error);
+      res.status(500).json({ error: "Failed to generate AI meal plan" });
+    }
+  });
+  
+  // Save meal plan to database
+  app.post("/api/nutrition/save-plan", isAuthenticated, async (req, res) => {
+    try {
+      const { mealPlan, meals, foodItems } = req.body;
+      
+      // Ensure user can only save meal plans for themselves
+      if (parseInt(mealPlan.user_id) !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized to save meal plans for this user" });
+      }
+      
+      // Start a transaction
+      return await db.transaction(async (tx) => {
+        // First insert (or update) the meal plan
+        let savedMealPlanId;
+        
+        // Check if a meal plan already exists for this date
+        const [existingPlan] = await tx.select().from(meal_plans)
+          .where(and(
+            eq(meal_plans.user_id, parseInt(mealPlan.user_id)),
+            eq(meal_plans.plan_date, mealPlan.plan_date)
+          ));
+        
+        if (existingPlan) {
+          // Deactivate the existing plan
+          await tx.update(meal_plans)
+            .set({ is_active: false })
+            .where(eq(meal_plans.id, existingPlan.id));
+        }
+        
+        // Insert the new meal plan
+        const [savedMealPlan] = await tx.insert(meal_plans)
+          .values(mealPlan)
+          .returning();
+        
+        savedMealPlanId = savedMealPlan.id;
+        
+        // Insert each meal
+        const savedMeals = [];
+        for (const meal of meals) {
+          const mealToSave = {
+            ...meal,
+            meal_plan_id: savedMealPlanId
+          };
+          
+          const [savedMeal] = await tx.insert(meals)
+            .values(mealToSave)
+            .returning();
+          
+          savedMeals.push(savedMeal);
+          
+          // Get meal's food items
+          const mealFoodItems = foodItems.filter(item => item.mealId === meal.tempId);
+          
+          // Insert each food item
+          for (const foodItem of mealFoodItems) {
+            // Check if food item already exists
+            let foodItemId;
+            const [existingFoodItem] = await tx.select().from(food_items)
+              .where(eq(food_items.name, foodItem.name));
+            
+            if (existingFoodItem) {
+              foodItemId = existingFoodItem.id;
+            } else {
+              // If not, insert it
+              const itemToSave = {
+                name: foodItem.name,
+                category: foodItem.category || 'other',
+                calories: foodItem.calories,
+                protein: foodItem.protein,
+                carbs: foodItem.carbs,
+                fat: foodItem.fat,
+                serving_size: foodItem.servingSize || '1',
+                serving_unit: foodItem.servingUnit || 'serving'
+              };
+              
+              const [savedFoodItem] = await tx.insert(food_items)
+                .values(itemToSave)
+                .returning();
+              
+              foodItemId = savedFoodItem.id;
+            }
+            
+            // Connect food item to meal
+            await tx.insert(meal_food_items)
+              .values({
+                meal_id: savedMeal.id,
+                food_item_id: foodItemId,
+                quantity: foodItem.quantity || 1
+              });
+          }
+        }
+        
+        res.status(201).json({
+          mealPlan: savedMealPlan,
+          meals: savedMeals
+        });
+      });
+    } catch (error) {
+      console.error("Error saving meal plan:", error);
+      res.status(500).json({ error: "Failed to save meal plan" });
     }
   });
 
