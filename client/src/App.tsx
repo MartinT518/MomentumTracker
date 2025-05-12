@@ -17,6 +17,7 @@ import SubscriptionPage from "@/pages/subscription-page";
 import StrengthExercisesPage from "@/pages/strength-exercises-page";
 import HealthMetricsPage from "@/pages/health-metrics-page";
 import NutritionPage from "@/pages/nutrition-page";
+import IntegrationCallbackPage from "@/pages/integration-callback-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
       <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
       <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
       <ProtectedRoute path="/nutrition" component={NutritionPage} />
+      <Route path="/auth/:platform/callback" component={IntegrationCallbackPage} />
       <Route component={NotFound} />
     </Switch>
   );
