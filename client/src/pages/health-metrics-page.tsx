@@ -9,7 +9,24 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { AlertTriangle, Calendar, Heart, Loader2, Moon, Plus, Zap, RefreshCw, Wifi } from "lucide-react";
+import { 
+  AlertTriangle, 
+  Calendar, 
+  Heart, 
+  Loader2, 
+  Moon, 
+  Plus, 
+  Zap, 
+  RefreshCw, 
+  Wifi, 
+  HelpCircle 
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   Dialog, 
   DialogContent, 
@@ -45,7 +62,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
   LineChart,
@@ -327,6 +344,60 @@ export default function HealthMetricsPage() {
     if (level >= 55) return "text-orange-500";
     if (level >= 40) return "text-amber-500";
     return "text-red-500";
+  };
+  
+  const getDataQualityIndicator = (metric: HealthMetric) => {
+    // Count how many metrics are available
+    let availableMetrics = 0;
+    let totalMetrics = 0;
+    
+    // Check each metric
+    if (metric.hrv_score !== null) { availableMetrics++; }
+    totalMetrics++;
+    
+    if (metric.resting_heart_rate !== null) { availableMetrics++; }
+    totalMetrics++;
+    
+    if (metric.sleep_quality !== null) { availableMetrics++; }
+    totalMetrics++;
+    
+    if (metric.sleep_duration !== null) { availableMetrics++; }
+    totalMetrics++;
+    
+    if (metric.stress_level !== null) { availableMetrics++; }
+    totalMetrics++;
+    
+    // Calculate percentage of available data
+    const dataCompleteness = (availableMetrics / totalMetrics) * 100;
+    
+    // Determine data quality text and color
+    let qualityLabel: string;
+    let qualityColor: string;
+    
+    if (dataCompleteness === 100) {
+      qualityLabel = "Complete data";
+      qualityColor = "text-green-500";
+    } else if (dataCompleteness >= 80) {
+      qualityLabel = "Good data quality";
+      qualityColor = "text-green-400";
+    } else if (dataCompleteness >= 60) {
+      qualityLabel = "Moderate data quality";
+      qualityColor = "text-yellow-500";
+    } else if (dataCompleteness >= 40) {
+      qualityLabel = "Limited data quality";
+      qualityColor = "text-orange-500";
+    } else {
+      qualityLabel = "Poor data quality";
+      qualityColor = "text-red-500";
+    }
+    
+    return (
+      <div className="flex items-center space-x-1 text-xs">
+        <div className={`w-2 h-2 rounded-full ${qualityColor.replace('text-', 'bg-')}`}></div>
+        <span className={`${qualityColor}`}>{qualityLabel}</span>
+        <span className="text-gray-400">({availableMetrics}/{totalMetrics} metrics)</span>
+      </div>
+    );
   };
 
   // Data processing for charts
@@ -685,39 +756,101 @@ export default function HealthMetricsPage() {
                             </p>
                           </div>
                         </div>
-                        <p className="text-sm font-medium mt-2">Energy Score</p>
+                        <div className="flex items-center mt-2">
+                          <p className="text-sm font-medium">Energy Score</p>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-80">
+                                <div className="space-y-2">
+                                  <p>Your Energy Score represents overall recovery and readiness to train, calculated from multiple biometric factors:</p>
+                                  <ul className="list-disc pl-4 space-y-1">
+                                    <li>HRV Score (30%): Higher is better</li>
+                                    <li>Resting HR (25%): Lower is better</li>
+                                    <li>Sleep Quality (20%): Higher is better</li>
+                                    <li>Sleep Duration (15%): Higher is better</li>
+                                    <li>Stress Level (10%): Lower is better</li>
+                                  </ul>
+                                  <p>Training recommendations are based on this score to help optimize your workouts and recovery.</p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </div>
 
                       {/* Recommendation & Metrics */}
                       <div className="flex-1 space-y-4">
-                        <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
-                          <Zap className={`w-4 h-4 mr-2 ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`} />
-                          <span className={`font-medium ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`}>
-                            {!energyLevel ? "No data" :
-                              energyLevel >= 85 ? "Excellent Energy" :
-                              energyLevel >= 70 ? "Very Good Energy" :
-                              energyLevel >= 55 ? "Moderate Energy" :
-                              energyLevel >= 40 ? "Below Average Energy" :
-                              "Low Energy"
-                            }
-                          </span>
+                        <div className="space-y-2">
+                          <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
+                            <Zap className={`w-4 h-4 mr-2 ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`} />
+                            <span className={`font-medium ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`}>
+                              {!energyLevel ? "No data" :
+                                energyLevel >= 85 ? "Excellent Energy" :
+                                energyLevel >= 70 ? "Very Good Energy" :
+                                energyLevel >= 55 ? "Moderate Energy" :
+                                energyLevel >= 40 ? "Below Average Energy" :
+                                "Low Energy"
+                              }
+                            </span>
+                          </div>
+                          
+                          {latestMetric && getDataQualityIndicator(latestMetric)}
                         </div>
                         <p className="text-sm text-muted-foreground">{recommendation}</p>
                         
                         {latestMetric && (
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                             <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
-                              <Heart className="h-5 w-5 text-red-500 mb-1" />
+                              <div className="flex items-center mb-1">
+                                <Heart className="h-5 w-5 text-red-500" />
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-72">
+                                      <p>Heart Rate Variability (HRV) measures the variation between heartbeats. Higher HRV generally indicates better recovery and readiness to train. Elite athletes typically show higher values.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                               <div className="text-xl font-medium">{latestMetric.hrv_score || "-"}</div>
                               <div className="text-xs text-muted-foreground">HRV Score</div>
                             </div>
                             <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
-                              <Heart className="h-5 w-5 text-purple-500 mb-1" />
+                              <div className="flex items-center mb-1">
+                                <Heart className="h-5 w-5 text-purple-500" />
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-72">
+                                      <p>Resting Heart Rate is your heart rate when completely at rest. Lower values typically indicate better cardiovascular fitness. Elite endurance athletes often have RHR between 40-50 bpm.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                               <div className="text-xl font-medium">{latestMetric.resting_heart_rate || "-"}</div>
                               <div className="text-xs text-muted-foreground">Resting HR</div>
                             </div>
                             <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
-                              <Moon className="h-5 w-5 text-blue-500 mb-1" />
+                              <div className="flex items-center mb-1">
+                                <Moon className="h-5 w-5 text-blue-500" />
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-72">
+                                      <p>Sleep Quality rates how restorative your sleep was on a scale of 1-10. Quality sleep is essential for recovery and adaptation to training. Higher scores indicate better recovery potential.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                               <div className="text-xl font-medium">{latestMetric.sleep_quality || "-"}/10</div>
                               <div className="text-xs text-muted-foreground">Sleep Quality</div>
                             </div>
@@ -772,7 +905,7 @@ export default function HealthMetricsPage() {
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="date" />
                           <YAxis />
-                          <Tooltip />
+                          <RechartsTooltip />
                           <Legend />
                           <Line 
                             type="monotone" 
