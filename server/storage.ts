@@ -1,10 +1,12 @@
 import { 
   users, groups, group_members, buddies, challenges, challenge_participants, 
   achievements, user_achievements, nutrition_logs, coaches, coaching_sessions,
+  subscription_plans,
   type User, type InsertUser, type Group, type InsertGroup, 
   type GroupMember, type InsertGroupMember, type Buddy, type InsertBuddy,
   type Challenge, type InsertChallenge, type NutritionLog, type InsertNutritionLog, 
-  type Coach, type InsertCoach, type CoachingSession, type InsertCoachingSession
+  type Coach, type InsertCoach, type CoachingSession, type InsertCoachingSession,
+  type SubscriptionPlan, type InsertSubscriptionPlan
 } from "@shared/schema";
 
 // Type aliases for types not explicitly exported from schema
@@ -17,7 +19,7 @@ type InsertChallengeParticipant = {
   status?: string;
 };
 import { db } from "./db";
-import { eq, and, or, sql } from "drizzle-orm";
+import { eq, and, or, sql, asc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -499,6 +501,82 @@ export class DatabaseStorage implements IStorage {
       .where(eq(coaching_sessions.id, id))
       .returning();
     return updatedSession;
+  }
+
+  // Subscription plans
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return db
+      .select()
+      .from(subscription_plans)
+      .where(eq(subscription_plans.is_active, true))
+      .orderBy(asc(subscription_plans.price));
+  }
+  
+  async getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(subscription_plans)
+      .where(eq(subscription_plans.id, id));
+      
+    return plan;
+  }
+  
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPlan] = await db
+      .insert(subscription_plans)
+      .values(plan)
+      .returning();
+      
+    return newPlan;
+  }
+  
+  async updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    const [updatedPlan] = await db
+      .update(subscription_plans)
+      .set({
+        ...data,
+        updated_at: new Date()
+      })
+      .where(eq(subscription_plans.id, id))
+      .returning();
+      
+    return updatedPlan;
+  }
+  
+  async updateUserSubscription(
+    userId: number,
+    data: { 
+      stripeCustomerId?: string, 
+      stripeSubscriptionId?: string, 
+      status?: string, 
+      endDate?: Date 
+    }
+  ): Promise<User> {
+    const updateData: any = {};
+    
+    if (data.stripeCustomerId) {
+      updateData.stripe_customer_id = data.stripeCustomerId;
+    }
+    
+    if (data.stripeSubscriptionId) {
+      updateData.stripe_subscription_id = data.stripeSubscriptionId;
+    }
+    
+    if (data.status) {
+      updateData.subscription_status = data.status;
+    }
+    
+    if (data.endDate) {
+      updateData.subscription_end_date = data.endDate;
+    }
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+      
+    return updatedUser;
   }
 }
 
