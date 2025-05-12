@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, json, boolean, varchar, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, json, boolean, varchar, decimal, date, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,6 +15,8 @@ export const users = pgTable("users", {
   weight: decimal("weight"), // In kg
   height: decimal("height"), // In cm
   experience_level: varchar("experience_level", { length: 20 }), // beginner, intermediate, advanced
+  bio: text("bio"),
+  profile_image: text("profile_image"),
 });
 
 // Training goals
@@ -43,6 +45,7 @@ export const activities = pgTable("activities", {
   heart_rate: integer("heart_rate"), // Average heart rate
   effort_level: varchar("effort_level", { length: 20 }), // easy, moderate, hard
   notes: text("notes"),
+  source: varchar("source", { length: 50 }).default("manual"), // manual, strava, garmin, polar
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -74,6 +77,150 @@ export const workouts = pgTable("workouts", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+// Community Features
+
+// Training groups
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 20 }).default("public"), // public, private, training
+  goal_type: varchar("goal_type", { length: 50 }), // e.g., 5k, marathon, weight_loss
+  created_by: integer("created_by").references(() => users.id).notNull(),
+  image: text("image"),
+  member_count: integer("member_count").default(0),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Group members
+export const group_members = pgTable("group_members", {
+  id: serial("id").primaryKey(),
+  group_id: integer("group_id").references(() => groups.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  role: varchar("role", { length: 20 }).default("member"), // admin, member
+  joined_at: timestamp("joined_at").defaultNow(),
+  status: varchar("status", { length: 20 }).default("active"), // active, inactive, banned
+}, (table) => {
+  return {
+    unq: unique().on(table.group_id, table.user_id),
+  };
+});
+
+// Achievements system
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  icon: text("icon"),
+  type: varchar("type", { length: 50 }).notNull(), // distance, streak, race, etc.
+  threshold: integer("threshold"), // e.g., run 100km, 10 day streak
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// User achievements
+export const user_achievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  achievement_id: integer("achievement_id").references(() => achievements.id).notNull(),
+  earned_at: timestamp("earned_at").defaultNow(),
+  times_earned: integer("times_earned").default(1),
+}, (table) => {
+  return {
+    unq: unique().on(table.user_id, table.achievement_id),
+  };
+});
+
+// Community challenges
+export const challenges = pgTable("challenges", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  start_date: date("start_date").notNull(),
+  end_date: date("end_date").notNull(),
+  challenge_type: varchar("challenge_type", { length: 50 }).notNull(), // distance, elevation, streak
+  target_value: decimal("target_value").notNull(),
+  created_by: integer("created_by").references(() => users.id),
+  group_id: integer("group_id").references(() => groups.id),
+  is_public: boolean("is_public").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Challenge participants
+export const challenge_participants = pgTable("challenge_participants", {
+  id: serial("id").primaryKey(),
+  challenge_id: integer("challenge_id").references(() => challenges.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  current_progress: decimal("current_progress").default("0"),
+  status: varchar("status", { length: 20 }).default("active"), // active, completed, dropped
+  joined_at: timestamp("joined_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: unique().on(table.challenge_id, table.user_id),
+  };
+});
+
+// Training buddies
+export const buddies = pgTable("buddies", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  buddy_id: integer("buddy_id").references(() => users.id).notNull(),
+  status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, declined
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: unique().on(table.user_id, table.buddy_id),
+  };
+});
+
+// Nutrition tracking
+export const nutrition_logs = pgTable("nutrition_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  log_date: date("log_date").notNull(),
+  calories: integer("calories"),
+  protein: integer("protein"), // in grams
+  carbs: integer("carbs"), // in grams
+  fat: integer("fat"), // in grams
+  hydration: integer("hydration"), // in ml
+  meal_quality: integer("meal_quality"), // 1-5 rating
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Human coaching
+export const coaches = pgTable("coaches", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  bio: text("bio"),
+  specialty: varchar("specialty", { length: 50 }),
+  experience_years: integer("experience_years"),
+  certifications: text("certifications"),
+  profile_image: text("profile_image"),
+  hourly_rate: decimal("hourly_rate"),
+  available: boolean("available").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const coaching_sessions = pgTable("coaching_sessions", {
+  id: serial("id").primaryKey(),
+  coach_id: integer("coach_id").references(() => coaches.id).notNull(),
+  athlete_id: integer("athlete_id").references(() => users.id).notNull(),
+  session_date: timestamp("session_date").notNull(),
+  duration_minutes: integer("duration_minutes").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // video_call, form_analysis, plan_review
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, completed, cancelled
+  notes: text("notes"),
+  recording_url: text("recording_url"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for validations
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -83,6 +230,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   weight: true,
   height: true,
   experience_level: true,
+  bio: true,
+  profile_image: true,
 }).omit({
   id: true,
   created_at: true,
@@ -111,6 +260,48 @@ export const insertWorkoutSchema = createInsertSchema(workouts).omit({
   created_at: true,
 });
 
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  member_count: true,
+});
+
+export const insertGroupMemberSchema = createInsertSchema(group_members).omit({
+  id: true,
+  joined_at: true,
+});
+
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertBuddySchema = createInsertSchema(buddies).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertNutritionLogSchema = createInsertSchema(nutrition_logs).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertCoachSchema = createInsertSchema(coaches).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertCoachingSessionSchema = createInsertSchema(coaching_sessions).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -122,3 +313,17 @@ export type TrainingPlan = typeof training_plans.$inferSelect;
 export type InsertTrainingPlan = z.infer<typeof insertTrainingPlanSchema>;
 export type Workout = typeof workouts.$inferSelect;
 export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
+export type Group = typeof groups.$inferSelect;
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+export type GroupMember = typeof group_members.$inferSelect;
+export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Buddy = typeof buddies.$inferSelect;
+export type InsertBuddy = z.infer<typeof insertBuddySchema>;
+export type NutritionLog = typeof nutrition_logs.$inferSelect;
+export type InsertNutritionLog = z.infer<typeof insertNutritionLogSchema>;
+export type Coach = typeof coaches.$inferSelect;
+export type InsertCoach = z.infer<typeof insertCoachSchema>;
+export type CoachingSession = typeof coaching_sessions.$inferSelect;
+export type InsertCoachingSession = z.infer<typeof insertCoachingSessionSchema>;
