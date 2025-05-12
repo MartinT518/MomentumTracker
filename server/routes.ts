@@ -972,13 +972,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/get-or-create-subscription', async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("Subscription request received:", req.body);
+    
+    if (!req.isAuthenticated()) {
+      console.log("Unauthorized subscription request");
+      return res.sendStatus(401);
+    }
     
     if (!stripe) {
+      console.error("Stripe integration is not configured");
       return res.status(500).json({ error: "Stripe integration is not configured" });
     }
     
     let user = req.user;
+    console.log("User requesting subscription:", { id: user.id, hasStripeCustomerId: !!user.stripe_customer_id });
     
     try {
       // If the user already has a subscription, retrieve it
@@ -1048,7 +1055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create a price for the product
           const price = await stripe.prices.create({
             product: product.id,
-            unit_amount: Math.round(parseFloat(subscriptionPlan.price) * 100), // Convert to cents
+            unit_amount: Math.round(Number(subscriptionPlan.price) * 100), // Convert to cents
             currency: 'usd',
             recurring: {
               interval: subscriptionPlan.billing_interval as 'month' | 'year',
