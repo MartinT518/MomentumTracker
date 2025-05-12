@@ -8,6 +8,26 @@ export interface TrainingPlan {
     weeks: number;
     daysPerWeek: number;
   };
+  // Extended properties for rich display
+  overview?: {
+    weeklyMileage?: string;
+    workoutsPerWeek?: string;
+    longRunDistance?: string;
+    qualityWorkouts?: string;
+  };
+  philosophy?: string;
+  weeklyPlans?: Array<{
+    week: number;
+    focus: string;
+    workouts: Array<{
+      day: string;
+      description: string;
+      type: string;
+      distance?: string;
+      duration?: string;
+      intensity?: string;
+    }>;
+  }>;
 }
 
 export interface PlanAdjustment {
@@ -221,20 +241,84 @@ export async function generateTrainingPlan(userData: {
     
     Please provide a detailed training plan with daily workouts, weekly structure, pacing guidance, and specific workout descriptions.`;
     
-    // This is a simplified implementation - in reality, we would process the response,
-    // parse it, and return a structured training plan object
+    // First, generate the basic training plan text
     const trainingPlanText = await generateText(prompt, systemPrompt);
     
-    // For now, we'll return a simple object with the raw text
-    return {
-      planText: trainingPlanText,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        goal: userData.goal,
-        weeks: userData.weeksToTrain,
-        daysPerWeek: userData.daysPerWeek
-      }
-    };
+    // Then, generate structured data for displaying the plan in a more interactive way
+    const structurePrompt = `
+    Please analyze the following training plan and extract structured information from it:
+    
+    ${trainingPlanText}
+    
+    Create a JSON object with the following structure:
+    {
+      "overview": "A brief 2-3 sentence overview of the plan",
+      "philosophy": "A brief description of the training philosophy",
+      "weeklyPlans": [
+        {
+          "week": 1,
+          "focus": "Main focus of the week",
+          "workouts": [
+            {
+              "day": "Monday",
+              "description": "Detailed workout description",
+              "type": "Easy Run/Tempo/Long Run/etc.",
+              "distance": "Distance if applicable",
+              "duration": "Duration if applicable",
+              "intensity": "Zone 1-5 or Easy/Moderate/Hard"
+            },
+            // Additional days...
+          ]
+        },
+        // Additional weeks...
+      ]
+    }`;
+    
+    try {
+      // Attempt to parse the training plan into structured data
+      const structuredData = await generateStructuredData<{
+        overview: string;
+        philosophy: string;
+        weeklyPlans: Array<{
+          week: number;
+          focus: string;
+          workouts: Array<{
+            day: string;
+            description: string;
+            type: string;
+            distance?: string;
+            duration?: string;
+            intensity?: string;
+          }>
+        }>
+      }>(structurePrompt, "Analyze the training plan and extract structured data for an interactive display.");
+      
+      // Return the complete training plan with both text and structured data
+      return {
+        planText: trainingPlanText,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          goal: userData.goal,
+          weeks: userData.weeksToTrain,
+          daysPerWeek: userData.daysPerWeek
+        },
+        overview: structuredData.overview,
+        philosophy: structuredData.philosophy,
+        weeklyPlans: structuredData.weeklyPlans
+      };
+    } catch (error) {
+      console.error("Error generating structured training plan data:", error);
+      // If structured data generation fails, still return the basic plan
+      return {
+        planText: trainingPlanText,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          goal: userData.goal,
+          weeks: userData.weeksToTrain,
+          daysPerWeek: userData.daysPerWeek
+        }
+      };
+    }
   } catch (error) {
     console.error("Error generating training plan:", error);
     throw new Error(`Failed to generate training plan: ${error instanceof Error ? error.message : String(error)}`);
@@ -248,6 +332,100 @@ export async function generateTrainingPlan(userData: {
  * @param additionalDetails Any additional details to consider for the adjustment
  * @returns A promise that resolves to the adjusted training plan
  */
+/**
+ * Generates recommendations for improving a training plan based on performance data
+ * @param plan The current training plan
+ * @param performanceData Recent performance data to analyze
+ * @returns A list of recommendations to improve the training plan
+ */
+export async function generateTrainingRecommendations(
+  plan: TrainingPlan,
+  performanceData: {
+    recentActivities: Array<{
+      date: string;
+      type: string;
+      distance?: number;
+      duration?: number;
+      avgPace?: string;
+      heartRate?: {
+        avg?: number;
+        max?: number;
+      };
+      perceivedEffort?: number;
+      notes?: string;
+    }>;
+    healthMetrics?: {
+      sleepScore?: number;
+      hrvScore?: number;
+      restingHeartRate?: number;
+      energyLevel?: number;
+      stressLevel?: number;
+    };
+    totalDistanceLastWeek?: number;
+    comparedToPlanLastWeek?: "above" | "below" | "on-target";
+    userFeedback?: string;
+  }
+): Promise<Array<{
+  type: "intensity" | "volume" | "recovery" | "workout_type" | "general";
+  recommendation: string;
+  reasoning: string;
+  priority: "high" | "medium" | "low";
+}>> {
+  try {
+    if (!genAI) {
+      throw new Error("Google AI not initialized");
+    }
+    
+    const systemPrompt = `You are an expert running coach who analyzes training data and provides personalized recommendations.
+    Based on the athlete's recent performance data and health metrics, suggest adjustments to their training plan.
+    Focus on:
+    1. Volume adjustments (mileage/distance)
+    2. Intensity adjustments (pace, heart rate zones)
+    3. Recovery recommendations
+    4. Workout type changes
+    5. General training advice
+    
+    Your recommendations should be specific, actionable, and backed by sports science principles.
+    Prioritize recommendations based on their potential impact and urgency.`;
+    
+    // Create a prompt that includes the training plan and performance data
+    const prompt = `I need recommendations to optimize this training plan based on recent performance data:
+    
+    CURRENT TRAINING PLAN:
+    ${plan.planText}
+    
+    RECENT PERFORMANCE DATA:
+    - Recent Activities: ${JSON.stringify(performanceData.recentActivities, null, 2)}
+    - Health Metrics: ${performanceData.healthMetrics ? JSON.stringify(performanceData.healthMetrics, null, 2) : 'No health metrics provided'}
+    - Total Distance Last Week: ${performanceData.totalDistanceLastWeek || 'Not provided'}
+    - Compared to Plan: ${performanceData.comparedToPlanLastWeek || 'Unknown'}
+    - User Feedback: ${performanceData.userFeedback || 'None provided'}
+    
+    Please provide recommendations in JSON format with the following structure:
+    [
+      {
+        "type": "intensity|volume|recovery|workout_type|general",
+        "recommendation": "Specific recommendation",
+        "reasoning": "Scientific reasoning behind recommendation",
+        "priority": "high|medium|low"
+      }
+    ]`;
+    
+    // Generate the recommendations
+    const recommendations = await generateStructuredData<Array<{
+      type: "intensity" | "volume" | "recovery" | "workout_type" | "general";
+      recommendation: string;
+      reasoning: string;
+      priority: "high" | "medium" | "low";
+    }>>(prompt, systemPrompt);
+    
+    return recommendations;
+  } catch (error) {
+    console.error("Error generating training recommendations:", error);
+    throw new Error(`Failed to generate training recommendations: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 export async function generateTrainingPlanAdjustments(
   originalPlan: TrainingPlan,
   adjustmentReason: string,
