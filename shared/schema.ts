@@ -334,6 +334,22 @@ export const integration_connections = pgTable("integration_connections", {
   };
 });
 
+// Sync logs for tracking integration data synchronization
+export const sync_logs = pgTable("sync_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(), // strava, garmin, polar
+  sync_start_time: timestamp("sync_start_time").notNull(),
+  sync_end_time: timestamp("sync_end_time"),
+  status: varchar("status", { length: 20 }).notNull(), // in_progress, completed, failed
+  activities_synced: integer("activities_synced").default(0),
+  activities_created: integer("activities_created").default(0),
+  activities_updated: integer("activities_updated").default(0),
+  activities_skipped: integer("activities_skipped").default(0),
+  error: text("error"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 // Health metrics (HRV, resting HR, sleep quality)
 export const health_metrics = pgTable("health_metrics", {
   id: serial("id").primaryKey(),
@@ -461,6 +477,11 @@ export const insertHealthMetricsSchema = createInsertSchema(health_metrics).omit
   created_at: true,
 });
 
+export const insertSyncLogSchema = createInsertSchema(sync_logs).omit({
+  id: true,
+  created_at: true,
+});
+
 export const insertSubscriptionPlanSchema = createInsertSchema(subscription_plans).omit({
   id: true,
   created_at: true,
@@ -500,6 +521,8 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type SubscriptionPlan = typeof subscription_plans.$inferSelect;
 export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type SyncLog = typeof sync_logs.$inferSelect;
+export type InsertSyncLog = z.infer<typeof insertSyncLogSchema>;
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type Activity = typeof activities.$inferSelect;
