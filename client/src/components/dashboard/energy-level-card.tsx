@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Battery, Heart, Zap, Moon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Progress } from "@/components/ui/progress";
 
 interface EnergyLevelData {
   readinessScore: number;
@@ -79,55 +80,145 @@ export function EnergyLevelCard() {
             <p className="text-sm text-neutral-600 mt-2">{energyData.recommendation}</p>
           </div>
           
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-medium">
-                  <Heart className="w-3.5 h-3.5 text-red-500 mr-1.5" />
-                  HRV Score
+          <div className="grid grid-cols-3 gap-4">
+            {/* HRV Score */}
+            <div className="flex flex-col items-center">
+              <div className="h-24 w-24 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Score', value: energyData.hrvScore },
+                        { name: 'Remaining', value: 100 - energyData.hrvScore }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={28}
+                      outerRadius={40}
+                      fill="#8884d8"
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell key="cell-0" fill="#ef4444" />
+                      <Cell key="cell-1" fill="#f3f4f6" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Heart className="w-4 h-4 text-red-500" />
+                  <p className="text-sm font-bold mt-0.5">{energyData.hrvScore}</p>
                 </div>
-                <span className="text-sm font-medium">{energyData.hrvScore}/100</span>
               </div>
-              <Progress value={energyData.hrvScore} className="h-2" />
+              <p className="text-xs font-medium mt-2">HRV Score</p>
             </div>
             
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-medium">
-                  <Heart className="w-3.5 h-3.5 text-purple-500 mr-1.5" />
-                  Resting HR
+            {/* Resting HR */}
+            <div className="flex flex-col items-center">
+              <div className="h-24 w-24 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Score', value: 100 - ((energyData.restingHR - 40) / 40) * 100 },
+                        { name: 'Remaining', value: ((energyData.restingHR - 40) / 40) * 100 }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={28}
+                      outerRadius={40}
+                      fill="#8884d8"
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell key="cell-0" fill="#a855f7" />
+                      <Cell key="cell-1" fill="#f3f4f6" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Heart className="w-4 h-4 text-purple-500" />
+                  <p className="text-sm font-bold mt-0.5">{energyData.restingHR} <span className="text-xs">bpm</span></p>
                 </div>
-                <span className="text-sm font-medium">{energyData.restingHR} bpm</span>
               </div>
-              <Progress 
-                value={100 - ((energyData.restingHR - 40) / 40) * 100} 
-                className="h-2"
-              />
+              <p className="text-xs font-medium mt-2">Resting HR</p>
             </div>
             
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-medium">
-                  <Moon className="w-3.5 h-3.5 text-blue-500 mr-1.5" />
-                  Sleep Score
+            {/* Sleep Score */}
+            <div className="flex flex-col items-center">
+              <div className="h-24 w-24 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Score', value: energyData.sleepScore },
+                        { name: 'Remaining', value: 100 - energyData.sleepScore }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={28}
+                      outerRadius={40}
+                      fill="#8884d8"
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell key="cell-0" fill="#3b82f6" />
+                      <Cell key="cell-1" fill="#f3f4f6" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Moon className="w-4 h-4 text-blue-500" />
+                  <p className="text-sm font-bold mt-0.5">{energyData.sleepScore}</p>
                 </div>
-                <span className="text-sm font-medium">{energyData.sleepScore}/100</span>
               </div>
-              <Progress value={energyData.sleepScore} className="h-2" />
+              <p className="text-xs font-medium mt-2">Sleep Score</p>
             </div>
           </div>
           
           <div className="mt-4 pt-4 border-t border-neutral-100">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-neutral-500">Overall Readiness</span>
               <span className={`text-base font-semibold ${getReadinessColor(energyData.readinessCategory)}`}>
                 {energyData.readinessScore}%
               </span>
             </div>
-            <Progress 
-              value={energyData.readinessScore} 
-              className="h-2.5 mt-2"
-            />
+            <div className="flex justify-center">
+              <div className="h-28 w-28 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Score', value: energyData.readinessScore },
+                        { name: 'Remaining', value: 100 - energyData.readinessScore }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={34}
+                      outerRadius={48}
+                      fill="#8884d8"
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell key="cell-0" fill={
+                        energyData.readinessCategory === 'low' ? '#ef4444' : 
+                        energyData.readinessCategory === 'moderate' ? '#eab308' : '#22c55e'
+                      } />
+                      <Cell key="cell-1" fill="#f3f4f6" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                  <Zap className={`w-5 h-5 mx-auto ${getReadinessColor(energyData.readinessCategory)}`} />
+                  <p className={`text-lg font-bold ${getReadinessColor(energyData.readinessCategory)}`}>
+                    {energyData.readinessScore}%
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>

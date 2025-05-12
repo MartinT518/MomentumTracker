@@ -44,6 +44,12 @@ export default function DashboardPage() {
         {/* Current Goal Banner */}
         <CurrentGoalBanner />
 
+        {/* Today's Workout - Moved to the top */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Workout</h2>
+          <TodaysWorkout />
+        </div>
+        
         {/* Weekly Overview */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">This Week's Overview</h2>
@@ -71,13 +77,9 @@ export default function DashboardPage() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Workout</h2>
-            <TodaysWorkout />
-
             {/* Weekly Progress */}
-            <div className="mt-6">
-              <WeeklyProgress />
-            </div>
+            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Weekly Progress</h2>
+            <WeeklyProgress />
           </div>
         </div>
 
