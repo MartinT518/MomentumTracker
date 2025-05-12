@@ -14,6 +14,7 @@ import {
   X,
   Dumbbell,
   Heart,
+  Apple,
 } from "lucide-react";
 
 export function MobileMenu() {
@@ -64,6 +65,12 @@ export function MobileMenu() {
       href: "/health-metrics",
       icon: Heart,
       active: location === "/health-metrics",
+    },
+    {
+      title: "Nutrition",
+      href: "/nutrition",
+      icon: Apple,
+      active: location === "/nutrition",
     },
     {
       title: "Goals",
