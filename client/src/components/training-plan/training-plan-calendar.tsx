@@ -6,9 +6,12 @@ import {
   Calendar as CalendarIcon, 
   List, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  Move
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDrag, useDrop, DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 // Training workout type interfaces
 interface WorkoutDay {
@@ -29,9 +32,14 @@ interface Workout {
   completed: boolean;
 }
 
-export function TrainingPlanCalendar() {
+interface CalendarProps {
+  onWorkoutClick?: (workout: Workout) => void;
+}
+
+export function TrainingPlanCalendar({ onWorkoutClick }: CalendarProps) {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>([]);
   
   // Generate mock data for the calendar
   const generateMockData = (): WorkoutDay[] => {
@@ -126,7 +134,46 @@ export function TrainingPlanCalendar() {
     return intensities[day % intensities.length];
   };
   
-  const workoutDays = generateMockData();
+  React.useEffect(() => {
+    setWorkoutDays(generateMockData());
+  }, [currentMonth]);
+  
+  // Handlers for drag and drop
+  const moveWorkout = (workoutId: number, fromDate: Date, toDate: Date) => {
+    setWorkoutDays(prevDays => {
+      // Deep copy of previous days
+      const newDays = JSON.parse(JSON.stringify(prevDays));
+      
+      // Find the workout in the source day
+      const sourceDayIndex = newDays.findIndex(
+        (day: WorkoutDay) => day.dateObj.toString() === fromDate.toString()
+      );
+      
+      if (sourceDayIndex === -1) return prevDays;
+      
+      const sourceDay = newDays[sourceDayIndex];
+      const workoutIndex = sourceDay.workouts.findIndex(
+        (w: Workout) => w.id === workoutId
+      );
+      
+      if (workoutIndex === -1) return prevDays;
+      
+      // Get the workout and remove it from source
+      const workout = {...sourceDay.workouts[workoutIndex]};
+      sourceDay.workouts.splice(workoutIndex, 1);
+      
+      // Find the target day and add the workout
+      const targetDayIndex = newDays.findIndex(
+        (day: WorkoutDay) => day.dateObj.toString() === toDate.toString()
+      );
+      
+      if (targetDayIndex === -1) return prevDays;
+      
+      newDays[targetDayIndex].workouts.push(workout);
+      
+      return newDays;
+    });
+  };
   
   // Handle month navigation
   const prevMonth = () => {
