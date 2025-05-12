@@ -623,6 +623,211 @@ if (geminiModel) {
   }
 }
 
+// API routes for integration data syncing
+
+// Authentication middleware for protected routes
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: "Authentication required" });
+}
+
+// Integration sync routes
+function setupIntegrationRoutes(app: Express) {
+  // Initiate sync for a specific platform
+  app.post("/api/integrations/:platform/sync", requireAuth, async (req, res) => {
+    const { platform } = req.params;
+    const userId = req.user!.id;
+    const forceSync = req.body.forceSync === true;
+    
+    try {
+      // Get integration connection
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        ));
+      
+      if (!connection) {
+        return res.status(404).json({ 
+          error: `No ${platform} integration found. Please connect your account first.` 
+        });
+      }
+      
+      // Start sync process in the background
+      let syncLogId;
+      
+      // Create a sync log entry
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform,
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogId = syncLog.id;
+      
+      // Initialize sync options
+      const syncOptions: SyncOptions = {
+        userId,
+        access_token: connection.access_token,
+        refresh_token: connection.refresh_token || undefined,
+        expires_at: connection.token_expires_at ? Math.floor(connection.token_expires_at.getTime() / 1000) : undefined,
+        forceSync,
+        syncLogId
+      };
+      
+      // Start sync process based on platform
+      if (platform === 'strava') {
+        // Sync happens asynchronously, we don't await the result
+        syncStravaData(syncOptions).catch(error => {
+          console.error(`Error during Strava sync for user ${userId}:`, error);
+        });
+      } else if (platform === 'garmin') {
+        syncGarminData(syncOptions).catch(error => {
+          console.error(`Error during Garmin sync for user ${userId}:`, error);
+        });
+      } else if (platform === 'polar') {
+        syncPolarData(syncOptions).catch(error => {
+          console.error(`Error during Polar sync for user ${userId}:`, error);
+        });
+      } else {
+        await db.update(sync_logs)
+          .set({
+            sync_end_time: new Date(),
+            status: 'failed',
+            error: 'Unsupported platform'
+          })
+          .where(eq(sync_logs.id, syncLogId));
+        
+        return res.status(400).json({ error: "Unsupported platform" });
+      }
+      
+      res.json({
+        message: `Sync with ${platform} initiated successfully`,
+        syncLogId
+      });
+    } catch (error) {
+      console.error(`Error initiating ${platform} sync:`, error);
+      res.status(500).json({ error: "Failed to initiate sync" });
+    }
+  });
+  
+  // Get sync status
+  app.get("/api/integrations/:platform/sync/:syncLogId", requireAuth, async (req, res) => {
+    const { platform, syncLogId } = req.params;
+    const userId = req.user!.id;
+    
+    try {
+      const [syncLog] = await db.select()
+        .from(sync_logs)
+        .where(and(
+          eq(sync_logs.id, parseInt(syncLogId)),
+          eq(sync_logs.user_id, userId),
+          eq(sync_logs.platform, platform)
+        ));
+      
+      if (!syncLog) {
+        return res.status(404).json({ error: "Sync log not found" });
+      }
+      
+      // Calculate progress percentage based on status
+      let progress = 0;
+      if (syncLog.status === 'completed') {
+        progress = 100;
+      } else if (syncLog.status === 'in_progress') {
+        // Just a rough estimate for now
+        progress = 50;
+      }
+      
+      res.json({
+        ...syncLog,
+        progress
+      });
+    } catch (error) {
+      console.error("Error getting sync status:", error);
+      res.status(500).json({ error: "Failed to get sync status" });
+    }
+  });
+  
+  // Get recent sync logs
+  app.get("/api/integrations/:platform/sync-history", requireAuth, async (req, res) => {
+    const { platform } = req.params;
+    const userId = req.user!.id;
+    const limit = parseInt(req.query.limit as string) || 5;
+    
+    try {
+      const syncLogs = await db.select()
+        .from(sync_logs)
+        .where(and(
+          eq(sync_logs.user_id, userId),
+          eq(sync_logs.platform, platform)
+        ))
+        .orderBy(desc(sync_logs.sync_start_time))
+        .limit(limit);
+      
+      res.json(syncLogs);
+    } catch (error) {
+      console.error("Error getting sync history:", error);
+      res.status(500).json({ error: "Failed to get sync history" });
+    }
+  });
+  
+  // Update sync settings
+  app.put("/api/integrations/:platform/settings", requireAuth, async (req, res) => {
+    const { platform } = req.params;
+    const userId = req.user!.id;
+    const { autoSync, syncFrequency } = req.body;
+    
+    try {
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        ));
+      
+      if (!connection) {
+        return res.status(404).json({ 
+          error: `No ${platform} integration found. Please connect your account first.` 
+        });
+      }
+      
+      // Validate sync frequency
+      if (syncFrequency && !['daily', 'realtime'].includes(syncFrequency)) {
+        return res.status(400).json({ 
+          error: "Invalid sync frequency. Allowed values: 'daily', 'realtime'" 
+        });
+      }
+      
+      // Update settings
+      await db.update(integration_connections)
+        .set({
+          auto_sync: autoSync !== undefined ? autoSync : connection.auto_sync,
+          sync_frequency: syncFrequency || connection.sync_frequency,
+          updated_at: new Date()
+        })
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        ));
+      
+      res.json({ 
+        message: `${platform} sync settings updated successfully`,
+        autoSync: autoSync !== undefined ? autoSync : connection.auto_sync,
+        syncFrequency: syncFrequency || connection.sync_frequency
+      });
+    } catch (error) {
+      console.error("Error updating sync settings:", error);
+      res.status(500).json({ error: "Failed to update sync settings" });
+    }
+  });
+}
+
 // Helper functions for integration data syncing
 
 // Strava data sync function
@@ -838,7 +1043,7 @@ async function processPolarSync(connection: any, userId: number) {
 }
 
 // Authentication and subscription middleware
-function isAuthenticated(req: Request, res: Response, next: Function) {
+function checkAuth(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) {
     return next();
   }
@@ -864,6 +1069,9 @@ function isSubscribed(req: Request, res: Response, next: NextFunction) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // Set up integration sync routes
+  setupIntegrationRoutes(app);
   
   // Initialize Stripe
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -2576,7 +2784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Nutrition AI Recommendation System Routes
   
   // Get user's nutrition preferences
-  app.get("/api/nutrition/preferences/:userId", isAuthenticated, async (req, res) => {
+  app.get("/api/nutrition/preferences/:userId", checkAuth, async (req, res) => {
     try {
       const { userId } = req.params;
       
@@ -2600,7 +2808,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Save or update nutrition preferences
-  app.post("/api/nutrition/preferences", isAuthenticated, async (req, res) => {
+  app.post("/api/nutrition/preferences", checkAuth, async (req, res) => {
     try {
       const { user_id } = req.body;
       
@@ -2639,7 +2847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get meal plan for a specific date
-  app.get("/api/nutrition/meal-plans/:userId/:date", isAuthenticated, async (req, res) => {
+  app.get("/api/nutrition/meal-plans/:userId/:date", checkAuth, async (req, res) => {
     try {
       const { userId, date } = req.params;
       
@@ -2698,7 +2906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // List food items by category
-  app.get("/api/nutrition/food-items/:category", isAuthenticated, async (req, res) => {
+  app.get("/api/nutrition/food-items/:category", checkAuth, async (req, res) => {
     try {
       const { category } = req.params;
       
@@ -2714,7 +2922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Search food items
-  app.get("/api/nutrition/food-items/search", isAuthenticated, async (req, res) => {
+  app.get("/api/nutrition/food-items/search", checkAuth, async (req, res) => {
     try {
       const query = req.query.q as string;
       
@@ -2859,7 +3067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Save meal plan to database
-  app.post("/api/nutrition/save-plan", isAuthenticated, async (req, res) => {
+  app.post("/api/nutrition/save-plan", checkAuth, async (req, res) => {
     try {
       const { mealPlan, meals, foodItems } = req.body;
       
@@ -2963,7 +3171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Third-party fitness platform integrations
   // Route to get all user integrations
-  app.get('/api/integrations', isAuthenticated, async (req, res) => {
+  app.get('/api/integrations', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       
@@ -2993,7 +3201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to get sync status for a specific platform
-  app.get('/api/integrations/:platform/sync-status', isAuthenticated, async (req, res) => {
+  app.get('/api/integrations/:platform/sync-status', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const platform = req.params.platform;
@@ -3035,7 +3243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to authenticate with Strava
-  app.post('/api/integrations/strava/authenticate', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations/strava/authenticate', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const { code } = req.body;
@@ -3110,7 +3318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to authenticate with Garmin
-  app.post('/api/integrations/garmin/authenticate', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations/garmin/authenticate', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const { code } = req.body;
@@ -3191,7 +3399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to authenticate with Polar
-  app.post('/api/integrations/polar/authenticate', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations/polar/authenticate', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const { code } = req.body;
@@ -3264,7 +3472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to disconnect an integration
-  app.delete('/api/integrations/:platform', isAuthenticated, async (req, res) => {
+  app.delete('/api/integrations/:platform', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const platform = req.params.platform;
@@ -3288,7 +3496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to manually sync activities from a platform
-  app.post('/api/integrations/:platform/sync', isAuthenticated, async (req, res) => {
+  app.post('/api/integrations/:platform/sync', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const platform = req.params.platform;
@@ -3372,7 +3580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to update sync settings for a platform
-  app.patch('/api/integrations/:platform/settings', isAuthenticated, async (req, res) => {
+  app.patch('/api/integrations/:platform/settings', checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const platform = req.params.platform;
