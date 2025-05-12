@@ -2942,7 +2942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Generate AI meal plan recommendations
-  app.post("/api/nutrition/generate", isAuthenticated, isSubscribed, async (req, res) => {
+  app.post("/api/nutrition/generate", checkAuth, isSubscribed, async (req, res) => {
     try {
       if (!googleAI) {
         return res.status(503).json({ error: "AI service is not available" });
