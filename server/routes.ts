@@ -9,13 +9,27 @@ import {
   insertBuddySchema,
   insertNutritionLogSchema,
   insertCoachSchema,
-  insertCoachingSessionSchema
+  insertCoachingSessionSchema,
+  insertSubscriptionPlanSchema,
+  users
 } from "@shared/schema";
 import { z } from "zod";
+import Stripe from "stripe";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // Initialize Stripe
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn('Missing STRIPE_SECRET_KEY environment variable. Stripe integration will not work.');
+  }
+  
+  const stripe = process.env.STRIPE_SECRET_KEY 
+    ? new Stripe(process.env.STRIPE_SECRET_KEY) 
+    : null;
 
   // API Routes
   // Current user's goal
@@ -782,6 +796,213 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating coaching session:", error);
       res.status(500).json({ error: "Failed to update coaching session" });
     }
+  });
+
+  // Subscription Plans API
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.get("/api/subscription-plans/:id", async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const plan = await storage.getSubscriptionPlanById(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ error: "Subscription plan not found" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plan" });
+    }
+  });
+
+  app.post("/api/subscription-plans", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    // Check if the user is an admin (in a real app, you would have proper role checks)
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Only admins can create subscription plans" });
+    }
+    
+    try {
+      const validation = insertSubscriptionPlanSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ errors: validation.error.errors });
+      }
+      
+      const plan = await storage.createSubscriptionPlan(validation.data);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      res.status(500).json({ error: "Failed to create subscription plan" });
+    }
+  });
+
+  // Stripe Subscription Endpoints
+  app.post("/api/create-payment-intent", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe integration is not configured" });
+    }
+    
+    try {
+      const { amount } = req.body;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          userId: req.user.id.toString()
+        }
+      });
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/get-or-create-subscription', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe integration is not configured" });
+    }
+    
+    let user = req.user;
+    
+    try {
+      // If the user already has a subscription, retrieve it
+      if (user.stripe_subscription_id) {
+        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
+        
+        const paymentIntent = subscription.latest_invoice?.payment_intent;
+        let clientSecret = null;
+        
+        if (typeof paymentIntent === 'string') {
+          const pi = await stripe.paymentIntents.retrieve(paymentIntent);
+          clientSecret = pi.client_secret;
+        } else if (paymentIntent) {
+          clientSecret = paymentIntent.client_secret;
+        }
+        
+        res.send({
+          subscriptionId: subscription.id,
+          clientSecret
+        });
+        
+        return;
+      }
+      
+      // Create a new customer if needed
+      if (!user.stripe_customer_id) {
+        const customer = await stripe.customers.create({
+          email: user.email || undefined,
+          name: user.username,
+          metadata: {
+            userId: user.id.toString()
+          }
+        });
+        
+        user = await storage.updateUserSubscription(user.id, {
+          stripeCustomerId: customer.id
+        });
+      }
+      
+      // Validate there's a price ID
+      if (!req.body.priceId) {
+        return res.status(400).json({ error: "Price ID is required" });
+      }
+      
+      // Create the subscription
+      const subscription = await stripe.subscriptions.create({
+        customer: user.stripe_customer_id!,
+        items: [{
+          price: req.body.priceId,
+        }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+      });
+      
+      // Update the user record with subscription info
+      await storage.updateUserSubscription(user.id, {
+        stripeSubscriptionId: subscription.id,
+        status: subscription.status
+      });
+      
+      // Get the client secret to complete the payment
+      const invoice = subscription.latest_invoice as Stripe.Invoice;
+      const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+      
+      res.send({
+        subscriptionId: subscription.id,
+        clientSecret: paymentIntent.client_secret
+      });
+    } catch (error: any) {
+      console.error("Error creating subscription:", error);
+      return res.status(400).send({ error: { message: error.message } });
+    }
+  });
+
+  // Webhook to handle subscription updates
+  app.post('/api/webhook', async (req, res) => {
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe integration is not configured" });
+    }
+    
+    const signature = req.headers['stripe-signature'] as string;
+    
+    let event;
+    
+    try {
+      // This is just a placeholder - in a real app, you need to set up proper webhook secret verification
+      // const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      // event = stripe.webhooks.constructEvent(req.body, signature, endpointSecret);
+      
+      // For now, just parse the body as a Stripe event
+      event = req.body;
+    } catch (err: any) {
+      console.error(`Webhook signature verification failed: ${err.message}`);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    
+    // Handle the event
+    switch (event.type) {
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
+        const subscription = event.data.object as Stripe.Subscription;
+        // Get the customer ID
+        const customerId = subscription.customer as string;
+        
+        // Find the user with this stripe customer ID
+        const [user] = await db.select().from(users).where(eq(users.stripe_customer_id, customerId));
+        
+        if (user) {
+          // Update subscription status
+          await storage.updateUserSubscription(user.id, {
+            status: subscription.status,
+            endDate: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : undefined
+          });
+        }
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+    
+    // Return a 200 response to acknowledge receipt of the event
+    res.send({ received: true });
   });
 
   const httpServer = createServer(app);
