@@ -56,14 +56,10 @@ export default function DashboardPage() {
           <WeeklyMetrics />
         </div>
         
-        {/* Energy Level - Moved to a separate row */}
+        {/* Energy Level - Moved to a separate row and made full width */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Energy</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <EnergyLevelCard />
-            </div>
-          </div>
+          <EnergyLevelCard />
         </div>
 
         {/* Progress Charts */}
