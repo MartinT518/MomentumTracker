@@ -12,6 +12,7 @@ import TrainingPlanPage from "@/pages/training-plan-page";
 import ActivitiesPage from "@/pages/activities-page";
 import GoalsPage from "@/pages/goals-page";
 import ProfilePage from "@/pages/profile-page";
+import SubscriptionPage from "@/pages/subscription-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -24,6 +25,8 @@ function Router() {
       <ProtectedRoute path="/activities" component={ActivitiesPage} />
       <ProtectedRoute path="/goals" component={GoalsPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/subscription" component={SubscriptionPage} />
+      <ProtectedRoute path="/subscription/success" component={SubscriptionPage} />
       <Route component={NotFound} />
     </Switch>
   );

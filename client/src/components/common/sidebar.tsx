@@ -9,6 +9,8 @@ import {
   User,
   Settings,
   LogOut,
+  CreditCard,
+  Crown,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -63,6 +65,13 @@ export function Sidebar({ className }: SidebarProps) {
       icon: Settings,
       active: location === "/settings",
     },
+    {
+      title: "Subscription",
+      href: "/subscription",
+      icon: CreditCard,
+      active: location === "/subscription" || location.startsWith("/subscription/"),
+      isPremium: true,
+    },
   ];
 
   return (
@@ -111,7 +120,12 @@ export function Sidebar({ className }: SidebarProps) {
                     "h-5 w-5 mr-3 text-neutral-medium",
                     item.active && "text-primary"
                   )} />
-                  {item.title}
+                  <div className="flex items-center">
+                    {item.title}
+                    {item.isPremium && (
+                      <Crown className="h-3.5 w-3.5 ml-2 text-amber-500" />
+                    )}
+                  </div>
                 </a>
               </Link>
             </li>
