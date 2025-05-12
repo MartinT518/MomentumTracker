@@ -1,13 +1,17 @@
 import { 
   users, groups, group_members, buddies, challenges, challenge_participants, 
   achievements, user_achievements, nutrition_logs, coaches, coaching_sessions,
-  subscription_plans,
+  subscription_plans, integration_connections, health_metrics,
   type User, type InsertUser, type Group, type InsertGroup, 
   type GroupMember, type InsertGroupMember, type Buddy, type InsertBuddy,
   type Challenge, type InsertChallenge, type NutritionLog, type InsertNutritionLog, 
   type Coach, type InsertCoach, type CoachingSession, type InsertCoachingSession,
-  type SubscriptionPlan, type InsertSubscriptionPlan
+  type SubscriptionPlan, type InsertSubscriptionPlan,
+  type IntegrationConnection, type InsertIntegrationConnection,
+  type HealthMetric, type InsertHealthMetric
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, or, sql, asc, desc, gte, lte } from "drizzle-orm";
 
 // Type aliases for types not explicitly exported from schema
 type ChallengeParticipant = typeof challenge_participants.$inferSelect;
@@ -18,8 +22,6 @@ type InsertChallengeParticipant = {
   current_progress?: number;
   status?: string;
 };
-import { db } from "./db";
-import { eq, and, or, sql, asc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -74,6 +76,18 @@ export interface IStorage {
   getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]>;
   createCoachingSession(session: InsertCoachingSession): Promise<CoachingSession>;
   updateCoachingSession(id: number, data: Partial<CoachingSession>): Promise<CoachingSession>;
+  
+  // Health metrics
+  getHealthMetrics(userId: number, startDate?: Date, endDate?: Date): Promise<HealthMetric[]>;
+  createHealthMetric(metric: InsertHealthMetric): Promise<HealthMetric>;
+  updateHealthMetric(id: number, data: Partial<HealthMetric>): Promise<HealthMetric>;
+  
+  // Integration connections
+  getIntegrationConnections(userId: number): Promise<IntegrationConnection[]>;
+  getIntegrationConnection(userId: number, platform: string): Promise<IntegrationConnection | undefined>;
+  createIntegrationConnection(connection: InsertIntegrationConnection): Promise<IntegrationConnection>;
+  updateIntegrationConnection(id: number, data: Partial<IntegrationConnection>): Promise<IntegrationConnection>;
+  removeIntegrationConnection(userId: number, platform: string): Promise<void>;
   
   // Subscriptions
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
@@ -605,8 +619,10 @@ export class MemStorage implements IStorage {
   private nutritionLogs: Map<number, NutritionLog>;
   private coaches: Map<number, Coach>;
   private coachingSessions: Map<number, CoachingSession>;
-  private achievements: Map<number, Achievement>;
+  private achievements: Map<number, any>; // Use any to fix type error
   private userAchievements: Map<number, UserAchievement>;
+  private healthMetrics: Map<number, HealthMetric>;
+  private integrationConnections: Map<number, IntegrationConnection>;
   
   currentId: number;
   sessionStore: session.SessionStore;
@@ -624,6 +640,8 @@ export class MemStorage implements IStorage {
     this.coachingSessions = new Map();
     this.achievements = new Map();
     this.userAchievements = new Map();
+    this.healthMetrics = new Map();
+    this.integrationConnections = new Map();
     
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
