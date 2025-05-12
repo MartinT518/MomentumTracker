@@ -25,7 +25,7 @@ type Plan = {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string | number; // Handle both string and number
   billing_interval: string;
   stripe_price_id: string;
   features: string[];
@@ -87,10 +87,16 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
         className="w-full" 
         disabled={!stripe || !elements || isProcessing}
       >
-        {isProcessing ? "Processing..." : `Subscribe - $${selectedPlan?.price.toFixed(2)}/${selectedPlan?.billing_interval}`}
+        {isProcessing ? "Processing..." : `Subscribe - $${formatPrice(selectedPlan?.price)}/${selectedPlan?.billing_interval}`}
       </Button>
     </form>
   );
+};
+
+// Helper function to format prices consistently
+const formatPrice = (price: string | number | undefined): string => {
+  if (!price) return '0.00';
+  return parseFloat(price.toString()).toFixed(2);
 };
 
 // The main subscription page component
@@ -278,7 +284,7 @@ export default function SubscriptionPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="font-medium">{selectedPlan.name}</span>
-                    <span>${selectedPlan.price.toFixed(2)}/{selectedPlan.billing_interval}</span>
+                    <span>${formatPrice(selectedPlan.price)}/{selectedPlan.billing_interval}</span>
                   </div>
                   <Separator />
                   <div className="space-y-2">
@@ -293,7 +299,7 @@ export default function SubscriptionPage() {
                   <Separator />
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>${selectedPlan.price.toFixed(2)}/{selectedPlan.billing_interval}</span>
+                    <span>${formatPrice(selectedPlan.price)}/{selectedPlan.billing_interval}</span>
                   </div>
                 </div>
               </CardContent>
@@ -359,7 +365,7 @@ export default function SubscriptionPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <span className="text-3xl font-bold">${plan.price.toFixed(2)}</span>
+                  <span className="text-3xl font-bold">${formatPrice(plan.price)}</span>
                   <span className="text-muted-foreground">/{plan.billing_interval}</span>
                 </div>
                 <div className="space-y-2">
