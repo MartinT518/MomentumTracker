@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Dumbbell,
 } from "lucide-react";
 
 export function MobileMenu() {
@@ -50,6 +51,12 @@ export function MobileMenu() {
       href: "/activities",
       icon: Activity,
       active: location === "/activities",
+    },
+    {
+      title: "Strength Exercises",
+      href: "/strength-exercises",
+      icon: Dumbbell,
+      active: location === "/strength-exercises",
     },
     {
       title: "Goals",
