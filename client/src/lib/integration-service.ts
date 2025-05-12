@@ -162,15 +162,47 @@ export async function syncActivities(platform: string, forceSync = false) {
 
 export async function getLastSyncStatus(platform: string) {
   try {
-    const response = await apiRequest('GET', `/api/integrations/${platform}/sync-status`);
+    // Get sync history with limit=1 to get only the most recent
+    const response = await apiRequest('GET', `/api/integrations/${platform}/sync-history?limit=1`);
     
     if (!response.ok) {
       throw new Error(`Failed to get sync status for ${platform}`);
     }
     
-    return await response.json();
+    const history = await response.json();
+    return history.length > 0 ? history[0] : null;
   } catch (error) {
     console.error(`Error getting sync status for ${platform}:`, error);
+    throw error;
+  }
+}
+
+export async function getSyncLogById(platform: string, syncLogId: number) {
+  try {
+    const response = await apiRequest('GET', `/api/integrations/${platform}/sync/${syncLogId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get sync log ${syncLogId} for ${platform}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error getting sync log for ${platform}:`, error);
+    throw error;
+  }
+}
+
+export async function getSyncHistory(platform: string, limit: number = 5) {
+  try {
+    const response = await apiRequest('GET', `/api/integrations/${platform}/sync-history?limit=${limit}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get sync history for ${platform}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error getting sync history for ${platform}:`, error);
     throw error;
   }
 }
@@ -178,7 +210,7 @@ export async function getLastSyncStatus(platform: string) {
 // Function to update sync settings
 export async function updateSyncSettings(platform: string, settings: { autoSync: boolean, syncFrequency?: 'daily' | 'realtime' }) {
   try {
-    const response = await apiRequest('PATCH', `/api/integrations/${platform}/settings`, settings);
+    const response = await apiRequest('PUT', `/api/integrations/${platform}/settings`, settings);
     
     if (!response.ok) {
       throw new Error(`Failed to update sync settings for ${platform}`);
