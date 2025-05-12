@@ -41,6 +41,7 @@ export default function TrainingPlanPage() {
   const [coachSessionId, setCoachSessionId] = useState<string>('');
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [aiPlan, setAiPlan] = useState<AITrainingPlan | null>(null);
+  const [planAdjustment, setPlanAdjustment] = useState<PlanAdjustment | null>(null);
   
   const { user } = useAuth();
   const { toast } = useToast();
