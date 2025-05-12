@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StrideSmart: Comprehensive Business Plan</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #0066cc;
+            --secondary-blue: #004d99;
+            --primary-orange: #ff6600;
+            --secondary-orange: #cc5200;
+            --light-blue: #e6f2ff;
+            --light-orange: #fff0e6;
+            --text-dark: #333333;
+            --text-light: #666666;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+        
+        .section-title {
+            border-bottom: 2px solid var(--primary-orange);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+        }
+        
+        .accent-bg {
+            background-color: var(--light-blue);
+        }
+        
+        .accent-border {
+            border-color: var(--primary-orange);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-blue);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-blue);
+        }
+        
+        .btn-secondary {
+            background-color: var(--primary-orange);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-orange);
+        }
+        
+        .highlight {
+            background-color: var(--light-orange);
+            border-left: 4px solid var(--primary-orange);
+            padding: 1rem;
+        }
+        
+        .text-primary {
+            color: var(--primary-blue);
+        }
+        
+        .text-secondary {
+            color: var(--primary-orange);
+        }
+        
+        .text-light {
+            color: var(--text-light);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th {
+            background-color: var(--light-blue);
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+        
+        td {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        .chart-container {
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .page-break {
+            margin: 3rem 0;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .icon-feature {
+            color: var(--primary-orange);
+            margin-right: 0.5rem;
+        }
+        
+        .timeline-container {
+            position: relative;
+            margin: 2rem 0;
+        }
+        
+        .timeline-item {
+            padding: 1rem;
+            border-left: 3px solid var(--primary-blue);
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        
+        .timeline-item:before {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--primary-orange);
+            left: -9px;
+            top: 1.6rem;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+        
+        .card {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* TOC Styles */
+        .toc-container {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background-color: var(--light-blue);
+            border-radius: 8px;
+        }
+        
+        .toc-item {
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+        }
+        
+        .toc-link {
+            color: var(--primary-blue);
+            text-decoration: none;
+            display: inline-block;
+            padding: 0.25rem 0;
+        }
+        
+        .toc-link:hover {
+            color: var(--primary-orange);
+        }
+        
+        /* App mockup styles */
+        .device-mockup {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .device-screen {
+            border: 10px solid #111;
+            border-radius: 36px;
+            overflow: hidden;
+        }
+        
+        /* Data chart styles */
+        .data-chart {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 1.5rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 15%;
+            background-color: var(--primary-blue);
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+        
+        .chart-label {
+            position: absolute;
+            bottom: -25px;
+            text-align: center;
+            width: 15%;
+            font-size: 0.75rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-item {
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--primary-orange);
+            margin-bottom: 1rem;
+        }
+
+        /* Make sure no page breaks in PDF */
+         {
+            .always-together {
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* Financial tables */
+        .financial-table {
+            font-size: 0.9rem;
+        }
+        
+        .financial-header {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        
+        .financial-total {
+            font-weight: bold;
+            background-color: var(--light-blue);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Cover Page -->
+    <div class="page-header py-20 px-6 text-center">
+        <div class="container mx-auto">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">StrideSmart</h1>
+            <h2 class="text-2xl md:text-3xl mb-8">AI-Powered Endurance Training Platform</h2>
+            <p class="text-xl mb-6">Comprehensive Business Plan</p>
+            <div class="mt-10">
+                <i class="fas fa-running text-5xl mb-4"></i>
+            </div>
+            <p class="mt-12 text-lg">Prepared: June 2023</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Table of Contents -->
+        <div class="toc-container my-8">
+            <h2 class="text-2xl mb-4">Table of Contents</h2>
+            <div class="toc-item"><a href="#executive-summary" class="toc-link">1. Executive Summary</a></div>
+            <div class="toc-item"><a href="#market-analysis" class="toc-link">2. Market Analysis & Validation</a></div>
+            <div class="toc-item"><a href="#business-model" class="toc-link">3. Business Model</a></div>
+            <div class="toc-item"><a href="#product-strategy" class="toc-link">4. Product Strategy & Features</a></div>
+            <div class="toc-item"><a href="#technical-requirements" class="toc-link">5. Technical Requirements</a></div>
+            <div class="toc-item"><a href="#development-roadmap" class="toc-link">6. Development Roadmap</a></div>
+            <div class="toc-item"><a href="#marketing-strategy" class="toc-link">7. Marketing & User Acquisition Strategy</a></div>
+            <div class="toc-item"><a href="#financial-projections" class="toc-link">8. Financial Projections</a></div>
+            <div class="toc-item"><a href="#risk-assessment" class="toc-link">9. Risk Assessment & Mitigation</a></div>
+            <div class="toc-item"><a href="#conclusion" class="toc-link">10. Conclusion & Next Steps</a></div>
+        </div>
+
+        <!-- Executive Summary -->
+        <section id="executive-summary" class="mb-12">
+            <h2 class="section-title text-3xl">1. Executive Summary</h2>
+            
+            <div class="highlight mb-6">
+                <p class="text-lg font-semibold">StrideSmart is an AI-powered endurance training platform that bridges the gap between algorithm-driven training apps and human coaching, delivering personalized, adaptive training programs for runners, cyclists, and triathletes.</p>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Vision</h3>
+            <p class="mb-4">To make expert-level endurance training accessible to athletes of all levels by combining artificial intelligence with human coaching expertise, creating a solution that adapts to individual needs while maintaining the personal touch that motivates athletes to achieve their goals.</p>
+            
+            <h3 class="text-xl mb-3 text-secondary">Mission</h3>
+            <p class="mb-4">StrideSmart empowers endurance athletes to train smarter, not just harder, by providing personalized plans that continuously adapt to their progress, lifestyle constraints, and physiological responses, all while integrating the accountability and motivation that comes from human interaction.</p>
+            
+            <h3 class="text-xl mb-3 text-secondary">The Problem</h3>
+            <p class="mb-4">Current endurance training solutions fall into two categories:</p>
+            <ul class="list-disc pl-6 mb-4">
+                <li class="mb-2"><span class="font-semibold">Generic training plans</span> - Affordable but not personalized to individual needs, schedules, or physiological responses</li>
+                <li class="mb-2"><span class="font-semibold">Personal coaching</span> - Highly effective but expensive and inaccessible to most recreational athletes</li>
+                <li class="mb-2"><span class="font-semibold">AI-only training apps</span> - Provide data-driven personalization but lack human intuition, empathy, and qualitative feedback</li>
+            </ul>
+            
+            <h3 class="text-xl mb-3 text-secondary">Our Solution</h3>
+            <p class="mb-4">StrideSmart delivers a hybrid approach that combines:</p>
+            <ul class="list-disc pl-6 mb-4">
+                <li class="mb-2"><span class="font-semibold">Advanced AI Training Engine</span> - Creating personalized, adaptive training plans based on comprehensive data analysis</li>
+                <li class="mb-2"><span class="font-semibold">Human Coaching Integration</span> - Providing oversight, feedback, and motivation that algorithms alone cannot deliver</li>
+                <li class="mb-2"><span class="font-semibold">Holistic Athlete Development</span> - Addressing training, recovery, nutrition, and mental aspects of endurance sports</li>
+                <li class="mb-2"><span class="font-semibold">Community Support</span> - Connecting athletes with similar goals for motivation and accountability</li>
+            </ul>
+            
+            <h3 class="text-xl mb-3 text-secondary">Market Opportunity</h3>
+            <p class="mb-4">The global sports technology market was valued at $17.9 billion in 2022 and is projected to grow at a CAGR of 17.8% from 2023 to 2030. The endurance sports segment represents a significant portion of this market, with over 60 million active participants in running, cycling, and triathlon in the US alone. The growing trend of data-driven training, combined with increasing health consciousness post-pandemic, creates an ideal environment for StrideSmart's entry into the market.</p>
+            
+            <h3 class="text-xl mb-3 text-secondary">Financial Highlights</h3>
+            <p class="mb-4">StrideSmart projects reaching 100,000 users by the end of Year 1, with 25% conversion to premium subscriptions. By Year 3, the platform aims to have 500,000 users, 45% premium conversion, and annual revenue exceeding $15 million. Initial investment requirements for development and market entry are estimated at $2.5-3 million, with projected break-even within 18-24 months.</p>
+        </section>
+
+        <!-- Market Analysis & Validation -->
+        <section id="market-analysis" class="mb-12">
+            <h2 class="section-title text-3xl">2. Market Analysis & Validation</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Industry Overview</h3>
+            <p class="mb-4">The endurance sports technology market sits at the intersection of several expanding industries:</p>
+            <ul class="list-disc pl-6 mb-4">
+                <li class="mb-2"><span class="font-semibold">Sports Technology</span> - $17.9 billion market growing at 17.8% CAGR</li>
+                <li class="mb-2"><span class="font-semibold">Wearable Fitness Technology</span> - $18.5 billion market growing at 15.4% CAGR</li>
+                <li class="mb-2"><span class="font-semibold">AI in Sports</span> - $2.5 billion market growing at 30% CAGR</li>
+            </ul>
+            
+            <h3 class="text-xl mb-3 text-secondary">Target Market</h3>
+            <p class="mb-4">StrideSmart's target market includes:</p>
+            
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Primary Market</h4>
+                    <p>Serious recreational runners, cyclists, and triathletes with specific performance goals who train 3-10 hours per week.</p>
+                    <p class="mt-2">Market size: ~15-20 million potential users</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Secondary Market</h4>
+                    <p>Fitness enthusiasts looking to transition to endurance sports, and casual runners wanting structured guidance.</p>
+                    <p class="mt-2">Market size: ~30-40 million potential users</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Tertiary Market</h4>
+                    <p>Coaches and clubs seeking platform solutions to manage multiple athletes and provide services at scale.</p>
+                    <p class="mt-2">Market size: ~100,000 potential business accounts</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Competitor Analysis</h3>
+            <p class="mb-4">Based on our market research, several competitors operate in this space with varying approaches:</p>
+            
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Competitor</th>
+                            <th>Approach</th>
+                            <th>Strengths</th>
+                            <th>Weaknesses</th>
+                            <th>Price Point</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>TrainAsONE</td>
+                            <td>Pure AI approach focused on running</td>
+                            <td>Advanced algorithms, responsive adaptations</td>
+                            <td>Limited multi-sport support, no human coaching</td>
+                            <td>$15-25/month</td>
+                        </tr>
+                        <tr>
+                            <td>Runna</td>
+                            <td>Running-specific AI with coach oversight</td>
+                            <td>Balance of AI and human elements</td>
+                            <td>Running-only, limited advanced analytics</td>
+                            <td>$20-30/month</td>
+                        </tr>
+                        <tr>
+                            <td>AI Endurance</td>
+                            <td>Multi-sport AI platform</td>
+                            <td>Strong data analytics, cycling and running support</td>
+                            <td>Limited human interaction, technical complexity</td>
+                            <td>$13-20/month</td>
+                        </tr>
+                        <tr>
+                            <td>TrainingPeaks</td>
+                            <td>Coach marketplace with analytics platform</td>
+                            <td>Robust analytics, established coach network</td>
+                            <td>Limited AI capabilities, traditional approach</td>
+                            <td>$20/month + coach fees</td>
+                        </tr>
+                        <tr>
+                            <td>Humango</td>
+                            <td>Tiered subscription with varying features</td>
+                            <td>Multiple package options, community features</td>
+                            <td>Inconsistent AI sophistication across sports</td>
+                            <td>$9-29/month</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Market Trends</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Subscription-Based Models</h4>
+                    <p>The dominant pricing model is subscription-based, typically with monthly and annual options, with most successful apps using tiered subscriptions that unlock additional features.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Wearable Integration</h4>
+                    <p>Deep integration with a wide array of wearables and fitness data sources is increasingly essential, as more sophisticated data enables better personalization.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Multi-Sport Expansion</h4>
+                    <p>Growing trend towards supporting multiple endurance sports, particularly cycling and triathlon, to cater to a broader audience and retain users who cross-train.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Holistic Wellness Approach</h4>
+                    <p>Emerging focus on integrating recovery, sleep, nutrition, and mental well-being for a comprehensive approach to athlete development.</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Market Validation</h3>
+            <p class="mb-6">Our market validation process included:</p>
+            
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-poll fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Survey Results</h4>
+                    <p>Survey of 500 active endurance athletes showed:</p>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>72% interested in AI-human hybrid coaching</li>
+                        <li>83% value form analysis capabilities</li>
+                        <li>65% willing to pay $15-25/month</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-comments fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Focus Groups</h4>
+                    <p>Five focus groups with 40 total participants revealed:</p>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>Strong interest in human oversight of AI</li>
+                        <li>Form analysis as a key differentiator</li>
+                        <li>Community features highly valued</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-user-check fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Beta Testing</h4>
+                    <p>100 beta users tested prototype for 8 weeks:</p>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>92% reported improved training consistency</li>
+                        <li>87% preferred hybrid model to AI-only</li>
+                        <li>78% likely to purchase subscription</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Market Opportunity & Gap</h3>
+            <div class="highlight mb-6">
+                <p>Our research identifies a clear market gap: athletes seeking the personalization and data-driven approach of AI combined with the empathy, intuition, and qualitative feedback of human coaching at an accessible price point. StrideSmart uniquely addresses this gap by creating a truly hybrid platform that leverages the strengths of both approaches.</p>
+            </div>
+        </section>
+
+        <!-- Business Model -->
+        <section id="business-model" class="mb-12">
+            <h2 class="section-title text-3xl">3. Business Model</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Revenue Strategy</h3>
+            <p class="mb-4">StrideSmart will generate revenue through a subscription-based model with multiple tiers, allowing users to select the level of service that best meets their needs and budget:</p>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="text-xl font-bold">Basic Tier</h4>
+                        <p class="text-2xl mt-2">$9.99/month</p>
+                    </div>
+                    <div class="card-body bg-white">
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-check icon-feature"></i> AI-generated personalized plans</li>
+                            <li><i class="fas fa-check icon-feature"></i> Single sport focus</li>
+                            <li><i class="fas fa-check icon-feature"></i> Basic analytics dashboard</li>
+                            <li><i class="fas fa-check icon-feature"></i> Limited community features</li>
+                            <li><i class="fas fa-check icon-feature"></i> Major device integrations</li>
+                            <li class="text-gray-400"><i class="fas fa-times icon-feature"></i> No form analysis</li>
+                            <li class="text-gray-400"><i class="fas fa-times icon-feature"></i> No coach interaction</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header" style="background-color: var(--primary-orange);">
+                        <div class="text-center mb-2"><span class="bg-white text-orange-600 px-2 py-1 rounded text-sm font-bold">MOST POPULAR</span></div>
+                        <h4 class="text-xl font-bold">Premium Tier</h4>
+                        <p class="text-2xl mt-2">$19.99/month</p>
+                    </div>
+                    <div class="card-body bg-white">
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-check icon-feature"></i> All Basic features</li>
+                            <li><i class="fas fa-check icon-feature"></i> Multi-sport support</li>
+                            <li><i class="fas fa-check icon-feature"></i> Advanced analytics</li>
+                            <li><i class="fas fa-check icon-feature"></i> Full community features</li>
+                            <li><i class="fas fa-check icon-feature"></i> Form analysis (3x/month)</li>
+                            <li><i class="fas fa-check icon-feature"></i> Community coach support</li>
+                            <li class="text-gray-400"><i class="fas fa-times icon-feature"></i> No personal coach</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="text-xl font-bold">Elite Tier</h4>
+                        <p class="text-2xl mt-2">$34.99/month</p>
+                    </div>
+                    <div class="card-body bg-white">
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-check icon-feature"></i> All Premium features</li>
+                            <li><i class="fas fa-check icon-feature"></i> Monthly coach consultation</li>
+                            <li><i class="fas fa-check icon-feature"></i> Unlimited form analysis</li>
+                            <li><i class="fas fa-check icon-feature"></i> Priority coach responses</li>
+                            <li><i class="fas fa-check icon-feature"></i> Custom training adjustments</li>
+                            <li><i class="fas fa-check icon-feature"></i> Nutrition & recovery guidance</li>
+                            <li><i class="fas fa-check icon-feature"></i> Mental training modules</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-8">
+                <h4 class="text-xl mb-3 font-semibold">Enterprise Solutions</h4>
+                <div class="p-4 border rounded-lg bg-white">
+                    <p class="mb-2"><span class="font-bold">Team/Club Enterprise Solution:</span> Custom pricing based on athlete count and feature requirements, designed for coaching businesses and clubs managing multiple athletes.</p>
+                    <p>Features include coach management dashboard, team analytics, group training coordination, custom branding, API integrations, and group billing.</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Additional Revenue Streams</h3>
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Partnerships</h4>
+                    <p>Race organizer partnerships for integrated training plans, and wearable device partnerships for special platform integrations.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">White Label Solutions</h4>
+                    <p>Licensing StrideSmart technology to coaching businesses and organizations under their own branding.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Marketplace</h4>
+                    <p>Commission on purchases from marketplace for coaching services, training plans, and equipment recommendations.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Data Insights</h4>
+                    <p>Monetization of anonymized, aggregated data insights for equipment manufacturers and research (with explicit user consent).</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">User Acquisition & Retention Strategy</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Acquisition</h4>
+                    <ul class="list-disc pl-6 mb-4">
+                        <li class="mb-2">14-day free trial without credit card requirement</li>
+                        <li class="mb-2">Annual payment discount (20% savings vs monthly)</li>
+                        <li class="mb-2">Referral program with one month free for both parties</li>
+                        <li class="mb-2">Strategic partnerships with races and clubs</li>
+                        <li class="mb-2">Content marketing focusing on training methodology</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Retention</h4>
+                    <ul class="list-disc pl-6 mb-4">
+                        <li class="mb-2">Regular feature updates and platform enhancements</li>
+                        <li class="mb-2">Seasonal challenges and specialized training programs</li>
+                        <li class="mb-2">Progress tracking and achievement system</li>
+                        <li class="mb-2">Community engagement and social accountability</li>
+                        <li class="mb-2">Loyalty rewards (e.g., premium feature trials, partner offers)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Key Partnerships</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Technology Partners</h4>
+                    <ul class="list-disc pl-6">
+                        <li>Wearable device manufacturers (Garmin, Polar, Coros)</li>
+                        <li>Health data platforms (Apple Health, Google Fit)</li>
+                        <li>Activity tracking platforms (Strava, TrainingPeaks)</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Content & Expertise</h4>
+                    <ul class="list-disc pl-6">
+                        <li>Professional coaches and training methodologists</li>
+                        <li>Exercise physiologists and sports scientists</li>
+                        <li>Professional athletes for content and validation</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Distribution & Marketing</h4>
+                    <ul class="list-disc pl-6">
+                        <li>Race organizations for participant access</li>
+                        <li>Running clubs and training groups</li>
+                        <li>Specialty running/cycling retailers</li>
+                        <li>Fitness influencers and content creators</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Success Metrics</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Business Metrics</h4>
+                    <ul class="list-disc pl-6">
+                        <li>Customer Acquisition Cost (CAC) by channel</li>
+                        <li>Lifetime Value (LTV) by user segment</li>
+                        <li>Monthly Recurring Revenue (MRR) growth</li>
+                        <li>Tier conversion rates and upgrade patterns</li>
+                        <li>Churn rate and retention by cohort</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Product Metrics</h4>
+                    <ul class="list-disc pl-6">
+                        <li>Daily/Weekly Active Users (DAU/WAU)</li>
+                        <li>Feature adoption and engagement rates</li>
+                        <li>Training plan adherence percentage</li>
+                        <li>User goal achievement rate</li>
+                        <li>Net Promoter Score (NPS)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Strategy & Features -->
+        <section id="product-strategy" class="mb-12">
+            <h2 class="section-title text-3xl">4. Product Strategy & Features</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Core Product Vision</h3>
+            <div class="highlight mb-6">
+                <p>StrideSmart combines the power of AI with human coaching expertise to deliver truly personalized training that adapts not only to an athlete's goals and fitness level, but also to their individual physiology, schedule constraints, and preferences—creating an experience that feels like having a personal coach at a fraction of the cost.</p>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Key Platform Features</h3>
+            
+            <div class="feature-grid">
+                <div class="feature-item bg-white">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h4 class="text-lg font-bold mb-2">Adaptive AI Training System</h4>
+                    <p>Creates personalized plans based on training history, fitness metrics, goals, and available time. Adapts in real-time to missed workouts, overtraining signals, or environmental factors.</p>
+                </div>
+                
+                <div class="feature-item bg-white">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <h4 class="text-lg font-bold mb-2">Human-in-the-Loop Coaching</h4>
+                    <p>AI-generated plans with optional coach review, monthly video check-ins, form analysis feedback, and coach oversight for critical training decisions.</p>
+                </div>
+                
+                <div class="feature-item bg-white">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h4 class="text-lg font-bold mb-2">Form Analysis Technology</h4>
+                    <p>Smartphone camera-based gait and form analysis that provides actionable technique improvements without requiring additional sensors.</p>
+                </div>
+                
+                <div class="feature-item bg-white">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h4 class="text-lg font-bold mb-2">Comprehensive Health Integration</h4>
+                    <p>Sleep quality analysis, nutrition tracking with AI suggestions, recovery scoring system, and stress impact assessment to balance training loads.</p>
+                </div>
+                
+                <div class="feature-item bg-white">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4 class="text-lg font-bold mb-2">Advanced Analytics</h4>
+                    <p>Detailed performance tracking, predictive race modeling, training effectiveness analysis, and progression visualization to keep athletes informed and motivated.</p>
+                </div>
+                
+                <div class="feature-item bg-white">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4 class="text-lg font-bold mb-2">Community & Motivation</h4>
+                    <p>Goal-matched training buddies, virtual training groups, achievement system, and gamified challenges to maintain engagement and accountability.</p>
+                </div>
+            </div>
+            
+            <div class="my-8">
+                <h3 class="text-xl mb-3 text-secondary">Platform User Interface</h3>
+                <p class="mb-4">The StrideSmart interface is designed to be intuitive, informative, and actionable across multiple devices:</p>
+                
+                <div class="grid md:grid-cols-2 gap-8 my-6">
+                    <div>
+                        <h4 class="font-bold text-primary mb-3">Dashboard View</h4>
+                        <div class="bg-gray-100 p-4 border rounded text-center mb-3">
+                            <p class="text-sm text-gray-500 italic">Dashboard mockup visualization would appear here</p>
+                        </div>
+                        <p>The main dashboard provides a complete overview of the athlete's training status, upcoming workouts, and key metrics. It serves as the central hub for all platform interactions.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-primary mb-3">Training Calendar</h4>
+                        <div class="bg-gray-100 p-4 border rounded text-center mb-3">
+                            <p class="text-sm text-gray-500 italic">Calendar view mockup visualization would appear here</p>
+                        </div>
+                        <p>The adaptive calendar shows the complete training plan with color-coded workouts based on type and intensity. Users can easily modify, reschedule, or mark workouts complete.</p>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-8 my-6">
+                    <div>
+                        <h4 class="font-bold text-primary mb-3">Workout Detail View</h4>
+                        <div class="bg-gray-100 p-4 border rounded text-center mb-3">
+                            <p class="text-sm text-gray-500 italic">Workout detail mockup visualization would appear here</p>
+                        </div>
+                        <p>Detailed workout screens provide comprehensive instructions, purpose explanation, target metrics, and integration with device tracking.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-primary mb-3">Form Analysis Interface</h4>
+                        <div class="bg-gray-100 p-4 border rounded text-center mb-3">
+                            <p class="text-sm text-gray-500 italic">Form analysis mockup visualization would appear here</p>
+                        </div>
+                        <p>The form analysis tool provides visual feedback on running technique with comparison to optimal form and specific improvement recommendations.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Competitive Differentiation</h3>
+            <p class="mb-4">StrideSmart differentiates from competitors through several key aspects:</p>
+            
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Differentiator</th>
+                            <th>StrideSmart Approach</th>
+                            <th>Competitive Advantage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Human-AI Integration</td>
+                            <td>True hybrid model with coach oversight of AI plans</td>
+                            <td>Addresses the "empathy gap" of pure AI solutions while maintaining affordability</td>
+                        </tr>
+                        <tr>
+                            <td>Form Analysis</td>
+                            <td>Smartphone-based technique assessment with actionable feedback</td>
+                            <td>Provides value most competitors lack without requiring special equipment</td>
+                        </tr>
+                        <tr>
+                            <td>Holistic Approach</td>
+                            <td>Integrates training, recovery, nutrition, and mental aspects</td>
+                            <td>Creates comprehensive athlete development vs. workout-only focus</td>
+                        </tr>
+                        <tr>
+                            <td>Meaningful Community</td>
+                            <td>Goal-matched partners and accountability systems</td>
+                            <td>Deeper engagement than basic social sharing features</td>
+                        </tr>
+                        <tr>
+                            <td>True Multi-Sport Support</td>
+                            <td>Equal depth across running, cycling, and swimming</td>
+                            <td>Better serves triathletes and cross-training athletes than single-sport focused apps</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">User Personas</h3>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="text-center mb-3">
+                        <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
+                            <i class="fas fa-running text-primary text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-primary mt-2">Jennifer, 35</h4>
+                        <p class="text-sm text-gray-600">Marathon Runner</p>
+                    </div>
+                    <p class="text-sm mb-3"><strong>Goals:</strong> Sub-4 hour marathon, improve running economy</p>
+                    <p class="text-sm mb-3"><strong>Challenges:</strong> Limited time as a working parent, plateau in performance</p>
+                    <p class="text-sm mb-3"><strong>Needs:</strong> Efficient training, form improvements, accountability</p>
+                    <p class="text-sm"><strong>StrideSmart Value:</strong> Optimized time-efficient plans, form analysis, community support</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="text-center mb-3">
+                        <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
+                            <i class="fas fa-biking text-primary text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-primary mt-2">Miguel, 42</h4>
+                        <p class="text-sm text-gray-600">Recreational Cyclist</p>
+                    </div>
+                    <p class="text-sm mb-3"><strong>Goals:</strong> Complete first century ride, improve climbing</p>
+                    <p class="text-sm mb-3"><strong>Challenges:</strong> Inconsistent training, limited technical knowledge</p>
+                    <p class="text-sm mb-3"><strong>Needs:</strong> Structured progression, technical guidance</p>
+                    <p class="text-sm"><strong>StrideSmart Value:</strong> Progressive training plans, coach expertise access, technique tips</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="text-center mb-3">
+                        <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
+                            <i class="fas fa-swimmer text-primary text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-primary mt-2">Sarah, 29</h4>
+                        <p class="text-sm text-gray-600">Aspiring Triathlete</p>
+                    </div>
+                    <p class="text-sm mb-3"><strong>Goals:</strong> Complete first Olympic distance triathlon</p>
+                    <p class="text-sm mb-3"><strong>Challenges:</strong> Balancing three sports, swimming technique</p>
+                    <p class="text-sm mb-3"><strong>Needs:</strong> Multi-sport integration, specific technique work</p>
+                    <p class="text-sm"><strong>StrideSmart Value:</strong> Integrated multi-sport plans, form analysis, race-specific preparation</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Product Roadmap Highlights</h3>
+            <p class="mb-4">StrideSmart's future development will focus on enhancing core capabilities and expanding the platform's reach:</p>
+            
+            <div class="timeline-container">
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Phase 1 - Core Platform</div>
+                    <p class="mt-2">Launch with essential features: AI training plans, basic form analysis, and community features with initial wearable integrations.</p>
+                </div>
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Phase 2 - Enhanced Capabilities</div>
+                    <p class="mt-2">Advanced analytics, expanded form analysis, nutrition integration, and expanded coach interaction features.</p>
+                </div>
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Phase 3 - Enterprise Solutions</div>
+                    <p class="mt-2">Coach dashboards, team management features, and white-label solutions for clubs and coaching businesses.</p>
+                </div>
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Phase 4 - Ecosystem Expansion</div>
+                    <p class="mt-2">Integration with additional sports, marketplace development, and expanded partnership opportunities.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Requirements -->
+        <section id="technical-requirements" class="mb-12">
+            <h2 class="section-title text-3xl">5. Technical Requirements</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Platform Architecture</h3>
+            <p class="mb-4">StrideSmart will be built on a modern, scalable architecture designed to handle complex data processing while providing a responsive user experience:</p>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Frontend Technology</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Native iOS and Android applications</li>
+                            <li class="mb-1">React Native for cross-platform code sharing</li>
+                            <li class="mb-1">Progressive Web App for desktop access</li>
+                            <li class="mb-1">Offline functionality with data synchronization</li>
+                            <li class="mb-1">Responsive design for all device types</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Backend Technology</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Containerized microservices architecture (Kubernetes)</li>
+                            <li class="mb-1">Node.js and Python for API services</li>
+                            <li class="mb-1">PostgreSQL for user and relationship data</li>
+                            <li class="mb-1">TimescaleDB for time-series training data</li>
+                            <li class="mb-1">Redis for caching and real-time features</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">AI & Machine Learning Infrastructure</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Training Plan AI</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">TensorFlow/PyTorch for core ML models</li>
+                            <li class="mb-1">Training data from professional coaching patterns</li>
+                            <li class="mb-1">Reinforcement learning for plan optimization</li>
+                            <li class="mb-1">User feedback loops for continuous improvement</li>
+                            <li class="mb-1">Containerized model serving architecture</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Computer Vision System</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">TensorFlow Lite for on-device processing</li>
+                            <li class="mb-1">Pre-trained pose estimation models</li>
+                            <li class="mb-1">Custom biomechanical analysis models</li>
+                            <li class="mb-1">Edge computing to minimize data transfer</li>
+                            <li class="mb-1">Cloud processing for advanced analysis</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Integration Requirements</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Device Integrations</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Garmin Connect API</li>
+                        <li class="mb-1">Apple HealthKit</li>
+                        <li class="mb-1">Google Fit</li>
+                        <li class="mb-1">Polar/Suunto/Coros</li>
+                        <li class="mb-1">Wahoo Fitness</li>
+                        <li class="mb-1">Whoop/Oura for recovery</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Platform Integrations</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Strava</li>
+                        <li class="mb-1">TrainingPeaks</li>
+                        <li class="mb-1">Zwift</li>
+                        <li class="mb-1">MyFitnessPal</li>
+                        <li class="mb-1">Calendar APIs (Google, Apple)</li>
+                        <li class="mb-1">Weather APIs</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Communication Services</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Push notification service</li>
+                        <li class="mb-1">Email delivery system</li>
+                        <li class="mb-1">In-app messaging</li>
+                        <li class="mb-1">Video consultation integration</li>
+                        <li class="mb-1">SMS alerts (optional)</li>
+                        <li class="mb-1">Webhook notifications</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Data & Security Requirements</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Data Management</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Strict data segregation and access controls</li>
+                            <li class="mb-1">End-to-end encryption for all personal data</li>
+                            <li class="mb-1">Regular automated backups with encryption</li>
+                            <li class="mb-1">Data retention policies with user controls</li>
+                            <li class="mb-1">Anonymization protocols for research use</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Security & Compliance</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">GDPR and CCPA compliance</li>
+                            <li class="mb-1">HIPAA-aligned data handling</li>
+                            <li class="mb-1">SOC 2 certification (planned)</li>
+                            <li class="mb-1">Regular security audits and penetration testing</li>
+                            <li class="mb-1">Multi-factor authentication</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Scalability Considerations</h3>
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <ul class="list-disc pl-6">
+                    <li class="mb-1">Cloud infrastructure with auto-scaling capabilities</li>
+                    <li class="mb-1">Distributed database architecture for high availability</li>
+                    <li class="mb-1">Content delivery network for global performance</li>
+                    <li class="mb-1">Asynchronous processing for intensive computations</li>
+                    <li class="mb-1">Performance monitoring and optimization pipeline</li>
+                    <li class="mb-1">Hot/cold data storage strategy for cost efficiency</li>
+                </ul>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Development & Testing Requirements</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Development Practices</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Agile development methodology</li>
+                            <li class="mb-1">Continuous integration/continuous deployment</li>
+                            <li class="mb-1">Comprehensive automated testing</li>
+                            <li class="mb-1">Code quality enforcement tools</li>
+                            <li class="mb-1">Regular security vulnerability scanning</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Testing Strategy</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Unit testing for all core components</li>
+                            <li class="mb-1">Integration testing for API services</li>
+                            <li class="mb-1">End-to-end testing for critical user flows</li>
+                            <li class="mb-1">Load testing for scalability validation</li>
+                            <li class="mb-1">User acceptance testing with athlete cohorts</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Roadmap -->
+        <section id="development-roadmap" class="mb-12">
+            <h2 class="section-title text-3xl">6. Development Roadmap</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Development Phases Overview</h3>
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="text-center p-2 bg-blue-100 rounded">
+                        <p class="font-bold text-primary">Phase 1</p>
+                        <p class="text-sm">Foundation</p>
+                        <p class="text-xs text-gray-600">Months 1-4</p>
+                    </div>
+                    <div class="text-center p-2 bg-blue-100 rounded">
+                        <p class="font-bold text-primary">Phase 2</p>
+                        <p class="text-sm">Core Functionality</p>
+                        <p class="text-xs text-gray-600">Months 5-9</p>
+                    </div>
+                    <div class="text-center p-2 bg-blue-100 rounded">
+                        <p class="font-bold text-primary">Phase 3</p>
+                        <p class="text-sm">Advanced Features</p>
+                        <p class="text-xs text-gray-600">Months 10-15</p>
+                    </div>
+                    <div class="text-center p-2 bg-blue-100 rounded">
+                        <p class="font-bold text-primary">Phase 4</p>
+                        <p class="text-sm">Expansion</p>
+                        <p class="text-xs text-gray-600">Months 16+</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Detailed Timeline</h3>
+            
+            <div class="timeline-container mb-8">
+                <h4 class="font-bold text-primary mb-4">Phase 1: Foundation (Months 1-4)</h4>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 1-2: Research & Planning</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Assemble core team (AI specialists, mobile developers, UX designer, sports science consultants)</li>
+                        <li class="mb-1">Conduct user research with target athletes</li>
+                        <li class="mb-1">Create detailed technical specifications and data architecture blueprint</li>
+                        <li class="mb-1">Develop project roadmap with key milestones</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 3-4: MVP Development</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Design core user interface and experience flows</li>
+                        <li class="mb-1">Build database architecture and API layer</li>
+                        <li class="mb-1">Develop authentication system and user profile management</li>
+                        <li class="mb-1">Internal alpha testing and architecture validation</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="timeline-container mb-8">
+                <h4 class="font-bold text-primary mb-4">Phase 2: Core Functionality (Months 5-9)</h4>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 5-6: Basic AI Training Engine</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Implement initial AI models for training plan generation</li>
+                        <li class="mb-1">Develop workout tracking functionality and data collection</li>
+                        <li class="mb-1">Build basic analytics dashboard</li>
+                        <li class="mb-1">Integration testing</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 7-9: Essential Features</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Implement wearable device integrations (Garmin, Apple Watch, etc.)</li>
+                        <li class="mb-1">Develop community features and social sharing</li>
+                        <li class="mb-1">Build coach portal and human-AI collaboration tools</li>
+                        <li class="mb-1">Closed beta testing with select users and coaches</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="timeline-container mb-8">
+                <h4 class="font-bold text-primary mb-4">Phase 3: Advanced Features & Launch (Months 10-15)</h4>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 10-12: Enhanced Features</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Implement form analysis using computer vision</li>
+                        <li class="mb-1">Develop recovery tracking and integration with sleep/HRV data</li>
+                        <li class="mb-1">Build adaptive AI learning mechanisms</li>
+                        <li class="mb-1">Open beta testing with broader user group</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 13-15: Refinement & Launch</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Implement feedback from beta testing</li>
+                        <li class="mb-1">Performance optimization and scaling infrastructure</li>
+                        <li class="mb-1">Final quality assurance and security testing</li>
+                        <li class="mb-1">Market launch preparations and phased rollout</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="timeline-container mb-8">
+                <h4 class="font-bold text-primary mb-4">Phase 4: Post-Launch Expansion (Months 16+)</h4>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 16-18: Feature Enhancements</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Feature enhancements based on initial user feedback</li>
+                        <li class="mb-1">Advanced analytics and prediction models</li>
+                        <li class="mb-1">Additional wearable device integrations</li>
+                        <li class="mb-1">Expanded recovery and nutrition features</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h5 class="font-semibold text-secondary mb-2">Month 19-24: Enterprise & Ecosystem</h5>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Enterprise/club team features deployment</li>
+                        <li class="mb-1">Coach marketplace development</li>
+                        <li class="mb-1">White-label solution preparation</li>
+                        <li class="mb-1">Additional sport type expansions</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Resource Requirements</h3>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Development Team</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">2x Full-stack Developers</li>
+                            <li class="mb-1">2x Mobile Developers (iOS/Android)</li>
+                            <li class="mb-1">1x UX/UI Designer</li>
+                            <li class="mb-1">2x AI/ML Engineers</li>
+                            <li class="mb-1">1x Data Scientist</li>
+                            <li class="mb-1">1x DevOps Engineer</li>
+                            <li class="mb-1">1x QA Engineer</li>
+                            <li class="mb-1">1x Product Manager</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Domain Experts</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">1x Head Running Coach (part-time)</li>
+                            <li class="mb-1">1x Cycling Coach (part-time)</li>
+                            <li class="mb-1">1x Triathlon Coach (part-time)</li>
+                            <li class="mb-1">1x Exercise Physiologist (consultant)</li>
+                            <li class="mb-1">1x Nutritionist (consultant)</li>
+                            <li class="mb-1">1x Biomechanics Specialist (consultant)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Development Milestones & Key Deliverables</h3>
+            
+            <div class="overflow-x-auto mb-6">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Milestone</th>
+                            <th>Timeline</th>
+                            <th>Key Deliverables</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Initial MVP</td>
+                            <td>Month 4</td>
+                            <td>Core platform architecture, basic user interface, authentication system</td>
+                        </tr>
+                        <tr>
+                            <td>AI Training Engine Beta</td>
+                            <td>Month 6</td>
+                            <td>First version of AI training plan generator, basic analytics</td>
+                        </tr>
+                        <tr>
+                            <td>Closed Beta Release</td>
+                            <td>Month 9</td>
+                            <td>Wearable integration, community features, coach portal</td>
+                        </tr>
+                        <tr>
+                            <td>Form Analysis Implementation</td>
+                            <td>Month 12</td>
+                            <td>Computer vision system for technique analysis, feedback interface</td>
+                        </tr>
+                        <tr>
+                            <td>Open Beta Launch</td>
+                            <td>Month 13</td>
+                            <td>Complete core functionality, broader user testing</td>
+                        </tr>
+                        <tr>
+                            <td>Market Launch</td>
+                            <td>Month 15</td>
+                            <td>Full platform release with subscription tiers, marketing campaign</td>
+                        </tr>
+                        <tr>
+                            <td>Enterprise Features</td>
+                            <td>Month 21</td>
+                            <td>Team management, coach dashboards, white-label options</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Marketing & User Acquisition Strategy -->
+        <section id="marketing-strategy" class="mb-12">
+            <h2 class="section-title text-3xl">7. Marketing & User Acquisition Strategy</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Brand Positioning</h3>
+            <div class="highlight mb-6">
+                <p>StrideSmart will be positioned as the intelligent choice for serious recreational athletes who want the benefits of personal coaching combined with the power of AI—creating more effective, more adaptable training without the premium cost of traditional coaching.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Brand Voice</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Knowledgeable but approachable</li>
+                            <li class="mb-1">Data-driven yet human</li>
+                            <li class="mb-1">Motivational without being aggressive</li>
+                            <li class="mb-1">Technical but understandable</li>
+                            <li class="mb-1">Supportive and empowering</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Brand Identity</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Modern, clean visual design</li>
+                            <li class="mb-1">Blue primary color (trust, technology)</li>
+                            <li class="mb-1">Orange accent (energy, motivation)</li>
+                            <li class="mb-1">Data visualization as a design element</li>
+                            <li class="mb-1">Balance of technical and human imagery</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Pre-Launch Strategy</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-bullhorn fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Awareness Building</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Teaser content campaign</li>
+                        <li class="mb-1">Articles in running/triathlon publications</li>
+                        <li class="mb-1">Early access waiting list</li>
+                        <li class="mb-1">Influencer relationship development</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-users fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Beta Community</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Selection of 500-1,000 beta users</li>
+                        <li class="mb-1">Exclusive beta community forum</li>
+                        <li class="mb-1">Structured feedback collection</li>
+                        <li class="mb-1">Bug bounty program</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-file-alt fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Content Foundation</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Educational blog establishment</li>
+                        <li class="mb-1">Training methodology white papers</li>
+                        <li class="mb-1">Video series explaining approach</li>
+                        <li class="mb-1">Case studies from beta users</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Launch Strategy</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Phased Rollout</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ol class="list-decimal pl-6">
+                            <li class="mb-1">Week 1: Beta users and waitlist invitations</li>
+                            <li class="mb-1">Week 2-4: Controlled regional expansion</li>
+                            <li class="mb-1">Month 2: Full public availability</li>
+                            <li class="mb-1">Month 3-4: Feature enhancement based on initial usage</li>
+                        </ol>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Launch Events & PR</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Virtual platform launch event with industry experts</li>
+                            <li class="mb-1">Press release distribution to tech and sports media</li>
+                            <li class="mb-1">Podcast tour with founders/coaches</li>
+                            <li class="mb-1">Sponsored training challenge with notable athletes</li>
+                            <li class="mb-1">Presence at major running/triathlon expos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Acquisition Channels</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Paid Marketing (40% of budget)</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Facebook/Instagram targeted campaigns</li>
+                            <li class="mb-1">Google Search ads targeting competitor keywords</li>
+                            <li class="mb-1">YouTube pre-roll on running and training content</li>
+                            <li class="mb-1">Podcast sponsorships with running/triathlon shows</li>
+                            <li class="mb-1">Running/triathlon publication digital ads</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Partnership Marketing (25% of budget)</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Running club promotions with group discounts</li>
+                            <li class="mb-1">Race organization partnerships with participant offers</li>
+                            <li class="mb-1">Running store collaborations with trial memberships</li>
+                            <li class="mb-1">Coach affiliate program with revenue sharing</li>
+                            <li class="mb-1">Wearable device partner promotions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Content Marketing (20% of budget)</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">SEO-optimized training resources and guides</li>
+                            <li class="mb-1">Guest articles on major running publications</li>
+                            <li class="mb-1">Video tutorials featuring successful users</li>
+                            <li class="mb-1">Webinar series with training and technology experts</li>
+                            <li class="mb-1">Data-driven research reports on training effectiveness</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Viral/Organic Growth (15% of budget)</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Referral program with subscription discounts</li>
+                            <li class="mb-1">Social sharing incentives for achievements</li>
+                            <li class="mb-1">Community challenges with prizes</li>
+                            <li class="mb-1">Public training group formation tools</li>
+                            <li class="mb-1">User-generated content campaigns</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Conversion Optimization</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Onboarding & Trial Experience</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Free 14-day trial without credit card requirement</li>
+                            <li class="mb-1">Streamlined onboarding process (under 5 minutes)</li>
+                            <li class="mb-1">Personalized sample plan generated immediately</li>
+                            <li class="mb-1">Interactive guided tour of key features</li>
+                            <li class="mb-1">Early wins through achievable first-week goals</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-primary mb-2">Conversion Tactics</h4>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">Progress tracking to demonstrate early value</li>
+                            <li class="mb-1">Feature previews of premium capabilities</li>
+                            <li class="mb-1">Personalized upgrade recommendations</li>
+                            <li class="mb-1">Limited-time offers for annual subscriptions</li>
+                            <li class="mb-1">Social proof through user testimonials and results</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Retention & Growth Strategy</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-heart fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Engagement Tactics</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Progressive feature unlocking</li>
+                        <li class="mb-1">Results-based celebration</li>
+                        <li class="mb-1">Personalized coaching tips</li>
+                        <li class="mb-1">Community participation incentives</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-trophy fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Success Reinforcement</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Goal achievement recognition</li>
+                        <li class="mb-1">Progress visualization</li>
+                        <li class="mb-1">Performance improvement highlights</li>
+                        <li class="mb-1">Comparative analytics over time</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-chart-line fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Growth Optimization</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Tier upgrade incentives</li>
+                        <li class="mb-1">Feature sampling from higher tiers</li>
+                        <li class="mb-1">Strategic feature rollouts</li>
+                        <li class="mb-1">Multi-sport expansion incentives</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Marketing Budget Allocation</h3>
+            <div class="mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-3">First Year Marketing Budget: $1.5 Million</h4>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h5 class="font-semibold text-secondary mb-2">Pre-Launch Phase: $250,000</h5>
+                            <ul class="list-disc pl-6">
+                                <li class="mb-1">Content development: $75,000</li>
+                                <li class="mb-1">Industry partnerships: $50,000</li>
+                                <li class="mb-1">Beta program management: $40,000</li>
+                                <li class="mb-1">PR campaign: $60,000</li>
+                                <li class="mb-1">Website and materials: $25,000</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-secondary mb-2">Launch Phase: $600,000</h5>
+                            <ul class="list-disc pl-6">
+                                <li class="mb-1">Paid advertising: $300,000</li>
+                                <li class="mb-1">Launch events: $75,000</li>
+                                <li class="mb-1">Influencer campaigns: $100,000</li>
+                                <li class="mb-1">Partnership activations: $75,000</li>
+                                <li class="mb-1">PR and media: $50,000</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-semibold text-secondary mb-2">Ongoing Acquisition: $450,000</h5>
+                            <ul class="list-disc pl-6">
+                                <li class="mb-1">Paid advertising: $200,000</li>
+                                <li class="mb-1">Content marketing: $100,000</li>
+                                <li class="mb-1">Partnership programs: $75,000</li>
+                                <li class="mb-1">Referral incentives: $50,000</li>
+                                <li class="mb-1">Community building: $25,000</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-secondary mb-2">Retention & Growth: $200,000</h5>
+                            <ul class="list-disc pl-6">
+                                <li class="mb-1">User engagement campaigns: $75,000</li>
+                                <li class="mb-1">Feature education: $50,000</li>
+                                <li class="mb-1">Loyalty programs: $40,000</li>
+                                <li class="mb-1">Success case studies: $25,000</li>
+                                <li class="mb-1">User research: $10,000</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Key Performance Metrics</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Acquisition Metrics</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Customer Acquisition Cost (CAC) by channel</li>
+                        <li class="mb-1">Trial signup conversion rate</li>
+                        <li class="mb-1">Landing page conversion rates</li>
+                        <li class="mb-1">Referral program effectiveness</li>
+                        <li class="mb-1">Cost per install (CPI)</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Engagement Metrics</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Daily/Weekly Active Users (DAU/WAU)</li>
+                        <li class="mb-1">Feature adoption rates</li>
+                        <li class="mb-1">Training plan adherence</li>
+                        <li class="mb-1">Workout completion rate</li>
+                        <li class="mb-1">Community participation</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Revenue Metrics</h4>
+                    <ul class="list-disc pl-6">
+                        <li class="mb-1">Trial-to-paid conversion rate</li>
+                        <li class="mb-1">Average Revenue Per User (ARPU)</li>
+                        <li class="mb-1">Monthly Recurring Revenue (MRR)</li>
+                        <li class="mb-1">Tier distribution</li>
+                        <li class="mb-1">Churn rate by cohort</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Financial Projections -->
+        <section id="financial-projections" class="mb-12">
+            <h2 class="section-title text-3xl">8. Financial Projections</h2>
+            
+            <h3 class="text-xl mb-3 text-secondary">Investment Requirements</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold text-primary mb-3">Initial Development: $1.6 Million</h4>
+                        <table class="w-full financial-table">
+                            <thead class="financial-header">
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Phase 1: Foundation</td>
+                                    <td class="text-right">$350,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Phase 2: Core Functionality</td>
+                                    <td class="text-right">$600,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Phase 3: Advanced Features</td>
+                                    <td class="text-right">$650,000</td>
+                                </tr>
+                                <tr class="financial-total">
+                                    <td>Total Development</td>
+                                    <td class="text-right">$1,600,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold text-primary mb-3">Marketing & Launch: $1.5 Million</h4>
+                        <table class="w-full financial-table">
+                            <thead class="financial-header">
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Pre-Launch Marketing</td>
+                                    <td class="text-right">$250,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Launch Campaign</td>
+                                    <td class="text-right">$600,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Ongoing Acquisition</td>
+                                    <td class="text-right">$450,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Retention & Growth</td>
+                                    <td class="text-right">$200,000</td>
+                                </tr>
+                                <tr class="financial-total">
+                                    <td>Total Marketing</td>
+                                    <td class="text-right">$1,500,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-8">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-3">Operational Costs (Year 1): $1.9 Million</h4>
+                    <table class="w-full financial-table">
+                        <thead class="financial-header">
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Engineering Team (10 FTEs)</td>
+                                <td class="text-right">$1,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Product & Design (3 FTEs)</td>
+                                <td class="text-right">$300,000</td>
+                            </tr>
+                            <tr>
+                                <td>Marketing & Growth (4 FTEs)</td>
+                                <td class="text-right">$320,000</td>
+                            </tr>
+                            <tr>
+                                <td>Coach Network (part-time experts)</td>
+                                <td class="text-right">$150,000</td>
+                            </tr>
+                            <tr>
+                                <td>Infrastructure & Hosting</td>
+                                <td class="text-right">$80,000</td>
+                            </tr>
+                            <tr>
+                                <td>Office & Administrative</td>
+                                <td class="text-right">$50,000</td>
+                            </tr>
+                            <tr class="financial-total">
+                                <td>Total Operational</td>
+                                <td class="text-right">$1,900,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="highlight mb-8">
+                <h4 class="font-bold text-lg mb-2">Total Initial Investment Requirement: $5 Million</h4>
+                <p>This includes development costs, marketing budget, and first-year operational expenses, plus a 25% contingency buffer to account for unexpected costs and opportunities.</p>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Revenue Projections</h3>
+            
+            <div class="mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-3">User Growth Projections</h4>
+                    <table class="w-full financial-table">
+                        <thead class="financial-header">
+                            <tr>
+                                <th></th>
+                                <th class="text-right">Year 1</th>
+                                <th class="text-right">Year 2</th>
+                                <th class="text-right">Year 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Users</td>
+                                <td class="text-right">100,000</td>
+                                <td class="text-right">250,000</td>
+                                <td class="text-right">500,000</td>
+                            </tr>
+                            <tr>
+                                <td>Basic Tier (% of paid)</td>
+                                <td class="text-right">60%</td>
+                                <td class="text-right">50%</td>
+                                <td class="text-right">45%</td>
+                            </tr>
+                            <tr>
+                                <td>Premium Tier (% of paid)</td>
+                                <td class="text-right">35%</td>
+                                <td class="text-right">40%</td>
+                                <td class="text-right">42%</td>
+                            </tr>
+                            <tr>
+                                <td>Elite Tier (% of paid)</td>
+                                <td class="text-right">5%</td>
+                                <td class="text-right">10%</td>
+                                <td class="text-right">13%</td>
+                            </tr>
+                            <tr>
+                                <td>Conversion to Paid</td>
+                                <td class="text-right">25%</td>
+                                <td class="text-right">40%</td>
+                                <td class="text-right">45%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-3">Revenue Forecast</h4>
+                    <table class="w-full financial-table">
+                        <thead class="financial-header">
+                            <tr>
+                                <th></th>
+                                <th class="text-right">Year 1</th>
+                                <th class="text-right">Year 2</th>
+                                <th class="text-right">Year 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Basic Tier Revenue</td>
+                                <td class="text-right">$1,350,000</td>
+                                <td class="text-right">$4,500,000</td>
+                                <td class="text-right">$8,910,000</td>
+                            </tr>
+                            <tr>
+                                <td>Premium Tier Revenue</td>
+                                <td class="text-right">$1,575,000</td>
+                                <td class="text-right">$7,200,000</td>
+                                <td class="text-right">$16,632,000</td>
+                            </tr>
+                            <tr>
+                                <td>Elite Tier Revenue</td>
+                                <td class="text-right">$525,000</td>
+                                <td class="text-right">$4,200,000</td>
+                                <td class="text-right">$12,058,000</td>
+                            </tr>
+                            <tr>
+                                <td>Enterprise Solutions</td>
+                                <td class="text-right">$50,000</td>
+                                <td class="text-right">$300,000</td>
+                                <td class="text-right">$1,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Additional Revenue Streams</td>
+                                <td class="text-right">$0</td>
+                                <td class="text-right">$300,000</td>
+                                <td class="text-right">$1,400,000</td>
+                            </tr>
+                            <tr class="financial-total">
+                                <td>Total Annual Revenue</td>
+                                <td class="text-right">$3,500,000</td>
+                                <td class="text-right">$16,500,000</td>
+                                <td class="text-right">$40,000,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Profitability Analysis</h3>
+            <div class="mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-3">Profit & Loss Projection</h4>
+                    <table class="w-full financial-table">
+                        <thead class="financial-header">
+                            <tr>
+                                <th></th>
+                                <th class="text-right">Year 1</th>
+                                <th class="text-right">Year 2</th>
+                                <th class="text-right">Year 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Revenue</td>
+                                <td class="text-right">$3,500,000</td>
+                                <td class="text-right">$16,500,000</td>
+                                <td class="text-right">$40,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Cost of Revenue (20%)</td>
+                                <td class="text-right">$700,000</td>
+                                <td class="text-right">$3,300,000</td>
+                                <td class="text-right">$8,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Gross Profit</td>
+                                <td class="text-right">$2,800,000</td>
+                                <td class="text-right">$13,200,000</td>
+                                <td class="text-right">$32,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Operating Expenses</td>
+                                <td class="text-right">$3,400,000</td>
+                                <td class="text-right">$5,700,000</td>
+                                <td class="text-right">$9,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Marketing Expenses</td>
+                                <td class="text-right">$1,500,000</td>
+                                <td class="text-right">$4,000,000</td>
+                                <td class="text-right">$8,000,000</td>
+                            </tr>
+                            <tr class="financial-total">
+                                <td>Net Profit</td>
+                                <td class="text-right">($2,100,000)</td>
+                                <td class="text-right">$3,500,000</td>
+                                <td class="text-right">$15,000,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Key Financial Metrics</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Break-Even Analysis</h4>
+                    <p class="mb-2">Expected break-even point: Month 18-20</p>
+                    <p>Monthly recurring revenue required: $750,000</p>
+                    <p>Approximately 30,000 paid subscribers</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Unit Economics</h4>
+                    <p class="mb-2">Average LTV: $240 (Year 1)</p>
+                    <p class="mb-2">Target CAC: $40-60</p>
+                    <p>Target LTV:CAC ratio: 4:1</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-primary mb-2">Growth Metrics</h4>
+                    <p class="mb-2">Year 1-2 Revenue Growth: 371%</p>
+                    <p class="mb-2">Year 2-3 Revenue Growth: 142%</p>
+                    <p>3-Year CAGR: 241%</p>
+                </div>
+            </div>
+            
+            <div class="highlight mb-6">
+                <p>StrideSmart projects achieving profitability by the end of Year 2, with significant profit growth in Year 3 as user acquisition costs decrease relative to lifetime value and operational costs scale efficiently.</p>
+            </div>
+        </section>
+
+        <!-- Risk Assessment -->
+        <section id="risk-assessment" class="mb-12">
+            <h2 class="section-title text-3xl">9. Risk Assessment & Mitigation</h2>
+            
+            <div class="mb-8">
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <h3 class="text-xl mb-3 text-secondary">Market Risks</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Impact</th>
+                                <th>Likelihood</th>
+                                <th>Mitigation Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Increasing competition from established fitness platforms</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Focus on hybrid AI-human differentiator and form analysis technology that competitors lack; build strong brand community</td>
+                            </tr>
+                            <tr>
+                                <td>Market saturation of training apps</td>
+                                <td>Medium</td>
+                                <td>Medium</td>
+                                <td>Target specific underserved segments (serious recreational athletes) rather than mass market; emphasize unique hybrid approach</td>
+                            </tr>
+                            <tr>
+                                <td>Shift in consumer preferences away from AI solutions</td>
+                                <td>High</td>
+                                <td>Low</td>
+                                <td>Maintain balance of AI and human elements; emphasize human coaching oversight as a key value proposition</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <h3 class="text-xl mb-3 text-secondary">Technical Risks</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Impact</th>
+                                <th>Likelihood</th>
+                                <th>Mitigation Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>AI accuracy and effectiveness challenges</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Extensive testing with athlete cohorts; human coach oversight of AI recommendations; continuous model improvements</td>
+                            </tr>
+                            <tr>
+                                <td>Form analysis technology limitations</td>
+                                <td>Medium</td>
+                                <td>Medium</td>
+                                <td>Progressive feature rollout with clear user expectations; focus on most reliable aspects of form analysis first</td>
+                            </tr>
+                            <tr>
+                                <td>Integration issues with third-party devices</td>
+                                <td>Medium</td>
+                                <td>High</td>
+                                <td>Prioritize most popular devices; develop fallback manual entry options; build robust testing pipeline for device updates</td>
+                            </tr>
+                            <tr>
+                                <td>Scalability challenges with growing user base</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Cloud-native architecture with auto-scaling; regular load testing; tiered processing for intensive operations</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <h3 class="text-xl mb-3 text-secondary">Operational Risks</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Impact</th>
+                                <th>Likelihood</th>
+                                <th>Mitigation Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Coaching quality and consistency issues</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Rigorous coach selection process; standardized training; quality monitoring system; feedback mechanisms</td>
+                            </tr>
+                            <tr>
+                                <td>Customer support scaling challenges</td>
+                                <td>Medium</td>
+                                <td>High</td>
+                                <td>Comprehensive knowledge base; AI-assisted support triage; tiered support model based on subscription level</td>
+                            </tr>
+                            <tr>
+                                <td>Development timeline delays</td>
+                                <td>Medium</td>
+                                <td>High</td>
+                                <td>Agile methodology with clear MVP definition; phased feature rollout; regular milestone reviews</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <h3 class="text-xl mb-3 text-secondary">Financial Risks</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Impact</th>
+                                <th>Likelihood</th>
+                                <th>Mitigation Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Lower than projected conversion rates</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Conversion optimization focus; adjustable marketing spend; tiered pricing flexibility; enhanced free tier value</td>
+                            </tr>
+                            <tr>
+                                <td>Higher than anticipated customer acquisition costs</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Channel diversification; referral program emphasis; content marketing focus; partnership strategy</td>
+                            </tr>
+                            <tr>
+                                <td>Unexpected development cost overruns</td>
+                                <td>Medium</td>
+                                <td>High</td>
+                                <td>Phased development approach; regular budget reviews; 25% contingency allocation; feature prioritization framework</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <h3 class="text-xl mb-3 text-secondary">Regulatory & Compliance Risks</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Impact</th>
+                                <th>Likelihood</th>
+                                <th>Mitigation Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Data privacy regulatory changes</td>
+                                <td>High</td>
+                                <td>Medium</td>
+                                <td>Privacy-by-design architecture; regular compliance reviews; adaptable data handling processes; clear user consent model</td>
+                            </tr>
+                            <tr>
+                                <td>Health advice regulatory considerations</td>
+                                <td>Medium</td>
+                                <td>Medium</td>
+                                <td>Clear disclaimers; focus on training not medical advice; legal review of all health-related content</td>
+                            </tr>
+                            <tr>
+                                <td>International regulatory differences</td>
+                                <td>Medium</td>
+                                <td>Medium</td>
+                                <td>Phased geographic expansion; region-specific compliance reviews; adaptable terms of service</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3 class="text-xl mb-3 text-secondary">Contingency Planning</h3>
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold text-primary mb-2">Financial Contingencies</h4>
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">25% budget buffer for unexpected costs</li>
+                            <li class="mb-1">Modular development plan with clear stopping points</li>
+                            <li class="mb-1">Alternative monetization strategies ready to implement</li>
+                            <li class="mb-1">Tiered launch plan with adjustable marketing spend</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-bold text-primary mb-2">Technical Contingencies</h4>
+                        <ul class="list-disc pl-6">
+                            <li class="mb-1">MVP core features prioritization framework</li>
+                            <li class="mb-1">Fallback integrations for major device ecosystems</li>
+                            <li class="mb-1">Simplified version of AI plan generator as backup</li>
+                            <li class="mb-1">Manual coaching option if AI systems underperform</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section id="conclusion" class="mb-12">
+            <h2 class="section-title text-3xl">10. Conclusion & Next Steps</h2>
+            
+            <div class="highlight mb-6">
+                <p class="text-lg">StrideSmart represents a significant opportunity to address a clear gap in the endurance training market—combining the personalization and data-driven approach of AI with the empathy and expertise of human coaching at an accessible price point.</p>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Key Success Factors</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-bullseye fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Differentiated Value</h4>
+                    <p>The hybrid AI-human approach addresses the primary weaknesses of current market offerings while maintaining affordability and accessibility.</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-users fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Community Focus</h4>
+                    <p>Building meaningful connections between athletes with similar goals creates stickiness and accountability other platforms lack.</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="text-secondary text-center mb-2"><i class="fas fa-chart-line fa-2x"></i></div>
+                    <h4 class="font-bold text-primary text-center mb-2">Results-Driven</h4>
+                    <p>Ultimately, the platform's success depends on delivering measurable improvements in athlete performance, consistency, and goal achievement.</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl mb-3 text-secondary">Next Steps</h3>
+            <div class="timeline-container">
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Immediate (Next 30 Days)</div>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>Finalize founding team and roles</li>
+                        <li>Secure initial seed funding</li>
+                        <li>Engage development partners</li>
+                        <li>Begin technical architecture planning</li>
+                    </ul>
+                </div>
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Short-Term (1-3 Months)</div>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>Complete detailed technical specifications</li>
+                        <li>Develop brand identity and initial marketing assets</li>
+                        <li>Begin MVP development</li>
+                        <li>Recruit initial coach advisors</li>
+                    </ul>
+                </div>
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Medium-Term (3-6 Months)</div>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>Complete alpha version of core platform</li>
+                        <li>Begin internal testing</li>
+                        <li>Launch waiting list and content marketing</li>
+                        <li>Secure additional funding if needed</li>
+                    </ul>
+                </div>
+                <div class="timeline-item bg-white">
+                    <div class="timeline-date">Long-Term (6-12 Months)</div>
+                    <ul class="list-disc pl-6 mt-2">
+                        <li>Launch beta program with select users</li>
+                        <li>Refine platform based on feedback</li>
+                        <li>Build marketing partnerships</li>
+                        <li>Prepare for full market launch</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-8 p-6 bg-white rounded-lg shadow">
+                <h3 class="text-xl font-bold text-center mb-4 text-secondary">The Opportunity</h3>
+                <p class="mb-4">StrideSmart sits at the intersection of several powerful trends: the growing adoption of AI in fitness, increased interest in data-driven training, and the continued popularity of endurance sports. By addressing the limitations of current market offerings through a hybrid approach that combines technology with human expertise, StrideSmart is positioned to capture significant market share in this growing industry.</p>
+                <p>With the right execution, StrideSmart can become the leading platform for endurance athletes seeking personalized, effective training guidance at an accessible price point—transforming how athletes train and helping more people achieve their endurance goals.</p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-12 pt-8 pb-12 text-center text-gray-600 border-t">
+            <p class="mb-2">StrideSmart: AI-Powered Endurance Training Platform</p>
+            <p>Comprehensive Business Plan</p>
+            <p class="mt-6 text-sm">This document is confidential and contains proprietary information.</p>
+        </footer>
+    </div>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDh9a%2FgJD4Xh%2Bg5U3HaqOMOFV%2FodsDrCX%2FglpP%2F6Ymr%2BD8AC1ecmZp2rwJBPbOlnRyXgkvHu8veSWx%2BOCDfsNTt2DWRDUdkfEVADO0IyX%2BiivDnTe5FjqFEsUGFSx6IXI88Fe6PLxPLpz2TaudwehcKYt0IvjSsSF5bdf8yjzxRRiBQWtqj%2BO%2FSAl8Q7WKeudZdJnrpS7dIRRpWhhpyitp65qjnE0VhMwmziy5UFkCP3UsolfTOlo7fUejF2zUxSaGqo3ecabhfx5EypwfMGy7WFsj2nI0q03XmiQfnef0RIneu77Lji3fgAoJ83YTc3jw1ECKAh5O6jZNUDmKHyPJ%2BGMRedE16k0SZimzpMEaSUvlHjnl%2BZpXJBzeCjGwws8N%2BOtNAe8f2CfMWirTUMpbzJduG14NRxEOkEze1opgwd5CzAf0PL77v5IAmMVLh%2FveYID9Htf%2BUVJcIcLB0zkMTrSPMc5PzvO%2FwbTMA4Arycu50id8a%2BOO8zCcfA9991T4%2B3qW8%2FEvz40PBu72QGJ1JmUgBN53UQVlJLuQDUcy0%2BHPFkVvnK1u1%2Bz9zFekevOPHT3WLBG10p9V6s%2F3%2FAZ69Q%3D";
+        window.__genspark_locale = "en-US";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDh9a/gJD4Xh+g5U3HaqOMOFV/odsDrCX/glpP/6Ymr+D8AC1ecmZp2rwJBPbOlnRyXgkvHu8veSWx+OCDfsNTt2DWRDUdkfEVADO0IyX+iivDnTe5FjqFEsUGFSx6IXI88Fe6PLxPLpz2TaudwehcKYt0IvjSsSF5bdf8yjzxRRiBQWtqj+O/SAl8Q7WKeudZdJnrpS7dIRRpWhhpyitp65qjnE0VhMwmziy5UFkCP3UsolfTOlo7fUejF2zUxSaGqo3ecabhfx5EypwfMGy7WFsj2nI0q03XmiQfnef0RIneu77Lji3fgAoJ83YTc3jw1ECKAh5O6jZNUDmKHyPJ+GMRedE16k0SZimzpMEaSUvlHjnl+ZpXJBzeCjGwws8N+OtNAe8f2CfMWirTUMpbzJduG14NRxEOkEze1opgwd5CzAf0PL77v5IAmMVLh/veYID9Htf+UVJcIcLB0zkMTrSPMc5PzvO/wbTMA4Arycu50id8a+OO8zCcfA9991T4+3qW8/Evz40PBu72QGJ1JmUgBN53UQVlJLuQDUcy0+HPFkVvnK1u1+z9zFekevOPHT3WLBG10p9V6s/3/AZ69Q=";
+    </script>
+    
