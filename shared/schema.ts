@@ -196,6 +196,92 @@ export const nutrition_logs = pgTable("nutrition_logs", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// New tables for nutrition recommendations
+
+// Food items database
+export const food_items = pgTable("food_items", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // e.g., protein, carbs, vegetable, fruit
+  calories: integer("calories").notNull(),
+  protein: integer("protein").notNull(), // in grams
+  carbs: integer("carbs").notNull(), // in grams
+  fat: integer("fat").notNull(), // in grams
+  fiber: integer("fiber"), // in grams
+  sugar: integer("sugar"), // in grams
+  sodium: integer("sodium"), // in mg
+  image_url: text("image_url"),
+  serving_size: varchar("serving_size", { length: 50 }).notNull(),
+  serving_unit: varchar("serving_unit", { length: 20 }).notNull(),
+  is_vegetarian: boolean("is_vegetarian").default(false),
+  is_vegan: boolean("is_vegan").default(false),
+  is_gluten_free: boolean("is_gluten_free").default(false),
+  glycemic_index: integer("glycemic_index"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Meal plans recommended to users
+export const meal_plans = pgTable("meal_plans", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  plan_date: date("plan_date").notNull(),
+  training_load: varchar("training_load", { length: 20 }), // rest, light, moderate, heavy
+  calories_target: integer("calories_target"),
+  protein_target: integer("protein_target"),
+  carbs_target: integer("carbs_target"),
+  fat_target: integer("fat_target"),
+  hydration_target: integer("hydration_target"),
+  notes: text("notes"),
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Individual meals within a meal plan
+export const meals = pgTable("meals", {
+  id: serial("id").primaryKey(),
+  meal_plan_id: integer("meal_plan_id").references(() => meal_plans.id).notNull(),
+  meal_type: varchar("meal_type", { length: 20 }).notNull(), // breakfast, lunch, dinner, snack
+  time_of_day: varchar("time_of_day", { length: 20 }), // morning, afternoon, evening
+  calories: integer("calories"),
+  protein: integer("protein"),
+  carbs: integer("carbs"),
+  fat: integer("fat"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Food items in each meal
+export const meal_food_items = pgTable("meal_food_items", {
+  id: serial("id").primaryKey(),
+  meal_id: integer("meal_id").references(() => meals.id).notNull(),
+  food_item_id: integer("food_item_id").references(() => food_items.id).notNull(),
+  quantity: decimal("quantity").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: unique().on(table.meal_id, table.food_item_id),
+  };
+});
+
+// User nutrition preferences
+export const nutrition_preferences = pgTable("nutrition_preferences", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  dietary_restrictions: varchar("dietary_restrictions", { length: 255 }), // comma-separated list: vegetarian, vegan, gluten-free, etc.
+  allergies: varchar("allergies", { length: 255 }), // comma-separated list
+  disliked_foods: varchar("disliked_foods", { length: 255 }), // comma-separated list
+  favorite_foods: varchar("favorite_foods", { length: 255 }), // comma-separated list
+  breakfast_time: varchar("breakfast_time", { length: 10 }),
+  lunch_time: varchar("lunch_time", { length: 10 }),
+  dinner_time: varchar("dinner_time", { length: 10 }),
+  snack_times: varchar("snack_times", { length: 50 }),
+  calorie_goal: integer("calorie_goal"),
+  protein_goal: integer("protein_goal"), // % of total calories
+  carbs_goal: integer("carbs_goal"), // % of total calories
+  fat_goal: integer("fat_goal"), // % of total calories
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Human coaching
 export const coaches = pgTable("coaches", {
   id: serial("id").primaryKey(),
@@ -379,6 +465,33 @@ export const insertSubscriptionPlanSchema = createInsertSchema(subscription_plan
   is_active: true,
 });
 
+// Insert schemas for nutrition recommendation
+export const insertFoodItemSchema = createInsertSchema(food_items).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertMealPlanSchema = createInsertSchema(meal_plans).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertMealSchema = createInsertSchema(meals).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertMealFoodItemSchema = createInsertSchema(meal_food_items).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertNutritionPreferenceSchema = createInsertSchema(nutrition_preferences).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -410,3 +523,19 @@ export type IntegrationConnection = typeof integration_connections.$inferSelect;
 export type InsertIntegrationConnection = z.infer<typeof insertIntegrationConnectionSchema>;
 export type HealthMetric = typeof health_metrics.$inferSelect;
 export type InsertHealthMetric = z.infer<typeof insertHealthMetricsSchema>;
+
+// Types for nutrition recommendation
+export type FoodItem = typeof food_items.$inferSelect;
+export type InsertFoodItem = z.infer<typeof insertFoodItemSchema>;
+
+export type MealPlan = typeof meal_plans.$inferSelect;
+export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
+
+export type Meal = typeof meals.$inferSelect;
+export type InsertMeal = z.infer<typeof insertMealSchema>;
+
+export type MealFoodItem = typeof meal_food_items.$inferSelect;
+export type InsertMealFoodItem = z.infer<typeof insertMealFoodItemSchema>;
+
+export type NutritionPreference = typeof nutrition_preferences.$inferSelect;
+export type InsertNutritionPreference = z.infer<typeof insertNutritionPreferenceSchema>;
