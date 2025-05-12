@@ -323,6 +323,9 @@ export const integration_connections = pgTable("integration_connections", {
   athlete_id: varchar("athlete_id", { length: 100 }), // External platform's user ID
   is_active: boolean("is_active").default(true),
   last_sync_at: timestamp("last_sync_at"),
+  auto_sync: boolean("auto_sync").default(true),
+  sync_frequency: varchar("sync_frequency", { length: 20 }).default("daily"), // "daily" or "realtime"
+  scope: text("scope"), // Permissions granted by the user
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 }, (table) => {
