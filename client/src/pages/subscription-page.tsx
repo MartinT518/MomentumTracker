@@ -38,17 +38,80 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
   const elements = useElements();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Check for payment result in URL on component mount
+  useEffect(() => {
+    if (!stripe) {
+      return;
+    }
+
+    // Check URL for potential payment result from redirect
+    const clientSecret = new URLSearchParams(window.location.search).get(
+      "payment_intent_client_secret"
+    );
+    
+    if (!clientSecret) {
+      return;
+    }
+    
+    console.log("Found payment intent client secret in URL");
+    
+    stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+      console.log("Retrieved payment intent:", paymentIntent?.status);
+      
+      switch (paymentIntent?.status) {
+        case "succeeded":
+          toast({
+            title: "Payment Successful",
+            description: "Thank you for your subscription!",
+            variant: "default",
+          });
+          break;
+        case "processing":
+          toast({
+            title: "Payment Processing",
+            description: "Your payment is processing.",
+            variant: "default",
+          });
+          break;
+        case "requires_payment_method":
+          setPaymentError("Your payment was not successful, please try again.");
+          toast({
+            title: "Payment Failed",
+            description: "Your payment method was declined. Please try again with a different payment method.",
+            variant: "destructive",
+          });
+          break;
+        default:
+          setPaymentError("Something went wrong with your payment.");
+          toast({
+            title: "Payment Error",
+            description: "Something went wrong with your payment. Please try again.",
+            variant: "destructive",
+          });
+          break;
+      }
+    });
+  }, [stripe, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!stripe || !elements || !selectedPlan) {
+      toast({
+        title: "Payment System Unavailable",
+        description: "Please try again later or contact support.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsProcessing(true);
+    setPaymentError(null);
 
     try {
+      console.log("Confirming payment with Stripe...");
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -57,18 +120,23 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
       });
 
       if (error) {
+        console.error("Payment confirmation error:", error);
+        setPaymentError(error.message || "Unknown error");
         toast({
           title: "Payment Failed",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log("Payment confirmation initiated successfully");
         toast({
           title: "Payment Processing",
           description: "Your subscription is being processed. You'll be redirected shortly.",
         });
       }
     } catch (err: any) {
+      console.error("Payment exception:", err);
+      setPaymentError(err.message || "An unexpected error occurred");
       toast({
         title: "Payment Error",
         description: err.message || "An error occurred during payment processing",
@@ -81,6 +149,11 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-6">
+      {paymentError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-800 mb-4">
+          <p className="text-sm font-medium">{paymentError}</p>
+        </div>
+      )}
       <PaymentElement />
       <Button 
         type="submit" 
@@ -89,6 +162,9 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
       >
         {isProcessing ? "Processing..." : `Subscribe - $${formatPrice(selectedPlan?.price)}/${selectedPlan?.billing_interval}`}
       </Button>
+      <p className="text-sm text-muted-foreground mt-2 text-center">
+        Your payment is securely processed by Stripe
+      </p>
     </form>
   );
 };

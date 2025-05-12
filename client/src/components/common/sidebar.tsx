@@ -90,8 +90,8 @@ export function Sidebar({ className }: SidebarProps) {
           {navItems.map((item) => (
             <li key={item.title}>
               <Link href={item.href}>
-                <a className={cn(
-                  "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
+                <div className={cn(
+                  "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter cursor-pointer",
                   item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
                 )}>
                   <item.icon className={cn(
@@ -99,7 +99,7 @@ export function Sidebar({ className }: SidebarProps) {
                     item.active && "text-primary"
                   )} />
                   {item.title}
-                </a>
+                </div>
               </Link>
             </li>
           ))}
@@ -112,8 +112,8 @@ export function Sidebar({ className }: SidebarProps) {
           {accountItems.map((item) => (
             <li key={item.title}>
               <Link href={item.href}>
-                <a className={cn(
-                  "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
+                <div className={cn(
+                  "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter cursor-pointer",
                   item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
                 )}>
                   <item.icon className={cn(
@@ -126,7 +126,7 @@ export function Sidebar({ className }: SidebarProps) {
                       <Crown className="h-3.5 w-3.5 ml-2 text-amber-500" />
                     )}
                   </div>
-                </a>
+                </div>
               </Link>
             </li>
           ))}
