@@ -290,7 +290,7 @@ export function TrainingPlanCalendar({
                 type: "Premium Content",
                 description: "Subscribe to see future workouts",
                 duration: "",
-                intensity: "moderate",
+                intensity: "moderate" as const,
                 completed: false,
               }
             ] : []

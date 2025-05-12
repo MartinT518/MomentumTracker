@@ -1,20 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Send, AlertTriangle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { SendHorizontal, Paperclip, Clock, Check, PenLine } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Coach } from '@shared/schema';
 
-interface ChatMessage {
+// Websocket connection for real-time chat
+let socket: WebSocket | null = null;
+
+interface Message {
   id: string;
-  content: string;
-  sender: string | number;
-  timestamp: string;
-  isCoach: boolean;
+  from: 'coach' | 'user';
+  text: string;
+  timestamp: Date;
+  status: 'sent' | 'delivered' | 'read';
+}
+
+interface TrainingPlanSuggestion {
+  id: string;
+  description: string;
+  date: Date;
+  workout: {
+    type: string;
+    details: string;
+    changes: string;
+  };
+  accepted: boolean;
 }
 
 interface CoachChatProps {
@@ -23,132 +37,142 @@ interface CoachChatProps {
 }
 
 export function CoachChat({ coach, sessionId }: CoachChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [showPlanUpdate, setShowPlanUpdate] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [planSuggestions, setPlanSuggestions] = useState<TrainingPlanSuggestion[]>([]);
+  const [message, setMessage] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
   
-  // Effect to initialize WebSocket connection
+  // Setup WebSocket connection
   useEffect(() => {
-    if (!user || !coach || !sessionId) return;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws?sessionId=${sessionId}`;
     
-    // Create WebSocket connection
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const ws = new WebSocket(wsUrl);
+    socket = new WebSocket(wsUrl);
     
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-      setConnected(true);
+    socket.onopen = () => {
+      setIsConnected(true);
+      console.log('WebSocket Connected');
       
-      // Send initialization message
-      ws.send(JSON.stringify({
-        type: 'init',
-        userId: user.id,
+      // Fetch chat history
+      socket.send(JSON.stringify({
+        type: 'history',
         sessionId
       }));
     };
     
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("Received WebSocket message:", data);
-        
-        // Handle different message types
-        if (data.type === 'init_confirmed') {
-          toast({
-            title: "Connected to coach",
-            description: "You can now chat with your coach",
-          });
-        }
-        else if (data.type === 'chat_message') {
-          const newMessage: ChatMessage = {
-            id: Date.now().toString(),
-            content: data.message,
-            sender: data.sender,
-            timestamp: data.timestamp,
-            isCoach: data.sender === coach.user_id
-          };
-          
-          setMessages(prev => [...prev, newMessage]);
-        }
-        else if (data.type === 'plan_update_request') {
-          setShowPlanUpdate(true);
-          toast({
-            title: "Training Plan Update",
-            description: "Your coach has suggested changes to your training plan. Please review and approve.",
-            duration: 10000,
-          });
-        }
-        else if (data.type === 'error') {
-          console.error("WebSocket error:", data.message);
-          toast({
-            title: "Connection Error",
-            description: data.message,
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
+    socket.onclose = () => {
+      setIsConnected(false);
+      console.log('WebSocket Disconnected');
     };
     
-    ws.onclose = () => {
-      console.log("WebSocket disconnected");
-      setConnected(false);
-      toast({
-        title: "Disconnected",
-        description: "Connection to coach lost. Trying to reconnect...",
-        variant: "destructive"
-      });
-    };
-    
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+    socket.onerror = (error) => {
+      console.error('WebSocket Error:', error);
       toast({
         title: "Connection Error",
-        description: "Failed to connect to coaching service",
-        variant: "destructive"
+        description: "Failed to connect to coaching session",
+        variant: "destructive",
       });
     };
     
-    setSocket(ws);
-    
-    // Cleanup function
-    return () => {
-      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-        ws.close();
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      switch (data.type) {
+        case 'message':
+          const newMessage: Message = {
+            id: data.id,
+            from: data.from,
+            text: data.text,
+            timestamp: new Date(data.timestamp),
+            status: data.status || 'sent'
+          };
+          setMessages(prev => [...prev, newMessage]);
+          break;
+          
+        case 'history':
+          const history: Message[] = data.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(history);
+          break;
+          
+        case 'typing':
+          setIsTyping(data.isTyping);
+          break;
+          
+        case 'plan_suggestion':
+          const suggestion: TrainingPlanSuggestion = {
+            id: data.id,
+            description: data.description,
+            date: new Date(data.date),
+            workout: data.workout,
+            accepted: false
+          };
+          setPlanSuggestions(prev => [...prev, suggestion]);
+          break;
+          
+        case 'status_update':
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === data.messageId 
+                ? { ...msg, status: data.status } 
+                : msg
+            )
+          );
+          break;
       }
     };
-  }, [user, coach, sessionId]);
+    
+    // Add initial welcome message if no messages exist
+    if (messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: 'welcome',
+        from: 'coach',
+        text: `Hello! I'm ${coach.name}, your running coach. I'm here to help you with your training plan and answer any questions you might have. How can I assist you today?`,
+        timestamp: new Date(),
+        status: 'read'
+      };
+      setMessages([welcomeMessage]);
+    }
+    
+    return () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, [sessionId, coach.name, toast]);
   
-  // Scroll to bottom when messages change
+  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
-  // Send a message
   const sendMessage = () => {
-    if (!inputMessage.trim() || !socket || !connected) return;
+    if (!message.trim() || !isConnected || !socket) return;
     
-    const message = {
-      type: 'chat_message',
-      message: inputMessage,
-      sender: user?.id,
-      athleteId: user?.id,
-      sessionId,
-      isCoach: false,
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      from: 'user',
+      text: message,
+      timestamp: new Date(),
+      status: 'sent'
     };
     
-    socket.send(JSON.stringify(message));
-    setInputMessage('');
+    setMessages(prev => [...prev, newMessage]);
+    
+    socket.send(JSON.stringify({
+      type: 'message',
+      text: message,
+      sessionId
+    }));
+    
+    setMessage('');
   };
   
-  // Handle Enter key press
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -156,32 +180,40 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
     }
   };
   
-  // Approve or reject plan updates
-  const handlePlanUpdateResponse = (approved: boolean) => {
-    if (!socket || !connected) return;
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+  
+  const handleSuggestionResponse = (suggestionId: string, accept: boolean) => {
+    if (!socket) return;
     
     socket.send(JSON.stringify({
-      type: 'plan_update_response',
-      approved,
-      coachId: coach.user_id,
-      athleteId: user?.id,
+      type: 'suggestion_response',
+      suggestionId,
+      accept,
       sessionId
     }));
     
-    setShowPlanUpdate(false);
+    setPlanSuggestions(prev => 
+      prev.map(suggestion => 
+        suggestion.id === suggestionId 
+          ? { ...suggestion, accepted: accept } 
+          : suggestion
+      )
+    );
     
     toast({
-      title: approved ? "Plan Changes Approved" : "Plan Changes Rejected",
-      description: approved 
-        ? "The coach's changes to your training plan have been applied" 
-        : "You've declined the coach's changes to your training plan",
+      title: accept ? "Workout Accepted" : "Workout Declined",
+      description: accept 
+        ? "The suggested workout has been added to your plan" 
+        : "You've declined this workout suggestion",
     });
   };
   
   return (
-    <Card className="w-full h-[600px] flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
+    <div className="flex flex-col h-[calc(100vh-14rem)]">
+      <Card className="flex flex-col flex-1 overflow-hidden">
+        <CardHeader className="border-b pb-3">
           <div className="flex items-center space-x-3">
             <Avatar>
               <AvatarImage src={coach.profile_image || ''} />
@@ -191,95 +223,145 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
               <CardTitle className="text-lg">{coach.name}</CardTitle>
               <CardDescription>{coach.specialty || 'Running Coach'}</CardDescription>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-1">
-            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-xs text-muted-foreground">{connected ? 'Online' : 'Offline'}</span>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <Separator className="mb-2" />
-      
-      {showPlanUpdate && (
-        <div className="mx-4 my-2 p-3 bg-amber-50 border border-amber-200 rounded-md flex flex-col">
-          <div className="flex items-start space-x-2 mb-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
-            <div>
-              <h4 className="font-medium text-sm">Training Plan Update</h4>
-              <p className="text-sm text-muted-foreground">
-                Your coach has suggested changes to your training plan. Would you like to accept these changes?
-              </p>
+            <div className="ml-auto flex items-center">
+              <span className={cn(
+                "h-2.5 w-2.5 rounded-full mr-2",
+                isConnected ? "bg-green-500" : "bg-gray-400"
+              )}></span>
+              <span className="text-sm text-muted-foreground">
+                {isConnected ? "Online" : "Offline"}
+              </span>
             </div>
           </div>
-          <div className="flex space-x-2 justify-end">
-            <Button variant="outline" size="sm" onClick={() => handlePlanUpdateResponse(false)}>
-              Decline
-            </Button>
-            <Button size="sm" onClick={() => handlePlanUpdateResponse(true)}>
-              Accept Changes
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      <CardContent className="flex-grow overflow-y-auto px-4 py-2">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-4">
-            <p className="text-muted-foreground mb-2">No messages yet</p>
-            <p className="text-sm text-muted-foreground">
-              Start chatting with your coach to get personalized advice and training plan adjustments
-            </p>
-          </div>
-        ) : (
+        </CardHeader>
+        
+        <CardContent className="flex-1 overflow-y-auto p-4">
           <div className="space-y-4">
-            {messages.map((msg) => (
+            {messages.map((msg, index) => (
               <div 
-                key={msg.id} 
-                className={`flex ${msg.isCoach ? 'justify-start' : 'justify-end'}`}
+                key={msg.id || index}
+                className={cn(
+                  "flex",
+                  msg.from === 'user' ? "justify-end" : "justify-start"
+                )}
               >
-                <div 
-                  className={`max-w-[75%] rounded-lg p-3 ${
-                    msg.isCoach 
-                      ? 'bg-gray-100 text-gray-900' 
-                      : 'bg-primary text-primary-foreground'
-                  }`}
-                >
-                  <p className="text-sm">{msg.content}</p>
-                  <p className="text-xs mt-1 opacity-70">
-                    {new Date(msg.timestamp).toLocaleTimeString(undefined, { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
+                <div className={cn(
+                  "max-w-[80%] rounded-lg p-3",
+                  msg.from === 'user' 
+                    ? "bg-primary/10 text-foreground" 
+                    : "bg-muted"
+                )}>
+                  <div className="text-sm">{msg.text}</div>
+                  <div className="flex justify-end items-center mt-1">
+                    <span className="text-xs text-muted-foreground mr-1">
+                      {formatTime(msg.timestamp)}
+                    </span>
+                    {msg.from === 'user' && (
+                      <span>
+                        {msg.status === 'sent' && (
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                        )}
+                        {msg.status === 'delivered' && (
+                          <Check className="h-3 w-3 text-muted-foreground" />
+                        )}
+                        {msg.status === 'read' && (
+                          <div className="flex">
+                            <Check className="h-3 w-3 text-blue-500 -mr-1" />
+                            <Check className="h-3 w-3 text-blue-500" />
+                          </div>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
+            
+            {/* Typing indicator */}
+            {isTyping && (
+              <div className="flex">
+                <div className="bg-muted rounded-lg p-3 max-w-[80%]">
+                  <div className="flex space-x-1">
+                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"></div>
+                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce delay-75"></div>
+                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce delay-150"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Workout suggestions */}
+            {planSuggestions.map((suggestion) => (
+              <div key={suggestion.id} className="border rounded-lg p-3 bg-blue-50 border-blue-200">
+                <div className="flex items-start">
+                  <PenLine className="h-5 w-5 text-blue-500 mt-1 mr-2 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="font-medium mb-1">Training Plan Suggestion</div>
+                    <div className="text-sm mb-2">{suggestion.description}</div>
+                    
+                    <div className="bg-white rounded p-3 mb-3 text-sm">
+                      <div className="font-medium">{suggestion.workout.type}</div>
+                      <div className="text-gray-600 mt-1">{suggestion.workout.details}</div>
+                      <div className="text-blue-600 mt-2">
+                        <span className="font-medium">Changes: </span>
+                        {suggestion.workout.changes}
+                      </div>
+                    </div>
+                    
+                    {suggestion.accepted ? (
+                      <div className="text-green-600 text-sm flex items-center">
+                        <Check className="h-4 w-4 mr-1" />
+                        Added to your plan
+                      </div>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => handleSuggestionResponse(suggestion.id, true)}
+                        >
+                          Accept
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleSuggestionResponse(suggestion.id, false)}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* This div is for scrolling to the bottom */}
             <div ref={messagesEndRef} />
           </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="pt-2">
-        <div className="flex w-full space-x-2">
-          <Input
-            placeholder="Type your message..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={!connected}
-            className="flex-grow"
-          />
-          <Button 
-            onClick={sendMessage} 
-            disabled={!connected || !inputMessage.trim()}
-            className="flex-shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+        </CardContent>
+        
+        <div className="p-3 border-t">
+          <div className="flex space-x-2">
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              className="min-h-[42px] resize-none"
+              disabled={!isConnected}
+            />
+            <div className="flex space-x-2">
+              <Button variant="outline" size="icon" disabled={!isConnected}>
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              <Button size="icon" onClick={sendMessage} disabled={!isConnected || !message.trim()}>
+                <SendHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
-      </CardFooter>
-    </Card>
+      </Card>
+    </div>
   );
 }
