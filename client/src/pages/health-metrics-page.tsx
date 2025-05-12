@@ -167,35 +167,53 @@ export default function HealthMetricsPage() {
   };
 
   const calculateEnergyLevel = (metric: HealthMetric) => {
-    // A simple algorithm to calculate energy level from health metrics
-    // You can enhance this with more sophisticated algorithms
+    // Enhanced algorithm to calculate energy level from health metrics
+    // Based on HRV, resting HR, and sleep quality as requested
     let energyScore = 50; // Base score
     
+    // HRV is a primary indicator of recovery (typically 20-100+ range)
     if (metric.hrv_score) {
-      // Higher HRV is generally better (adjust weights as needed)
-      energyScore += (metric.hrv_score - 50) * 0.3;
+      // Higher HRV scores indicate better recovery
+      // For a typical scale where 50 is average, adjust score based on deviation
+      // Weight: 40% of total score
+      const hrvFactor = (metric.hrv_score - 50) * 0.4;
+      energyScore += hrvFactor;
     }
     
+    // Resting heart rate is inversely correlated with recovery
     if (metric.resting_heart_rate) {
-      // Lower resting HR is generally better (adjust weights as needed)
-      energyScore += (70 - metric.resting_heart_rate) * 0.3;
+      // Lower resting HR is generally better for athletes
+      // Using 60 bpm as a baseline reference point 
+      // Weight: 30% of total score
+      const restingHrFactor = (60 - metric.resting_heart_rate) * 0.5;
+      energyScore += restingHrFactor;
     }
     
+    // Sleep quality has significant impact on recovery
     if (metric.sleep_quality) {
-      // Higher sleep quality is better (scale of 1-10)
-      energyScore += (metric.sleep_quality - 5) * 3;
+      // Scale of 1-10, with 10 being excellent sleep
+      // Weight: 30% of total score
+      const sleepQualityFactor = (metric.sleep_quality - 5) * 4;
+      energyScore += sleepQualityFactor;
     }
     
+    // Sleep duration affects recovery
     if (metric.sleep_duration) {
       // Optimal sleep time is around 7-8 hours (420-480 minutes)
       const optimalSleep = 450;
       const sleepDiff = Math.abs(metric.sleep_duration - optimalSleep);
-      energyScore -= sleepDiff * 0.1;
+      // Penalize more severely for insufficient sleep vs. excess sleep
+      const sleepPenalty = metric.sleep_duration < optimalSleep 
+        ? sleepDiff * 0.15  // More penalty for under-sleeping
+        : sleepDiff * 0.08; // Less penalty for over-sleeping
+      energyScore -= sleepPenalty;
     }
     
+    // Stress level impacts recovery capacity
     if (metric.stress_level) {
       // Lower stress is better (scale of 1-10)
-      energyScore -= (metric.stress_level - 5) * 2;
+      const stressFactor = (metric.stress_level - 5) * 2.5;
+      energyScore -= stressFactor;
     }
     
     // Ensure the score is within 0-100 range
@@ -203,14 +221,16 @@ export default function HealthMetricsPage() {
   };
 
   const getTrainingRecommendation = (energyLevel: number) => {
-    if (energyLevel >= 80) {
-      return "Energy levels are optimal. Great day for high-intensity or long workouts.";
-    } else if (energyLevel >= 60) {
-      return "Energy levels are good. Moderate to high-intensity training recommended.";
+    if (energyLevel >= 85) {
+      return "Energy levels are excellent. Ideal day for high-intensity intervals, threshold work, or long endurance sessions. Your body is showing optimal recovery capacity.";
+    } else if (energyLevel >= 70) {
+      return "Energy levels are very good. Well-suited for quality workouts like tempo runs, hill repeats, or medium-long runs. Your body is showing good recovery.";
+    } else if (energyLevel >= 55) {
+      return "Energy levels are moderate. Focus on aerobic endurance at an easy to moderate effort. Consider reducing intensity while maintaining planned volume.";
     } else if (energyLevel >= 40) {
-      return "Energy levels are moderate. Consider a light to moderate workout today.";
+      return "Energy levels are below average. Prioritize recovery with easy runs or cross-training. Reduce workout volume and avoid high-intensity efforts today.";
     } else {
-      return "Energy levels are low. Rest or very light activity recommended.";
+      return "Energy levels are low. Your body needs recovery. Consider a rest day, gentle yoga, or very light activity. Prioritize extra sleep and proper nutrition.";
     }
   };
 
@@ -594,9 +614,10 @@ export default function HealthMetricsPage() {
                           <Zap className={`w-4 h-4 mr-2 ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`} />
                           <span className={`font-medium ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`}>
                             {!energyLevel ? "No data" :
-                              energyLevel >= 80 ? "Optimal Energy" :
-                              energyLevel >= 60 ? "Good Energy" :
-                              energyLevel >= 40 ? "Moderate Energy" :
+                              energyLevel >= 85 ? "Excellent Energy" :
+                              energyLevel >= 70 ? "Very Good Energy" :
+                              energyLevel >= 55 ? "Moderate Energy" :
+                              energyLevel >= 40 ? "Below Average Energy" :
                               "Low Energy"
                             }
                           </span>
