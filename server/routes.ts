@@ -860,8 +860,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subscription-plans", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    // Check if the user is an admin (in a real app, you would have proper role checks)
-    if (req.user.role !== 'admin') {
+    // Check if the user is an admin 
+    // For now, we'll assume the first user is an admin
+    if (req.user.id !== 1) {
       return res.status(403).json({ error: "Only admins can create subscription plans" });
     }
     
@@ -1002,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.send({
           subscriptionId: subscription.id,
-          clientSecret
+          clientSecret: clientSecret || undefined
         });
         
         return;
@@ -1041,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // First create a product if it doesn't exist
           const product = await stripe.products.create({
             name: subscriptionPlan.name,
-            description: subscriptionPlan.description,
+            description: subscriptionPlan.description || undefined,
           });
           
           // Create a price for the product
