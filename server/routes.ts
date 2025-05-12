@@ -834,6 +834,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health Metrics API
+  app.get("/api/health-metrics", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // Parse date query parameters if provided
+      let startDate = undefined;
+      let endDate = undefined;
+      
+      if (req.query.startDate) {
+        startDate = new Date(req.query.startDate as string);
+      }
+      
+      if (req.query.endDate) {
+        endDate = new Date(req.query.endDate as string);
+      }
+      
+      const metrics = await storage.getHealthMetrics(req.user.id, startDate, endDate);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching health metrics:", error);
+      res.status(500).json({ error: "Failed to fetch health metrics" });
+    }
+  });
+
+  app.post("/api/health-metrics", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const validation = insertHealthMetricsSchema.safeParse({
+        ...req.body,
+        user_id: req.user.id,
+        metric_date: req.body.metric_date ? new Date(req.body.metric_date) : new Date()
+      });
+      
+      if (!validation.success) {
+        return res.status(400).json({ errors: validation.error.errors });
+      }
+      
+      const metric = await storage.createHealthMetric(validation.data);
+      res.status(201).json(metric);
+    } catch (error) {
+      console.error("Error creating health metric:", error);
+      res.status(500).json({ error: "Failed to create health metric" });
+    }
+  });
+
+  app.patch("/api/health-metrics/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const metricId = parseInt(req.params.id);
+      const updatedMetric = await storage.updateHealthMetric(metricId, req.body);
+      res.json(updatedMetric);
+    } catch (error) {
+      console.error("Error updating health metric:", error);
+      res.status(500).json({ error: "Failed to update health metric" });
+    }
+  });
+
+  // Integration connections API
+  app.get("/api/integrations", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const connections = await storage.getIntegrationConnections(req.user.id);
+      res.json(connections);
+    } catch (error) {
+      console.error("Error fetching integrations:", error);
+      res.status(500).json({ error: "Failed to fetch integrations" });
+    }
+  });
+
+  app.get("/api/integrations/:platform", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const platform = req.params.platform;
+      const connection = await storage.getIntegrationConnection(req.user.id, platform);
+      
+      if (!connection) {
+        return res.status(404).json({ error: "Integration connection not found" });
+      }
+      
+      res.json(connection);
+    } catch (error) {
+      console.error("Error fetching integration:", error);
+      res.status(500).json({ error: "Failed to fetch integration" });
+    }
+  });
+
+  app.post("/api/integrations", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const validation = insertIntegrationConnectionSchema.safeParse({
+        ...req.body,
+        user_id: req.user.id
+      });
+      
+      if (!validation.success) {
+        return res.status(400).json({ errors: validation.error.errors });
+      }
+      
+      const connection = await storage.createIntegrationConnection(validation.data);
+      res.status(201).json(connection);
+    } catch (error) {
+      console.error("Error creating integration connection:", error);
+      res.status(500).json({ error: "Failed to create integration connection" });
+    }
+  });
+
+  app.patch("/api/integrations/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const connectionId = parseInt(req.params.id);
+      const updatedConnection = await storage.updateIntegrationConnection(connectionId, req.body);
+      res.json(updatedConnection);
+    } catch (error) {
+      console.error("Error updating integration connection:", error);
+      res.status(500).json({ error: "Failed to update integration connection" });
+    }
+  });
+
+  app.delete("/api/integrations/:platform", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const platform = req.params.platform;
+      await storage.removeIntegrationConnection(req.user.id, platform);
+      res.status(200).json({ message: `Successfully removed ${platform} integration` });
+    } catch (error) {
+      console.error("Error removing integration connection:", error);
+      res.status(500).json({ error: "Failed to remove integration connection" });
+    }
+  });
+
   // Subscription Plans API
   app.get("/api/subscription-plans", async (req, res) => {
     try {
