@@ -602,6 +602,110 @@ export class DatabaseStorage implements IStorage {
       
     return updatedUser;
   }
+
+  // Health metrics
+  async getHealthMetrics(userId: number, startDate?: Date, endDate?: Date): Promise<HealthMetric[]> {
+    let query = db
+      .select()
+      .from(health_metrics)
+      .where(eq(health_metrics.user_id, userId));
+    
+    if (startDate) {
+      query = query.where(gte(health_metrics.metric_date, startDate));
+    }
+    
+    if (endDate) {
+      query = query.where(lte(health_metrics.metric_date, endDate));
+    }
+    
+    const metrics = await query.orderBy(desc(health_metrics.metric_date));
+    return metrics;
+  }
+  
+  async createHealthMetric(metric: InsertHealthMetric): Promise<HealthMetric> {
+    const [newMetric] = await db
+      .insert(health_metrics)
+      .values(metric)
+      .returning();
+    return newMetric;
+  }
+  
+  async updateHealthMetric(id: number, data: Partial<HealthMetric>): Promise<HealthMetric> {
+    const [updatedMetric] = await db
+      .update(health_metrics)
+      .set(data)
+      .where(eq(health_metrics.id, id))
+      .returning();
+    
+    if (!updatedMetric) {
+      throw new Error(`Health metric with ID ${id} not found`);
+    }
+    
+    return updatedMetric;
+  }
+  
+  // Integration connections
+  async getIntegrationConnections(userId: number): Promise<IntegrationConnection[]> {
+    return db
+      .select()
+      .from(integration_connections)
+      .where(eq(integration_connections.user_id, userId))
+      .orderBy(desc(integration_connections.created_at));
+  }
+  
+  async getIntegrationConnection(userId: number, platform: string): Promise<IntegrationConnection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(integration_connections)
+      .where(
+        and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        )
+      );
+    
+    return connection;
+  }
+  
+  async createIntegrationConnection(connection: InsertIntegrationConnection): Promise<IntegrationConnection> {
+    const [newConnection] = await db
+      .insert(integration_connections)
+      .values({
+        ...connection,
+        last_sync_at: null
+      })
+      .returning();
+    
+    return newConnection;
+  }
+  
+  async updateIntegrationConnection(id: number, data: Partial<IntegrationConnection>): Promise<IntegrationConnection> {
+    const [updatedConnection] = await db
+      .update(integration_connections)
+      .set({
+        ...data,
+        updated_at: new Date()
+      })
+      .where(eq(integration_connections.id, id))
+      .returning();
+    
+    if (!updatedConnection) {
+      throw new Error(`Integration connection with ID ${id} not found`);
+    }
+    
+    return updatedConnection;
+  }
+  
+  async removeIntegrationConnection(userId: number, platform: string): Promise<void> {
+    await db
+      .delete(integration_connections)
+      .where(
+        and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        )
+      );
+  }
 }
 
 // Fallback to memory storage if DB connection fails
