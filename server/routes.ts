@@ -3,6 +3,562 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from "axios";
+import { and, eq, desc, asc, gte, lte, or, sql } from "drizzle-orm";
+import { db } from "./db";
+import {
+  users,
+  goals,
+  activities,
+  workouts,
+  health_metrics,
+  training_plans,
+  nutrition_logs,
+  food_items,
+  meal_plans,
+  meals,
+  meal_food_items,
+  nutrition_preferences,
+  integration_connections,
+  sync_logs,
+  coaches,
+  coaching_sessions,
+  subscription_plans,
+} from "@shared/schema";
+
+// Functions for synchronizing data from third-party platforms
+interface SyncOptions {
+  userId: number;
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: number;
+  forceSync?: boolean;
+  syncLogId?: number;
+}
+
+// Sync activities from Strava
+async function syncStravaData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, refresh_token, expires_at, forceSync = false, syncLogId } = options;
+  let token = access_token;
+  let syncLogEntry = syncLogId;
+  
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'strava',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Check if token needs refreshing
+    if (expires_at && expires_at < Math.floor(Date.now() / 1000)) {
+      console.log('Refreshing Strava token...');
+      
+      // Token has expired, refresh it
+      const refreshResponse = await axios.post('https://www.strava.com/oauth/token', {
+        client_id: process.env.STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        refresh_token,
+        grant_type: 'refresh_token'
+      });
+      
+      // Update token info
+      token = refreshResponse.data.access_token;
+      const newRefreshToken = refreshResponse.data.refresh_token;
+      const newExpiresAt = refreshResponse.data.expires_at;
+      
+      // Update stored token
+      await db.update(integration_connections)
+        .set({
+          access_token: token,
+          refresh_token: newRefreshToken,
+          token_expires_at: new Date(newExpiresAt * 1000),
+          updated_at: new Date()
+        })
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'strava')
+        ));
+    }
+    
+    // Determine since when to fetch activities
+    let sinceDate: Date | undefined;
+    
+    if (!forceSync) {
+      // Get the last sync time
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'strava')
+        ));
+      
+      sinceDate = connection.last_sync_at;
+    }
+    
+    // Fetch activities from Strava
+    const sinceTimestamp = sinceDate ? Math.floor(sinceDate.getTime() / 1000) : undefined;
+    const activitiesUrl = `https://www.strava.com/api/v3/athlete/activities?per_page=100${sinceTimestamp ? `&after=${sinceTimestamp}` : ''}`;
+    
+    const activitiesResponse = await axios.get(activitiesUrl, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    const stravaActivities = activitiesResponse.data;
+    
+    let activitiesCreated = 0;
+    let activitiesUpdated = 0;
+    let activitiesSkipped = 0;
+    
+    // Process each activity
+    for (const stravaActivity of stravaActivities) {
+      // Check if activity already exists
+      const [existingActivity] = await db.select()
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          eq(activities.external_id, stravaActivity.id.toString()),
+          eq(activities.source_platform, 'strava')
+        ));
+      
+      const activityData = {
+        user_id: userId,
+        external_id: stravaActivity.id.toString(),
+        activity_type: mapStravaActivityType(stravaActivity.type),
+        source_platform: 'strava',
+        activity_date: new Date(stravaActivity.start_date),
+        start_time: new Date(stravaActivity.start_date),
+        end_time: stravaActivity.elapsed_time 
+          ? new Date(new Date(stravaActivity.start_date).getTime() + stravaActivity.elapsed_time * 1000) 
+          : undefined,
+        duration: stravaActivity.elapsed_time,
+        distance: stravaActivity.distance / 1000, // Convert meters to kilometers
+        elevation_gain: stravaActivity.total_elevation_gain,
+        average_heart_rate: stravaActivity.average_heartrate,
+        max_heart_rate: stravaActivity.max_heartrate,
+        calories: stravaActivity.calories,
+        average_pace: stravaActivity.average_speed ? (1000 / stravaActivity.average_speed) : undefined, // Convert m/s to sec/km
+        notes: stravaActivity.description || '',
+        is_race: stravaActivity.workout_type === 1, // 1 = race in Strava
+        is_manual_entry: false,
+        created_at: new Date(),
+        polyline: stravaActivity.map?.summary_polyline,
+        raw_data: stravaActivity
+      };
+      
+      if (existingActivity) {
+        // Update existing activity
+        await db.update(activities)
+          .set(activityData)
+          .where(eq(activities.id, existingActivity.id));
+        
+        activitiesUpdated++;
+      } else {
+        // Create new activity
+        await db.insert(activities)
+          .values(activityData);
+        
+        activitiesCreated++;
+      }
+    }
+    
+    // Update sync log status
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: stravaActivities.length,
+        activities_created: activitiesCreated,
+        activities_updated: activitiesUpdated,
+        activities_skipped: activitiesSkipped
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'strava')
+      ));
+      
+  } catch (error) {
+    console.error('Error syncing Strava data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
+// Sync activities from Garmin
+async function syncGarminData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, forceSync = false, syncLogId } = options;
+  let syncLogEntry = syncLogId;
+  
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'garmin',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Determine since when to fetch activities
+    let sinceDate: Date | undefined;
+    
+    if (!forceSync) {
+      // Get the last sync time
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'garmin')
+        ));
+      
+      sinceDate = connection.last_sync_at;
+    }
+    
+    // Fetch activities from Garmin
+    // Note: Garmin's API implementation is more complex and would require a 
+    // separate OAuth library to handle the specifics of their authentication flow
+    const sinceTimestamp = sinceDate ? sinceDate.toISOString() : undefined;
+    const activitiesUrl = `https://apis.garmin.com/wellness-api/rest/activities?start=${sinceTimestamp || '0'}&limit=100`;
+    
+    const activitiesResponse = await axios.get(activitiesUrl, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    
+    const garminActivities = activitiesResponse.data.activities || [];
+    
+    let activitiesCreated = 0;
+    let activitiesUpdated = 0;
+    let activitiesSkipped = 0;
+    
+    // Process each activity (simplified for demonstration)
+    for (const garminActivity of garminActivities) {
+      // Check if activity already exists
+      const [existingActivity] = await db.select()
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          eq(activities.external_id, garminActivity.activityId.toString()),
+          eq(activities.source_platform, 'garmin')
+        ));
+      
+      const activityData = {
+        user_id: userId,
+        external_id: garminActivity.activityId.toString(),
+        activity_type: mapGarminActivityType(garminActivity.activityType),
+        source_platform: 'garmin',
+        activity_date: new Date(garminActivity.startTimeInSeconds * 1000),
+        start_time: new Date(garminActivity.startTimeInSeconds * 1000),
+        end_time: new Date((garminActivity.startTimeInSeconds + garminActivity.durationInSeconds) * 1000),
+        duration: garminActivity.durationInSeconds,
+        distance: (garminActivity.distanceInMeters || 0) / 1000, // Convert meters to kilometers
+        elevation_gain: garminActivity.elevationGainInMeters,
+        average_heart_rate: garminActivity.averageHeartRateInBeatsPerMinute,
+        max_heart_rate: garminActivity.maxHeartRateInBeatsPerMinute,
+        calories: garminActivity.activeKilocalories,
+        is_manual_entry: false,
+        created_at: new Date(),
+        raw_data: garminActivity
+      };
+      
+      if (existingActivity) {
+        // Update existing activity
+        await db.update(activities)
+          .set(activityData)
+          .where(eq(activities.id, existingActivity.id));
+        
+        activitiesUpdated++;
+      } else {
+        // Create new activity
+        await db.insert(activities)
+          .values(activityData);
+        
+        activitiesCreated++;
+      }
+    }
+    
+    // Update sync log status
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: garminActivities.length,
+        activities_created: activitiesCreated,
+        activities_updated: activitiesUpdated,
+        activities_skipped: activitiesSkipped
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'garmin')
+      ));
+      
+  } catch (error) {
+    console.error('Error syncing Garmin data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
+// Sync activities from Polar
+async function syncPolarData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, forceSync = false, syncLogId } = options;
+  let syncLogEntry = syncLogId;
+  
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'polar',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Determine since when to fetch activities
+    let sinceDate: Date | undefined;
+    
+    if (!forceSync) {
+      // Get the last sync time
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'polar')
+        ));
+      
+      sinceDate = connection.last_sync_at;
+    }
+    
+    // Fetch activities from Polar
+    const sinceTimestamp = sinceDate ? sinceDate.toISOString() : undefined;
+    const activitiesUrl = `https://www.polaraccesslink.com/v3/users/${userId}/exercise-transactions`;
+    
+    // Get transaction list
+    const transactionResponse = await axios.post(activitiesUrl, {}, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    
+    const transactionUrl = transactionResponse.headers.location;
+    
+    // Get exercises from transaction
+    const exercisesResponse = await axios.get(`${transactionUrl}/exercises`, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    
+    const polarExercises = exercisesResponse.data.exercises || [];
+    
+    let activitiesCreated = 0;
+    let activitiesUpdated = 0;
+    let activitiesSkipped = 0;
+    
+    // Process each exercise
+    for (const exerciseUrl of polarExercises) {
+      // Get detailed exercise data
+      const exerciseResponse = await axios.get(exerciseUrl, {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+      
+      const exercise = exerciseResponse.data;
+      
+      // Check if activity already exists
+      const [existingActivity] = await db.select()
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          eq(activities.external_id, exercise.id),
+          eq(activities.source_platform, 'polar')
+        ));
+      
+      const startTime = new Date(exercise.start_time);
+      const endTime = new Date(exercise.end_time);
+      const durationSeconds = (endTime.getTime() - startTime.getTime()) / 1000;
+      
+      const activityData = {
+        user_id: userId,
+        external_id: exercise.id,
+        activity_type: mapPolarActivityType(exercise.sport),
+        source_platform: 'polar',
+        activity_date: startTime,
+        start_time: startTime,
+        end_time: endTime,
+        duration: durationSeconds,
+        distance: (exercise.distance || 0) / 1000, // Convert meters to kilometers
+        average_heart_rate: exercise.heart_rate?.average,
+        max_heart_rate: exercise.heart_rate?.maximum,
+        calories: exercise.calories,
+        is_manual_entry: false,
+        created_at: new Date(),
+        raw_data: exercise
+      };
+      
+      if (existingActivity) {
+        // Update existing activity
+        await db.update(activities)
+          .set(activityData)
+          .where(eq(activities.id, existingActivity.id));
+        
+        activitiesUpdated++;
+      } else {
+        // Create new activity
+        await db.insert(activities)
+          .values(activityData);
+        
+        activitiesCreated++;
+      }
+    }
+    
+    // Commit the transaction
+    await axios.put(`${transactionUrl}`, {}, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    
+    // Update sync log status
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: polarExercises.length,
+        activities_created: activitiesCreated,
+        activities_updated: activitiesUpdated,
+        activities_skipped: activitiesSkipped
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'polar')
+      ));
+      
+  } catch (error) {
+    console.error('Error syncing Polar data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
+// Helper functions to map activity types from external services to our system
+function mapStravaActivityType(stravaType: string): string {
+  const typeMap: Record<string, string> = {
+    'Run': 'run',
+    'Trail Run': 'run',
+    'Treadmill': 'run',
+    'Track Run': 'run',
+    'Virtual Run': 'run',
+    'Ride': 'bike',
+    'VirtualRide': 'bike',
+    'Swim': 'swim',
+    'Walk': 'walk',
+    'Hike': 'hike',
+    'Weight Training': 'strength',
+    'Workout': 'strength',
+    'Yoga': 'yoga'
+  };
+  
+  return typeMap[stravaType] || 'other';
+}
+
+function mapGarminActivityType(garminType: string): string {
+  const typeMap: Record<string, string> = {
+    'RUNNING': 'run',
+    'INDOOR_RUNNING': 'run',
+    'TREADMILL_RUNNING': 'run',
+    'TRAIL_RUNNING': 'run',
+    'CYCLING': 'bike',
+    'INDOOR_CYCLING': 'bike',
+    'SWIMMING': 'swim',
+    'OPEN_WATER_SWIMMING': 'swim',
+    'WALKING': 'walk',
+    'HIKING': 'hike',
+    'STRENGTH_TRAINING': 'strength',
+    'YOGA': 'yoga'
+  };
+  
+  return typeMap[garminType] || 'other';
+}
+
+function mapPolarActivityType(polarType: string): string {
+  const typeMap: Record<string, string> = {
+    'RUNNING': 'run',
+    'JOGGING': 'run',
+    'TREADMILL': 'run',
+    'TRAIL_RUNNING': 'run',
+    'CYCLING': 'bike',
+    'INDOOR_CYCLING': 'bike',
+    'SWIMMING': 'swim',
+    'WALKING': 'walk',
+    'HIKING': 'hike',
+    'STRENGTH_TRAINING': 'strength',
+    'CIRCUIT_TRAINING': 'strength',
+    'YOGA': 'yoga'
+  };
+  
+  return typeMap[polarType] || 'other';
+}
 
 // Set up Google AI model for nutrition recommendations
 let googleAI: GoogleGenerativeAI | null = null;
@@ -70,7 +626,7 @@ if (geminiModel) {
 // Helper functions for integration data syncing
 
 // Strava data sync function
-async function syncStravaData(connection: any, userId: number) {
+async function processStravaSync(connection: any, userId: number) {
   console.log(`Syncing Strava data for user ${userId}`);
   
   // In a real implementation, you would:
@@ -141,7 +697,7 @@ async function syncStravaData(connection: any, userId: number) {
 }
 
 // Garmin data sync function
-async function syncGarminData(connection: any, userId: number) {
+async function processGarminSync(connection: any, userId: number) {
   console.log(`Syncing Garmin data for user ${userId}`);
   
   // In a real implementation, you would:
@@ -224,7 +780,7 @@ async function syncGarminData(connection: any, userId: number) {
 }
 
 // Polar data sync function
-async function syncPolarData(connection: any, userId: number) {
+async function processPolarSync(connection: any, userId: number) {
   console.log(`Syncing Polar data for user ${userId}`);
   
   // In a real implementation, you would:
@@ -2402,6 +2958,452 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error saving meal plan:", error);
       res.status(500).json({ error: "Failed to save meal plan" });
+    }
+  });
+
+  // Third-party fitness platform integrations
+  // Route to get all user integrations
+  app.get('/api/integrations', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get all integration connections for the user
+      const connections = await db.select()
+        .from(integration_connections)
+        .where(eq(integration_connections.user_id, userId));
+      
+      // Format response as key-value object with platform names as keys
+      const result: Record<string, boolean> = {
+        strava: false,
+        garmin: false,
+        polar: false
+      };
+      
+      connections.forEach(connection => {
+        if (connection.is_active) {
+          result[connection.platform] = true;
+        }
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching integrations:', error);
+      res.status(500).json({ error: 'Failed to fetch integrations' });
+    }
+  });
+  
+  // Route to get sync status for a specific platform
+  app.get('/api/integrations/:platform/sync-status', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const platform = req.params.platform;
+      
+      // Get the integration connection
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform),
+          eq(integration_connections.is_active, true)
+        ));
+      
+      if (!connection) {
+        return res.status(404).json({ error: 'Integration not found' });
+      }
+      
+      // Get the most recent successful sync log
+      const [lastSuccessfulSync] = await db.select()
+        .from(sync_logs)
+        .where(and(
+          eq(sync_logs.user_id, userId),
+          eq(sync_logs.platform, platform),
+          eq(sync_logs.status, 'completed')
+        ))
+        .orderBy(desc(sync_logs.sync_end_time))
+        .limit(1);
+      
+      res.json({
+        lastSynced: connection.last_sync_at?.toISOString() || null,
+        autoSync: connection.auto_sync,
+        syncFrequency: connection.sync_frequency,
+        activitiesSynced: lastSuccessfulSync ? lastSuccessfulSync.activities_synced : 0
+      });
+    } catch (error) {
+      console.error(`Error fetching sync status for ${req.params.platform}:`, error);
+      res.status(500).json({ error: `Failed to fetch sync status for ${req.params.platform}` });
+    }
+  });
+  
+  // Route to authenticate with Strava
+  app.post('/api/integrations/strava/authenticate', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ error: 'Authorization code is required' });
+      }
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await axios.post('https://www.strava.com/oauth/token', {
+        client_id: process.env.STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code'
+      });
+      
+      const { access_token, refresh_token, expires_at, athlete } = tokenResponse.data;
+      
+      // Check if connection already exists
+      const [existingConnection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'strava')
+        ));
+      
+      if (existingConnection) {
+        // Update existing connection
+        await db.update(integration_connections)
+          .set({
+            access_token,
+            refresh_token,
+            token_expires_at: new Date(expires_at * 1000),
+            is_active: true,
+            updated_at: new Date()
+          })
+          .where(eq(integration_connections.id, existingConnection.id));
+      } else {
+        // Create new connection
+        await db.insert(integration_connections).values({
+          user_id: userId,
+          platform: 'strava',
+          access_token,
+          refresh_token,
+          token_expires_at: new Date(expires_at * 1000),
+          athlete_id: athlete.id.toString(),
+          is_active: true,
+          auto_sync: true,
+          sync_frequency: 'daily'
+        });
+      }
+      
+      // Create sync log entry
+      await db.insert(sync_logs).values({
+        user_id: userId,
+        platform: 'strava',
+        sync_start_time: new Date(),
+        status: 'in_progress'
+      });
+      
+      // Initiate background sync process
+      void syncStravaData({ userId, access_token, refresh_token, expires_at });
+      
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error('Error authenticating with Strava:', error);
+      res.status(500).json({ 
+        error: 'Failed to authenticate with Strava',
+        details: error.response?.data || error.message
+      });
+    }
+  });
+  
+  // Route to authenticate with Garmin
+  app.post('/api/integrations/garmin/authenticate', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ error: 'Authorization code is required' });
+      }
+      
+      // Exchange authorization code for access token
+      // Note: Garmin's OAuth implementation is different from the standard
+      // This is a simplified example - in reality, you'd need to follow Garmin's specific API
+      const tokenResponse = await axios.post('https://connectapi.garmin.com/oauth-service/oauth/token', {
+        client_id: process.env.GARMIN_CLIENT_ID,
+        client_secret: process.env.GARMIN_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code'
+      });
+      
+      const { access_token, refresh_token, expires_in, user_id: athleteId } = tokenResponse.data;
+      
+      // Calculate expiration time
+      const expiresAt = new Date();
+      expiresAt.setSeconds(expiresAt.getSeconds() + expires_in);
+      
+      // Check if connection already exists
+      const [existingConnection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'garmin')
+        ));
+      
+      if (existingConnection) {
+        // Update existing connection
+        await db.update(integration_connections)
+          .set({
+            access_token,
+            refresh_token,
+            token_expires_at: expiresAt,
+            is_active: true,
+            updated_at: new Date()
+          })
+          .where(eq(integration_connections.id, existingConnection.id));
+      } else {
+        // Create new connection
+        await db.insert(integration_connections).values({
+          user_id: userId,
+          platform: 'garmin',
+          access_token,
+          refresh_token,
+          token_expires_at: expiresAt,
+          athlete_id: athleteId.toString(),
+          is_active: true,
+          auto_sync: true,
+          sync_frequency: 'daily'
+        });
+      }
+      
+      // Create sync log entry
+      await db.insert(sync_logs).values({
+        user_id: userId,
+        platform: 'garmin',
+        sync_start_time: new Date(),
+        status: 'in_progress'
+      });
+      
+      // Initiate background sync process
+      void syncGarminData({ userId, access_token, refresh_token, expires_at: expiresAt.getTime() / 1000 });
+      
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error('Error authenticating with Garmin:', error);
+      res.status(500).json({ 
+        error: 'Failed to authenticate with Garmin',
+        details: error.response?.data || error.message 
+      });
+    }
+  });
+  
+  // Route to authenticate with Polar
+  app.post('/api/integrations/polar/authenticate', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ error: 'Authorization code is required' });
+      }
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await axios.post('https://polarremote.com/v2/oauth2/token', {
+        client_id: process.env.POLAR_CLIENT_ID,
+        client_secret: process.env.POLAR_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code'
+      });
+      
+      const { access_token, x_user_id } = tokenResponse.data;
+      
+      // Polar tokens don't expire, so we don't need to store an expiration time
+      
+      // Check if connection already exists
+      const [existingConnection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'polar')
+        ));
+      
+      if (existingConnection) {
+        // Update existing connection
+        await db.update(integration_connections)
+          .set({
+            access_token,
+            is_active: true,
+            updated_at: new Date()
+          })
+          .where(eq(integration_connections.id, existingConnection.id));
+      } else {
+        // Create new connection
+        await db.insert(integration_connections).values({
+          user_id: userId,
+          platform: 'polar',
+          access_token,
+          athlete_id: x_user_id,
+          is_active: true,
+          auto_sync: true,
+          sync_frequency: 'daily'
+        });
+      }
+      
+      // Create sync log entry
+      await db.insert(sync_logs).values({
+        user_id: userId,
+        platform: 'polar',
+        sync_start_time: new Date(),
+        status: 'in_progress'
+      });
+      
+      // Initiate background sync process
+      void syncPolarData({ userId, access_token });
+      
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error('Error authenticating with Polar:', error);
+      res.status(500).json({ 
+        error: 'Failed to authenticate with Polar',
+        details: error.response?.data || error.message 
+      });
+    }
+  });
+  
+  // Route to disconnect an integration
+  app.delete('/api/integrations/:platform', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const platform = req.params.platform;
+      
+      // Update the connection to inactive
+      await db.update(integration_connections)
+        .set({ 
+          is_active: false,
+          updated_at: new Date()
+        })
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        ));
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error(`Error disconnecting ${req.params.platform}:`, error);
+      res.status(500).json({ error: `Failed to disconnect ${req.params.platform}` });
+    }
+  });
+  
+  // Route to manually sync activities from a platform
+  app.post('/api/integrations/:platform/sync', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const platform = req.params.platform;
+      const { forceSync = false } = req.body;
+      
+      // Get the integration connection
+      const [connection] = await db.select()
+        .from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform),
+          eq(integration_connections.is_active, true)
+        ));
+      
+      if (!connection) {
+        return res.status(404).json({ error: 'Integration not found or not active' });
+      }
+      
+      // Create sync log entry
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: platform,
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      // Initiate sync based on platform
+      let syncPromise;
+      
+      switch (platform) {
+        case 'strava':
+          syncPromise = syncStravaData({
+            userId,
+            access_token: connection.access_token,
+            refresh_token: connection.refresh_token,
+            expires_at: connection.token_expires_at?.getTime() ? connection.token_expires_at.getTime() / 1000 : undefined,
+            forceSync,
+            syncLogId: syncLog.id
+          });
+          break;
+          
+        case 'garmin':
+          syncPromise = syncGarminData({
+            userId,
+            access_token: connection.access_token,
+            refresh_token: connection.refresh_token,
+            expires_at: connection.token_expires_at?.getTime() ? connection.token_expires_at.getTime() / 1000 : undefined,
+            forceSync,
+            syncLogId: syncLog.id
+          });
+          break;
+          
+        case 'polar':
+          syncPromise = syncPolarData({
+            userId,
+            access_token: connection.access_token,
+            forceSync,
+            syncLogId: syncLog.id
+          });
+          break;
+          
+        default:
+          return res.status(400).json({ error: 'Unsupported platform' });
+      }
+      
+      // We don't await the sync to complete, as it may take time
+      void syncPromise;
+      
+      // Respond immediately with the sync initiation status
+      res.status(200).json({ 
+        message: 'Sync initiated',
+        syncId: syncLog.id,
+        estimatedTimeInSeconds: 30 // Estimated time for sync to complete
+      });
+    } catch (error) {
+      console.error(`Error initiating sync for ${req.params.platform}:`, error);
+      res.status(500).json({ error: `Failed to initiate sync for ${req.params.platform}` });
+    }
+  });
+  
+  // Route to update sync settings for a platform
+  app.patch('/api/integrations/:platform/settings', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const platform = req.params.platform;
+      const { autoSync, syncFrequency } = req.body;
+      
+      // Validate input
+      if (typeof autoSync !== 'boolean') {
+        return res.status(400).json({ error: 'autoSync must be a boolean' });
+      }
+      
+      if (syncFrequency && !['daily', 'realtime'].includes(syncFrequency)) {
+        return res.status(400).json({ error: 'syncFrequency must be either "daily" or "realtime"' });
+      }
+      
+      // Update the connection settings
+      await db.update(integration_connections)
+        .set({ 
+          auto_sync: autoSync,
+          ...(syncFrequency && { sync_frequency: syncFrequency }),
+          updated_at: new Date()
+        })
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform),
+          eq(integration_connections.is_active, true)
+        ));
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error(`Error updating sync settings for ${req.params.platform}:`, error);
+      res.status(500).json({ error: `Failed to update sync settings for ${req.params.platform}` });
     }
   });
 
