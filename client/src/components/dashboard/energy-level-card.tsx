@@ -70,17 +70,54 @@ export function EnergyLevelCard() {
       </CardHeader>
       <CardContent>
         <div className="mt-1 space-y-5">
-          <div className="text-center mb-4">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
-              <Zap className={`w-4 h-4 mr-2 ${getReadinessColor(energyData.readinessCategory)}`} />
-              <span className={`font-medium ${getReadinessColor(energyData.readinessCategory)}`}>
-                {getReadinessText(energyData.readinessScore)} Energy
-              </span>
+          <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-4 space-y-3 md:space-y-0">
+            <div>
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
+                <Zap className={`w-4 h-4 mr-2 ${getReadinessColor(energyData.readinessCategory)}`} />
+                <span className={`font-medium ${getReadinessColor(energyData.readinessCategory)}`}>
+                  {getReadinessText(energyData.readinessScore)} Energy
+                </span>
+              </div>
+              <p className="text-sm text-neutral-600 mt-2 md:max-w-md">{energyData.recommendation}</p>
             </div>
-            <p className="text-sm text-neutral-600 mt-2">{energyData.recommendation}</p>
+            
+            <div className="flex justify-center">
+              <div className="h-28 w-28 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Score', value: energyData.readinessScore },
+                        { name: 'Remaining', value: 100 - energyData.readinessScore }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={34}
+                      outerRadius={48}
+                      fill="#8884d8"
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell key="cell-0" fill={
+                        energyData.readinessCategory === 'low' ? '#ef4444' : 
+                        energyData.readinessCategory === 'moderate' ? '#eab308' : '#22c55e'
+                      } />
+                      <Cell key="cell-1" fill="#f3f4f6" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Zap className={`w-5 h-5 ${getReadinessColor(energyData.readinessCategory)}`} />
+                  <p className={`text-lg font-bold ${getReadinessColor(energyData.readinessCategory)}`}>
+                    {energyData.readinessScore}%
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* HRV Score */}
             <div className="flex flex-col items-center">
               <div className="h-24 w-24 relative">
@@ -175,49 +212,6 @@ export function EnergyLevelCard() {
                 </div>
               </div>
               <p className="text-xs font-medium mt-2">Sleep Score</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 pt-4 border-t border-neutral-100">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-neutral-500">Overall Readiness</span>
-              <span className={`text-base font-semibold ${getReadinessColor(energyData.readinessCategory)}`}>
-                {energyData.readinessScore}%
-              </span>
-            </div>
-            <div className="flex justify-center">
-              <div className="h-28 w-28 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Score', value: energyData.readinessScore },
-                        { name: 'Remaining', value: 100 - energyData.readinessScore }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={34}
-                      outerRadius={48}
-                      fill="#8884d8"
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <Cell key="cell-0" fill={
-                        energyData.readinessCategory === 'low' ? '#ef4444' : 
-                        energyData.readinessCategory === 'moderate' ? '#eab308' : '#22c55e'
-                      } />
-                      <Cell key="cell-1" fill="#f3f4f6" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                  <Zap className={`w-5 h-5 mx-auto ${getReadinessColor(energyData.readinessCategory)}`} />
-                  <p className={`text-lg font-bold ${getReadinessColor(energyData.readinessCategory)}`}>
-                    {energyData.readinessScore}%
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
