@@ -133,6 +133,22 @@ export default function TrainingPlanPage() {
     // Would normally save the plan to the database here
   };
   
+  // Handle AI plan adjustments
+  const handlePlanAdjustment = (adjustedPlan: AITrainingPlan, insights: PlanAdjustment) => {
+    setAiPlan(adjustedPlan);
+    setPlanAdjustment(insights);
+    
+    toast({
+      title: "Plan Adjusted Successfully",
+      description: "Your training plan has been adjusted based on your performance data!",
+    });
+    
+    // Switch to schedule tab to show the adjusted plan
+    setSelectedTab('schedule');
+    
+    // Would normally save the adjusted plan and insights to the database here
+  };
+  
   // Check if user has active subscription
   const hasSubscription = user?.subscription_status === 'active';
 
@@ -203,6 +219,10 @@ export default function TrainingPlanPage() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="ai-plan">AI Plan</TabsTrigger>
+            <TabsTrigger value="adjust-plan" className="flex items-center">
+              <Zap className="w-4 h-4 mr-2" />
+              Adjust Plan
+            </TabsTrigger>
             <TabsTrigger value="coach" className="flex items-center">
               <BookUser className="w-4 h-4 mr-2" />
               Human Coach
