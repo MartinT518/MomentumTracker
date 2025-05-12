@@ -14,6 +14,7 @@ import GoalsPage from "@/pages/goals-page";
 import ProfilePage from "@/pages/profile-page";
 import SettingsPage from "@/pages/settings-page";
 import SubscriptionPage from "@/pages/subscription-page";
+import StrengthExercisesPage from "@/pages/strength-exercises-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/subscription/success" component={SubscriptionPage} />
+      <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
       <Route component={NotFound} />
     </Switch>
   );

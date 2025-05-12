@@ -11,6 +11,7 @@ import {
   LogOut,
   CreditCard,
   Crown,
+  Dumbbell,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -43,6 +44,12 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/activities",
       icon: Activity,
       active: location === "/activities",
+    },
+    {
+      title: "Strength Exercises",
+      href: "/strength-exercises",
+      icon: Dumbbell,
+      active: location === "/strength-exercises",
     },
     {
       title: "Goals",
