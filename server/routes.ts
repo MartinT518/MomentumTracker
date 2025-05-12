@@ -1013,6 +1013,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Price ID is required" });
       }
       
+      // We need to get the subscription plan to get the price information
+      const subscriptionPlan = await storage.getSubscriptionPlanByStripeId(req.body.priceId);
+      if (!subscriptionPlan) {
+        return res.status(400).json({ error: "Invalid price ID" });
+      }
+      
+      // Check if this is a placeholder price id
+      if (req.body.priceId === 'price_monthly' || req.body.priceId === 'price_annual') {
+        // Create a price in Stripe first
+        try {
+          // First create a product if it doesn't exist
+          const product = await stripe.products.create({
+            name: subscriptionPlan.name,
+            description: subscriptionPlan.description,
+          });
+          
+          // Create a price for the product
+          const price = await stripe.prices.create({
+            product: product.id,
+            unit_amount: Math.round(parseFloat(subscriptionPlan.price.toString()) * 100), // Convert to cents
+            currency: 'usd',
+            recurring: {
+              interval: subscriptionPlan.billing_interval as 'month' | 'year',
+            },
+          });
+          
+          // Update the subscription plan in the database with the real Stripe price ID
+          await storage.updateSubscriptionPlan(subscriptionPlan.id, {
+            stripe_price_id: price.id,
+          });
+          
+          // Use the new price ID
+          req.body.priceId = price.id;
+          
+        } catch (error: any) {
+          console.error("Error creating Stripe product and price:", error);
+          return res.status(500).json({ 
+            error: { 
+              message: "Failed to create Stripe product and price",
+              details: error.message
+            } 
+          });
+        }
+      }
+      
       // Create the subscription
       const subscription = await stripe.subscriptions.create({
         customer: user.stripe_customer_id!,
