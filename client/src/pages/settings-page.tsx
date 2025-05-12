@@ -15,8 +15,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Shield, Unlock, UserCog, BellRing } from 'lucide-react';
+import { Shield, Unlock, UserCog, BellRing, ArrowLeft } from 'lucide-react';
 import { IntegrationSettings } from '@/components/settings/integration-settings';
+import { Link } from 'wouter';
 
 const profileFormSchema = z.object({
   username: z.string().min(3, {
@@ -215,7 +216,15 @@ export default function SettingsPage() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-2">
+          <div>
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="mb-2 px-1">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
           <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
         </div>
 
