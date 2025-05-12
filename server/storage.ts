@@ -975,78 +975,106 @@ export class MemStorage implements IStorage {
   
   // Health metrics methods
   async getHealthMetrics(userId: number, startDate?: Date, endDate?: Date): Promise<HealthMetric[]> {
-    let query = db.select().from(health_metrics).where(eq(health_metrics.user_id, userId));
+    const metrics = Array.from(this.healthMetrics.values())
+      .filter(metric => metric.user_id === userId);
+    
+    let filteredMetrics = metrics;
     
     if (startDate) {
-      query = query.where(gte(health_metrics.metric_date, startDate));
+      filteredMetrics = filteredMetrics.filter(metric => {
+        const metricDate = new Date(metric.metric_date);
+        return metricDate >= startDate;
+      });
     }
     
     if (endDate) {
-      query = query.where(lte(health_metrics.metric_date, endDate));
+      filteredMetrics = filteredMetrics.filter(metric => {
+        const metricDate = new Date(metric.metric_date);
+        return metricDate <= endDate;
+      });
     }
     
-    return query.orderBy(desc(health_metrics.metric_date));
+    return filteredMetrics.sort((a, b) => {
+      const dateA = new Date(a.metric_date);
+      const dateB = new Date(b.metric_date);
+      return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+    });
   }
   
   async createHealthMetric(metric: InsertHealthMetric): Promise<HealthMetric> {
-    const [result] = await db.insert(health_metrics).values(metric).returning();
-    return result;
+    const id = this.currentId++;
+    const newMetric: HealthMetric = { 
+      ...metric, 
+      id, 
+      created_at: new Date() 
+    };
+    this.healthMetrics.set(id, newMetric);
+    return newMetric;
   }
   
   async updateHealthMetric(id: number, data: Partial<HealthMetric>): Promise<HealthMetric> {
-    const [updated] = await db
-      .update(health_metrics)
-      .set(data)
-      .where(eq(health_metrics.id, id))
-      .returning();
-    return updated;
+    const metric = this.healthMetrics.get(id);
+    if (!metric) {
+      throw new Error(`Health metric with ID ${id} not found`);
+    }
+    const updatedMetric = { ...metric, ...data };
+    this.healthMetrics.set(id, updatedMetric);
+    return updatedMetric;
   }
   
   // Integration connections methods
   async getIntegrationConnections(userId: number): Promise<IntegrationConnection[]> {
-    return db
-      .select()
-      .from(integration_connections)
-      .where(eq(integration_connections.user_id, userId))
-      .orderBy(desc(integration_connections.created_at));
+    return Array.from(this.integrationConnections.values())
+      .filter(connection => connection.user_id === userId)
+      .sort((a, b) => {
+        const dateA = a.created_at || new Date(0);
+        const dateB = b.created_at || new Date(0);
+        return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+      });
   }
   
   async getIntegrationConnection(userId: number, platform: string): Promise<IntegrationConnection | undefined> {
-    const [connection] = await db
-      .select()
-      .from(integration_connections)
-      .where(
-        and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform)
-        )
+    return Array.from(this.integrationConnections.values())
+      .find(connection => 
+        connection.user_id === userId && 
+        connection.platform === platform
       );
-    return connection;
   }
   
   async createIntegrationConnection(connection: InsertIntegrationConnection): Promise<IntegrationConnection> {
-    const [result] = await db.insert(integration_connections).values(connection).returning();
-    return result;
+    const id = this.currentId++;
+    const newConnection: IntegrationConnection = {
+      ...connection,
+      id,
+      created_at: new Date(),
+      updated_at: new Date(),
+      last_sync_at: null
+    };
+    this.integrationConnections.set(id, newConnection);
+    return newConnection;
   }
   
   async updateIntegrationConnection(id: number, data: Partial<IntegrationConnection>): Promise<IntegrationConnection> {
-    const [updated] = await db
-      .update(integration_connections)
-      .set(data)
-      .where(eq(integration_connections.id, id))
-      .returning();
-    return updated;
+    const connection = this.integrationConnections.get(id);
+    if (!connection) {
+      throw new Error(`Integration connection with ID ${id} not found`);
+    }
+    const updatedConnection = { 
+      ...connection, 
+      ...data, 
+      updated_at: new Date() 
+    };
+    this.integrationConnections.set(id, updatedConnection);
+    return updatedConnection;
   }
   
   async removeIntegrationConnection(userId: number, platform: string): Promise<void> {
-    await db
-      .delete(integration_connections)
-      .where(
-        and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform)
-        )
-      );
+    const connection = Array.from(this.integrationConnections.values())
+      .find(c => c.user_id === userId && c.platform === platform);
+    
+    if (connection) {
+      this.integrationConnections.delete(connection.id);
+    }
   }
   
   async updateUserSubscription(
@@ -1068,7 +1096,8 @@ export class MemStorage implements IStorage {
       stripe_customer_id: data.stripeCustomerId || user.stripe_customer_id,
       stripe_subscription_id: data.stripeSubscriptionId || user.stripe_subscription_id,
       subscription_status: data.status || user.subscription_status,
-      subscription_end_date: data.endDate || user.subscription_end_date
+      subscription_end_date: data.endDate || user.subscription_end_date,
+      updated_at: new Date()
     };
     
     this.users.set(userId, updatedUser);

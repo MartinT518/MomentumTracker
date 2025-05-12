@@ -11,8 +11,12 @@ import {
   insertCoachSchema,
   insertCoachingSessionSchema,
   insertSubscriptionPlanSchema,
+  insertHealthMetricsSchema,
+  insertIntegrationConnectionSchema,
   subscription_plans,
-  users
+  users,
+  health_metrics,
+  integration_connections
 } from "@shared/schema";
 import { z } from "zod";
 import Stripe from "stripe";
