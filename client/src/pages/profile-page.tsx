@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Loader2, Save, ExternalLink, Mail, Bell, User as UserIcon, Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -245,18 +246,34 @@ export default function ProfilePage() {
                     <div>
                       <h3 className="font-medium">Strava</h3>
                       <p className="text-sm text-muted-foreground">
-                        Connect to import activities from Strava
+                        Connect to automatically sync activities from Strava
                       </p>
+                      {stravaConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Auto-sync ON</Badge>
+                          <span className="text-xs text-muted-foreground">New activities are imported automatically</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>
                     {stravaConnected ? (
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Connected</Badge>
-                        <Button variant="ghost" size="sm">Disconnect</Button>
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Revoke Access
+                        </Button>
                       </div>
                     ) : (
-                      <Button onClick={handleConnectStrava}>Connect</Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectStrava}>Connect</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Connecting allows automatic import of new activities. You can revoke access anytime.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </div>
@@ -275,18 +292,34 @@ export default function ProfilePage() {
                     <div>
                       <h3 className="font-medium">Garmin Connect</h3>
                       <p className="text-sm text-muted-foreground">
-                        Connect to import activities from Garmin
+                        Connect to automatically sync activities from Garmin
                       </p>
+                      {garminConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Auto-sync ON</Badge>
+                          <span className="text-xs text-muted-foreground">New activities are imported automatically</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>
                     {garminConnected ? (
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Connected</Badge>
-                        <Button variant="ghost" size="sm">Disconnect</Button>
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Revoke Access
+                        </Button>
                       </div>
                     ) : (
-                      <Button onClick={handleConnectGarmin}>Connect</Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectGarmin}>Connect</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Connecting allows automatic import of new activities. You can revoke access anytime.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </div>
@@ -301,18 +334,34 @@ export default function ProfilePage() {
                     <div>
                       <h3 className="font-medium">Polar Flow</h3>
                       <p className="text-sm text-muted-foreground">
-                        Connect to import activities from Polar
+                        Connect to automatically sync activities from Polar
                       </p>
+                      {polarConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Auto-sync ON</Badge>
+                          <span className="text-xs text-muted-foreground">New activities are imported automatically</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>
                     {polarConnected ? (
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Connected</Badge>
-                        <Button variant="ghost" size="sm">Disconnect</Button>
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Revoke Access
+                        </Button>
                       </div>
                     ) : (
-                      <Button onClick={handleConnectPolar}>Connect</Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectPolar}>Connect</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Connecting allows automatic import of new activities. You can revoke access anytime.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </div>
