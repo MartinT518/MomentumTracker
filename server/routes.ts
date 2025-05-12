@@ -11,6 +11,7 @@ import {
   insertCoachSchema,
   insertCoachingSessionSchema,
   insertSubscriptionPlanSchema,
+  subscription_plans,
   users
 } from "@shared/schema";
 import { z } from "zod";
@@ -853,6 +854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if there are already subscription plans in the database
       const existingPlans = await db.select().from(subscription_plans);
+      console.log("Existing plans:", existingPlans);
       
       if (existingPlans.length > 0) {
         return res.status(200).json({ message: 'Subscription plans already exist. Skipping seed.', planCount: existingPlans.length });
@@ -895,13 +897,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
       
+      console.log("Plans to insert:", plans);
+      
       // Insert plans into the database
-      await db.insert(subscription_plans).values(plans);
+      const result = await db.insert(subscription_plans).values(plans);
+      console.log("Insert result:", result);
       
       return res.status(201).json({ message: 'Successfully seeded subscription plans!', planCount: plans.length });
     } catch (error) {
       console.error("Error seeding subscription plans:", error);
-      res.status(500).json({ error: "Failed to seed subscription plans" });
+      // More detailed error in the response
+      res.status(500).json({ 
+        error: "Failed to seed subscription plans", 
+        details: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
