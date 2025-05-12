@@ -1,5 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+export interface TrainingPlan {
+  planText: string;
+  metadata: {
+    generatedAt: string;
+    goal: string;
+    weeks: number;
+    daysPerWeek: number;
+  };
+}
+
+export interface PlanAdjustment {
+  planText: string;
+  metadata: {
+    generatedAt: string;
+    adjustmentReason: string;
+    originalPlanId?: string;
+  };
+}
+
 // Initialize the Google AI with the API key
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
@@ -60,7 +79,7 @@ export function getGeminiModel(modelName = "gemini-1.5-pro", systemPrompt?: stri
           category: "HARM_CATEGORY_DANGEROUS_CONTENT",
           threshold: "BLOCK_MEDIUM_AND_ABOVE"
         }
-      ],
+      ] as any,
       history: [
         {
           role: "user",
@@ -151,5 +170,73 @@ export async function generateStructuredData<T>(
   } catch (error) {
     console.error("Error generating structured data:", error);
     throw new Error(`Failed to generate structured data: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Generates a training plan using the Gemini model
+ * @param userData Information about the user and their training goals
+ * @returns A promise that resolves to the generated training plan
+ */
+export async function generateTrainingPlan(userData: {
+  goal: string;
+  currentFitness: string;
+  weeksToTrain: number;
+  daysPerWeek: number;
+  includeStrengthTraining: boolean;
+  raceDistance?: string;
+  preferences?: string;
+  injuries?: string;
+  recentRaceTime?: string;
+  preferredTerrains?: string[];
+}): Promise<TrainingPlan> {
+  try {
+    if (!genAI) {
+      throw new Error("Google AI not initialized");
+    }
+    
+    const systemPrompt = `You are an expert running coach with decades of experience training all levels of runners. 
+    Your task is to create a personalized running training plan based on the user's goals, fitness level, and preferences.
+    Your training plans should include:
+    1. A weekly schedule with specific workouts
+    2. Training intensity zones (easy, moderate, hard)
+    3. Pacing guidelines
+    4. Rest and recovery recommendations
+    5. Strength training exercises (if requested)
+    6. Realistic progression that avoids overtraining
+    Always prioritize injury prevention and sustainable training.`;
+    
+    // Create the prompt with the user's data
+    const prompt = `Create a ${userData.weeksToTrain}-week training plan for a runner with the following details:
+    
+    Goal: ${userData.goal}
+    Current fitness level: ${userData.currentFitness}
+    Available training days per week: ${userData.daysPerWeek}
+    Include strength training: ${userData.includeStrengthTraining ? 'Yes' : 'No'}
+    ${userData.raceDistance ? `Race distance: ${userData.raceDistance}` : ''}
+    ${userData.preferences ? `Training preferences: ${userData.preferences}` : ''}
+    ${userData.injuries ? `Injury history or concerns: ${userData.injuries}` : ''}
+    ${userData.recentRaceTime ? `Recent race time: ${userData.recentRaceTime}` : ''}
+    ${userData.preferredTerrains?.length ? `Preferred terrain: ${userData.preferredTerrains.join(', ')}` : ''}
+    
+    Please provide a detailed training plan with daily workouts, weekly structure, pacing guidance, and specific workout descriptions.`;
+    
+    // This is a simplified implementation - in reality, we would process the response,
+    // parse it, and return a structured training plan object
+    const trainingPlanText = await generateText(prompt, systemPrompt);
+    
+    // For now, we'll return a simple object with the raw text
+    return {
+      planText: trainingPlanText,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        goal: userData.goal,
+        weeks: userData.weeksToTrain,
+        daysPerWeek: userData.daysPerWeek
+      }
+    };
+  } catch (error) {
+    console.error("Error generating training plan:", error);
+    throw new Error(`Failed to generate training plan: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
