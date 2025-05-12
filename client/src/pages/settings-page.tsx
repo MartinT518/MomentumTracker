@@ -445,9 +445,9 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="email-notifications">Email Notifications</Label>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground">
                       Receive important updates via email.
-                    </FormDescription>
+                    </p>
                   </div>
                   <Switch
                     id="email-notifications"
@@ -458,9 +458,9 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="training-reminders">Training Reminders</Label>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground">
                       Get notified about your upcoming workouts.
-                    </FormDescription>
+                    </p>
                   </div>
                   <Switch
                     id="training-reminders"
@@ -471,9 +471,9 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="achievement-alerts">Achievement Alerts</Label>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground">
                       Receive notifications when you earn achievements.
-                    </FormDescription>
+                    </p>
                   </div>
                   <Switch
                     id="achievement-alerts"
@@ -484,9 +484,9 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="community-updates">Community Updates</Label>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground">
                       Stay informed about community events and challenges.
-                    </FormDescription>
+                    </p>
                   </div>
                   <Switch
                     id="community-updates"
