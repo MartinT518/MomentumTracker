@@ -404,26 +404,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/charts/pace", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const timeRange = req.query.timeRange || "week";
+    const runType = req.query.runType || "all";
     
-    // In a real app, this would fetch the user's pace data for the specified time range
-    const weekData = [
-      { name: "Week 1", value: 9.5 },
-      { name: "Week 2", value: 9.3 },
-      { name: "Week 3", value: 9.0 },
-      { name: "Week 4", value: 8.8 },
-      { name: "Week 5", value: 8.7 },
-      { name: "Week 6", value: 8.5 }
-    ];
+    // In a real app, this would fetch the user's pace data for the specified time range and run type
     
-    const monthData = Array.from({ length: 12 }, (_, i) => ({
-      name: `Week ${i + 1}`,
-      value: 10 - Math.random() * 2
-    }));
+    // Sample pace data grouped by run type
+    const paceDataByType = {
+      easy: [
+        { name: "Week 1", value: 9.8, date: "2023-07-01" },
+        { name: "Week 2", value: 9.7, date: "2023-07-08" },
+        { name: "Week 3", value: 9.5, date: "2023-07-15" },
+        { name: "Week 4", value: 9.4, date: "2023-07-22" },
+        { name: "Week 5", value: 9.3, date: "2023-07-29" },
+        { name: "Week 6", value: 9.2, date: "2023-08-05" }
+      ],
+      tempo: [
+        { name: "Week 1", value: 8.5, date: "2023-07-04" },
+        { name: "Week 2", value: 8.3, date: "2023-07-11" },
+        { name: "Week 3", value: 8.2, date: "2023-07-18" },
+        { name: "Week 4", value: 8.1, date: "2023-07-25" },
+        { name: "Week 5", value: 8.0, date: "2023-08-01" }
+      ],
+      long: [
+        { name: "Week 1", value: 9.3, date: "2023-07-02" },
+        { name: "Week 2", value: 9.2, date: "2023-07-09" },
+        { name: "Week 3", value: 9.1, date: "2023-07-16" },
+        { name: "Week 4", value: 9.0, date: "2023-07-23" },
+        { name: "Week 5", value: 8.9, date: "2023-07-30" },
+        { name: "Week 6", value: 8.8, date: "2023-08-06" }
+      ],
+      interval: [
+        { name: "Week 1", value: 7.8, date: "2023-07-05" },
+        { name: "Week 2", value: 7.7, date: "2023-07-12" },
+        { name: "Week 3", value: 7.6, date: "2023-07-19" },
+        { name: "Week 4", value: 7.5, date: "2023-07-26" },
+        { name: "Week 5", value: 7.4, date: "2023-08-02" }
+      ]
+    };
     
-    const yearData = Array.from({ length: 12 }, (_, i) => ({
-      name: `Month ${i + 1}`,
-      value: 10 - Math.random() * 3
-    }));
+    // Create combined data that includes all run types with their data points
+    const allData = Object.keys(paceDataByType).flatMap(type => 
+      paceDataByType[type].map(item => ({
+        ...item,
+        runType: type
+      }))
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Month and year data would be handled similarly but with different time ranges
+    const monthData = runType === 'all' 
+      ? allData 
+      : paceDataByType[runType as string] || [];
+      
+    const yearData = runType === 'all'
+      ? allData
+      : paceDataByType[runType as string] || [];
     
     let responseData;
     switch (timeRange) {
@@ -434,7 +468,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         responseData = yearData;
         break;
       default:
-        responseData = weekData;
+        responseData = runType === 'all' 
+          ? allData 
+          : paceDataByType[runType as string] || [];
     }
     
     res.json(responseData);
