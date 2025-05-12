@@ -119,17 +119,38 @@ export default function SubscriptionPage() {
   // Mutation to create a subscription
   const createSubscriptionMutation = useMutation({
     mutationFn: async (priceId: string) => {
+      console.log("Creating subscription with price ID:", priceId);
       const res = await apiRequest('POST', '/api/get-or-create-subscription', { priceId });
+      
       if (!res.ok) {
         const errorData = await res.json();
+        console.error("Subscription creation failed:", errorData);
         throw new Error(errorData.error?.message || 'Failed to create subscription');
       }
-      return await res.json();
+      
+      const data = await res.json();
+      console.log("Subscription created successfully:", data);
+      return data;
     },
     onSuccess: (data) => {
+      console.log("Setting client secret from subscription response:", {
+        hasClientSecret: !!data.clientSecret,
+        clientSecretType: typeof data.clientSecret
+      });
+      
+      if (!data.clientSecret) {
+        toast({
+          title: "Subscription Created",
+          description: "Your subscription was created but payment setup is not available. Please contact support.",
+          variant: "default",
+        });
+        return;
+      }
+      
       setClientSecret(data.clientSecret);
     },
     onError: (error: Error) => {
+      console.error("Subscription mutation error:", error);
       toast({
         title: "Subscription Error",
         description: error.message,

@@ -1082,6 +1082,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create the subscription
+      console.log("Creating Stripe subscription with params:", {
+        customerId: user.stripe_customer_id,
+        priceId: req.body.priceId
+      });
+      
       const subscription = await stripe.subscriptions.create({
         customer: user.stripe_customer_id!,
         items: [{
@@ -1091,6 +1096,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         payment_settings: { save_default_payment_method: 'on_subscription' },
         expand: ['latest_invoice.payment_intent'],
       }) as ExpandedSubscription;
+      
+      console.log("Subscription created:", {
+        id: subscription.id,
+        status: subscription.status,
+        hasLatestInvoice: !!subscription.latest_invoice,
+        latestInvoiceType: typeof subscription.latest_invoice
+      });
       
       // Update the user record with subscription info
       await storage.updateUserSubscription(user.id, {
@@ -1102,21 +1114,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let clientSecret = null;
       const latestInvoice = subscription.latest_invoice;
       
+      console.log("Processing latest invoice:", {
+        hasInvoice: !!latestInvoice,
+        invoiceType: typeof latestInvoice
+      });
+      
       if (latestInvoice && typeof latestInvoice !== 'string') {
         const paymentIntent = latestInvoice.payment_intent;
         
+        console.log("Processing payment intent:", {
+          hasPaymentIntent: !!paymentIntent,
+          paymentIntentType: typeof paymentIntent
+        });
+        
         if (typeof paymentIntent === 'string') {
+          console.log("Retrieving payment intent details for ID:", paymentIntent);
           const pi = await stripe.paymentIntents.retrieve(paymentIntent);
           clientSecret = pi.client_secret;
+          console.log("Retrieved client secret from payment intent");
         } else if (paymentIntent) {
           clientSecret = paymentIntent.client_secret;
+          console.log("Using embedded client secret from payment intent");
+        } else {
+          console.log("No payment intent found on invoice");
         }
+      } else {
+        console.log("No valid invoice found on subscription");
       }
       
-      res.send({
+      // Final response with client secret
+      const responseData = {
         subscriptionId: subscription.id,
-        clientSecret: clientSecret || undefined
-      });
+        clientSecret: clientSecret || null
+      };
+      
+      console.log("Sending subscription response:", responseData);
+      res.json(responseData);
     } catch (error: any) {
       console.error("Error creating subscription:", error);
       return res.status(400).send({ error: { message: error.message } });
