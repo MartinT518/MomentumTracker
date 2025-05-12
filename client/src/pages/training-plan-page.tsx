@@ -277,20 +277,16 @@ export default function TrainingPlanPage() {
               <WorkoutDetailView />
             ) : (
               <>
-                <TrainingPlanCalendar onWorkoutClick={handleWorkoutClick} hasSubscription={hasSubscription} />
+                <TrainingPlanCalendar 
+                  onWorkoutClick={handleWorkoutClick} 
+                  hasSubscription={hasSubscription}
+                  onWeekWorkoutsGenerated={setWeekWorkouts}
+                />
                 
                 {/* Add strength training suggestion component */}
-                {hasSubscription && (
+                {hasSubscription && weekWorkouts.length > 0 && (
                   <StrengthTrainingSuggestion
-                    currentWeekSchedule={
-                      // Convert the first 7 days from workoutDays in TrainingPlanCalendar into format needed by the component
-                      workoutDays?.slice(0, 7).map(day => ({
-                        date: new Date(day?.dateObj || new Date()),
-                        workoutType: day?.workouts[0]?.type || "Rest",
-                        intensity: (day?.workouts[0]?.intensity || "rest") as "easy" | "moderate" | "hard" | "rest" | "recovery",
-                        completed: day?.workouts[0]?.completed || false
-                      })) || []
-                    }
+                    currentWeekSchedule={weekWorkouts}
                   />
                 )}
                 

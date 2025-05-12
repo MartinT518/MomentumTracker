@@ -1,510 +1,349 @@
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
-import { 
-  Dumbbell, Filter, ChevronDown, Play, Clock, Flame, LucideIcon, 
-  MoveHorizontal, Heart, RefreshCw, Search
-} from "lucide-react";
-import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle 
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dumbbell, Filter, Search, Play, Bookmark, Clock, BarChart3, Heart, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// Types
-export interface Exercise {
+// Define exercise categories
+type ExerciseCategory = "upper-body" | "lower-body" | "core" | "full-body" | "recovery" | "mobility";
+type ExerciseDifficulty = "beginner" | "intermediate" | "advanced";
+type ExerciseEquipment = "none" | "minimal" | "standard";
+
+interface Exercise {
   id: number;
   name: string;
   description: string;
+  category: ExerciseCategory;
+  difficulty: ExerciseDifficulty;
+  equipment: ExerciseEquipment;
   muscleGroups: string[];
-  difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
-  duration: number; // in minutes
-  caloriesBurn: number; // estimated per session
-  imageUrl: string;
-  videoUrl?: string;
+  duration: string;
   steps: string[];
-  equipment: string[];
   tips: string[];
-  variations: {
-    name: string;
-    description: string;
-  }[];
+  videoUrl?: string;
+  youtubeId?: string;
+  imageUrl?: string;
+  favorite?: boolean;
 }
 
-// Exercise data
-const bodyweightExercises: Exercise[] = [
+// Mock exercises data
+const exercisesData: Exercise[] = [
   {
     id: 1,
-    name: "Push-Ups",
-    description: "A classic upper body exercise that strengthens the chest, shoulders, triceps, and core.",
-    muscleGroups: ["chest", "shoulders", "triceps", "core"],
-    difficultyLevel: "beginner",
-    duration: 5,
-    caloriesBurn: 100,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Push-Ups",
-    videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4",
+    name: "Bodyweight Squats",
+    description: "A fundamental lower body exercise that targets your quadriceps, hamstrings, and glutes.",
+    category: "lower-body",
+    difficulty: "beginner", 
+    equipment: "none",
+    muscleGroups: ["Quadriceps", "Hamstrings", "Glutes", "Core"],
+    duration: "5-10 minutes",
     steps: [
-      "Start in a plank position with your hands slightly wider than shoulder-width apart",
-      "Lower your body until your chest nearly touches the floor",
-      "Pause, then push yourself back up",
-      "Repeat for the desired number of repetitions"
+      "Stand with feet shoulder-width apart",
+      "Keep your chest up and back straight",
+      "Lower your body by bending your knees as if sitting in a chair",
+      "Ensure knees don't extend past your toes",
+      "Lower until thighs are parallel to ground (or as far as comfortable)",
+      "Push through heels to return to standing position"
     ],
-    equipment: [],
     tips: [
-      "Keep your body in a straight line from head to heels",
-      "Don't let your hips sag or pike upward",
-      "Engage your core throughout the movement"
-    ],
-    variations: [
-      {
-        name: "Knee Push-Ups",
-        description: "An easier variation performed with knees on the ground"
-      },
-      {
-        name: "Diamond Push-Ups",
-        description: "A more challenging variation with hands close together in a diamond shape"
-      }
+      "Keep weight in heels",
+      "Maintain neutral spine throughout movement",
+      "For added difficulty, try a slower tempo or pause at the bottom",
+      "Beginners can use a chair or bench for guidance"
     ]
   },
   {
     id: 2,
-    name: "Bodyweight Squats",
-    description: "A fundamental lower body exercise that targets the quadriceps, hamstrings, and glutes.",
-    muscleGroups: ["quadriceps", "hamstrings", "glutes", "core"],
-    difficultyLevel: "beginner",
-    duration: 5,
-    caloriesBurn: 100,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Squats",
-    videoUrl: "https://www.youtube.com/watch?v=YaXPRqUwItQ",
+    name: "Push-ups",
+    description: "An effective upper body exercise that works your chest, shoulders, triceps, and core.",
+    category: "upper-body",
+    difficulty: "intermediate",
+    equipment: "none",
+    muscleGroups: ["Chest", "Shoulders", "Triceps", "Core"],
+    duration: "3-8 minutes",
     steps: [
-      "Stand with feet shoulder-width apart",
-      "Lower your body by bending your knees and pushing your hips back",
-      "Descend until your thighs are parallel to the ground",
-      "Push through your heels to return to the starting position"
+      "Start in a plank position with hands slightly wider than shoulders",
+      "Keep body in a straight line from head to heels",
+      "Lower your body by bending elbows until chest nearly touches the floor",
+      "Keep elbows at about 45-degree angle from your body",
+      "Push back up to starting position"
     ],
-    equipment: [],
     tips: [
-      "Keep your chest up and back straight",
-      "Make sure your knees track over your toes",
-      "Go as deep as your mobility allows"
-    ],
-    variations: [
-      {
-        name: "Jump Squats",
-        description: "Add an explosive jump at the top of the movement for increased intensity"
-      },
-      {
-        name: "Split Squats",
-        description: "Perform with one foot forward and one back for single-leg focus"
-      }
+      "Engage core throughout the movement",
+      "Don't let hips sag or pike upwards",
+      "For easier variation, perform on knees or against a wall",
+      "For added difficulty, elevate feet or try diamond push-ups"
     ]
   },
   {
     id: 3,
-    name: "Planks",
-    description: "An isometric core exercise that builds endurance and stability throughout the entire body.",
-    muscleGroups: ["core", "shoulders", "back"],
-    difficultyLevel: "beginner",
-    duration: 3,
-    caloriesBurn: 50,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Planks",
-    videoUrl: "https://www.youtube.com/watch?v=ASdvN_XEl_c",
+    name: "Plank",
+    description: "A core stabilizing exercise that builds endurance and strength in your abdominals, back, and shoulders.",
+    category: "core",
+    difficulty: "beginner",
+    equipment: "none",
+    muscleGroups: ["Abdominals", "Lower Back", "Shoulders"],
+    duration: "1-5 minutes",
     steps: [
-      "Position yourself on your forearms and toes",
-      "Keep your body in a straight line from head to heels",
-      "Engage your core and hold the position",
-      "Hold for the desired duration (aim for 30-60 seconds)"
+      "Start in push-up position with forearms on the ground",
+      "Elbows should be directly beneath your shoulders",
+      "Keep body in a straight line from head to heels",
+      "Engage your core and glutes",
+      "Hold the position for desired duration"
     ],
-    equipment: [],
     tips: [
-      "Don't let your hips sag or pike upward",
-      "Keep your gaze down to maintain neutral neck position",
-      "Breathe normally throughout the hold"
-    ],
-    variations: [
-      {
-        name: "Side Plank",
-        description: "Turn to one side to target the obliques"
-      },
-      {
-        name: "Plank Shoulder Taps",
-        description: "Add movement by alternately lifting one hand to tap the opposite shoulder"
-      }
+      "Don't hold your breath - breathe normally",
+      "Look slightly forward to maintain neutral neck position",
+      "For easier variation, keep knees on the ground",
+      "For added difficulty, try lifting one limb at a time"
     ]
   },
   {
     id: 4,
-    name: "Lunges",
-    description: "A unilateral lower body exercise that targets the quadriceps, hamstrings, and glutes while improving balance.",
-    muscleGroups: ["quadriceps", "hamstrings", "glutes", "core"],
-    difficultyLevel: "beginner",
-    duration: 6,
-    caloriesBurn: 120,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Lunges",
-    videoUrl: "https://www.youtube.com/watch?v=QOVaHwm-Q6U",
+    name: "Glute Bridges",
+    description: "An excellent exercise for strengthening the posterior chain, especially important for runners.",
+    category: "lower-body",
+    difficulty: "beginner",
+    equipment: "none",
+    muscleGroups: ["Glutes", "Lower Back", "Hamstrings"],
+    duration: "3-8 minutes",
     steps: [
-      "Stand with feet hip-width apart",
-      "Step forward with one leg and lower your body until both knees form 90-degree angles",
-      "Push through the front heel to return to the starting position",
-      "Repeat with the opposite leg"
+      "Lie on your back with knees bent, feet flat on floor",
+      "Place feet hip-width apart, arms at sides",
+      "Press through heels to lift hips toward ceiling",
+      "Squeeze glutes at the top",
+      "Lower hips back to starting position under control"
     ],
-    equipment: [],
     tips: [
-      "Keep your upper body straight with shoulders back",
-      "Make sure your front knee stays above or behind your toes",
-      "Engage your core for stability"
-    ],
-    variations: [
-      {
-        name: "Walking Lunges",
-        description: "Perform lunges while moving forward for increased challenge"
-      },
-      {
-        name: "Reverse Lunges",
-        description: "Step backward instead of forward to reduce knee stress"
-      }
+      "Ensure knees track in line with toes",
+      "Don't overextend at the top - keep movement controlled",
+      "For added difficulty, extend one leg straight",
+      "Can be performed with a resistance band around knees"
     ]
   },
   {
     id: 5,
     name: "Mountain Climbers",
-    description: "A dynamic exercise that combines cardio and core strengthening.",
-    muscleGroups: ["core", "shoulders", "hip flexors", "cardiovascular system"],
-    difficultyLevel: "intermediate",
-    duration: 4,
-    caloriesBurn: 150,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Mountain+Climbers",
-    videoUrl: "https://www.youtube.com/watch?v=nmwgirgXLYM",
+    description: "A dynamic full-body exercise that builds core strength and cardiovascular fitness.",
+    category: "full-body",
+    difficulty: "intermediate",
+    equipment: "none",
+    muscleGroups: ["Core", "Shoulders", "Hip Flexors", "Quads"],
+    duration: "2-4 minutes",
     steps: [
-      "Start in a push-up position with arms straight",
-      "Drive one knee toward your chest",
-      "Quickly switch legs, extending the bent leg and driving the other knee in",
-      "Continue alternating legs in a running motion"
+      "Start in push-up position with arms straight",
+      "Keep your body in a straight line from head to heels",
+      "Quickly drive one knee toward your chest",
+      "Return foot to starting position while simultaneously driving opposite knee forward",
+      "Continue alternating in a running motion"
     ],
-    equipment: [],
     tips: [
-      "Keep your hips down and core engaged",
-      "Maintain a steady pace for better results",
-      "Breathe rhythmically with the movement"
-    ],
-    variations: [
-      {
-        name: "Slow Mountain Climbers",
-        description: "Perform the movement slowly for more control and core engagement"
-      },
-      {
-        name: "Cross-Body Mountain Climbers",
-        description: "Drive knees toward opposite elbows to engage obliques"
-      }
+      "Keep hips down and core engaged",
+      "Control the pace to maintain proper form",
+      "For easier variation, slow down the movement",
+      "For added intensity, increase speed"
     ]
   },
   {
     id: 6,
-    name: "Burpees",
-    description: "A full-body exercise that combines a squat, push-up, and jump for intense cardiovascular and muscular work.",
-    muscleGroups: ["full body", "cardiovascular system"],
-    difficultyLevel: "advanced",
-    duration: 8,
-    caloriesBurn: 250,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Burpees",
-    videoUrl: "https://www.youtube.com/watch?v=TU8QYVW0gDU",
+    name: "Lunges",
+    description: "A unilateral lower body exercise that improves balance, coordination, and strength.",
+    category: "lower-body",
+    difficulty: "intermediate",
+    equipment: "none",
+    muscleGroups: ["Quadriceps", "Hamstrings", "Glutes", "Calves"],
+    duration: "5-10 minutes",
     steps: [
-      "Start standing, then drop into a squat position with hands on the ground",
-      "Kick your feet back into a plank position",
-      "Perform a push-up (optional)",
-      "Return feet to squat position and explosively jump up"
+      "Stand with feet hip-width apart",
+      "Step forward with one leg",
+      "Lower your body until front thigh is parallel to floor and back knee nearly touches ground",
+      "Push through front heel to return to starting position",
+      "Repeat with opposite leg"
     ],
-    equipment: [],
     tips: [
-      "Modify by stepping back instead of jumping if needed",
-      "Keep your core engaged throughout the movement",
-      "Land softly from the jump with bent knees"
-    ],
-    variations: [
-      {
-        name: "Half Burpee",
-        description: "Skip the push-up portion for a less intense variation"
-      },
-      {
-        name: "Burpee Pull-Up",
-        description: "Add a pull-up at the end of each burpee (requires a pull-up bar)"
-      }
+      "Keep torso upright and core engaged",
+      "Ensure front knee stays in line with foot",
+      "For balance issues, perform next to a wall or chair",
+      "For added difficulty, try walking lunges or add a twist"
     ]
   },
   {
     id: 7,
-    name: "Glute Bridges",
-    description: "A lower body exercise focusing on the glutes and posterior chain.",
-    muscleGroups: ["glutes", "hamstrings", "lower back"],
-    difficultyLevel: "beginner",
-    duration: 4,
-    caloriesBurn: 60,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Glute+Bridges",
-    videoUrl: "https://www.youtube.com/watch?v=wPM8icPu6H8",
+    name: "Superman",
+    description: "An effective exercise for strengthening the posterior chain and improving posture.",
+    category: "core",
+    difficulty: "beginner",
+    equipment: "none",
+    muscleGroups: ["Lower Back", "Glutes", "Upper Back"],
+    duration: "3-6 minutes",
     steps: [
-      "Lie on your back with knees bent and feet flat on the floor",
-      "Drive through your heels to lift your hips toward the ceiling",
-      "Squeeze your glutes at the top of the movement",
-      "Lower back down with control"
+      "Lie face down with arms extended overhead",
+      "Simultaneously lift arms, chest, and legs off the floor",
+      "Keep neck in neutral position (looking down)",
+      "Hold briefly at the top",
+      "Lower back to starting position under control"
     ],
-    equipment: [],
     tips: [
-      "Keep your core engaged to protect your lower back",
-      "Ensure your knees track over your ankles",
-      "Focus on the glute contraction at the top"
-    ],
-    variations: [
-      {
-        name: "Single-Leg Glute Bridge",
-        description: "Perform with one leg extended for increased difficulty"
-      },
-      {
-        name: "Marching Glute Bridge",
-        description: "Hold the top position and alternately lift each foot"
-      }
+      "Focus on using back muscles rather than momentum",
+      "Don't hyperextend the neck - keep gaze down",
+      "For easier variation, lift only arms or only legs",
+      "For added difficulty, increase hold time at the top"
     ]
   },
   {
     id: 8,
-    name: "Tricep Dips",
-    description: "An upper body exercise focusing on the triceps, with assistance from the shoulders and chest.",
-    muscleGroups: ["triceps", "shoulders", "chest"],
-    difficultyLevel: "intermediate",
-    duration: 5,
-    caloriesBurn: 80,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Tricep+Dips",
-    videoUrl: "https://www.youtube.com/watch?v=6kALZikXxLc",
+    name: "Bird Dog",
+    description: "A core stabilizing exercise that enhances balance and coordination while strengthening the back.",
+    category: "core",
+    difficulty: "beginner",
+    equipment: "none",
+    muscleGroups: ["Core", "Lower Back", "Shoulders", "Glutes"],
+    duration: "3-8 minutes",
     steps: [
-      "Sit on the edge of a stable chair or bench with hands gripping the edge",
-      "Slide your butt off the edge with legs extended",
-      "Lower your body by bending your elbows to about 90 degrees",
-      "Push back up to the starting position"
+      "Start on hands and knees in tabletop position",
+      "Extend opposite arm and leg simultaneously",
+      "Keep back flat and core engaged",
+      "Hold briefly at full extension",
+      "Return to starting position and repeat on opposite side"
     ],
-    equipment: ["chair or bench (optional)"],
     tips: [
-      "Keep your shoulders down and away from your ears",
-      "Stay close to the chair/bench throughout the movement",
-      "For easier variation, bend knees to 90 degrees"
-    ],
-    variations: [
-      {
-        name: "Bench Dips",
-        description: "Perform with feet on the floor and knees bent for an easier version"
-      },
-      {
-        name: "Straight Leg Dips",
-        description: "Extend legs fully for increased difficulty"
-      }
+      "Move slowly with control",
+      "Keep hips level throughout the movement",
+      "For added difficulty, bring elbow to knee under body before extending",
+      "Focus on stability rather than speed"
     ]
   },
   {
     id: 9,
-    name: "Superman",
-    description: "A back strengthening exercise that targets the erector spinae, glutes, and shoulders.",
-    muscleGroups: ["lower back", "glutes", "shoulders"],
-    difficultyLevel: "beginner",
-    duration: 3,
-    caloriesBurn: 40,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Superman",
-    videoUrl: "https://www.youtube.com/watch?v=cc6UVRS7PW4",
+    name: "Calf Raises",
+    description: "A simple yet effective exercise for strengthening calf muscles, crucial for runners.",
+    category: "lower-body",
+    difficulty: "beginner",
+    equipment: "none",
+    muscleGroups: ["Calves"],
+    duration: "2-5 minutes",
     steps: [
-      "Lie face down with arms extended overhead",
-      "Simultaneously lift your arms, chest, and legs off the ground",
-      "Hold the position briefly",
-      "Lower back down with control"
+      "Stand with feet hip-width apart",
+      "Raise heels off the ground by pushing through the balls of your feet",
+      "Rise as high as possible",
+      "Hold briefly at the top",
+      "Lower heels back to the ground under control"
     ],
-    equipment: [],
     tips: [
-      "Focus on lengthening through your fingertips and toes",
-      "Keep your neck in a neutral position, looking at the floor",
-      "Don't strain to lift too high"
-    ],
-    variations: [
-      {
-        name: "Alternating Superman",
-        description: "Lift opposite arm and leg, then switch"
-      },
-      {
-        name: "Superman Hold",
-        description: "Hold the top position for 3-5 seconds"
-      }
+      "For balance, lightly hold onto a wall or chair",
+      "For added difficulty, perform one leg at a time",
+      "Perform on a step for increased range of motion",
+      "Vary foot position to target different parts of the calf muscle"
     ]
   },
   {
     id: 10,
-    name: "Hollow Body Hold",
-    description: "An advanced core exercise that strengthens the entire midsection and improves stability.",
-    muscleGroups: ["core", "hip flexors", "lower back"],
-    difficultyLevel: "intermediate",
-    duration: 4,
-    caloriesBurn: 70,
-    imageUrl: "https://placehold.co/300x200/f5f5f5/a3a3a3?text=Hollow+Body+Hold",
-    videoUrl: "https://www.youtube.com/watch?v=2fB1R9uWQbw",
+    name: "Hip Mobility Flow",
+    description: "A series of movements designed to improve hip mobility and flexibility, essential for runners.",
+    category: "mobility",
+    difficulty: "beginner",
+    equipment: "none",
+    muscleGroups: ["Hip Flexors", "Glutes", "Adductors"],
+    duration: "5-10 minutes",
     steps: [
-      "Lie on your back with arms extended overhead",
-      "Simultaneously lift your shoulders and legs off the ground, creating a 'dish' shape",
-      "Hold the position, keeping lower back pressed into the floor",
-      "Maintain the position for the desired duration"
+      "Start with gentle hip circles in both directions",
+      "Move to standing hip swings forward and backward",
+      "Perform lateral hip swings side to side",
+      "Include figure-4 stretch for piriformis",
+      "Finish with deep squat holds if comfortable"
     ],
-    equipment: [],
     tips: [
-      "Press your lower back firmly into the ground throughout",
-      "Start with knees bent if the full version is too challenging",
-      "Focus on creating tension throughout your entire body"
-    ],
-    variations: [
-      {
-        name: "Hollow Body Rock",
-        description: "Add a gentle rocking motion for increased intensity"
-      },
-      {
-        name: "Tuck Hollow Hold",
-        description: "Keep knees bent toward chest for a beginner version"
-      }
+      "Focus on controlled movements rather than forcing range",
+      "Breathe deeply throughout the exercises",
+      "Perform daily for best results",
+      "Can be used as part of a warm-up routine"
     ]
   }
 ];
 
-// Icons for muscle groups
-const muscleGroupIcons: Record<string, LucideIcon> = {
-  chest: Heart,
-  shoulders: MoveHorizontal,
-  triceps: Dumbbell,
-  core: RefreshCw,
-  quadriceps: Dumbbell,
-  hamstrings: Dumbbell,
-  glutes: Dumbbell,
-  back: MoveHorizontal,
-  "hip flexors": MoveHorizontal,
-  "lower back": MoveHorizontal,
-  "full body": RefreshCw,
-  "cardiovascular system": Heart
-};
-
-// Exercise Card Component
-function ExerciseCard({ exercise }: { exercise: Exercise }) {
-  const { toast } = useToast();
-  
-  return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <div className="relative h-48 overflow-hidden bg-neutral-100">
-        <img 
-          src={exercise.imageUrl} 
-          alt={exercise.name} 
-          className="object-cover w-full h-full"
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4 text-white" />
-              <span className="text-white text-xs">{exercise.duration} min</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Flame className="h-4 w-4 text-white" />
-              <span className="text-white text-xs">~{exercise.caloriesBurn} cal</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{exercise.name}</CardTitle>
-          <span className={`text-xs px-2 py-1 rounded-full ${
-            exercise.difficultyLevel === 'beginner' ? 'bg-green-100 text-green-700' :
-            exercise.difficultyLevel === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
-            'bg-red-100 text-red-700'
-          }`}>
-            {exercise.difficultyLevel.charAt(0).toUpperCase() + exercise.difficultyLevel.slice(1)}
-          </span>
-        </div>
-        <CardDescription>{exercise.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div>
-            <h4 className="text-sm font-medium mb-1">Targets</h4>
-            <div className="flex flex-wrap gap-1.5">
-              {exercise.muscleGroups.map(muscle => {
-                const Icon = muscleGroupIcons[muscle.toLowerCase()] || Dumbbell;
-                return (
-                  <span key={muscle} className="inline-flex items-center gap-1 text-xs bg-neutral-100 px-2 py-1 rounded-full">
-                    <Icon className="h-3.5 w-3.5 text-neutral-500" />
-                    {muscle.charAt(0).toUpperCase() + muscle.slice(1)}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            className="w-full gap-1"
-            onClick={() => {
-              toast({
-                title: "Exercise Details",
-                description: `Opening detailed view for ${exercise.name}.`,
-              });
-            }}
-          >
-            View Details <ChevronDown className="h-4 w-4" />
-          </Button>
-
-          {exercise.videoUrl && (
-            <Button 
-              variant="default" 
-              className="w-full gap-1"
-              onClick={() => {
-                toast({
-                  title: "Video Tutorial",
-                  description: `Opening video for ${exercise.name}.`,
-                });
-                window.open(exercise.videoUrl, '_blank');
-              }}
-            >
-              Watch Tutorial <Play className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export default function StrengthExercisesPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string[]>([]);
-  const [selectedMuscleGroups, setSelectedMuscleGroups] = useState<string[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>(exercisesData);
+  const [filteredExercises, setFilteredExercises] = useState<Exercise[]>(exercisesData);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | 'all'>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<ExerciseDifficulty | 'all'>('all');
+  const [equipmentFilter, setEquipmentFilter] = useState<ExerciseEquipment | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   
-  // Extract unique muscle groups
-  const allMuscleGroups = Array.from(
-    new Set(bodyweightExercises.flatMap(ex => ex.muscleGroups))
-  );
+  // Apply filters when they change
+  useEffect(() => {
+    let result = [...exercises];
+    
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      result = result.filter(exercise => exercise.category === categoryFilter);
+    }
+    
+    // Apply difficulty filter
+    if (difficultyFilter !== 'all') {
+      result = result.filter(exercise => exercise.difficulty === difficultyFilter);
+    }
+    
+    // Apply equipment filter
+    if (equipmentFilter !== 'all') {
+      result = result.filter(exercise => exercise.equipment === equipmentFilter);
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        exercise => 
+          exercise.name.toLowerCase().includes(query) || 
+          exercise.description.toLowerCase().includes(query) ||
+          exercise.muscleGroups.some(group => group.toLowerCase().includes(query))
+      );
+    }
+    
+    setFilteredExercises(result);
+  }, [exercises, categoryFilter, difficultyFilter, equipmentFilter, searchQuery]);
   
-  // Filter exercises based on search and filters
-  const filteredExercises = bodyweightExercises.filter(exercise => {
-    // Search filter
-    const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         exercise.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Difficulty filter
-    const matchesDifficulty = selectedDifficulty.length === 0 || 
-                             selectedDifficulty.includes(exercise.difficultyLevel);
-    
-    // Muscle group filter
-    const matchesMuscleGroup = selectedMuscleGroups.length === 0 || 
-                              exercise.muscleGroups.some(muscle => 
-                                selectedMuscleGroups.includes(muscle));
-    
-    return matchesSearch && matchesDifficulty && matchesMuscleGroup;
-  });
-
+  // Toggle exercise favorite status
+  const toggleFavorite = (id: number) => {
+    setExercises(prev => 
+      prev.map(exercise => 
+        exercise.id === id 
+          ? {...exercise, favorite: !exercise.favorite} 
+          : exercise
+      )
+    );
+  };
+  
+  // View exercise details
+  const viewExerciseDetails = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+  };
+  
+  // Back to list
+  const backToList = () => {
+    setSelectedExercise(null);
+  };
+  
+  // Render difficulty badge
+  const renderDifficultyBadge = (difficulty: ExerciseDifficulty) => {
+    switch(difficulty) {
+      case 'beginner':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Beginner</Badge>;
+      case 'intermediate':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Intermediate</Badge>;
+      case 'advanced':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Advanced</Badge>;
+    }
+  };
+  
   return (
     <div className="flex h-screen max-w-full overflow-hidden">
       <Sidebar />
@@ -513,231 +352,410 @@ export default function StrengthExercisesPage() {
       <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
         {/* For mobile view padding to account for fixed header */}
         <div className="md:hidden pt-20"></div>
-
-        {/* Header */}
+        
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold font-heading text-neutral-darker">Strength Exercises</h1>
-            <p className="text-neutral-medium mt-1">
-              Bodyweight strength training to complement your running program
-            </p>
+            <p className="text-neutral-medium mt-1">Build strength to improve running performance and prevent injuries</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="all" className="mb-6">
-          <TabsList>
-            <TabsTrigger value="all">All Exercises</TabsTrigger>
-            <TabsTrigger value="upper">Upper Body</TabsTrigger>
-            <TabsTrigger value="lower">Lower Body</TabsTrigger>
-            <TabsTrigger value="core">Core</TabsTrigger>
-            <TabsTrigger value="full">Full Body</TabsTrigger>
-          </TabsList>
-          
-          <div className="mt-4 flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-400" />
-              <Input 
-                placeholder="Search exercises..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-1">
-                    <Filter className="h-4 w-4" /> Difficulty
+        {/* Main content */}
+        {selectedExercise ? (
+          // Exercise detail view
+          <Card className="border-neutral-200">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={backToList}
+                    className="h-8 px-2 lg:px-3"
+                  >
+                    <span className="sr-only lg:not-sr-only">Back</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {['beginner', 'intermediate', 'advanced'].map(difficulty => (
-                    <DropdownMenuCheckboxItem
-                      key={difficulty}
-                      checked={selectedDifficulty.includes(difficulty)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedDifficulty([...selectedDifficulty, difficulty]);
-                        } else {
-                          setSelectedDifficulty(
-                            selectedDifficulty.filter(d => d !== difficulty)
-                          );
-                        }
-                      }}
-                    >
-                      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-1">
-                    <Dumbbell className="h-4 w-4" /> Muscle Groups
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {allMuscleGroups.map(muscle => (
-                    <DropdownMenuCheckboxItem
-                      key={muscle}
-                      checked={selectedMuscleGroups.includes(muscle)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedMuscleGroups([...selectedMuscleGroups, muscle]);
-                        } else {
-                          setSelectedMuscleGroups(
-                            selectedMuscleGroups.filter(m => m !== muscle)
-                          );
-                        }
-                      }}
-                    >
-                      {muscle.charAt(0).toUpperCase() + muscle.slice(1)}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExercises.map(exercise => (
-                <ExerciseCard key={exercise.id} exercise={exercise} />
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="upper" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExercises
-                .filter(ex => 
-                  ex.muscleGroups.some(m => 
-                    ['chest', 'shoulders', 'triceps', 'back'].includes(m.toLowerCase())
-                  )
-                )
-                .map(exercise => (
-                  <ExerciseCard key={exercise.id} exercise={exercise} />
-                ))
-              }
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="lower" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExercises
-                .filter(ex => 
-                  ex.muscleGroups.some(m => 
-                    ['quadriceps', 'hamstrings', 'glutes', 'hip flexors'].includes(m.toLowerCase())
-                  )
-                )
-                .map(exercise => (
-                  <ExerciseCard key={exercise.id} exercise={exercise} />
-                ))
-              }
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="core" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExercises
-                .filter(ex => 
-                  ex.muscleGroups.some(m => 
-                    ['core', 'lower back'].includes(m.toLowerCase())
-                  )
-                )
-                .map(exercise => (
-                  <ExerciseCard key={exercise.id} exercise={exercise} />
-                ))
-              }
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="full" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExercises
-                .filter(ex => 
-                  ex.muscleGroups.includes('full body')
-                )
-                .map(exercise => (
-                  <ExerciseCard key={exercise.id} exercise={exercise} />
-                ))
-              }
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Workout Tips Section */}
-        <div className="mt-8 mb-6">
-          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">
-            Strength Training For Runners
-          </h2>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Why Strength Training Matters</h3>
-                  <p className="text-neutral-medium mb-4">
-                    Regular strength training helps runners prevent injuries, improve running economy, 
-                    and enhance overall performance. Just 2-3 sessions per week can make a significant difference.
-                  </p>
-                  
-                  <h3 className="text-lg font-medium mb-2">Best Practices</h3>
-                  <ul className="text-neutral-medium space-y-2 list-disc pl-5">
-                    <li>Schedule strength workouts after running or on separate days</li>
-                    <li>Focus on multi-joint exercises that work multiple muscle groups</li>
-                    <li>Start with bodyweight exercises before adding external resistance</li>
-                    <li>Allow 48 hours of recovery between strength sessions for the same muscle groups</li>
-                    <li>Aim for 2-3 strength sessions per week of 20-30 minutes each</li>
-                  </ul>
+                  <CardTitle className="text-xl">{selectedExercise.name}</CardTitle>
                 </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Recovery Tips</h3>
-                  <p className="text-neutral-medium mb-4">
-                    Proper recovery is essential for adapting to the stress of combined running and strength training.
-                  </p>
-                  
-                  <ul className="text-neutral-medium space-y-2 list-disc pl-5">
-                    <li>Prioritize protein intake within 30 minutes post-workout</li>
-                    <li>Stay hydrated before, during, and after training</li>
-                    <li>Get adequate sleep (7-9 hours for most adults)</li>
-                    <li>Consider foam rolling and gentle stretching on rest days</li>
-                    <li>Listen to your body and adjust intensity as needed</li>
-                    <li>Remember that improvement comes during recovery, not during the workout itself</li>
-                  </ul>
+                <div className="flex items-center gap-2">
+                  {renderDifficultyBadge(selectedExercise.difficulty)}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFavorite(selectedExercise.id)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Heart 
+                      className={cn(
+                        "h-5 w-5", 
+                        selectedExercise.favorite ? "fill-red-500 text-red-500" : "text-neutral-500"
+                      )} 
+                    />
+                    <span className="sr-only">
+                      {selectedExercise.favorite ? "Remove from favorites" : "Add to favorites"}
+                    </span>
+                  </Button>
                 </div>
               </div>
-              
-              <Separator className="my-6" />
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Sample Workout Structure</h3>
-                <p className="text-neutral-medium mb-4">
-                  Try this simple format for your strength training sessions:
-                </p>
+              <CardDescription className="mt-2">
+                {selectedExercise.description}
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="pb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">How to Perform</h3>
+                  <ol className="space-y-2 list-decimal list-inside text-neutral-dark">
+                    {selectedExercise.steps.map((step, index) => (
+                      <li key={index} className="pl-1">
+                        <span className="text-neutral-darker">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  
+                  <h3 className="text-lg font-medium mt-6 mb-3">Tips</h3>
+                  <ul className="space-y-1 list-disc list-inside text-neutral-dark">
+                    {selectedExercise.tips.map((tip, index) => (
+                      <li key={index} className="pl-1">
+                        <span className="text-neutral-darker">{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
                 
-                <ol className="text-neutral-medium space-y-3 list-decimal pl-5">
-                  <li>
-                    <strong>Warm-up (5 min):</strong> Light cardio and dynamic stretches
-                  </li>
-                  <li>
-                    <strong>Core activation (5 min):</strong> Planks, hollow body holds, or similar exercises
-                  </li>
-                  <li>
-                    <strong>Main exercises (15 min):</strong> 3-5 compound movements like squats, lunges, push-ups
-                  </li>
-                  <li>
-                    <strong>Cool down (5 min):</strong> Gentle stretching for worked muscle groups
-                  </li>
-                </ol>
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Exercise Details</h3>
+                  <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-100 space-y-4">
+                    <div className="flex items-center">
+                      <BarChart3 className="h-5 w-5 text-neutral-500 mr-3" />
+                      <div>
+                        <p className="text-sm text-neutral-500">Target Muscle Groups</p>
+                        <p className="text-neutral-darker">{selectedExercise.muscleGroups.join(', ')}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Clock className="h-5 w-5 text-neutral-500 mr-3" />
+                      <div>
+                        <p className="text-sm text-neutral-500">Recommended Duration</p>
+                        <p className="text-neutral-darker">{selectedExercise.duration}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Dumbbell className="h-5 w-5 text-neutral-500 mr-3" />
+                      <div>
+                        <p className="text-sm text-neutral-500">Equipment Needed</p>
+                        <p className="text-neutral-darker capitalize">
+                          {selectedExercise.equipment === 'none' 
+                            ? 'No equipment (bodyweight only)' 
+                            : selectedExercise.equipment === 'minimal'
+                              ? 'Minimal equipment (resistance bands, light weights)'
+                              : 'Standard gym equipment'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {selectedExercise.videoUrl && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-medium mb-3">Video Demonstration</h3>
+                      <div className="bg-neutral-800 rounded-lg h-56 flex items-center justify-center">
+                        <Button size="sm" className="flex items-center gap-2">
+                          <Play className="h-4 w-4" />
+                          Watch Demo
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
+            
+            <CardFooter className="border-t border-neutral-100 pt-6 flex flex-wrap gap-3">
+              <Button variant="secondary" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Add to Workout
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Bookmark className="h-4 w-4" />
+                Save
+              </Button>
+            </CardFooter>
           </Card>
-        </div>
+        ) : (
+          // Exercise list view
+          <>
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                <Input
+                  placeholder="Search exercises..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+                <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as ExerciseCategory | 'all')}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Category</SelectLabel>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="upper-body">Upper Body</SelectItem>
+                      <SelectItem value="lower-body">Lower Body</SelectItem>
+                      <SelectItem value="core">Core</SelectItem>
+                      <SelectItem value="full-body">Full Body</SelectItem>
+                      <SelectItem value="recovery">Recovery</SelectItem>
+                      <SelectItem value="mobility">Mobility</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {showFilters && (
+              <Card className="mb-6 border-neutral-200">
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <h3 className="text-sm font-medium mb-3">Difficulty Level</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="difficulty-all" 
+                            checked={difficultyFilter === 'all'}
+                            onCheckedChange={() => setDifficultyFilter('all')}
+                          />
+                          <label htmlFor="difficulty-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            All Levels
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="difficulty-beginner" 
+                            checked={difficultyFilter === 'beginner'}
+                            onCheckedChange={() => setDifficultyFilter('beginner')}
+                          />
+                          <label htmlFor="difficulty-beginner" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Beginner
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="difficulty-intermediate" 
+                            checked={difficultyFilter === 'intermediate'}
+                            onCheckedChange={() => setDifficultyFilter('intermediate')}
+                          />
+                          <label htmlFor="difficulty-intermediate" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Intermediate
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="difficulty-advanced" 
+                            checked={difficultyFilter === 'advanced'}
+                            onCheckedChange={() => setDifficultyFilter('advanced')}
+                          />
+                          <label htmlFor="difficulty-advanced" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Advanced
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium mb-3">Equipment Required</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="equipment-all" 
+                            checked={equipmentFilter === 'all'}
+                            onCheckedChange={() => setEquipmentFilter('all')}
+                          />
+                          <label htmlFor="equipment-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            All Equipment Types
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="equipment-none" 
+                            checked={equipmentFilter === 'none'}
+                            onCheckedChange={() => setEquipmentFilter('none')}
+                          />
+                          <label htmlFor="equipment-none" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            No Equipment (Bodyweight Only)
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="equipment-minimal" 
+                            checked={equipmentFilter === 'minimal'}
+                            onCheckedChange={() => setEquipmentFilter('minimal')}
+                          />
+                          <label htmlFor="equipment-minimal" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Minimal Equipment
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="equipment-standard" 
+                            checked={equipmentFilter === 'standard'}
+                            onCheckedChange={() => setEquipmentFilter('standard')}
+                          />
+                          <label htmlFor="equipment-standard" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Standard Gym Equipment
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium mb-3">Category</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="category-all" 
+                            checked={categoryFilter === 'all'}
+                            onCheckedChange={() => setCategoryFilter('all')}
+                          />
+                          <label htmlFor="category-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            All Categories
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="category-upper" 
+                            checked={categoryFilter === 'upper-body'}
+                            onCheckedChange={() => setCategoryFilter('upper-body')}
+                          />
+                          <label htmlFor="category-upper" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Upper Body
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="category-lower" 
+                            checked={categoryFilter === 'lower-body'}
+                            onCheckedChange={() => setCategoryFilter('lower-body')}
+                          />
+                          <label htmlFor="category-lower" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Lower Body
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="category-core" 
+                            checked={categoryFilter === 'core'}
+                            onCheckedChange={() => setCategoryFilter('core')}
+                          />
+                          <label htmlFor="category-core" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Core
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredExercises.map(exercise => (
+                <Card 
+                  key={exercise.id} 
+                  className="border-neutral-200 transition-all hover:shadow-md cursor-pointer"
+                  onClick={() => viewExerciseDetails(exercise)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg">{exercise.name}</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(exercise.id);
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Heart 
+                          className={cn(
+                            "h-5 w-5", 
+                            exercise.favorite ? "fill-red-500 text-red-500" : "text-neutral-500"
+                          )} 
+                        />
+                        <span className="sr-only">
+                          {exercise.favorite ? "Remove from favorites" : "Add to favorites"}
+                        </span>
+                      </Button>
+                    </div>
+                    <div className="flex space-x-2 mt-1">
+                      {renderDifficultyBadge(exercise.difficulty)}
+                      <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-200 capitalize">
+                        {exercise.category.replace('-', ' ')}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-neutral-medium text-sm line-clamp-2">
+                      {exercise.description}
+                    </p>
+                    <div className="flex items-center mt-3 text-xs text-neutral-500">
+                      <Clock className="h-3 w-3 mr-1" />
+                      <span>{exercise.duration}</span>
+                      <span className="mx-2">•</span>
+                      <Dumbbell className="h-3 w-3 mr-1" />
+                      <span className="capitalize">{exercise.equipment === 'none' ? 'No equipment' : exercise.equipment}</span>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="ml-auto text-primary"
+                    >
+                      View Details
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+            
+            {filteredExercises.length === 0 && (
+              <div className="text-center py-10">
+                <Dumbbell className="h-10 w-10 text-neutral-300 mx-auto mb-3" />
+                <h3 className="text-lg font-medium">No exercises found</h3>
+                <p className="text-neutral-medium mt-1">Try adjusting your filters or search terms</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => {
+                    setCategoryFilter('all');
+                    setDifficultyFilter('all');
+                    setEquipmentFilter('all');
+                    setSearchQuery('');
+                  }}
+                >
+                  Reset Filters
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   );

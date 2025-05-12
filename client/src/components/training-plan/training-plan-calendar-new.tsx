@@ -149,11 +149,18 @@ const DroppableDay = ({ day, onWorkoutClick, moveWorkout }: DroppableDayProps) =
 interface CalendarProps {
   onWorkoutClick?: (workout: Workout) => void;
   hasSubscription?: boolean;
+  onWeekWorkoutsGenerated?: (workouts: Array<{
+    date: Date;
+    workoutType: string;
+    intensity: "easy" | "moderate" | "hard" | "rest" | "recovery";
+    completed: boolean;
+  }>) => void;
 }
 
 export function TrainingPlanCalendar({ 
   onWorkoutClick = () => {}, 
-  hasSubscription = false 
+  hasSubscription = false,
+  onWeekWorkoutsGenerated 
 }: CalendarProps) {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -302,7 +309,19 @@ export function TrainingPlanCalendar({
     } else {
       setWorkoutDays(allWorkoutDays);
     }
-  }, [currentMonth, hasSubscription]);
+    
+    // If the callback is provided, send the first week's data for strength training suggestions
+    if (onWeekWorkoutsGenerated) {
+      const firstWeekData = allWorkoutDays.slice(0, 7).map(day => ({
+        date: day.dateObj,
+        workoutType: day.workouts[0]?.type || "Rest",
+        intensity: (day.workouts[0]?.intensity || "rest") as "easy" | "moderate" | "hard" | "rest" | "recovery",
+        completed: day.workouts[0]?.completed || false
+      }));
+      
+      onWeekWorkoutsGenerated(firstWeekData);
+    }
+  }, [currentMonth, hasSubscription, onWeekWorkoutsGenerated]);
   
   // Handlers for drag and drop
   const moveWorkout = (workoutId: number, fromDate: Date, toDate: Date) => {
