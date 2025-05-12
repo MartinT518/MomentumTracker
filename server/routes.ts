@@ -847,6 +847,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to create subscription plan" });
     }
   });
+  
+  // Seed subscription plans for development
+  app.post("/api/seed-subscription-plans", async (req, res) => {
+    try {
+      // Check if there are already subscription plans in the database
+      const existingPlans = await db.select().from(subscription_plans);
+      
+      if (existingPlans.length > 0) {
+        return res.status(200).json({ message: 'Subscription plans already exist. Skipping seed.', planCount: existingPlans.length });
+      }
+      
+      // Define the plans to insert
+      const plans = [
+        {
+          name: 'Premium Monthly',
+          description: 'Full access to all premium features with monthly billing',
+          price: 9.99,
+          billing_interval: 'month',
+          stripe_price_id: 'price_monthly', // Replace with actual Stripe price ID
+          features: JSON.stringify([
+            'Advanced training analytics',
+            'Custom training plans',
+            'Unlimited training history',
+            'AI-powered recommendations',
+            'Priority support',
+            'Early access to new features'
+          ]),
+          is_active: true
+        },
+        {
+          name: 'Premium Annual',
+          description: 'Full access to all premium features with annual billing (save 20%)',
+          price: 95.88,
+          billing_interval: 'year',
+          stripe_price_id: 'price_annual', // Replace with actual Stripe price ID
+          features: JSON.stringify([
+            'Advanced training analytics',
+            'Custom training plans',
+            'Unlimited training history',
+            'AI-powered recommendations',
+            'Priority support',
+            'Early access to new features',
+            'Exclusive annual subscriber benefits'
+          ]),
+          is_active: true
+        }
+      ];
+      
+      // Insert plans into the database
+      await db.insert(subscription_plans).values(plans);
+      
+      return res.status(201).json({ message: 'Successfully seeded subscription plans!', planCount: plans.length });
+    } catch (error) {
+      console.error("Error seeding subscription plans:", error);
+      res.status(500).json({ error: "Failed to seed subscription plans" });
+    }
+  });
 
   // Stripe Subscription Endpoints
   app.post("/api/create-payment-intent", async (req, res) => {
