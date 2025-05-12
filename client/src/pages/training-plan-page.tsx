@@ -3,7 +3,7 @@ import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, BookUser, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, BookUser, Sparkles, Loader2, Check } from "lucide-react";
 import { TrainingGoalOverview } from "@/components/training-plan/training-goal-overview";
 import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar-new";
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
@@ -247,17 +247,78 @@ export default function TrainingPlanPage() {
             {selectedWorkout ? (
               <WorkoutDetailView />
             ) : (
-              <TrainingPlanCalendar onWorkoutClick={handleWorkoutClick} />
+              <>
+                <TrainingPlanCalendar onWorkoutClick={handleWorkoutClick} hasSubscription={hasSubscription} />
+                
+                {!hasSubscription && aiPlan && (
+                  <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-yellow-100 p-2 rounded-full">
+                        <Sparkles className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium mb-1">Training Plan Preview</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Free users can view the first week of their training plan in detail. Upgrade to premium for the full plan with {aiPlan.weeklyPlans?.length || 'multiple'} weeks of detailed workouts, nutrition advice, and more.
+                        </p>
+                        <Button 
+                          onClick={() => setSelectedTab("subscription")}
+                          className="flex items-center"
+                          size="sm"
+                        >
+                          Upgrade to Premium
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
           
           <TabsContent value="ai-plan">
-            <AIPlanGenerator 
-              onPlanGenerated={(plan) => {
-                handlePlanGenerated(plan);
-                setIsGeneratingPlan(true);
-              }} 
-            />
+            {!hasSubscription ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
+                <Sparkles className="h-12 w-12 mx-auto text-primary/60 mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Premium Feature</h2>
+                <p className="text-muted-foreground mb-6">
+                  Free users can see one week of AI-generated training plans. Upgrade to premium for full access to:
+                  <ul className="mt-3 space-y-1 text-left max-w-md mx-auto">
+                    <li className="flex items-center">
+                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      Complete multi-week training plans
+                    </li>
+                    <li className="flex items-center">
+                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      Detailed workouts with warm-up and cool-down routines
+                    </li>
+                    <li className="flex items-center">
+                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      Nutritional guidance and recovery strategies
+                    </li>
+                  </ul>
+                </p>
+                <Button 
+                  onClick={() => setSelectedTab("subscription")}
+                  size="lg"
+                >
+                  Upgrade to Premium
+                </Button>
+              </div>
+            ) : (
+              <AIPlanGenerator 
+                onPlanGenerated={(plan) => {
+                  handlePlanGenerated(plan);
+                  setIsGeneratingPlan(true);
+                }} 
+              />
+            )}
           </TabsContent>
           
           <TabsContent value="coach">

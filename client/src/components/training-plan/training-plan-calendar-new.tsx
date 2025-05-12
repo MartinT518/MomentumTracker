@@ -148,9 +148,13 @@ const DroppableDay = ({ day, onWorkoutClick, moveWorkout }: DroppableDayProps) =
 
 interface CalendarProps {
   onWorkoutClick?: (workout: Workout) => void;
+  hasSubscription?: boolean;
 }
 
-export function TrainingPlanCalendar({ onWorkoutClick = () => {} }: CalendarProps) {
+export function TrainingPlanCalendar({ 
+  onWorkoutClick = () => {}, 
+  hasSubscription = false 
+}: CalendarProps) {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>([]);
@@ -249,8 +253,56 @@ export function TrainingPlanCalendar({ onWorkoutClick = () => {} }: CalendarProp
   };
   
   useEffect(() => {
-    setWorkoutDays(generateMockData());
-  }, [currentMonth]);
+    const allWorkoutDays = generateMockData();
+    
+    // For non-subscribers, restrict detailed workout info after week 1
+    if (!hasSubscription) {
+      const today = new Date();
+      const firstWeekEndDate = new Date(today);
+      firstWeekEndDate.setDate(today.getDate() + 7);
+      
+      const secondWeekEndDate = new Date(today);
+      secondWeekEndDate.setDate(today.getDate() + 14);
+      
+      // Apply subscription restrictions to workouts
+      const restrictedDays = allWorkoutDays.map(day => {
+        // First week - show all details
+        if (day.dateObj <= firstWeekEndDate) {
+          return day;
+        }
+        // Second week - show type only, no details
+        else if (day.dateObj <= secondWeekEndDate) {
+          return {
+            ...day,
+            workouts: day.workouts.map(workout => ({
+              ...workout,
+              description: "Premium content (upgrade to view details)",
+            }))
+          };
+        }
+        // Beyond second week - no workouts shown
+        else {
+          return {
+            ...day,
+            workouts: day.workouts.length > 0 ? [
+              {
+                id: -1,
+                type: "Premium Content",
+                description: "Subscribe to see future workouts",
+                duration: "",
+                intensity: "moderate",
+                completed: false,
+              }
+            ] : []
+          };
+        }
+      });
+      
+      setWorkoutDays(restrictedDays);
+    } else {
+      setWorkoutDays(allWorkoutDays);
+    }
+  }, [currentMonth, hasSubscription]);
   
   // Handlers for drag and drop
   const moveWorkout = (workoutId: number, fromDate: Date, toDate: Date) => {
