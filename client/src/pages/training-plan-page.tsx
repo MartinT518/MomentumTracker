@@ -9,6 +9,7 @@ import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-c
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
 import { AIPlanGenerator } from "@/components/training-plan/ai-plan-generator";
 import PlanAdjustmentTool from "@/components/training-plan/plan-adjustment-tool";
+import { StrengthTrainingSuggestion } from "@/components/training-plan/strength-training-suggestion";
 import { CoachSelection } from "@/components/coaching/coach-selection";
 import { CoachChat } from "@/components/coaching/coach-chat";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,6 +43,12 @@ export default function TrainingPlanPage() {
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [aiPlan, setAiPlan] = useState<AITrainingPlan | null>(null);
   const [planAdjustment, setPlanAdjustment] = useState<PlanAdjustment | null>(null);
+  const [weekWorkouts, setWeekWorkouts] = useState<Array<{
+    date: Date;
+    workoutType: string;
+    intensity: "easy" | "moderate" | "hard" | "rest" | "recovery";
+    completed: boolean;
+  }>>([]);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -271,6 +278,21 @@ export default function TrainingPlanPage() {
             ) : (
               <>
                 <TrainingPlanCalendar onWorkoutClick={handleWorkoutClick} hasSubscription={hasSubscription} />
+                
+                {/* Add strength training suggestion component */}
+                {hasSubscription && (
+                  <StrengthTrainingSuggestion
+                    currentWeekSchedule={
+                      // Convert the first 7 days from workoutDays in TrainingPlanCalendar into format needed by the component
+                      workoutDays?.slice(0, 7).map(day => ({
+                        date: new Date(day?.dateObj || new Date()),
+                        workoutType: day?.workouts[0]?.type || "Rest",
+                        intensity: (day?.workouts[0]?.intensity || "rest") as "easy" | "moderate" | "hard" | "rest" | "recovery",
+                        completed: day?.workouts[0]?.completed || false
+                      })) || []
+                    }
+                  />
+                )}
                 
                 {!hasSubscription && aiPlan && (
                   <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-6">
