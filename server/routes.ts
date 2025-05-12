@@ -887,7 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         {
           name: 'Premium Monthly',
           description: 'Full access to all premium features with monthly billing',
-          price: 9.99,
+          price: '9.99',
           billing_interval: 'month',
           stripe_price_id: 'price_monthly', // Replace with actual Stripe price ID
           features: JSON.stringify([
@@ -903,7 +903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         {
           name: 'Premium Annual',
           description: 'Full access to all premium features with annual billing (save 20%)',
-          price: 95.88,
+          price: '95.88',
           billing_interval: 'year',
           stripe_price_id: 'price_annual', // Replace with actual Stripe price ID
           features: JSON.stringify([
@@ -1032,7 +1032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create a price for the product
           const price = await stripe.prices.create({
             product: product.id,
-            unit_amount: Math.round(parseFloat(subscriptionPlan.price.toString()) * 100), // Convert to cents
+            unit_amount: Math.round(parseFloat(subscriptionPlan.price) * 100), // Convert to cents
             currency: 'usd',
             recurring: {
               interval: subscriptionPlan.billing_interval as 'month' | 'year',
