@@ -252,7 +252,12 @@ export async function generateTrainingPlan(userData: {
     
     Create a JSON object with the following structure:
     {
-      "overview": "A brief 2-3 sentence overview of the plan",
+      "overview": {
+        "weeklyMileage": "Average weekly mileage (e.g., '32 miles')",
+        "workoutsPerWeek": "Number of workout sessions per week (e.g., '5')",
+        "longRunDistance": "Typical long run distance (e.g., '12 miles')",
+        "qualityWorkouts": "Number of quality/intense workouts per week (e.g., '2')"
+      },
       "philosophy": "A brief description of the training philosophy",
       "weeklyPlans": [
         {
@@ -277,7 +282,12 @@ export async function generateTrainingPlan(userData: {
     try {
       // Attempt to parse the training plan into structured data
       const structuredData = await generateStructuredData<{
-        overview: string;
+        overview: {
+          weeklyMileage: string;
+          workoutsPerWeek: string;
+          longRunDistance: string;
+          qualityWorkouts: string;
+        };
         philosophy: string;
         weeklyPlans: Array<{
           week: number;
@@ -291,7 +301,7 @@ export async function generateTrainingPlan(userData: {
             intensity?: string;
           }>
         }>
-      }>(structurePrompt, "Analyze the training plan and extract structured data for an interactive display.");
+      }>(structurePrompt, "Analyze the training plan and extract structured data for an interactive display. The overview should include weeklyMileage, workoutsPerWeek, longRunDistance, and qualityWorkouts as separate fields.");
       
       // Return the complete training plan with both text and structured data
       return {
