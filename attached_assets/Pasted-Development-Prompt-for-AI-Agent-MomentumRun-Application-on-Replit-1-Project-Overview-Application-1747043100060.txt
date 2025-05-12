@@ -1,0 +1,89 @@
+Development Prompt for AI Agent: MomentumRun Application on Replit
+1. Project Overview
+Application Name: MomentumRun
+Core Concept: You are tasked with developing MomentumRun, an AI-powered running platform. The primary goal of MomentumRun is to provide users with personalized running training plans and data-driven insights to help them achieve their fitness objectives. The application should empower users by making sophisticated training methodologies accessible and adaptable.
+Design Philosophy: The application must embody the "Data-Driven Achiever" aesthetic. This translates to a sleek, modern, and tech-forward user interface. Key characteristics include:
+*   Clarity: Intuitive navigation and easily understandable information presentation.
+*   Motivation: Visuals and feedback loops that encourage user engagement and progress.
+*   Performance Focus: Emphasis on tracking metrics, visualizing progress, and celebrating achievements.
+*   Professionalism: A polished look and feel that inspires confidence in the AI's recommendations.
+Target Development Environment: The entire application (frontend, backend, database) should be developed and deployable on Replit. Utilize Replit's features for hosting, database management, and environment configuration.
+2. Technical Stack
+Backend: Node.js with the Express.js framework.
+Database: PostgreSQL. Configure and use Replit's PostgreSQL database service.
+ORM: Sequelize. Use Sequelize for database interactions, including defining models and migrations.
+Frontend: React.js. Develop a single-page application (SPA).
+State Management: Implement a robust state management solution (e.g., Redux Toolkit, Zustand, or React Context with useReducer, based on your assessment of suitability for the features).
+API Communication: Use a library like Axios or the built-in Fetch API for communication with the backend.
+Styling: Employ modern CSS techniques. Consider CSS Modules, Styled-Components, or a utility-first framework like Tailwind CSS if it aligns with the "Data-Driven Achiever" aesthetic and Replit's environment. Ensure the design is responsive.
+Version Control: Initialize a Git repository within the Replit environment.
+3. Core Features
+3.1. User Authentication & Profile Management
+Secure User Registration: Allow new users to sign up using email and password.
+User Login: Enable existing users to log in.
+JWT-based Session Management: Implement secure authentication using JSON Web Tokens.
+User Profile: Users should be able to:
+Input and edit personal details: age, weight, height.
+Specify their running experience level (e.g., beginner, intermediate, advanced).
+Define current fitness levels or recent running achievements (e.g., recent race times, average weekly mileage).
+3.2. Goal Setting
+Allow users to define specific running goals. Examples include:
+Training for a specific race distance (5k, 10k, half-marathon, marathon).
+Improving pace for a certain distance.
+Increasing weekly/monthly mileage or endurance.
+General fitness or weight loss through running.
+3.3. Personalized Training Plan Generation (AI Core)
+This is the central AI feature of MomentumRun.
+The backend should house the logic for generating training plans.
+Inputs for Plan Generation: User profile data, defined goals, and potentially user-provided constraints (e.g., number of days available to run per week).
+Output Plan: The generated plan should be structured and easy to follow, detailing:
+Daily/weekly schedules.
+Types of runs (e.g., easy run, tempo run, interval training, long run, rest day).
+Recommended duration, distance, and/or pace for each run.
+The plan should adapt over a defined period (e.g., 4-16 weeks).
+AI Methodology (Guidance): While you (the AI agent) will implement this, consider a rules-based approach or a simplified machine learning model if feasible within Replit's constraints for an initial version. The key is personalization based on the inputs.
+3.4. Dashboard and Progress Visualization
+A central dashboard to display key information at a glance.
+Metrics Display: Show current progress towards goals, upcoming workouts, and summary statistics (e.g., total distance run this week/month, average pace).
+Visualizations: Implement charts or graphs to visualize running data over time (e.g., mileage trends, pace improvements). This is crucial for the "Data-Driven Achiever" theme.
+3.5. Activity Logging (Simplified Initial Version)
+Allow users to manually log their completed runs:
+Date of run.
+Distance covered.
+Duration.
+Optional: User notes, perceived effort.
+This logged data should feed back into progress tracking and potentially inform future plan adjustments (advanced feature).
+3.6. (Optional - If time/complexity allows) Basic Subscription Model
+Consider a simple two-tier model (Free, Premium).
+Free Tier: Basic plan generation (e.g., for one goal at a time), manual activity logging.
+Premium Tier: More advanced plan features, more detailed analytics, ability to manage multiple goals.
+Stripe Integration: If implementing, use Stripe for handling subscriptions. Store Stripe API keys securely as Replit secrets.
+4. Development and Deployment on Replit
+Project Structure: Organize the project into clear frontend and backend directories within the main Replit project.
+Environment Variables: Utilize Replit secrets for all sensitive information (API keys, database credentials, JWT secret).
+Database Setup: Provide clear instructions or scripts (if necessary) for setting up the PostgreSQL database schema using Sequelize migrations within the Replit environment.
+API Design: Design and document a clear RESTful API for communication between the frontend and backend.
+Running the Application: Ensure both frontend and backend services can be started easily within Replit. The frontend should proxy API requests to the backend.
+Deployment: The application should be deployable and accessible via Replit's hosting.
+5. Deliverables
+A fully functional MomentumRun application deployed on Replit, encompassing the features outlined above.
+Well-structured and commented code for both frontend and backend.
+Sequelize models and migration files for the database schema.
+A README.md file in the root of the Replit project, containing:
+A brief overview of the application.
+Instructions on how to set up and run the project locally within Replit (if applicable beyond just hitting "Run").
+Details on how to configure environment variables (secrets).
+An overview of the API endpoints (if not documented elsewhere).
+6. Design and UX Guidelines
+Adherence to "Data-Driven Achiever" Theme: This is paramount. The UI should be clean, modern, and visually appealing, with a focus on data and performance.
+User-Friendly Interface: Despite being data-driven, the app must be intuitive for users of varying technical abilities.
+Responsive Design: The frontend must be fully responsive and provide a good user experience on desktop, tablet, and mobile devices.
+Clear Feedback: Provide users with clear visual feedback for actions, loading states, and errors.
+7. Evaluation Criteria
+Functionality: All specified core features are implemented and working correctly.
+Code Quality: Code is well-organized, readable, maintainable, and follows good practices for the chosen tech stack.
+Adherence to Design Philosophy: The application's look, feel, and UX align with the "Data-Driven Achiever" concept.
+Replit Integration: The application is correctly set up and deployable on Replit, utilizing its features effectively.
+Database Integrity: Data is stored and managed correctly using PostgreSQL and Sequelize.
+Security: Basic security practices are followed, especially for authentication and data handling.
+Good luck with the development of MomentumRun!
