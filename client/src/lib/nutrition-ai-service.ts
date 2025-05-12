@@ -1,14 +1,76 @@
-// AI-powered nutrition recommendation service
-import { 
-  MealPlan, 
-  FoodItem, 
-  Meal, 
-  NutritionPreference,
-  InsertMealPlan
-} from "@shared/schema";
 import { apiRequest } from "./queryClient";
+import { format } from "date-fns";
 
-// Types for nutrition AI responses
+// Type definitions for nutrition-related data
+
+export interface NutritionPreference {
+  id?: number;
+  user_id: number;
+  dietary_type?: string;
+  calorie_goal?: number;
+  protein_goal?: number;
+  carbs_goal?: number;
+  fat_goal?: number;
+  meal_frequency?: number;
+  favorite_foods?: string;
+  disliked_foods?: string;
+  allergies?: string;
+  dietary_restrictions?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MealPlan {
+  id?: number;
+  user_id: number;
+  plan_date: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  hydration?: number;
+  is_active: boolean;
+  training_load?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  meals?: Meal[];
+}
+
+export interface Meal {
+  id?: number;
+  meal_plan_id: number;
+  name: string;
+  meal_type: string;
+  time_of_day: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  recipe?: string;
+  preparation_time?: number;
+  order: number;
+  created_at?: string;
+  updated_at?: string;
+  foodItems?: FoodItem[];
+}
+
+export interface FoodItem {
+  id?: number;
+  name: string;
+  category: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  serving_size?: string;
+  serving_unit?: string;
+  created_at?: string;
+  updated_at?: string;
+  quantity?: number;
+}
+
 export interface AIGeneratedMealPlan {
   dailyPlan: {
     calories: number;
@@ -45,7 +107,6 @@ export interface AIGeneratedFoodItem {
   fat: number;
 }
 
-// Nutrition recommendation parameters
 export interface NutritionRecommendationParams {
   userId: number;
   date: string;
@@ -67,11 +128,12 @@ export interface NutritionRecommendationParams {
   useWeeklyMealPlanning?: boolean;
 }
 
-// Get nutrition preferences for a user
+// API functions for nutrition-related data
+
 export async function getNutritionPreferences(userId: number): Promise<NutritionPreference | null> {
   try {
     const response = await apiRequest("GET", `/api/nutrition/preferences/${userId}`);
-    if (!response.ok) return null;
+    if (response.status === 404) return null;
     return await response.json();
   } catch (error) {
     console.error("Error fetching nutrition preferences:", error);
@@ -79,22 +141,20 @@ export async function getNutritionPreferences(userId: number): Promise<Nutrition
   }
 }
 
-// Save nutrition preferences
 export async function saveNutritionPreferences(preferences: NutritionPreference): Promise<boolean> {
   try {
-    const response = await apiRequest("POST", `/api/nutrition/preferences`, preferences);
-    return response.ok;
+    const response = await apiRequest("POST", "/api/nutrition/preferences", preferences);
+    return response.status === 201 || response.status === 200;
   } catch (error) {
     console.error("Error saving nutrition preferences:", error);
     return false;
   }
 }
 
-// Get a user's meal plan for a specific date
 export async function getMealPlan(userId: number, date: string): Promise<MealPlan | null> {
   try {
     const response = await apiRequest("GET", `/api/nutrition/meal-plans/${userId}/${date}`);
-    if (!response.ok) return null;
+    if (response.status === 404) return null;
     return await response.json();
   } catch (error) {
     console.error("Error fetching meal plan:", error);
@@ -102,13 +162,9 @@ export async function getMealPlan(userId: number, date: string): Promise<MealPla
   }
 }
 
-// Generate a meal plan using AI
 export async function generateAIMealPlan(params: NutritionRecommendationParams): Promise<AIGeneratedMealPlan | null> {
   try {
     const response = await apiRequest("POST", "/api/nutrition/generate", params);
-    if (!response.ok) {
-      throw new Error(`Failed to generate meal plan: ${response.statusText}`);
-    }
     return await response.json();
   } catch (error) {
     console.error("Error generating AI meal plan:", error);
@@ -116,26 +172,25 @@ export async function generateAIMealPlan(params: NutritionRecommendationParams):
   }
 }
 
-// Save an AI-generated meal plan to the database
-export async function saveMealPlan(mealPlan: InsertMealPlan, meals: Meal[], foodItems: FoodItem[]): Promise<boolean> {
+export async function saveMealPlan(mealPlan: MealPlan, meals: Meal[], foodItems: any[]): Promise<boolean> {
   try {
-    const response = await apiRequest("POST", "/api/nutrition/save-plan", {
+    const payload = {
       mealPlan,
       meals,
-      foodItems
-    });
-    return response.ok;
+      foodItems,
+    };
+    
+    const response = await apiRequest("POST", "/api/nutrition/save-plan", payload);
+    return response.status === 201 || response.status === 200;
   } catch (error) {
     console.error("Error saving meal plan:", error);
     return false;
   }
 }
 
-// Get food items by category (for displaying options)
 export async function getFoodItemsByCategory(category: string): Promise<FoodItem[]> {
   try {
     const response = await apiRequest("GET", `/api/nutrition/food-items/${category}`);
-    if (!response.ok) return [];
     return await response.json();
   } catch (error) {
     console.error(`Error fetching food items for category ${category}:`, error);
@@ -143,32 +198,32 @@ export async function getFoodItemsByCategory(category: string): Promise<FoodItem
   }
 }
 
-// Search for food items
 export async function searchFoodItems(query: string): Promise<FoodItem[]> {
   try {
     const response = await apiRequest("GET", `/api/nutrition/food-items/search?q=${encodeURIComponent(query)}`);
-    if (!response.ok) return [];
     return await response.json();
   } catch (error) {
-    console.error(`Error searching food items for "${query}":`, error);
+    console.error("Error searching food items:", error);
     return [];
   }
 }
 
-// Calculate nutrition stats based on a list of food items
 export function calculateNutrition(foodItems: (FoodItem & { quantity: number })[]): {
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
 } {
-  return foodItems.reduce((totals, item) => {
-    const multiplier = item.quantity || 1;
-    return {
-      calories: totals.calories + (item.calories * multiplier),
-      protein: totals.protein + (item.protein * multiplier),
-      carbs: totals.carbs + (item.carbs * multiplier),
-      fat: totals.fat + (item.fat * multiplier),
-    };
-  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  return foodItems.reduce(
+    (acc, item) => {
+      const multiplier = item.quantity || 1;
+      return {
+        calories: acc.calories + item.calories * multiplier,
+        protein: acc.protein + item.protein * multiplier,
+        carbs: acc.carbs + item.carbs * multiplier,
+        fat: acc.fat + item.fat * multiplier,
+      };
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
 }
