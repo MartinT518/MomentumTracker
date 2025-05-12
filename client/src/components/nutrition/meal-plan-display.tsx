@@ -1,21 +1,7 @@
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Clock, Utensils } from "lucide-react";
 import { AIGeneratedMealPlan, AIGeneratedMeal } from "@/lib/nutrition-ai-service";
 
 interface MealPlanDisplayProps {
@@ -23,142 +9,80 @@ interface MealPlanDisplayProps {
 }
 
 export default function MealPlanDisplay({ plan }: MealPlanDisplayProps) {
-  const [selectedDay, setSelectedDay] = useState(0);
-  
-  // Calculate macro percentages
-  const proteinPercentage = Math.round((plan.dailyPlan.protein / plan.dailyPlan.calories) * 400); // 4 cal per gram
-  const carbsPercentage = Math.round((plan.dailyPlan.carbs / plan.dailyPlan.calories) * 400); // 4 cal per gram
-  const fatPercentage = Math.round((plan.dailyPlan.fat / plan.dailyPlan.calories) * 900); // 9 cal per gram
-  
-  // Determine if we have a weekly plan
-  const hasWeeklyPlan = plan.weeklyPlans && plan.weeklyPlans.length > 0;
-  
-  // Get the current day's plan
-  const currentPlan = hasWeeklyPlan ? plan.weeklyPlans![selectedDay] : plan;
+  if (!plan || !plan.dailyPlan) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>No Meal Plan Available</CardTitle>
+          <CardDescription>
+            There is no meal plan to display. Generate a new plan to see recommendations.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Nutrition Summary */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Nutrition Summary</CardTitle>
-          <CardDescription>
-            Daily nutrition breakdown and macronutrient balance
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Daily Summary</CardTitle>
+            <CardDescription>
+              Total nutrients for the day
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Calories</span>
-                  <span className="text-sm font-medium">{currentPlan.dailyPlan.calories} kcal</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-primary/10 rounded-md">
+                  <p className="text-xs text-muted-foreground">Calories</p>
+                  <p className="font-medium">{plan.dailyPlan.calories} kcal</p>
                 </div>
-                <Progress value={100} className="h-2" />
+                <div className="p-3 bg-green-100 rounded-md">
+                  <p className="text-xs text-muted-foreground">Protein</p>
+                  <p className="font-medium">{plan.dailyPlan.protein}g</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-md">
+                  <p className="text-xs text-muted-foreground">Carbs</p>
+                  <p className="font-medium">{plan.dailyPlan.carbs}g</p>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-md">
+                  <p className="text-xs text-muted-foreground">Fat</p>
+                  <p className="font-medium">{plan.dailyPlan.fat}g</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Protein</span>
-                  <span className="text-sm font-medium">{currentPlan.dailyPlan.protein}g ({proteinPercentage}%)</span>
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-medium text-blue-700">Hydration Target</span>
                 </div>
-                <Progress value={proteinPercentage} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Carbs</span>
-                  <span className="text-sm font-medium">{currentPlan.dailyPlan.carbs}g ({carbsPercentage}%)</span>
-                </div>
-                <Progress value={carbsPercentage} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Fat</span>
-                  <span className="text-sm font-medium">{currentPlan.dailyPlan.fat}g ({fatPercentage}%)</span>
-                </div>
-                <Progress value={fatPercentage} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Hydration Target</span>
-                  <span className="text-sm font-medium">{currentPlan.dailyPlan.hydration}ml</span>
-                </div>
-                <Progress value={100} className="h-2" />
+                <p className="text-sm text-blue-800">{plan.dailyPlan.hydration}ml of water</p>
               </div>
             </div>
-            
-            <div className="flex flex-col justify-center">
-              <div className="flex space-x-2 mb-4">
-                <div className="w-4 h-4 rounded-full bg-primary"></div>
-                <span className="text-sm">Protein: {proteinPercentage}%</span>
-              </div>
-              <div className="flex space-x-2 mb-4">
-                <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                <span className="text-sm">Carbs: {carbsPercentage}%</span>
-              </div>
-              <div className="flex space-x-2 mb-4">
-                <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-                <span className="text-sm">Fat: {fatPercentage}%</span>
-              </div>
-              {plan.notes && (
-                <div className="mt-4 p-3 bg-primary/10 rounded-md text-sm">
-                  <p className="font-semibold mb-1">Notes:</p>
-                  <p>{plan.notes}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Weekly Plan Tabs (if available) */}
-      {hasWeeklyPlan && (
-        <Tabs 
-          defaultValue="0" 
-          onValueChange={(val) => setSelectedDay(parseInt(val))}
-          className="w-full"
-        >
-          <TabsList className="grid grid-cols-7 mb-4">
-            <TabsTrigger value="0">Day 1</TabsTrigger>
-            <TabsTrigger value="1">Day 2</TabsTrigger>
-            <TabsTrigger value="2">Day 3</TabsTrigger>
-            <TabsTrigger value="3">Day 4</TabsTrigger>
-            <TabsTrigger value="4">Day 5</TabsTrigger>
-            <TabsTrigger value="5">Day 6</TabsTrigger>
-            <TabsTrigger value="6">Day 7</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      )}
+        {plan.notes && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Nutritionist Notes</CardTitle>
+              <CardDescription>
+                Additional guidance for this meal plan
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-line">{plan.notes}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-      {/* Meal Details */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Daily Meals</CardTitle>
-          <CardDescription>
-            Full breakdown of your meal plan
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            {currentPlan.dailyPlan.meals.map((meal, index) => (
-              <AccordionItem key={index} value={`meal-${index}`}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex flex-col items-start sm:flex-row sm:items-center sm:justify-between w-full">
-                    <div className="font-medium">
-                      {meal.name} <Badge variant="outline" className="ml-2">{meal.mealType}</Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1 sm:mt-0">
-                      {meal.calories} kcal • {meal.protein}g protein • {meal.timeOfDay}
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <MealDetail meal={meal} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium">Today's Meals</h3>
+        {plan.dailyPlan.meals.map((meal, index) => (
+          <MealDetail key={index} meal={meal} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -169,55 +93,63 @@ interface MealDetailProps {
 
 function MealDetail({ meal }: MealDetailProps) {
   return (
-    <div className="space-y-4 px-1">
-      {/* Macronutrient breakdown */}
-      <div className="grid grid-cols-4 gap-4 text-center">
-        <div className="p-2 bg-primary/10 rounded-md">
-          <p className="text-xs text-muted-foreground">Calories</p>
-          <p className="font-medium">{meal.calories} kcal</p>
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-lg">{meal.name}</CardTitle>
+            <div className="flex items-center space-x-2 mt-1">
+              <Badge variant="outline" className="capitalize">
+                {meal.mealType}
+              </Badge>
+              <span className="text-sm text-muted-foreground">{meal.timeOfDay}</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="font-medium">{meal.calories} kcal</p>
+            <div className="text-xs text-muted-foreground space-x-1">
+              <span>P: {meal.protein}g</span>
+              <span>C: {meal.carbs}g</span>
+              <span>F: {meal.fat}g</span>
+            </div>
+          </div>
         </div>
-        <div className="p-2 bg-primary/10 rounded-md">
-          <p className="text-xs text-muted-foreground">Protein</p>
-          <p className="font-medium">{meal.protein}g</p>
-        </div>
-        <div className="p-2 bg-primary/10 rounded-md">
-          <p className="text-xs text-muted-foreground">Carbs</p>
-          <p className="font-medium">{meal.carbs}g</p>
-        </div>
-        <div className="p-2 bg-primary/10 rounded-md">
-          <p className="text-xs text-muted-foreground">Fat</p>
-          <p className="font-medium">{meal.fat}g</p>
-        </div>
-      </div>
-
-      {/* Ingredients list */}
-      <div>
-        <h4 className="text-sm font-semibold mb-2">Ingredients</h4>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+      </CardHeader>
+      <CardContent>
+        <h4 className="text-sm font-medium mb-2">Foods</h4>
+        <ul className="space-y-2 mb-4">
           {meal.foods.map((food, index) => (
-            <li key={index} className="text-sm flex justify-between">
-              <span>{food.name}</span>
-              <span className="text-muted-foreground">{food.quantity} {food.servingUnit}</span>
+            <li key={index} className="text-sm">
+              <div className="flex justify-between">
+                <span>
+                  {food.name} <span className="text-muted-foreground">({food.quantity} {food.servingUnit})</span>
+                </span>
+                <span className="text-muted-foreground">{food.calories} kcal</span>
+              </div>
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* Recipe instructions */}
-      {meal.recipe && (
-        <>
-          <Separator />
-          <div>
-            <h4 className="text-sm font-semibold mb-2">Preparation</h4>
-            {meal.preparationTime && (
-              <p className="text-xs text-muted-foreground mb-2">
-                Preparation time: approximately {meal.preparationTime} minutes
-              </p>
-            )}
-            <p className="text-sm whitespace-pre-line">{meal.recipe}</p>
+        
+        {meal.recipe && (
+          <>
+            <Separator className="my-3" />
+            <div className="mt-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <Utensils className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-medium">Preparation</h4>
+              </div>
+              <p className="text-sm whitespace-pre-line">{meal.recipe}</p>
+            </div>
+          </>
+        )}
+        
+        {meal.preparationTime && (
+          <div className="mt-4 flex items-center text-sm text-muted-foreground">
+            <Clock className="h-3.5 w-3.5 mr-1" />
+            <span>Prep time: {meal.preparationTime} min</span>
           </div>
-        </>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
