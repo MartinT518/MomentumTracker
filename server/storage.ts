@@ -596,14 +596,65 @@ const MemoryStore = createMemoryStore(session);
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
+  private subscriptionPlans: Map<number, SubscriptionPlan>;
+  private groups: Map<number, Group>;
+  private groupMembers: Map<number, GroupMember>;
+  private challenges: Map<number, Challenge>;
+  private challengeParticipants: Map<number, ChallengeParticipant>;
+  private buddies: Map<number, Buddy>;
+  private nutritionLogs: Map<number, NutritionLog>;
+  private coaches: Map<number, Coach>;
+  private coachingSessions: Map<number, CoachingSession>;
+  private achievements: Map<number, Achievement>;
+  private userAchievements: Map<number, UserAchievement>;
+  
   currentId: number;
   sessionStore: session.SessionStore;
 
   constructor() {
     this.users = new Map();
+    this.subscriptionPlans = new Map();
+    this.groups = new Map();
+    this.groupMembers = new Map();
+    this.challenges = new Map();
+    this.challengeParticipants = new Map();
+    this.buddies = new Map();
+    this.nutritionLogs = new Map();
+    this.coaches = new Map();
+    this.coachingSessions = new Map();
+    this.achievements = new Map();
+    this.userAchievements = new Map();
+    
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24h
+    });
+    
+    // Initialize with default subscription plans
+    this.subscriptionPlans.set(1, {
+      id: 1,
+      name: "Premium Monthly",
+      description: "Full access to all premium features with monthly billing",
+      price: "9.99",
+      billing_interval: "month",
+      stripe_price_id: "price_monthly",
+      features: JSON.stringify(["Advanced training analytics", "Custom training plans", "Unlimited training history", "AI-powered recommendations", "Priority support", "Early access to new features"]),
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+    
+    this.subscriptionPlans.set(2, {
+      id: 2,
+      name: "Premium Annual",
+      description: "Full access to all premium features with annual billing (save 20%)",
+      price: "95.88",
+      billing_interval: "year",
+      stripe_price_id: "price_annual",
+      features: JSON.stringify(["Advanced training analytics", "Custom training plans", "Unlimited training history", "AI-powered recommendations", "Priority support", "Early access to new features", "Exclusive annual subscriber benefits"]),
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
     });
   }
 
@@ -622,6 +673,312 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    const updatedUser = { ...user, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  // Groups methods
+  async getGroups(): Promise<Group[]> {
+    return Array.from(this.groups.values());
+  }
+  
+  async getGroupById(id: number): Promise<Group | undefined> {
+    return this.groups.get(id);
+  }
+  
+  async getGroupsByUser(userId: number): Promise<Group[]> {
+    const memberGroups = Array.from(this.groupMembers.values())
+      .filter(member => member.user_id === userId)
+      .map(member => member.group_id);
+      
+    return Array.from(this.groups.values())
+      .filter(group => memberGroups.includes(group.id));
+  }
+  
+  async createGroup(group: InsertGroup): Promise<Group> {
+    const id = this.currentId++;
+    const newGroup: Group = { ...group, id, created_at: new Date(), updated_at: new Date() };
+    this.groups.set(id, newGroup);
+    return newGroup;
+  }
+  
+  async addUserToGroup(groupMember: InsertGroupMember): Promise<GroupMember> {
+    const id = this.currentId++;
+    const newMember: GroupMember = { ...groupMember, id, created_at: new Date(), updated_at: new Date() };
+    this.groupMembers.set(id, newMember);
+    return newMember;
+  }
+  
+  async removeUserFromGroup(groupId: number, userId: number): Promise<void> {
+    const memberToRemove = Array.from(this.groupMembers.values())
+      .find(member => member.group_id === groupId && member.user_id === userId);
+      
+    if (memberToRemove) {
+      this.groupMembers.delete(memberToRemove.id);
+    }
+  }
+  
+  // Buddies methods
+  async getBuddies(userId: number): Promise<Buddy[]> {
+    return Array.from(this.buddies.values())
+      .filter(buddy => (buddy.user_id === userId || buddy.buddy_id === userId) && buddy.status === 'accepted');
+  }
+  
+  async getBuddyRequests(userId: number): Promise<Buddy[]> {
+    return Array.from(this.buddies.values())
+      .filter(buddy => buddy.buddy_id === userId && buddy.status === 'pending');
+  }
+  
+  async requestBuddy(buddyData: InsertBuddy): Promise<Buddy> {
+    const id = this.currentId++;
+    const newBuddy: Buddy = { ...buddyData, id, created_at: new Date(), updated_at: new Date() };
+    this.buddies.set(id, newBuddy);
+    return newBuddy;
+  }
+  
+  async updateBuddyStatus(id: number, status: string): Promise<Buddy> {
+    const buddy = this.buddies.get(id);
+    if (!buddy) {
+      throw new Error(`Buddy relationship with ID ${id} not found`);
+    }
+    
+    const updatedBuddy = { ...buddy, status, updated_at: new Date() };
+    this.buddies.set(id, updatedBuddy);
+    return updatedBuddy;
+  }
+  
+  async removeBuddy(userId: number, buddyId: number): Promise<void> {
+    const buddyToRemove = Array.from(this.buddies.values())
+      .find(buddy => 
+        (buddy.user_id === userId && buddy.buddy_id === buddyId) || 
+        (buddy.user_id === buddyId && buddy.buddy_id === userId)
+      );
+      
+    if (buddyToRemove) {
+      this.buddies.delete(buddyToRemove.id);
+    }
+  }
+  
+  // Challenges methods
+  async getChallenges(): Promise<Challenge[]> {
+    return Array.from(this.challenges.values());
+  }
+  
+  async getChallengeById(id: number): Promise<Challenge | undefined> {
+    return this.challenges.get(id);
+  }
+  
+  async getChallengesByUser(userId: number): Promise<Challenge[]> {
+    const participantChallenges = Array.from(this.challengeParticipants.values())
+      .filter(participant => participant.user_id === userId)
+      .map(participant => participant.challenge_id);
+      
+    return Array.from(this.challenges.values())
+      .filter(challenge => participantChallenges.includes(challenge.id));
+  }
+  
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const id = this.currentId++;
+    const newChallenge: Challenge = { ...challenge, id, created_at: new Date(), updated_at: new Date() };
+    this.challenges.set(id, newChallenge);
+    return newChallenge;
+  }
+  
+  async joinChallenge(participantData: InsertChallengeParticipant): Promise<ChallengeParticipant> {
+    const id = this.currentId++;
+    const newParticipant: ChallengeParticipant = { 
+      ...participantData, 
+      id, 
+      current_progress: 0, 
+      status: 'active',
+      created_at: new Date(), 
+      updated_at: new Date() 
+    };
+    this.challengeParticipants.set(id, newParticipant);
+    return newParticipant;
+  }
+  
+  async leaveChallenge(challengeId: number, userId: number): Promise<void> {
+    const participantToRemove = Array.from(this.challengeParticipants.values())
+      .find(participant => participant.challenge_id === challengeId && participant.user_id === userId);
+      
+    if (participantToRemove) {
+      this.challengeParticipants.delete(participantToRemove.id);
+    }
+  }
+  
+  async updateChallengeProgress(challengeId: number, userId: number, progress: number): Promise<void> {
+    const participant = Array.from(this.challengeParticipants.values())
+      .find(p => p.challenge_id === challengeId && p.user_id === userId);
+      
+    if (participant) {
+      const updatedParticipant = { ...participant, current_progress: progress, updated_at: new Date() };
+      this.challengeParticipants.set(participant.id, updatedParticipant);
+    }
+  }
+  
+  // Achievements methods
+  async getAchievements(): Promise<Achievement[]> {
+    return Array.from(this.achievements.values());
+  }
+  
+  async getUserAchievements(userId: number): Promise<UserAchievement[]> {
+    return Array.from(this.userAchievements.values())
+      .filter(achievement => achievement.user_id === userId);
+  }
+  
+  async awardAchievement(userId: number, achievementId: number): Promise<UserAchievement> {
+    const id = this.currentId++;
+    const userAchievement: UserAchievement = { 
+      id, 
+      user_id: userId, 
+      achievement_id: achievementId,
+      earned_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    this.userAchievements.set(id, userAchievement);
+    return userAchievement;
+  }
+  
+  // Nutrition methods
+  async getNutritionLogs(userId: number, startDate?: Date, endDate?: Date): Promise<NutritionLog[]> {
+    let logs = Array.from(this.nutritionLogs.values())
+      .filter(log => log.user_id === userId);
+      
+    if (startDate) {
+      logs = logs.filter(log => new Date(log.date) >= startDate);
+    }
+    
+    if (endDate) {
+      logs = logs.filter(log => new Date(log.date) <= endDate);
+    }
+    
+    return logs;
+  }
+  
+  async createNutritionLog(log: InsertNutritionLog): Promise<NutritionLog> {
+    const id = this.currentId++;
+    const newLog: NutritionLog = { ...log, id, created_at: new Date(), updated_at: new Date() };
+    this.nutritionLogs.set(id, newLog);
+    return newLog;
+  }
+  
+  async updateNutritionLog(id: number, data: Partial<NutritionLog>): Promise<NutritionLog> {
+    const log = this.nutritionLogs.get(id);
+    if (!log) {
+      throw new Error(`Nutrition log with ID ${id} not found`);
+    }
+    
+    const updatedLog = { ...log, ...data, updated_at: new Date() };
+    this.nutritionLogs.set(id, updatedLog);
+    return updatedLog;
+  }
+  
+  // Coaching methods
+  async getCoaches(): Promise<Coach[]> {
+    return Array.from(this.coaches.values());
+  }
+  
+  async getCoachById(id: number): Promise<Coach | undefined> {
+    return this.coaches.get(id);
+  }
+  
+  async createCoach(coach: InsertCoach): Promise<Coach> {
+    const id = this.currentId++;
+    const newCoach: Coach = { ...coach, id, created_at: new Date(), updated_at: new Date() };
+    this.coaches.set(id, newCoach);
+    return newCoach;
+  }
+  
+  async getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]> {
+    return Array.from(this.coachingSessions.values())
+      .filter(session => role === 'coach' ? session.coach_id === userId : session.athlete_id === userId);
+  }
+  
+  async createCoachingSession(session: InsertCoachingSession): Promise<CoachingSession> {
+    const id = this.currentId++;
+    const newSession: CoachingSession = { ...session, id, created_at: new Date(), updated_at: new Date() };
+    this.coachingSessions.set(id, newSession);
+    return newSession;
+  }
+  
+  async updateCoachingSession(id: number, data: Partial<CoachingSession>): Promise<CoachingSession> {
+    const session = this.coachingSessions.get(id);
+    if (!session) {
+      throw new Error(`Coaching session with ID ${id} not found`);
+    }
+    
+    const updatedSession = { ...session, ...data, updated_at: new Date() };
+    this.coachingSessions.set(id, updatedSession);
+    return updatedSession;
+  }
+  
+  // Subscription methods
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return Array.from(this.subscriptionPlans.values());
+  }
+  
+  async getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined> {
+    return this.subscriptionPlans.get(id);
+  }
+  
+  async getSubscriptionPlanByStripeId(stripeId: string): Promise<SubscriptionPlan | undefined> {
+    return Array.from(this.subscriptionPlans.values())
+      .find(plan => plan.stripe_price_id === stripeId);
+  }
+  
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const id = this.currentId++;
+    const newPlan: SubscriptionPlan = { ...plan, id, created_at: new Date(), updated_at: new Date() };
+    this.subscriptionPlans.set(id, newPlan);
+    return newPlan;
+  }
+  
+  async updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    const plan = this.subscriptionPlans.get(id);
+    if (!plan) {
+      throw new Error(`Subscription plan with ID ${id} not found`);
+    }
+    
+    const updatedPlan = { ...plan, ...data, updated_at: new Date() };
+    this.subscriptionPlans.set(id, updatedPlan);
+    return updatedPlan;
+  }
+  
+  async updateUserSubscription(
+    userId: number, 
+    data: { 
+      stripeCustomerId?: string, 
+      stripeSubscriptionId?: string, 
+      status?: string, 
+      endDate?: Date 
+    }
+  ): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      stripe_customer_id: data.stripeCustomerId || user.stripe_customer_id,
+      stripe_subscription_id: data.stripeSubscriptionId || user.stripe_subscription_id,
+      subscription_status: data.status || user.subscription_status,
+      subscription_end_date: data.endDate || user.subscription_end_date
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 }
 
