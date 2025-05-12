@@ -1,160 +1,79 @@
+// Nutrition AI Service
+// This service interacts with the Google Gemini AI model to generate personalized meal plans
+
 import { apiRequest } from "./queryClient";
-import { format } from "date-fns";
 
-// Type definitions for nutrition-related data
-
-export interface NutritionPreference {
-  id?: number;
-  user_id: number;
-  dietary_type?: string;
-  calorie_goal?: number;
-  protein_goal?: number;
-  carbs_goal?: number;
-  fat_goal?: number;
-  meal_frequency?: number;
-  favorite_foods?: string;
-  disliked_foods?: string;
-  allergies?: string;
-  dietary_restrictions?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface MealPlan {
-  id?: number;
-  user_id: number;
-  plan_date: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  hydration?: number;
-  is_active: boolean;
-  training_load?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-  meals?: Meal[];
-}
-
-export interface Meal {
-  id?: number;
-  meal_plan_id: number;
+// Food item in a meal
+export interface AIGeneratedFood {
   name: string;
-  meal_type: string;
-  time_of_day: string;
+  quantity: string;
+  servingUnit: string;
   calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  recipe?: string;
-  preparation_time?: number;
-  order: number;
-  created_at?: string;
-  updated_at?: string;
-  foodItems?: FoodItem[];
+  protein?: number;
+  carbs?: number;
+  fat?: number;
 }
 
-export interface FoodItem {
-  id?: number;
-  name: string;
-  category: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  serving_size?: string;
-  serving_unit?: string;
-  created_at?: string;
-  updated_at?: string;
-  quantity?: number;
-}
-
-export interface AIGeneratedMealPlan {
-  dailyPlan: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    hydration: number;
-    meals: AIGeneratedMeal[];
-  };
-  weeklyPlans?: AIGeneratedMealPlan[];
-  notes?: string;
-}
-
+// Meal in a meal plan
 export interface AIGeneratedMeal {
   name: string;
-  mealType: string;
+  mealType: string; // breakfast, lunch, dinner, snack
   timeOfDay: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  foods: AIGeneratedFoodItem[];
+  foods: AIGeneratedFood[];
   recipe?: string;
   preparationTime?: number;
 }
 
-export interface AIGeneratedFoodItem {
-  name: string;
-  quantity: number;
-  servingUnit: string;
+// Daily nutritional summary
+export interface DailyNutritionSummary {
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
+  hydration: number; // in milliliters
+  meals: AIGeneratedMeal[];
 }
 
-export interface NutritionRecommendationParams {
-  userId: number;
+// Complete meal plan
+export interface AIGeneratedMealPlan {
   date: string;
-  trainingLoad: "rest" | "light" | "moderate" | "heavy";
-  userPreferences: {
-    dietaryRestrictions?: string[];
-    allergies?: string[];
-    dislikedFoods?: string[];
-    favoriteFoods?: string[];
-    calorieGoal?: number;
-    proteinGoal?: number;
-    carbsGoal?: number;
-    fatGoal?: number;
-  };
-  activityLevel: string;
-  fitnessGoals: string[];
-  healthConditions?: string[];
-  recoverySituation?: string;
-  useWeeklyMealPlanning?: boolean;
+  dailyPlan: DailyNutritionSummary;
+  notes?: string;
+  userPreferences?: NutritionPreference;
 }
 
-// API functions for nutrition-related data
-
-export async function getNutritionPreferences(userId: number): Promise<NutritionPreference | null> {
-  try {
-    const response = await apiRequest("GET", `/api/nutrition/preferences/${userId}`);
-    if (response.status === 404) return null;
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching nutrition preferences:", error);
-    return null;
-  }
+// User nutrition preferences
+export interface NutritionPreference {
+  id: number;
+  user_id: number;
+  dietary_restrictions: string[]; // vegan, vegetarian, gluten-free, etc.
+  excluded_foods: string[]; // foods to avoid
+  preferred_foods: string[]; // foods the user likes
+  calorie_target: number;
+  protein_target: number;
+  carbs_target: number;
+  fat_target: number;
+  meal_count: number; // number of meals per day
+  created_at: Date;
+  updated_at: Date;
 }
 
-export async function saveNutritionPreferences(preferences: NutritionPreference): Promise<boolean> {
+/**
+ * Generates a meal plan based on user preferences, training load, and dietary needs
+ * @param userId The user ID
+ * @param date The date for the meal plan
+ * @returns A promise that resolves to the generated meal plan
+ */
+export async function getMealPlan(userId: number, date: string): Promise<AIGeneratedMealPlan | null> {
   try {
-    const response = await apiRequest("POST", "/api/nutrition/preferences", preferences);
-    return response.status === 201 || response.status === 200;
-  } catch (error) {
-    console.error("Error saving nutrition preferences:", error);
-    return false;
-  }
-}
-
-export async function getMealPlan(userId: number, date: string): Promise<MealPlan | null> {
-  try {
-    const response = await apiRequest("GET", `/api/nutrition/meal-plans/${userId}/${date}`);
-    if (response.status === 404) return null;
+    const response = await apiRequest("GET", `/api/nutrition/meal-plan/${userId}?date=${date}`);
+    if (!response.ok) {
+      return null;
+    }
     return await response.json();
   } catch (error) {
     console.error("Error fetching meal plan:", error);
@@ -162,68 +81,81 @@ export async function getMealPlan(userId: number, date: string): Promise<MealPla
   }
 }
 
-export async function generateAIMealPlan(params: NutritionRecommendationParams): Promise<AIGeneratedMealPlan | null> {
+/**
+ * Generates a new meal plan using the Google Gemini AI model
+ * @param userId The user ID
+ * @param preferences The user's nutrition preferences
+ * @param trainingLoad Information about the user's training for the day
+ * @returns A promise that resolves to the generated meal plan
+ */
+export async function generateMealPlan(
+  userId: number, 
+  preferences: NutritionPreference,
+  trainingLoad?: {
+    calories_burned: number;
+    workout_type: string;
+    duration_minutes: number;
+  }
+): Promise<AIGeneratedMealPlan | null> {
   try {
-    const response = await apiRequest("POST", "/api/nutrition/generate", params);
+    const response = await apiRequest("POST", "/api/nutrition/generate-meal-plan", {
+      userId,
+      preferences,
+      trainingLoad,
+      date: new Date().toISOString().split('T')[0]
+    });
+    
+    if (!response.ok) {
+      return null;
+    }
+    
     return await response.json();
   } catch (error) {
-    console.error("Error generating AI meal plan:", error);
+    console.error("Error generating meal plan:", error);
     return null;
   }
 }
 
-export async function saveMealPlan(mealPlan: MealPlan, meals: Meal[], foodItems: any[]): Promise<boolean> {
+/**
+ * Gets the user's nutrition preferences
+ * @param userId The user ID
+ * @returns A promise that resolves to the user's nutrition preferences
+ */
+export async function getNutritionPreferences(userId: number): Promise<NutritionPreference | null> {
   try {
-    const payload = {
-      mealPlan,
-      meals,
-      foodItems,
-    };
+    const response = await apiRequest("GET", `/api/nutrition/preferences/${userId}`);
     
-    const response = await apiRequest("POST", "/api/nutrition/save-plan", payload);
-    return response.status === 201 || response.status === 200;
-  } catch (error) {
-    console.error("Error saving meal plan:", error);
-    return false;
-  }
-}
-
-export async function getFoodItemsByCategory(category: string): Promise<FoodItem[]> {
-  try {
-    const response = await apiRequest("GET", `/api/nutrition/food-items/${category}`);
+    if (!response.ok) {
+      return null;
+    }
+    
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching food items for category ${category}:`, error);
-    return [];
+    console.error("Error fetching nutrition preferences:", error);
+    return null;
   }
 }
 
-export async function searchFoodItems(query: string): Promise<FoodItem[]> {
+/**
+ * Updates the user's nutrition preferences
+ * @param userId The user ID
+ * @param preferences The updated preferences
+ * @returns A promise that resolves to the updated preferences
+ */
+export async function updateNutritionPreferences(
+  userId: number,
+  preferences: Partial<NutritionPreference>
+): Promise<NutritionPreference | null> {
   try {
-    const response = await apiRequest("GET", `/api/nutrition/food-items/search?q=${encodeURIComponent(query)}`);
+    const response = await apiRequest("PATCH", `/api/nutrition/preferences/${userId}`, preferences);
+    
+    if (!response.ok) {
+      return null;
+    }
+    
     return await response.json();
   } catch (error) {
-    console.error("Error searching food items:", error);
-    return [];
+    console.error("Error updating nutrition preferences:", error);
+    return null;
   }
-}
-
-export function calculateNutrition(foodItems: (FoodItem & { quantity: number })[]): {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-} {
-  return foodItems.reduce(
-    (acc, item) => {
-      const multiplier = item.quantity || 1;
-      return {
-        calories: acc.calories + item.calories * multiplier,
-        protein: acc.protein + item.protein * multiplier,
-        carbs: acc.carbs + item.carbs * multiplier,
-        fat: acc.fat + item.fat * multiplier,
-      };
-    },
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
 }

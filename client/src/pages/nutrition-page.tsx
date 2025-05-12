@@ -6,7 +6,7 @@ import { PageLayout } from "@/components/common/page-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Chef } from "lucide-react";
+import { Loader2, Utensils } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NutritionDashboard from "@/components/nutrition/nutrition-dashboard";
 import { getMealPlan, getNutritionPreferences, NutritionPreference } from "@/lib/nutrition-ai-service";
@@ -71,7 +71,7 @@ export default function NutritionPage() {
         />
         
         <div className="flex flex-col items-center justify-center space-y-6 max-w-3xl mx-auto mt-12 py-12 px-6 bg-neutral-50 rounded-lg text-center">
-          <Chef className="h-16 w-16 text-primary" />
+          <Utensils className="h-16 w-16 text-primary" />
           <h2 className="text-2xl font-bold">Welcome to Personalized Nutrition</h2>
           <p className="text-neutral-dark max-w-lg">
             Set up your nutrition preferences to get personalized meal recommendations based on your training load, 
