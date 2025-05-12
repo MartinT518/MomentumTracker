@@ -12,6 +12,7 @@ import {
   CreditCard,
   Crown,
   Dumbbell,
+  Heart,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -50,6 +51,12 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/strength-exercises",
       icon: Dumbbell,
       active: location === "/strength-exercises",
+    },
+    {
+      title: "Health Metrics",
+      href: "/health-metrics",
+      icon: Heart,
+      active: location === "/health-metrics",
     },
     {
       title: "Goals",
