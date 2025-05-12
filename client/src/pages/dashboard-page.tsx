@@ -7,6 +7,7 @@ import { TrainingCalendar } from "@/components/dashboard/training-calendar";
 import { TodaysWorkout } from "@/components/dashboard/todays-workout";
 import { WeeklyProgress } from "@/components/dashboard/weekly-progress";
 import { RecentActivities } from "@/components/dashboard/recent-activities";
+import { EnergyLevelCard } from "@/components/dashboard/energy-level-card";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -31,7 +32,7 @@ export default function DashboardPage() {
             <p className="text-neutral-medium mt-1">You're making great progress on your training.</p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3">
-            <Link href="/activities/new">
+            <Link href="/activities">
               <Button className="inline-flex items-center">
                 <Plus className="-ml-1 mr-2 h-5 w-5" />
                 Log Activity
@@ -43,9 +44,18 @@ export default function DashboardPage() {
         {/* Current Goal Banner */}
         <CurrentGoalBanner />
 
-        {/* Weekly Overview */}
-        <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">This Week's Overview</h2>
-        <WeeklyMetrics />
+        {/* Weekly Overview and Energy Level */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="md:col-span-2">
+            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">This Week's Overview</h2>
+            <WeeklyMetrics />
+          </div>
+          
+          <div>
+            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Energy</h2>
+            <EnergyLevelCard />
+          </div>
+        </div>
 
         {/* Progress Charts */}
         <ProgressCharts />
