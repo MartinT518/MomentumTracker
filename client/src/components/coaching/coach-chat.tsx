@@ -57,10 +57,12 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
       console.log('WebSocket Connected');
       
       // Fetch chat history
-      socket.send(JSON.stringify({
-        type: 'history',
-        sessionId
-      }));
+      if (socket) {
+        socket.send(JSON.stringify({
+          type: 'history',
+          sessionId
+        }));
+      }
     };
     
     socket.onclose = () => {

@@ -289,7 +289,15 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
               <p className="text-muted-foreground mb-4">
                 You don't have any active coaching sessions. Select a coach to get started.
               </p>
-              <Button variant="outline" onClick={() => document.querySelector('[data-value="all"]')?.click()}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  const element = document.querySelector('[data-value="all"]');
+                  if (element instanceof HTMLElement) {
+                    element.click();
+                  }
+                }}
+              >
                 Browse Coaches
               </Button>
             </div>
