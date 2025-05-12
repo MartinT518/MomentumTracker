@@ -18,6 +18,28 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { WebSocketServer } from "ws";
+import ws from "ws";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize Google AI for generating training plans
+if (!process.env.GOOGLE_AI_API_KEY) {
+  console.warn('Missing GOOGLE_AI_API_KEY environment variable. AI features will not work.');
+}
+
+const googleAI = process.env.GOOGLE_AI_API_KEY 
+  ? new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
+  : null;
+
+const geminiModel = googleAI?.getGenerativeModel({
+  model: "gemini-1.5-pro",
+  generationConfig: {
+    temperature: 0.7,
+    topK: 40,
+    topP: 0.95,
+    maxOutputTokens: 8192,
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -1071,6 +1093,349 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send({ received: true });
   });
 
+  // AI Training Plan Generation API
+  app.post("/api/generate-training-plan", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (!geminiModel) {
+      return res.status(503).json({ error: "AI service is not available. Missing API key." });
+    }
+
+    try {
+      const params = req.body;
+      
+      // Validate required parameters
+      if (!params.fitnessLevel || !params.availableDaysPerWeek) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: fitnessLevel and availableDaysPerWeek are required" 
+        });
+      }
+
+      // Build the prompt
+      const prompt = `
+        As an experienced running coach, create a detailed training plan with the following specifications:
+        
+        USER PROFILE:
+        - Target Race: ${params.targetRace || 'General fitness'}
+        - Race Distance: ${params.raceDistance || 'Not specified'}
+        - Goal Time: ${params.goalTime || 'Completion'}
+        - Fitness Level: ${params.fitnessLevel}
+        - Current Weekly Mileage: ${params.currentWeeklyMileage || 'Not specified'} miles per week
+        - Available Days: ${params.availableDaysPerWeek} days per week
+        - Time Per Session: ${params.timePerSessionMinutes || 60} minutes
+        - Preferred Workout Types: ${params.preferredWorkoutTypes?.join(', ') || 'Any'}
+        - Injuries/Limitations: ${params.injuries?.join(', ') || 'None'}
+        - Age: ${params.userAge || 'Not specified'}
+        - Weight: ${params.userWeight || 'Not specified'} kg
+        - Height: ${params.userHeight || 'Not specified'} cm
+        - Start Date: ${params.startDate || 'Immediate'}
+        - End Date/Race Day: ${params.endDate || 'Not specified'}
+        
+        I need a comprehensive training plan in JSON format with the following structure:
+        
+        {
+          "overview": {
+            "title": "string",
+            "description": "string",
+            "weeklyMileage": "string",
+            "workoutsPerWeek": number,
+            "longRunDistance": "string",
+            "qualityWorkouts": number
+          },
+          "philosophy": "string explaining training approach",
+          "recommendedGear": ["string array of recommended gear"],
+          "nutritionTips": "string with nutrition guidance",
+          "weeklyPlans": [
+            {
+              "weekNumber": number,
+              "focus": "string explaining week's focus",
+              "totalMileage": "string",
+              "workouts": [
+                {
+                  "id": number,
+                  "day": "string - day of week",
+                  "type": "string - workout type",
+                  "description": "string",
+                  "duration": "string",
+                  "distance": "string",
+                  "intensity": "string - one of: easy, moderate, hard, recovery, race",
+                  "warmUp": "string",
+                  "mainSet": ["string array of main workout components"],
+                  "coolDown": "string",
+                  "notes": "string with special considerations"
+                }
+              ]
+            }
+          ]
+        }
+        
+        Make sure the response is in valid JSON format that can be parsed directly.
+      `;
+
+      const result = await geminiModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Try to parse the response as JSON
+      try {
+        const trainingPlan = JSON.parse(text);
+        res.json(trainingPlan);
+      } catch (error) {
+        console.error("Error parsing AI response as JSON:", error);
+        
+        // If we couldn't parse as JSON, try to extract JSON portion
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const jsonText = jsonMatch[0];
+            const trainingPlan = JSON.parse(jsonText);
+            res.json(trainingPlan);
+          } catch (jsonError) {
+            res.status(500).json({ 
+              error: "Failed to parse training plan. Please try again." 
+            });
+          }
+        } else {
+          res.status(500).json({ 
+            error: "Failed to generate a valid training plan. Please try again." 
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("Error generating training plan:", error);
+      res.status(500).json({ 
+        error: `Failed to generate training plan: ${error.message}` 
+      });
+    }
+  });
+
+  // Coach API endpoints
+  app.get("/api/coaching-sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      // Check if user has an active subscription
+      const user = req.user;
+      
+      if (user.subscription_status !== "active") {
+        return res.status(403).json({ 
+          error: "Active subscription required to access coaching services" 
+        });
+      }
+      
+      const sessions = await storage.getCoachingSessions(user.id, 'athlete');
+      res.json(sessions);
+    } catch (error: any) {
+      console.error("Error fetching coaching sessions:", error);
+      res.status(500).json({ 
+        error: `Failed to fetch coaching sessions: ${error.message}` 
+      });
+    }
+  });
+
+  // Create new coaching session (for users with active subscription)
+  app.post("/api/coaching-sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    try {
+      const user = req.user;
+      
+      // Verify subscription status
+      if (user.subscription_status !== "active") {
+        return res.status(403).json({ 
+          error: "Active subscription required to access coaching services" 
+        });
+      }
+      
+      const { coach_id, goals, questions } = req.body;
+      
+      if (!coach_id) {
+        return res.status(400).json({ error: "Coach ID is required" });
+      }
+      
+      // Verify coach exists
+      const coach = await storage.getCoachById(coach_id);
+      if (!coach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+      
+      // Create coaching session
+      const session = await storage.createCoachingSession({
+        athlete_id: user.id,
+        coach_id,
+        status: "active",
+        type: "coaching",
+        session_date: new Date(),
+        duration_minutes: 60,
+        notes: `Goals: ${goals || "Not specified"}\nQuestions: ${questions || "None"}`
+      });
+      
+      res.status(201).json(session);
+    } catch (error: any) {
+      console.error("Error creating coaching session:", error);
+      res.status(500).json({ 
+        error: `Failed to create coaching session: ${error.message}` 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // Add WebSocket server for coaching chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Track active connections by session ID and user ID
+  const activeConnections: Map<string, Map<string, ws.WebSocket>> = new Map();
+  
+  wss.on('connection', (socket: ws.WebSocket, req: any) => {
+    console.log('Client connected to coaching chat');
+    let userId: string | null = null;
+    let sessionId: string | null = null;
+    
+    socket.on('message', async (message: ws.RawData) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received message:', data);
+        
+        // Handle initialization message
+        if (data.type === 'init') {
+          userId = data.userId;
+          sessionId = data.sessionId;
+          
+          // Store connection for this user and session
+          if (userId && sessionId) {
+            if (!activeConnections.has(sessionId)) {
+              activeConnections.set(sessionId, new Map());
+            }
+            const sessionMap = activeConnections.get(sessionId);
+            if (sessionMap) {
+              sessionMap.set(userId, socket);
+            }
+            
+            // Send confirmation
+            if (socket.readyState === ws.WebSocket.OPEN) {
+              socket.send(JSON.stringify({ 
+                type: 'init_confirmed', 
+                sessionId 
+              }));
+            }
+          }
+        }
+        // Handle chat messages
+        else if (data.type === 'chat_message') {
+          // Verify user is authenticated to send messages
+          if (!userId || !sessionId) {
+            if (socket.readyState === ws.WebSocket.OPEN) {
+              socket.send(JSON.stringify({
+                type: 'error',
+                message: 'Not initialized. Send init message first.'
+              }));
+            }
+            return;
+          }
+          
+          // Save message to database (would implement in a real system)
+          // For now, just broadcast to participants
+          
+          // Broadcast message to all users in this session
+          const sessionConnections = activeConnections.get(sessionId);
+          if (sessionConnections) {
+            sessionConnections.forEach((clientSocket, clientId) => {
+              if (clientSocket.readyState === ws.WebSocket.OPEN) {
+                clientSocket.send(JSON.stringify({
+                  type: 'chat_message',
+                  message: data.message,
+                  sender: userId,
+                  timestamp: new Date().toISOString()
+                }));
+              }
+            });
+          }
+          
+          // If message mentions training plan and sender is coach
+          if (data.message.toLowerCase().includes('training plan') && 
+              data.isCoach) {
+            // Flag that coach has suggested plan modifications
+            // (In a real implementation, update the database)
+            
+            // Notify the athlete that the plan requires approval
+            const athleteConnection = sessionConnections?.get(data.athleteId);
+            if (athleteConnection && athleteConnection.readyState === ws.WebSocket.OPEN) {
+              athleteConnection.send(JSON.stringify({
+                type: 'plan_update_request',
+                coachId: userId,
+                message: 'Your coach has suggested changes to your training plan. Review and approve them in your dashboard.'
+              }));
+            }
+          }
+        }
+        // Handle training plan approvals
+        else if (data.type === 'plan_update_response') {
+          if (!sessionId) return;
+          
+          if (data.approved) {
+            // Update the plan (would implement in a real system)
+            // For now, just notify coach
+            
+            // Notify coach of approval
+            const sessionConnections = activeConnections.get(sessionId);
+            const coachConnection = sessionConnections?.get(data.coachId);
+            
+            if (coachConnection && coachConnection.readyState === ws.WebSocket.OPEN) {
+              coachConnection.send(JSON.stringify({
+                type: 'plan_update_approved',
+                athleteId: userId,
+                message: 'The athlete has approved your training plan changes.'
+              }));
+            }
+          } else {
+            // Notify coach of rejection
+            const sessionConnections = activeConnections.get(sessionId);
+            const coachConnection = sessionConnections?.get(data.coachId);
+            
+            if (coachConnection && coachConnection.readyState === ws.WebSocket.OPEN) {
+              coachConnection.send(JSON.stringify({
+                type: 'plan_update_rejected',
+                athleteId: userId,
+                message: 'The athlete has declined your training plan changes.'
+              }));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error processing message:', error);
+        if (socket.readyState === ws.WebSocket.OPEN) {
+          socket.send(JSON.stringify({ 
+            type: 'error', 
+            message: 'Failed to process message' 
+          }));
+        }
+      }
+    });
+    
+    socket.on('close', () => {
+      console.log('Client disconnected from coaching chat');
+      
+      // Remove connection from active connections
+      if (userId && sessionId && activeConnections.has(sessionId)) {
+        const sessionConnections = activeConnections.get(sessionId);
+        if (sessionConnections) {
+          sessionConnections.delete(userId);
+          
+          // If no more connections in this session, remove the session
+          if (sessionConnections.size === 0) {
+            activeConnections.delete(sessionId);
+          }
+        }
+      }
+    });
+  });
+  
   return httpServer;
 }
