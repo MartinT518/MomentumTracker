@@ -343,6 +343,60 @@ export default function TrainingPlanPage() {
             )}
           </TabsContent>
           
+          <TabsContent value="adjust-plan">
+            {!hasSubscription ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
+                <Zap className="h-12 w-12 mx-auto text-primary/60 mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Premium Feature</h2>
+                <p className="text-muted-foreground mb-6">
+                  Get smart adjustments to your training plan based on your performance data, biometrics, and feedback.
+                  <ul className="mt-3 space-y-1 text-left max-w-md mx-auto">
+                    <li className="flex items-center">
+                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      Personalized adjustments based on workout completion
+                    </li>
+                    <li className="flex items-center">
+                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      Analysis of your biometric data and recovery status
+                    </li>
+                    <li className="flex items-center">
+                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      Training load optimization and performance insights
+                    </li>
+                  </ul>
+                </p>
+                <Button 
+                  onClick={() => setSelectedTab("subscription")}
+                  size="lg"
+                >
+                  Upgrade to Premium
+                </Button>
+              </div>
+            ) : !aiPlan ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
+                <Zap className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" />
+                <h2 className="text-2xl font-bold mb-2">No Training Plan Found</h2>
+                <p className="text-muted-foreground mb-6">
+                  You need to generate a training plan first before you can get AI adjustments to it.
+                </p>
+                <Button variant="default" onClick={() => setSelectedTab('ai-plan')}>
+                  Generate a Training Plan
+                </Button>
+              </div>
+            ) : (
+              <PlanAdjustmentTool 
+                currentPlan={aiPlan} 
+                onApplyChanges={handlePlanAdjustment}
+              />
+            )}
+          </TabsContent>
+          
           <TabsContent value="coach">
             {!hasSubscription ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
