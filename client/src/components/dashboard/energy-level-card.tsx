@@ -52,7 +52,7 @@ export function EnergyLevelCard() {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-medium">Energy Level</CardTitle>
           <TooltipProvider>
@@ -68,9 +68,9 @@ export function EnergyLevelCard() {
         </div>
         <CardDescription>Today's training readiness based on biometrics</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="mt-1 space-y-5">
-          <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-4 space-y-3 md:space-y-0">
+      <CardContent className="pt-1 pb-3">
+        <div className="space-y-4">
+          <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-1 space-y-2 md:space-y-0">
             <div>
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
                 <Zap className={`w-4 h-4 mr-2 ${getReadinessColor(energyData.readinessCategory)}`} />
@@ -82,7 +82,7 @@ export function EnergyLevelCard() {
             </div>
             
             <div className="flex justify-center">
-              <div className="h-28 w-28 relative">
+              <div className="h-32 w-32 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -92,8 +92,8 @@ export function EnergyLevelCard() {
                       ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={34}
-                      outerRadius={48}
+                      innerRadius={38}
+                      outerRadius={56}
                       fill="#8884d8"
                       dataKey="value"
                       startAngle={90}
@@ -108,8 +108,8 @@ export function EnergyLevelCard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Zap className={`w-5 h-5 ${getReadinessColor(energyData.readinessCategory)}`} />
-                  <p className={`text-lg font-bold ${getReadinessColor(energyData.readinessCategory)}`}>
+                  <Zap className={`w-6 h-6 ${getReadinessColor(energyData.readinessCategory)}`} />
+                  <p className={`text-xl font-bold ${getReadinessColor(energyData.readinessCategory)}`}>
                     {energyData.readinessScore}%
                   </p>
                 </div>
@@ -117,10 +117,10 @@ export function EnergyLevelCard() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 justify-center">
             {/* HRV Score */}
             <div className="flex flex-col items-center">
-              <div className="h-24 w-24 relative">
+              <div className="h-28 w-28 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -130,8 +130,8 @@ export function EnergyLevelCard() {
                       ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={28}
-                      outerRadius={40}
+                      innerRadius={32}
+                      outerRadius={48}
                       fill="#8884d8"
                       dataKey="value"
                       startAngle={90}
@@ -143,16 +143,16 @@ export function EnergyLevelCard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Heart className="w-4 h-4 text-red-500" />
-                  <p className="text-sm font-bold mt-0.5">{energyData.hrvScore}</p>
+                  <Heart className="w-5 h-5 text-red-500" />
+                  <p className="text-base font-bold mt-0.5">{energyData.hrvScore}</p>
                 </div>
               </div>
-              <p className="text-xs font-medium mt-2">HRV Score</p>
+              <p className="text-xs font-medium mt-1">HRV Score</p>
             </div>
             
             {/* Resting HR */}
             <div className="flex flex-col items-center">
-              <div className="h-24 w-24 relative">
+              <div className="h-28 w-28 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -162,8 +162,8 @@ export function EnergyLevelCard() {
                       ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={28}
-                      outerRadius={40}
+                      innerRadius={32}
+                      outerRadius={48}
                       fill="#8884d8"
                       dataKey="value"
                       startAngle={90}
@@ -175,16 +175,16 @@ export function EnergyLevelCard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Heart className="w-4 h-4 text-purple-500" />
-                  <p className="text-sm font-bold mt-0.5">{energyData.restingHR} <span className="text-xs">bpm</span></p>
+                  <Heart className="w-5 h-5 text-purple-500" />
+                  <p className="text-base font-bold mt-0.5">{energyData.restingHR} <span className="text-xs">bpm</span></p>
                 </div>
               </div>
-              <p className="text-xs font-medium mt-2">Resting HR</p>
+              <p className="text-xs font-medium mt-1">Resting HR</p>
             </div>
             
             {/* Sleep Score */}
             <div className="flex flex-col items-center">
-              <div className="h-24 w-24 relative">
+              <div className="h-28 w-28 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -194,8 +194,8 @@ export function EnergyLevelCard() {
                       ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={28}
-                      outerRadius={40}
+                      innerRadius={32}
+                      outerRadius={48}
                       fill="#8884d8"
                       dataKey="value"
                       startAngle={90}
@@ -207,11 +207,11 @@ export function EnergyLevelCard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Moon className="w-4 h-4 text-blue-500" />
-                  <p className="text-sm font-bold mt-0.5">{energyData.sleepScore}</p>
+                  <Moon className="w-5 h-5 text-blue-500" />
+                  <p className="text-base font-bold mt-0.5">{energyData.sleepScore}</p>
                 </div>
               </div>
-              <p className="text-xs font-medium mt-2">Sleep Score</p>
+              <p className="text-xs font-medium mt-1">Sleep Score</p>
             </div>
           </div>
         </div>
