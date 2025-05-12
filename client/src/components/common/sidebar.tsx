@@ -13,6 +13,7 @@ import {
   Crown,
   Dumbbell,
   Heart,
+  Apple,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -57,6 +58,12 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/health-metrics",
       icon: Heart,
       active: location === "/health-metrics",
+    },
+    {
+      title: "Nutrition",
+      href: "/nutrition",
+      icon: Apple,
+      active: location === "/nutrition",
     },
     {
       title: "Goals",

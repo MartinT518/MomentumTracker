@@ -16,6 +16,7 @@ import SettingsPage from "@/pages/settings-page";
 import SubscriptionPage from "@/pages/subscription-page";
 import StrengthExercisesPage from "@/pages/strength-exercises-page";
 import HealthMetricsPage from "@/pages/health-metrics-page";
+import NutritionPage from "@/pages/nutrition-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <ProtectedRoute path="/subscription/success" component={SubscriptionPage} />
       <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
       <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
+      <ProtectedRoute path="/nutrition" component={NutritionPage} />
       <Route component={NotFound} />
     </Switch>
   );
