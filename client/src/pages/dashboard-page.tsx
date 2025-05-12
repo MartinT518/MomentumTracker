@@ -44,16 +44,19 @@ export default function DashboardPage() {
         {/* Current Goal Banner */}
         <CurrentGoalBanner />
 
-        {/* Weekly Overview and Energy Level */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="md:col-span-2">
-            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">This Week's Overview</h2>
-            <WeeklyMetrics />
-          </div>
-          
-          <div>
-            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Energy</h2>
-            <EnergyLevelCard />
+        {/* Weekly Overview */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">This Week's Overview</h2>
+          <WeeklyMetrics />
+        </div>
+        
+        {/* Energy Level - Moved to a separate row */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Energy</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1">
+              <EnergyLevelCard />
+            </div>
           </div>
         </div>
 
