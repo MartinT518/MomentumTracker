@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Sidebar } from '@/components/common/sidebar';
+import { MobileMenu } from '@/components/common/mobile-menu';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Shield, Unlock, UserCog, BellRing } from 'lucide-react';
+import { IntegrationSettings } from '@/components/settings/integration-settings';
 
 const profileFormSchema = z.object({
   username: z.string().min(3, {
@@ -353,82 +355,9 @@ export default function SettingsPage() {
           {/* Integrations Settings */}
           <TabsContent value="integrations" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Connected Services</CardTitle>
-                <CardDescription>
-                  Connect your fitness accounts to sync your activities and data.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                      <span className="text-orange-600 font-bold text-sm">ST</span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-medium leading-none">Strava</p>
-                      <p className="text-sm text-muted-foreground">
-                        {stravaConnected ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant={stravaConnected ? "destructive" : "default"}
-                    size="sm"
-                    onClick={() => handleIntegrationToggle('strava', stravaConnected)}
-                    disabled={connectIntegrationMutation.isPending}
-                  >
-                    {stravaConnected ? "Disconnect" : "Connect"}
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-blue-600 font-bold text-sm">GC</span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-medium leading-none">Garmin Connect</p>
-                      <p className="text-sm text-muted-foreground">
-                        {garminConnected ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant={garminConnected ? "destructive" : "default"}
-                    size="sm"
-                    onClick={() => handleIntegrationToggle('garmin', garminConnected)}
-                    disabled={connectIntegrationMutation.isPending}
-                  >
-                    {garminConnected ? "Disconnect" : "Connect"}
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                      <span className="text-red-600 font-bold text-sm">PL</span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-medium leading-none">Polar</p>
-                      <p className="text-sm text-muted-foreground">
-                        {polarConnected ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant={polarConnected ? "destructive" : "default"}
-                    size="sm"
-                    onClick={() => handleIntegrationToggle('polar', polarConnected)}
-                    disabled={connectIntegrationMutation.isPending}
-                  >
-                    {polarConnected ? "Disconnect" : "Connect"}
-                  </Button>
-                </div>
+              <CardContent className="pt-6">
+                <IntegrationSettings />
               </CardContent>
-              <CardFooter>
-                <p className="text-sm text-muted-foreground">
-                  Connecting your accounts allows us to automatically import your activities.
-                </p>
-              </CardFooter>
             </Card>
           </TabsContent>
           
