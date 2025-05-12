@@ -200,3 +200,216 @@ function cleanJsonResponse(responseText: string): string {
   
   return cleanText;
 }
+
+// Interface for user performance data
+export interface UserPerformance {
+  completedWorkouts: {
+    date: string;
+    workoutType: string;
+    plannedDistance?: string;
+    actualDistance?: string;
+    plannedDuration?: string;
+    actualDuration?: string;
+    perceivedEffort: number; // 1-10 scale
+    heartRateData?: {
+      average: number;
+      max: number;
+    };
+    notes?: string;
+    completed: boolean;
+  }[];
+  missedWorkouts: {
+    date: string;
+    workoutType: string;
+    reason?: string;
+  }[];
+  biometricData?: {
+    sleepQuality: number[]; // Last 7 days, 1-10 scale
+    restingHeartRate: number[]; // Last 7 days
+    hrvScore?: number[]; // Last 7 days
+    stressScore?: number[]; // Last 7 days
+  };
+  energyLevels: number[]; // Last 7 days, 1-10 scale
+  fatigueLevel: number; // 1-10 scale
+  weeklyMileage: {
+    planned: number;
+    actual: number;
+  };
+  recentInjuries?: string[];
+  goalsProgress?: {
+    type: string;
+    target: number;
+    current: number;
+  }[];
+}
+
+// Interface for plan adjustment response
+export interface PlanAdjustment {
+  recommendedChanges: {
+    overall: string;
+    currentWeek: {
+      message: string;
+      adjustments: {
+        day: string;
+        originalWorkout: string;
+        adjustedWorkout: string;
+        reason: string;
+      }[];
+    };
+    futureWeeks: {
+      message: string;
+      adjustmentTypes: string[];
+    };
+  };
+  adaptationInsights: {
+    strengths: string[];
+    limitingFactors: string[];
+    recommendations: string[];
+  };
+  trainingLoad: {
+    previousWeek: number; // 1-100 scale
+    currentWeek: number; // 1-100 scale
+    recommendedNextWeek: number; // 1-100 scale
+    explanation: string;
+  };
+}
+
+// Function to generate training plan adjustments based on user performance
+export async function generateTrainingPlanAdjustments(
+  currentPlan: TrainingPlan,
+  performanceData: UserPerformance,
+  userPreferences: { focusAreas: string[], recoveryPreference: 'aggressive' | 'moderate' | 'conservative' }
+): Promise<PlanAdjustment> {
+  try {
+    // Check if API key is available
+    const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Google AI API key not found');
+    }
+
+    // Initialize Google AI
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    // Prepare the prompt
+    const prompt = createPlanAdjustmentPrompt(currentPlan, performanceData, userPreferences);
+    
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Parse the response as JSON
+    try {
+      // Clean response text in case there are markdown code blocks
+      const jsonStr = cleanJsonResponse(text);
+      return JSON.parse(jsonStr) as PlanAdjustment;
+    } catch (parseError) {
+      console.error("Failed to parse AI response as JSON:", parseError);
+      console.log("Raw Response:", text);
+      throw new Error("Failed to generate valid training plan adjustments. Please try again.");
+    }
+  } catch (error: any) {
+    console.error("Error generating training plan adjustments:", error);
+    throw new Error(error.message || "Failed to generate training plan adjustments");
+  }
+}
+
+// Helper function to create the prompt for the AI adjustment algorithm
+function createPlanAdjustmentPrompt(
+  currentPlan: TrainingPlan, 
+  performanceData: UserPerformance,
+  userPreferences: { focusAreas: string[], recoveryPreference: 'aggressive' | 'moderate' | 'conservative' }
+): string {
+  // Calculate key metrics for the prompt
+  const completionRate = performanceData.completedWorkouts.length / 
+    (performanceData.completedWorkouts.length + performanceData.missedWorkouts.length) * 100;
+    
+  const avgEffort = performanceData.completedWorkouts.reduce(
+    (sum, workout) => sum + workout.perceivedEffort, 0
+  ) / performanceData.completedWorkouts.length;
+  
+  const avgEnergy = performanceData.energyLevels.reduce((sum, level) => sum + level, 0) / 
+    performanceData.energyLevels.length;
+  
+  const mileageAdherence = (performanceData.weeklyMileage.actual / performanceData.weeklyMileage.planned) * 100;
+  
+  // Create a detailed prompt with all performance data
+  let prompt = `
+Generate personalized training plan adjustments in JSON format based on the following data:
+
+CURRENT TRAINING PLAN:
+- Plan name: ${currentPlan.name}
+- Current week: ${currentPlan.weeklyPlans[0].weekNumber}
+- Planned weekly mileage: ${currentPlan.weeklyPlans[0].totalMileage}
+- Key workouts: ${JSON.stringify(currentPlan.weeklyPlans[0].keyWorkouts)}
+
+USER PERFORMANCE DATA:
+- Workout completion rate: ${completionRate.toFixed(1)}%
+- Average perceived effort: ${avgEffort.toFixed(1)}/10
+- Average energy level: ${avgEnergy.toFixed(1)}/10
+- Weekly mileage adherence: ${mileageAdherence.toFixed(1)}%
+- Current fatigue level: ${performanceData.fatigueLevel}/10
+- Completed workouts: ${performanceData.completedWorkouts.length}
+- Missed workouts: ${performanceData.missedWorkouts.length}
+
+${performanceData.biometricData ? `BIOMETRIC DATA:
+- Average sleep quality: ${performanceData.biometricData.sleepQuality.reduce((sum, val) => sum + val, 0) / performanceData.biometricData.sleepQuality.length}/10
+- Recent resting HR trend: ${performanceData.biometricData.restingHeartRate.join(', ')} bpm
+${performanceData.biometricData.hrvScore ? `- Recent HRV trend: ${performanceData.biometricData.hrvScore.join(', ')}` : ''}` : ''}
+
+${performanceData.recentInjuries && performanceData.recentInjuries.length > 0 ? 
+  `RECENT INJURIES/ISSUES:
+- ${performanceData.recentInjuries.join('\n- ')}` : ''}
+
+USER PREFERENCES:
+- Focus areas: ${userPreferences.focusAreas.join(', ')}
+- Recovery preference: ${userPreferences.recoveryPreference}
+
+Using advanced exercise science principles, analyze this data and generate a comprehensive training plan adjustment in this JSON format:
+{
+  "recommendedChanges": {
+    "overall": "Brief summary of overall adjustment approach",
+    "currentWeek": {
+      "message": "Brief explanation of current week adjustments",
+      "adjustments": [
+        {
+          "day": "Day of week",
+          "originalWorkout": "Brief description of original workout",
+          "adjustedWorkout": "Detailed description of adjusted workout",
+          "reason": "Physiological explanation for the adjustment"
+        }
+      ]
+    },
+    "futureWeeks": {
+      "message": "How future weeks of the plan should be modified",
+      "adjustmentTypes": ["List of adjustment types needed"]
+    }
+  },
+  "adaptationInsights": {
+    "strengths": ["Areas where the athlete is showing positive adaptation"],
+    "limitingFactors": ["Factors limiting performance improvement"],
+    "recommendations": ["Specific recommendations beyond workout adjustments"]
+  },
+  "trainingLoad": {
+    "previousWeek": 75, 
+    "currentWeek": 85,
+    "recommendedNextWeek": 80,
+    "explanation": "Explanation of training load recommendations"
+  }
+}
+
+Apply these advanced training principles in your analysis:
+1. Consider heart rate variability and resting heart rate trends when determining recovery status
+2. Apply the principles of periodization and progressive overload
+3. Balance high-intensity and low-intensity training appropriately
+4. Account for both physiological and psychological factors
+5. Make adjustments that maintain training plan integrity while addressing immediate needs
+6. Consider the impact of sleep quality on recovery capability
+7. Analyze effort-to-performance ratio to detect signs of overtraining or undertraining
+8. Apply the latest sports science on optimizing training adaptations
+
+Generate ONLY valid JSON with no explanations before or after.`;
+
+  return prompt;
+}

@@ -3,11 +3,12 @@ import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, BookUser, Sparkles, Loader2, Check } from "lucide-react";
+import { ArrowLeft, BookUser, Sparkles, Loader2, Check, Zap } from "lucide-react";
 import { TrainingGoalOverview } from "@/components/training-plan/training-goal-overview";
 import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar-new";
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
 import { AIPlanGenerator } from "@/components/training-plan/ai-plan-generator";
+import PlanAdjustmentTool from "@/components/training-plan/plan-adjustment-tool";
 import { CoachSelection } from "@/components/coaching/coach-selection";
 import { CoachChat } from "@/components/coaching/coach-chat";
 import { useAuth } from "@/hooks/use-auth";
@@ -15,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from "@/lib/queryClient";
 import { Coach, TrainingPlan } from '@shared/schema';
-import { TrainingPlan as AITrainingPlan } from '@/lib/ai-service';
+import { TrainingPlan as AITrainingPlan, PlanAdjustment } from '@/lib/ai-service';
 
 // Interface for selected workout
 interface Workout {
