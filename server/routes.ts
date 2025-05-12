@@ -54,6 +54,220 @@ const geminiModel = googleAI?.getGenerativeModel({
   }
 });
 
+// Helper functions for integration data syncing
+
+// Strava data sync function
+async function syncStravaData(connection: any, userId: number) {
+  console.log(`Syncing Strava data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Use the Strava API to fetch recent activities
+  // 2. Use the Strava API to fetch athlete stats for health metrics
+  // 3. Store this data in your database
+  
+  // Mock implementation that simulates a successful sync
+  try {
+    // Simulate fetching recent activities (last 30 days)
+    const activities = [
+      {
+        id: "strava_123456",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 3 * 86400000), // 3 days ago
+        activity_type: "run",
+        distance: 8.2, // km
+        duration: 2160, // seconds (36 minutes)
+        pace: "7:30", // min/mile
+        heart_rate: 156,
+        effort_level: "moderate",
+        notes: "Evening run with some hill repeats",
+        source: "strava"
+      },
+      {
+        id: "strava_123457",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 5 * 86400000), // 5 days ago
+        activity_type: "run",
+        distance: 16.1, // km
+        duration: 5400, // seconds (90 minutes)
+        pace: "8:00", // min/mile
+        heart_rate: 149,
+        effort_level: "moderate",
+        notes: "Long run, felt good",
+        source: "strava"
+      }
+    ];
+    
+    // Simulate fetching health metrics from Strava
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        hrv_score: 65,
+        resting_heart_rate: 51,
+        sleep_quality: null,
+        sleep_duration: null,
+        energy_level: null,
+        stress_level: null,
+        source: "strava",
+        notes: "Auto-imported from Strava"
+      }
+    ];
+    
+    // In a real implementation, store this data in the database
+    // For now, just log and return success
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Strava`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing Strava data:", error);
+    throw new Error(`Failed to sync Strava data: ${error.message}`);
+  }
+}
+
+// Garmin data sync function
+async function syncGarminData(connection: any, userId: number) {
+  console.log(`Syncing Garmin data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Use the Garmin Connect API to fetch recent activities
+  // 2. Use the Garmin Connect API to fetch health metrics
+  // 3. Store this data in your database
+  
+  // Mock implementation that simulates a successful sync
+  try {
+    // Simulate fetching recent activities (last 30 days)
+    const activities = [
+      {
+        id: "garmin_234567",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
+        activity_type: "run",
+        distance: 5.0, // km
+        duration: 1500, // seconds (25 minutes)
+        pace: "8:03", // min/mile
+        heart_rate: 147,
+        effort_level: "easy",
+        notes: "Morning recovery run",
+        source: "garmin"
+      },
+      {
+        id: "garmin_234568",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 7 * 86400000), // 7 days ago
+        activity_type: "run",
+        distance: 10.0, // km
+        duration: 2700, // seconds (45 minutes)
+        pace: "7:15", // min/mile
+        heart_rate: 166,
+        effort_level: "hard",
+        notes: "Tempo run, pushing the pace",
+        source: "garmin"
+      }
+    ];
+    
+    // Simulate fetching health metrics from Garmin (more comprehensive)
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        hrv_score: 68,
+        resting_heart_rate: 49,
+        sleep_quality: 8,
+        sleep_duration: 480, // 8 hours in minutes
+        energy_level: 9,
+        stress_level: 3,
+        source: "garmin",
+        notes: "Auto-imported from Garmin Connect"
+      },
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
+        hrv_score: 62,
+        resting_heart_rate: 52,
+        sleep_quality: 6,
+        sleep_duration: 390, // 6.5 hours in minutes
+        energy_level: 7,
+        stress_level: 5,
+        source: "garmin",
+        notes: "Auto-imported from Garmin Connect"
+      }
+    ];
+    
+    // In a real implementation, store this data in the database
+    // For now, just log and return success
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Garmin`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing Garmin data:", error);
+    throw new Error(`Failed to sync Garmin data: ${error.message}`);
+  }
+}
+
+// Polar data sync function
+async function syncPolarData(connection: any, userId: number) {
+  console.log(`Syncing Polar data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Use the Polar Flow API to fetch recent activities
+  // 2. Use the Polar Flow API to fetch health metrics
+  // 3. Store this data in your database
+  
+  // Mock implementation that simulates a successful sync
+  try {
+    // Simulate fetching recent activities (last 30 days)
+    const activities = [
+      {
+        id: "polar_345678",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        activity_type: "run",
+        distance: 7.5, // km
+        duration: 2100, // seconds (35 minutes)
+        pace: "7:45", // min/mile
+        heart_rate: 159,
+        effort_level: "moderate",
+        notes: "Afternoon run through the park",
+        source: "polar"
+      }
+    ];
+    
+    // Simulate fetching health metrics from Polar
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        hrv_score: 59,
+        resting_heart_rate: 53,
+        sleep_quality: 7,
+        sleep_duration: 450, // 7.5 hours in minutes
+        energy_level: 8,
+        stress_level: 4,
+        source: "polar",
+        notes: "Auto-imported from Polar Flow"
+      }
+    ];
+    
+    // In a real implementation, store this data in the database
+    // For now, just log and return success
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Polar`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing Polar data:", error);
+    throw new Error(`Failed to sync Polar data: ${error.message}`);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
@@ -968,10 +1182,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ message: `Successfully removed ${platform} integration` });
     } catch (error) {
       console.error("Error removing integration connection:", error);
-      res.status(500).json({ error: "Failed to remove integration connection" });
     }
   });
 
+  // New endpoints for connecting to platforms and syncing data
+  app.post("/api/integrations/connect/:platform", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const platform = req.params.platform;
+      let authUrl;
+      
+      // Platform-specific connection logic
+      switch (platform) {
+        case "strava":
+          // Generate Strava OAuth URL
+          // In production, you'd use Strava's OAuth API
+          authUrl = `https://www.strava.com/oauth/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/integrations/callback/strava`)}&approval_prompt=force&scope=read,activity:read,activity:read_all`;
+          break;
+        case "garmin":
+          // Garmin Connect API OAuth process
+          authUrl = `/api/integrations/garmin/auth?userId=${req.user.id}`;
+          break;
+        case "polar":
+          // Polar Flow API OAuth process
+          authUrl = `https://flow.polar.com/oauth2/authorization?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/integrations/callback/polar`)}`;
+          break;
+        default:
+          return res.status(400).json({ error: `Unsupported platform: ${platform}` });
+      }
+      
+      res.json({ authUrl });
+    } catch (error) {
+      console.error(`Error connecting to ${req.params.platform}:`, error);
+      res.status(500).json({ error: `Failed to connect to ${req.params.platform}` });
+    }
+  });
+  
+  // OAuth callback handlers for each platform
+  app.get("/api/integrations/callback/:platform", async (req, res) => {
+    // Handle OAuth callback
+    const platform = req.params.platform;
+    const { code, error } = req.query;
+    
+    if (error) {
+      // Auth was denied or failed
+      return res.redirect(`/settings?tab=integrations&error=${error}`);
+    }
+    
+    if (!code) {
+      return res.redirect("/settings?tab=integrations&error=missing_code");
+    }
+    
+    try {
+      let tokenData;
+      
+      switch (platform) {
+        case "strava":
+          // Exchange code for token using Strava's API
+          // In production, you'd use actual API calls to Strava
+          tokenData = {
+            access_token: "sample_access_token",
+            refresh_token: "sample_refresh_token",
+            expires_at: new Date(Date.now() + 21600000), // 6 hours from now
+            athlete_id: "12345"
+          };
+          break;
+        case "garmin":
+          // Exchange code for token using Garmin's API
+          tokenData = {
+            access_token: "sample_access_token",
+            refresh_token: "sample_refresh_token",
+            expires_at: new Date(Date.now() + 3600000), // 1 hour from now
+            athlete_id: "67890"
+          };
+          break;
+        case "polar":
+          // Exchange code for token using Polar's API
+          tokenData = {
+            access_token: "sample_access_token",
+            refresh_token: "sample_refresh_token",
+            expires_at: new Date(Date.now() + 86400000), // 24 hours from now
+            athlete_id: "11223"
+          };
+          break;
+      }
+      
+      if (!req.isAuthenticated()) {
+        // If user is not logged in, store token in session for later
+        // In a real app, this would require more secure handling
+        req.session.pendingIntegration = { platform, tokenData };
+        return res.redirect("/auth?redirect=/settings?tab=integrations");
+      }
+      
+      // Create or update the integration connection
+      const connectionData = {
+        user_id: req.user.id,
+        platform,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        token_expires_at: tokenData.expires_at,
+        athlete_id: tokenData.athlete_id,
+        is_active: true
+      };
+      
+      // Check if connection already exists
+      const existingConnection = await storage.getIntegrationConnection(req.user.id, platform);
+      
+      if (existingConnection) {
+        await storage.updateIntegrationConnection(existingConnection.id, connectionData);
+      } else {
+        await storage.createIntegrationConnection(connectionData);
+      }
+      
+      res.redirect(`/settings?tab=integrations&success=${platform}`);
+    } catch (error) {
+      console.error(`Error completing ${platform} integration:`, error);
+      res.redirect(`/settings?tab=integrations&error=integration_failed`);
+    }
+  });
+  
+  // Data sync endpoint for each integration
+  app.post("/api/integrations/sync/:platform", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const platform = req.params.platform;
+    
+    try {
+      // Get the integration connection
+      const connection = await storage.getIntegrationConnection(req.user.id, platform);
+      
+      if (!connection) {
+        return res.status(404).json({ error: `No ${platform} integration found` });
+      }
+      
+      if (!connection.is_active) {
+        return res.status(400).json({ error: `${platform} integration is not active` });
+      }
+      
+      // Check if token is expired and refresh if needed
+      const now = new Date();
+      if (connection.token_expires_at && new Date(connection.token_expires_at) < now) {
+        // Token is expired, refresh it
+        // In a real app, you'd call the platform's API to refresh the token
+        console.log(`Refreshing ${platform} token`);
+        
+        // Mock refreshed token
+        const refreshedToken = {
+          access_token: `new_${platform}_access_token`,
+          refresh_token: `new_${platform}_refresh_token`,
+          expires_at: new Date(Date.now() + 21600000), // 6 hours from now
+        };
+        
+        // Update the connection with new token
+        await storage.updateIntegrationConnection(connection.id, {
+          access_token: refreshedToken.access_token,
+          refresh_token: refreshedToken.refresh_token,
+          token_expires_at: refreshedToken.expires_at
+        });
+        
+        // Update our local connection object
+        connection.access_token = refreshedToken.access_token;
+      }
+      
+      // Platform-specific sync logic
+      let syncResults = { activities: 0, metrics: 0 };
+      
+      switch (platform) {
+        case "strava":
+          // Fetch activities from Strava
+          // In a real app, you'd use the Strava API client
+          syncResults = await syncStravaData(connection, req.user.id);
+          break;
+        case "garmin":
+          // Fetch data from Garmin Connect
+          syncResults = await syncGarminData(connection, req.user.id);
+          break;
+        case "polar":
+          // Fetch data from Polar Flow
+          syncResults = await syncPolarData(connection, req.user.id);
+          break;
+      }
+      
+      // Update last_sync_at
+      await storage.updateIntegrationConnection(connection.id, {
+        last_sync_at: new Date()
+      });
+      
+      res.json({
+        success: true,
+        platform,
+        ...syncResults
+      });
+    } catch (error) {
+      console.error(`Error syncing data from ${platform}:`, error);
+      res.status(500).json({ error: `Failed to sync data from ${platform}` });
+    }
+  });
+  
   // Subscription Plans API
   app.get("/api/subscription-plans", async (req, res) => {
     try {
