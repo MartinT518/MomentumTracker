@@ -1,312 +1,408 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Activity } from 'lucide-react';
+  initiateStravaAuth, 
+  initiateGarminAuth, 
+  initiatePolarAuth,
+  getIntegrations,
+  disconnectIntegration,
+  syncActivities,
+  updateSyncSettings,
+  getLastSyncStatus
+} from '@/lib/integration-service';
+import { Loader2, RefreshCw, Unplug, Clock, Check } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
-interface IntegrationPlatform {
-  id: string;
-  name: string;
-  logoIcon: React.ReactNode;
-  description: string;
-  isConnected: boolean;
+type IntegrationStatus = {
+  connected: boolean;
   lastSynced?: string;
-}
-
-interface IntegrationConnection {
-  id: number;
-  user_id: number;
+  autoSync: boolean;
+  syncFrequency?: 'daily' | 'realtime';
   platform: string;
-  is_active: boolean;
-  last_sync_at: string | null;
-  athlete_id: string | null;
-}
+  displayName: string;
+};
 
 export function IntegrationSettings() {
   const { toast } = useToast();
-  const [syncInProgress, setSyncInProgress] = useState<string | null>(null);
-
-  // Fetch existing connections
-  const { data: connections, isLoading } = useQuery<IntegrationConnection[]>({
+  const [confirmDisconnect, setConfirmDisconnect] = useState<string | null>(null);
+  
+  // Fetch integrations status
+  const { 
+    data: integrations = { strava: false, garmin: false, polar: false },
+    isLoading: isLoadingIntegrations
+  } = useQuery({
     queryKey: ['/api/integrations'],
-    queryFn: () => apiRequest('GET', '/api/integrations').then(res => res.json())
-  });
-
-  // Connect integration mutation
-  const connectMutation = useMutation({
-    mutationFn: async (platform: string) => {
-      const response = await apiRequest('POST', `/api/integrations/connect/${platform}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to start connection process');
+    queryFn: async () => {
+      try {
+        return await getIntegrations();
+      } catch (error) {
+        // Default all to disconnected if there's an error
+        return { strava: false, garmin: false, polar: false };
       }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // Redirect to authorization page
-      window.location.href = data.authUrl;
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to connect",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   });
-
-  // Disconnect integration mutation
+  
+  // Initialize integration statuses
+  const [integrationStatuses, setIntegrationStatuses] = useState<IntegrationStatus[]>([
+    { platform: 'strava', displayName: 'Strava', connected: false, autoSync: true, syncFrequency: 'daily' },
+    { platform: 'garmin', displayName: 'Garmin Connect', connected: false, autoSync: true, syncFrequency: 'daily' },
+    { platform: 'polar', displayName: 'Polar Flow', connected: false, autoSync: true, syncFrequency: 'daily' },
+  ]);
+  
+  // Update integration statuses when data is loaded
+  useEffect(() => {
+    if (integrations) {
+      setIntegrationStatuses(prev => prev.map(status => ({
+        ...status,
+        connected: !!integrations[status.platform as keyof typeof integrations]
+      })));
+    }
+  }, [integrations]);
+  
+  // For each connected integration, fetch its last sync status
+  useEffect(() => {
+    integrationStatuses.forEach(status => {
+      if (status.connected) {
+        getLastSyncStatus(status.platform)
+          .then(data => {
+            setIntegrationStatuses(prev => prev.map(s => 
+              s.platform === status.platform ? { ...s, lastSynced: data.lastSynced, autoSync: data.autoSync, syncFrequency: data.syncFrequency } : s
+            ));
+          })
+          .catch(error => {
+            console.error(`Error fetching sync status for ${status.platform}:`, error);
+          });
+      }
+    });
+  }, [integrationStatuses.map(s => s.connected).join(',')]);
+  
+  // Mutation for disconnecting an integration
   const disconnectMutation = useMutation({
     mutationFn: async (platform: string) => {
-      const response = await apiRequest('DELETE', `/api/integrations/${platform}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to disconnect');
-      }
-      return response.json();
+      return await disconnectIntegration(platform);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/integrations'] });
+    onSuccess: (_, platform) => {
       toast({
-        title: "Success",
-        description: "Integration disconnected successfully.",
+        title: 'Integration Disconnected',
+        description: `Successfully disconnected from ${platform.charAt(0).toUpperCase() + platform.slice(1)}`,
       });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to disconnect",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Toggle active state mutation
-  const toggleActiveMutation = useMutation({
-    mutationFn: async ({ platform, active }: { platform: string, active: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/integrations/${platform}`, { is_active: active });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update settings');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/integrations'] });
-      toast({
-        title: "Success",
-        description: "Integration settings updated.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Sync data mutation
-  const syncDataMutation = useMutation({
-    mutationFn: async (platform: string) => {
-      setSyncInProgress(platform);
-      const response = await apiRequest('POST', `/api/integrations/sync/${platform}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to sync data');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setSyncInProgress(null);
+      
+      // Update local state
+      setIntegrationStatuses(prev => prev.map(status => 
+        status.platform === platform ? { ...status, connected: false } : status
+      ));
+      
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['/api/integrations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/health-metrics'] });
+    },
+    onError: (error, platform) => {
       toast({
-        title: "Success",
-        description: `Synced ${data.activities || 0} activities and ${data.metrics || 0} health metrics`,
+        title: 'Disconnection Failed',
+        description: `Failed to disconnect from ${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
       });
     },
-    onError: (error: Error) => {
-      setSyncInProgress(null);
-      toast({
-        title: "Failed to sync data",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   });
-
-  // Define available platforms
-  const platforms: IntegrationPlatform[] = [
-    {
-      id: "strava",
-      name: "Strava",
-      logoIcon: <Activity className="h-6 w-6 text-orange-600" />,
-      description: "Connect to Strava to automatically import your running and cycling activities.",
-      isConnected: connections?.some(conn => conn.platform === "strava") || false,
-      lastSynced: connections?.find(conn => conn.platform === "strava")?.last_sync_at || undefined
+  
+  // Mutation for syncing activities
+  const syncMutation = useMutation({
+    mutationFn: async ({ platform, forceSync = false }: { platform: string, forceSync?: boolean }) => {
+      return await syncActivities(platform, forceSync);
     },
-    {
-      id: "garmin",
-      name: "Garmin Connect",
-      logoIcon: <Activity className="h-6 w-6 text-blue-600" />,
-      description: "Import activities, health metrics, and sleep data from your Garmin device.",
-      isConnected: connections?.some(conn => conn.platform === "garmin") || false,
-      lastSynced: connections?.find(conn => conn.platform === "garmin")?.last_sync_at || undefined
+    onSuccess: (data, { platform }) => {
+      toast({
+        title: 'Activities Synced',
+        description: `Successfully synced ${data.count} activities from ${platform.charAt(0).toUpperCase() + platform.slice(1)}`,
+      });
+      
+      // Update last synced time
+      setIntegrationStatuses(prev => prev.map(status => 
+        status.platform === platform ? { ...status, lastSynced: new Date().toISOString() } : status
+      ));
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
     },
-    {
-      id: "polar",
-      name: "Polar Flow",
-      logoIcon: <Activity className="h-6 w-6 text-red-600" />,
-      description: "Get activities, heart rate data, and workouts from your Polar devices.",
-      isConnected: connections?.some(conn => conn.platform === "polar") || false,
-      lastSynced: connections?.find(conn => conn.platform === "polar")?.last_sync_at || undefined
-    }
-  ];
-
-  // Get connection status for a platform
-  const getConnectionStatus = (platformId: string) => {
-    if (!connections) return { isConnected: false, isActive: false };
-    
-    const connection = connections.find(conn => conn.platform === platformId);
-    return {
-      isConnected: !!connection,
-      isActive: connection?.is_active || false
-    };
-  };
-
+    onError: (error, { platform }) => {
+      toast({
+        title: 'Sync Failed',
+        description: `Failed to sync activities from ${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Mutation for updating sync settings
+  const updateSyncSettingsMutation = useMutation({
+    mutationFn: async ({ platform, settings }: { platform: string, settings: { autoSync: boolean, syncFrequency?: 'daily' | 'realtime' } }) => {
+      return await updateSyncSettings(platform, settings);
+    },
+    onSuccess: (_, { platform, settings }) => {
+      toast({
+        title: 'Sync Settings Updated',
+        description: `Successfully updated sync settings for ${platform.charAt(0).toUpperCase() + platform.slice(1)}`,
+      });
+      
+      // Update local state
+      setIntegrationStatuses(prev => prev.map(status => 
+        status.platform === platform ? { ...status, ...settings } : status
+      ));
+    },
+    onError: (error, { platform }) => {
+      toast({
+        title: 'Update Failed',
+        description: `Failed to update sync settings for ${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Handler for connecting to a service
   const handleConnect = (platform: string) => {
-    connectMutation.mutate(platform);
+    switch (platform) {
+      case 'strava':
+        initiateStravaAuth();
+        break;
+      case 'garmin':
+        initiateGarminAuth();
+        break;
+      case 'polar':
+        initiatePolarAuth();
+        break;
+      default:
+        toast({
+          title: 'Unsupported Platform',
+          description: `Integration with ${platform} is not supported yet.`,
+          variant: 'destructive',
+        });
+    }
   };
-
+  
+  // Handler for disconnecting from a service
   const handleDisconnect = (platform: string) => {
-    disconnectMutation.mutate(platform);
+    setConfirmDisconnect(platform);
   };
-
-  const handleToggleActive = (platform: string, active: boolean) => {
-    toggleActiveMutation.mutate({ platform, active });
+  
+  // Handler for confirming disconnect
+  const confirmDisconnectHandler = () => {
+    if (confirmDisconnect) {
+      disconnectMutation.mutate(confirmDisconnect);
+      setConfirmDisconnect(null);
+    }
   };
-
-  const handleSync = (platform: string) => {
-    syncDataMutation.mutate(platform);
+  
+  // Handler for syncing activities
+  const handleSync = (platform: string, forceSync = false) => {
+    syncMutation.mutate({ platform, forceSync });
+  };
+  
+  // Handler for toggling auto-sync
+  const handleToggleAutoSync = (platform: string, autoSync: boolean) => {
+    const status = integrationStatuses.find(s => s.platform === platform);
+    if (status) {
+      updateSyncSettingsMutation.mutate({ 
+        platform, 
+        settings: { 
+          autoSync, 
+          syncFrequency: status.syncFrequency 
+        } 
+      });
+    }
+  };
+  
+  // Handler for changing sync frequency
+  const handleChangeSyncFrequency = (platform: string, syncFrequency: 'daily' | 'realtime') => {
+    const status = integrationStatuses.find(s => s.platform === platform);
+    if (status) {
+      updateSyncSettingsMutation.mutate({ 
+        platform, 
+        settings: { 
+          autoSync: status.autoSync, 
+          syncFrequency 
+        } 
+      });
+    }
+  };
+  
+  // For rendering a formatted last synced time
+  const formatLastSynced = (dateString?: string) => {
+    if (!dateString) return 'Never';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h3 className="text-xl font-medium">Fitness Platform Integrations</h3>
-        <p className="text-sm text-muted-foreground">
-          Connect to your favorite fitness platforms to automatically import your activities,
-          health metrics, and training data.
+        <h3 className="text-lg font-medium mb-4">Integration Accounts</h3>
+        <p className="text-muted-foreground mb-4">
+          Connect with your favorite fitness platforms to import activities and health data
         </p>
-      </div>
-      <Separator />
-      
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {platforms.map((platform) => {
-            const { isConnected, isActive } = getConnectionStatus(platform.id);
-            
-            return (
-              <Card key={platform.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="flex items-center space-x-2">
-                    {platform.logoIcon}
-                    <CardTitle className="text-lg">{platform.name}</CardTitle>
-                  </div>
-                  {isConnected && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground mr-2">Active</span>
-                      <Switch
-                        checked={isActive}
-                        onCheckedChange={(checked) => handleToggleActive(platform.id, checked)}
-                        disabled={disconnectMutation.isPending || toggleActiveMutation.isPending}
-                      />
+        
+        {isLoadingIntegrations ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {integrationStatuses.map((integration) => (
+              <div key={integration.platform} className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 p-4 border rounded-lg">
+                <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      integration.connected ? 'bg-green-100' : 'bg-neutral-100'
+                    }`}>
+                      {/* Platform-specific icon could go here */}
+                      {integration.connected ? (
+                        <Check className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <span className="text-lg font-medium text-neutral-500">
+                          {integration.displayName.charAt(0)}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{platform.description}</CardDescription>
-                  
-                  {isConnected && platform.lastSynced && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Last synced: {new Date(platform.lastSynced).toLocaleString()}
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  {isConnected ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleDisconnect(platform.id)}
-                        disabled={disconnectMutation.isPending}
-                      >
-                        Disconnect
-                      </Button>
-                      <Button
-                        onClick={() => handleSync(platform.id)}
-                        disabled={syncInProgress !== null || !isActive}
-                      >
-                        {syncInProgress === platform.id ? (
+                    <div className="ml-3">
+                      <h4 className="font-medium">{integration.displayName}</h4>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        {integration.connected ? (
                           <>
-                            <span className="animate-spin mr-2">⟳</span>
-                            Syncing...
+                            <span className="mr-2">Connected</span>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
+                              Active
+                            </Badge>
                           </>
                         ) : (
-                          "Sync Data"
+                          <span>Not connected</span>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {integration.connected && (
+                    <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-4 md:ml-8">
+                      <div className="flex items-center text-sm">
+                        <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span>Last sync: {formatLastSynced(integration.lastSynced)}</span>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <Switch
+                          id={`auto-sync-${integration.platform}`}
+                          checked={integration.autoSync}
+                          onCheckedChange={(checked) => handleToggleAutoSync(integration.platform, checked)}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`auto-sync-${integration.platform}`} className="text-sm">
+                          Auto-sync
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex space-x-2">
+                  {integration.connected ? (
+                    <>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSync(integration.platform)}
+                              disabled={syncMutation.isPending}
+                            >
+                              {syncMutation.isPending && syncMutation.variables?.platform === integration.platform ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                              )}
+                              Sync Now
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Sync new activities from {integration.displayName}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-500 border-red-200 hover:bg-red-50"
+                        onClick={() => handleDisconnect(integration.platform)}
+                        disabled={disconnectMutation.isPending}
+                      >
+                        {disconnectMutation.isPending && disconnectMutation.variables === integration.platform ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Unplug className="h-4 w-4 mr-1" />
+                        )}
+                        Disconnect
                       </Button>
                     </>
                   ) : (
-                    <Button
-                      onClick={() => handleConnect(platform.id)}
-                      disabled={connectMutation.isPending}
-                    >
-                      Connect {platform.name}
+                    <Button onClick={() => handleConnect(integration.platform)}>
+                      Connect
                     </Button>
                   )}
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="mt-8">
-        <h4 className="text-lg font-medium">About Integration Data</h4>
-        <div className="text-sm text-muted-foreground mt-2 space-y-2">
-          <p>
-            When you connect to external fitness platforms, MomentumRun will import:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Your running, cycling, and other activities</li>
-            <li>Health metrics including HRV, resting heart rate, and sleep data</li>
-            <li>Training sessions and workout details</li>
-          </ul>
-          <p>
-            Data will automatically sync daily, but you can also manually sync anytime.
-            You can disconnect or pause any integration at any time.
-          </p>
-        </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <Alert className="mt-6 bg-blue-50">
+          <AlertDescription>
+            Connecting these services allows MomentumRun to automatically import your activities. You can revoke access at any time.
+          </AlertDescription>
+        </Alert>
       </div>
+      
+      {/* Disconnect confirmation dialog */}
+      <Dialog open={!!confirmDisconnect} onOpenChange={(open) => !open && setConfirmDisconnect(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Disconnect Integration</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to disconnect from {confirmDisconnect ? confirmDisconnect.charAt(0).toUpperCase() + confirmDisconnect.slice(1) : ''}? 
+              This will stop syncing new activities, but your existing imported activities will remain in your account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setConfirmDisconnect(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDisconnectHandler}
+              disabled={disconnectMutation.isPending}
+            >
+              {disconnectMutation.isPending && (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              )}
+              Disconnect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
