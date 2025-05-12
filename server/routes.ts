@@ -990,9 +990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // If the user already has a subscription, retrieve it
       if (user.stripe_subscription_id) {
-        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id, {
-          expand: ['latest_invoice.payment_intent']
-        }) as ExpandedSubscription;
+        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id) as ExpandedSubscription;
         
         let clientSecret = null;
         const latestInvoice = subscription.latest_invoice;
@@ -1094,7 +1092,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }],
         payment_behavior: 'default_incomplete',
         payment_settings: { save_default_payment_method: 'on_subscription' },
-        expand: ['latest_invoice.payment_intent'],
       }) as ExpandedSubscription;
       
       console.log("Subscription created:", {
