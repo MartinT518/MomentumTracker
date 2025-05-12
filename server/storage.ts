@@ -78,6 +78,7 @@ export interface IStorage {
   // Subscriptions
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined>;
+  getSubscriptionPlanByStripeId(stripeId: string): Promise<SubscriptionPlan | undefined>;
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
   updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan>;
   updateUserSubscription(
@@ -517,6 +518,15 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(subscription_plans)
       .where(eq(subscription_plans.id, id));
+      
+    return plan;
+  }
+  
+  async getSubscriptionPlanByStripeId(stripeId: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(subscription_plans)
+      .where(eq(subscription_plans.stripe_price_id, stripeId));
       
     return plan;
   }
