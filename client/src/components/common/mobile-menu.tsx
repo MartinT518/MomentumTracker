@@ -30,6 +30,7 @@ export function MobileMenu() {
   };
 
   const toggleMenu = () => {
+    console.log("Toggle menu clicked, current state:", isOpen);
     setIsOpen(!isOpen);
   };
 
@@ -97,17 +98,17 @@ export function MobileMenu() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-primary z-50">
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold font-heading text-neutral-darker flex items-center">
-            <span className="text-primary mr-1">Momentum</span>Run
+          <h1 className="text-xl font-bold font-heading text-white flex items-center">
+            <span className="text-white mr-1">Momentum</span>Run
           </h1>
           <button 
-            className="p-1 rounded-md hover:bg-neutral-lighter"
+            className="p-2 rounded-md bg-white/20 hover:bg-white/30"
             onClick={toggleMenu}
             aria-label="Toggle menu"
           >
-            <Menu className="h-6 w-6 text-neutral-darker" />
+            <Menu className="h-6 w-6 text-white" />
           </button>
         </div>
       </div>
