@@ -429,6 +429,8 @@ export const training_preferences = pgTable("training_preferences", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+
+
 // Subscription plans
 export const subscription_plans = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),
