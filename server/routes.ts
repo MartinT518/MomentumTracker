@@ -4153,6 +4153,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Goals management
+  app.post('/api/goals', requireAuth, async (req, res) => {
+    try {
+      // Extract data from request body
+      const {
+        primary_goal,
+        goal_event_type,
+        goal_distance,
+        goal_time,
+        goal_date,
+        has_target_race,
+        weight_goal,
+        target_weight,
+        current_weight,
+        experience_level
+      } = req.body;
+      
+      // Map client data to database schema
+      const goalsData = {
+        user_id: req.user!.id,
+        goal_type: primary_goal || "general_fitness",
+        target_value: goal_distance || (target_weight ? parseFloat(current_weight) - parseFloat(target_weight) : null),
+        target_unit: primary_goal === "race" ? "km" : (primary_goal === "weight" ? "kg" : null),
+        time_frame: null,
+        time_frame_unit: null,
+        start_date: new Date(),
+        target_date: goal_date ? new Date(goal_date) : null,
+        status: "active",
+        race_distance: goal_event_type || null,
+        target_time: goal_time || null,
+        experience_level: experience_level || "intermediate",
+        weekly_mileage: current_weight ? parseFloat(current_weight) : null,
+        frequency_per_week: has_target_race ? 3 : 2,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      
+      const [newGoal] = await db
+        .insert(fitness_goals)
+        .values(goalsData)
+        .returning();
+      
+      res.status(201).json(newGoal);
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      res.status(500).json({ message: 'Failed to create goal' });
+    }
+  });
+  
+  app.get('/api/goals', requireAuth, async (req, res) => {
+    try {
+      const goals = await db
+        .select()
+        .from(fitness_goals)
+        .where(eq(fitness_goals.user_id, req.user!.id))
+        .orderBy(desc(fitness_goals.created_at));
+      
+      res.json(goals);
+    } catch (error) {
+      console.error('Error fetching goals:', error);
+      res.status(500).json({ message: 'Failed to fetch goals' });
+    }
+  });
+  
+  app.get('/api/goals/:id', requireAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      
+      const [goal] = await db
+        .select()
+        .from(fitness_goals)
+        .where(and(
+          eq(fitness_goals.id, goalId),
+          eq(fitness_goals.user_id, req.user!.id)
+        ));
+      
+      if (!goal) {
+        return res.status(404).json({ message: 'Goal not found' });
+      }
+      
+      res.json(goal);
+    } catch (error) {
+      console.error('Error fetching goal:', error);
+      res.status(500).json({ message: 'Failed to fetch goal' });
+    }
+  });
+  
+  app.put('/api/goals/:id', requireAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      
+      // Check if goal exists and belongs to user
+      const [existingGoal] = await db
+        .select()
+        .from(fitness_goals)
+        .where(and(
+          eq(fitness_goals.id, goalId),
+          eq(fitness_goals.user_id, req.user!.id)
+        ));
+      
+      if (!existingGoal) {
+        return res.status(404).json({ message: 'Goal not found' });
+      }
+      
+      // Extract data from request body
+      const {
+        goal_type,
+        target_value,
+        target_unit,
+        target_date,
+        status,
+        race_distance,
+        target_time,
+        experience_level
+      } = req.body;
+      
+      // Update goal
+      const [updatedGoal] = await db
+        .update(fitness_goals)
+        .set({
+          goal_type: goal_type || existingGoal.goal_type,
+          target_value: target_value !== undefined ? target_value : existingGoal.target_value,
+          target_unit: target_unit || existingGoal.target_unit,
+          target_date: target_date ? new Date(target_date) : existingGoal.target_date,
+          status: status || existingGoal.status,
+          race_distance: race_distance || existingGoal.race_distance,
+          target_time: target_time || existingGoal.target_time,
+          experience_level: experience_level || existingGoal.experience_level,
+          updated_at: new Date()
+        })
+        .where(eq(fitness_goals.id, goalId))
+        .returning();
+      
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      res.status(500).json({ message: 'Failed to update goal' });
+    }
+  });
+  
+  app.delete('/api/goals/:id', requireAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      
+      // Check if goal exists and belongs to user
+      const [existingGoal] = await db
+        .select()
+        .from(fitness_goals)
+        .where(and(
+          eq(fitness_goals.id, goalId),
+          eq(fitness_goals.user_id, req.user!.id)
+        ));
+      
+      if (!existingGoal) {
+        return res.status(404).json({ message: 'Goal not found' });
+      }
+      
+      // Delete goal
+      await db
+        .delete(fitness_goals)
+        .where(eq(fitness_goals.id, goalId));
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      res.status(500).json({ message: 'Failed to delete goal' });
+    }
+  });
+
   // User experience
   app.get('/api/onboarding/user-experience', requireAuth, async (req, res) => {
     try {
