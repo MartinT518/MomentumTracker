@@ -393,8 +393,12 @@ export const fitness_goals = pgTable("fitness_goals", {
   start_date: date("start_date").defaultNow(),
   target_date: date("target_date"),
   status: varchar("status", { length: 20 }).default("active"), // active, completed, abandoned
-  notes: text("notes"),
-  priority: integer("priority").default(1), // 1 = highest priority
+  // Additional fields from actual database
+  frequency_per_week: integer("frequency_per_week"),
+  weekly_mileage: decimal("weekly_mileage"),
+  race_distance: varchar("race_distance", { length: 50 }),
+  target_time: varchar("target_time", { length: 20 }),
+  experience_level: varchar("experience_level", { length: 20 }),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
