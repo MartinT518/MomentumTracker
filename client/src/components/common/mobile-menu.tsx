@@ -97,7 +97,7 @@ export function MobileMenu() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10" style={{display: "block"}}>
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
         <div className="flex items-center justify-between p-4">
           <h1 className="text-xl font-bold font-heading text-neutral-darker flex items-center">
             <span className="text-primary mr-1">Momentum</span>Run
@@ -105,6 +105,7 @@ export function MobileMenu() {
           <button 
             className="p-1 rounded-md hover:bg-neutral-lighter"
             onClick={toggleMenu}
+            aria-label="Toggle menu"
           >
             <Menu className="h-6 w-6 text-neutral-darker" />
           </button>
