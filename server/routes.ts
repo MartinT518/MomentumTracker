@@ -2545,10 +2545,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("No valid invoice found on subscription");
       }
       
+      // Create a payment intent if we don't have a client secret yet
+      if (!clientSecret) {
+        console.log("No client secret found, creating a payment intent");
+        try {
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(Number(subscriptionPlan.price) * 100), // Convert to cents
+            currency: 'usd',
+            customer: user.stripe_customer_id!,
+            setup_future_usage: 'off_session',
+            metadata: {
+              subscription_id: subscription.id,
+            },
+          });
+          
+          clientSecret = paymentIntent.client_secret;
+          console.log("Created new payment intent with client secret");
+        } catch (piError) {
+          console.error("Error creating payment intent:", piError);
+        }
+      }
+      
       // Final response with client secret
       const responseData = {
         subscriptionId: subscription.id,
-        clientSecret: clientSecret || null
+        clientSecret: clientSecret
       };
       
       console.log("Sending subscription response:", responseData);

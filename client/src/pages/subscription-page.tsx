@@ -181,6 +181,7 @@ export default function SubscriptionPage() {
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [clientSecret, setClientSecret] = useState("");
+  const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
 
   // Fetch available subscription plans
   const { data: plans, isLoading: isLoadingPlans } = useQuery({
@@ -194,8 +195,10 @@ export default function SubscriptionPage() {
 
   // Mutation to create a subscription
   const createSubscriptionMutation = useMutation({
-    mutationFn: async (priceId: string) => {
+    mutationFn: async ({ priceId, planId }: { priceId: string, planId: number }) => {
       console.log("Creating subscription with price ID:", priceId);
+      setLoadingPlanId(planId);
+      
       const res = await apiRequest('POST', '/api/get-or-create-subscription', { priceId });
       
       if (!res.ok) {
@@ -214,11 +217,13 @@ export default function SubscriptionPage() {
         clientSecretType: typeof data.clientSecret
       });
       
+      setLoadingPlanId(null);
+      
       if (!data.clientSecret) {
         toast({
-          title: "Subscription Created",
-          description: "Your subscription was created but payment setup is not available. Please contact support.",
-          variant: "default",
+          title: "Subscription Error",
+          description: "Payment setup failed. Please try again or contact support.",
+          variant: "destructive",
         });
         return;
       }
@@ -227,6 +232,7 @@ export default function SubscriptionPage() {
     },
     onError: (error: Error) => {
       console.error("Subscription mutation error:", error);
+      setLoadingPlanId(null);
       toast({
         title: "Subscription Error",
         description: error.message,
@@ -239,7 +245,10 @@ export default function SubscriptionPage() {
   const handleSelectPlan = (plan: Plan) => {
     setSelectedPlan(plan);
     if (plan.stripe_price_id) {
-      createSubscriptionMutation.mutate(plan.stripe_price_id);
+      createSubscriptionMutation.mutate({ 
+        priceId: plan.stripe_price_id,
+        planId: plan.id
+      });
     } else {
       toast({
         title: "Invalid Plan",
@@ -485,11 +494,11 @@ export default function SubscriptionPage() {
                 <Button 
                   onClick={() => handleSelectPlan(plan)} 
                   className="w-full"
-                  disabled={createSubscriptionMutation.isPending}
+                  disabled={loadingPlanId === plan.id || createSubscriptionMutation.isPending}
                   variant={plan.name.includes('Premium') ? 'default' : 'outline'}
                 >
-                  {createSubscriptionMutation.isPending ? 'Processing...' : 'Subscribe'} 
-                  {!createSubscriptionMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
+                  {loadingPlanId === plan.id ? 'Processing...' : 'Subscribe'} 
+                  {loadingPlanId !== plan.id && !createSubscriptionMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
               </CardFooter>
             </Card>
