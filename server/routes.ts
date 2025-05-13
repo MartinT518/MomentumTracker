@@ -24,6 +24,10 @@ import {
   coaches,
   coaching_sessions,
   subscription_plans,
+  onboarding_status,
+  fitness_goals,
+  user_experience,
+  training_preferences,
 } from "@shared/schema";
 
 // Functions for synchronizing data from third-party platforms
@@ -3793,6 +3797,287 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error updating sync settings for ${req.params.platform}:`, error);
       res.status(500).json({ error: `Failed to update sync settings for ${req.params.platform}` });
+    }
+  });
+
+  // Onboarding routes
+  app.get('/api/onboarding/status', requireAuth, async (req, res) => {
+    try {
+      const [status] = await db
+        .select()
+        .from(onboarding_status)
+        .where(eq(onboarding_status.user_id, req.user!.id));
+      
+      if (!status) {
+        return res.status(404).json({ message: 'Onboarding status not found' });
+      }
+      
+      res.json(status);
+    } catch (error) {
+      console.error('Error fetching onboarding status:', error);
+      res.status(500).json({ message: 'Failed to fetch onboarding status' });
+    }
+  });
+
+  app.post('/api/onboarding/status', requireAuth, async (req, res) => {
+    try {
+      // Check if status already exists
+      const [existingStatus] = await db
+        .select()
+        .from(onboarding_status)
+        .where(eq(onboarding_status.user_id, req.user!.id));
+      
+      if (existingStatus) {
+        // Update existing status
+        const [updatedStatus] = await db
+          .update(onboarding_status)
+          .set({
+            ...req.body,
+            updated_at: new Date(),
+          })
+          .where(eq(onboarding_status.id, existingStatus.id))
+          .returning();
+        
+        return res.json(updatedStatus);
+      }
+      
+      // Create new status
+      const [newStatus] = await db
+        .insert(onboarding_status)
+        .values({
+          user_id: req.user!.id,
+          ...req.body,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning();
+      
+      res.status(201).json(newStatus);
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+      res.status(500).json({ message: 'Failed to save onboarding status' });
+    }
+  });
+
+  // Fitness goals
+  app.get('/api/onboarding/fitness-goals', requireAuth, async (req, res) => {
+    try {
+      const [goals] = await db
+        .select()
+        .from(fitness_goals)
+        .where(eq(fitness_goals.user_id, req.user!.id));
+      
+      if (!goals) {
+        return res.status(404).json({ message: 'Fitness goals not found' });
+      }
+      
+      res.json(goals);
+    } catch (error) {
+      console.error('Error fetching fitness goals:', error);
+      res.status(500).json({ message: 'Failed to fetch fitness goals' });
+    }
+  });
+
+  app.post('/api/onboarding/fitness-goals', requireAuth, async (req, res) => {
+    try {
+      // Check if goals already exist
+      const [existingGoals] = await db
+        .select()
+        .from(fitness_goals)
+        .where(eq(fitness_goals.user_id, req.user!.id));
+      
+      if (existingGoals) {
+        // Update existing goals
+        const [updatedGoals] = await db
+          .update(fitness_goals)
+          .set({
+            ...req.body,
+            updated_at: new Date(),
+          })
+          .where(eq(fitness_goals.id, existingGoals.id))
+          .returning();
+        
+        return res.json(updatedGoals);
+      }
+      
+      // Create new goals
+      const [newGoals] = await db
+        .insert(fitness_goals)
+        .values({
+          user_id: req.user!.id,
+          ...req.body,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning();
+      
+      res.status(201).json(newGoals);
+    } catch (error) {
+      console.error('Error saving fitness goals:', error);
+      res.status(500).json({ message: 'Failed to save fitness goals' });
+    }
+  });
+
+  // User experience
+  app.get('/api/onboarding/user-experience', requireAuth, async (req, res) => {
+    try {
+      const [experience] = await db
+        .select()
+        .from(user_experience)
+        .where(eq(user_experience.user_id, req.user!.id));
+      
+      if (!experience) {
+        return res.status(404).json({ message: 'User experience not found' });
+      }
+      
+      res.json(experience);
+    } catch (error) {
+      console.error('Error fetching user experience:', error);
+      res.status(500).json({ message: 'Failed to fetch user experience' });
+    }
+  });
+
+  app.post('/api/onboarding/user-experience', requireAuth, async (req, res) => {
+    try {
+      // Check if experience already exists
+      const [existingExperience] = await db
+        .select()
+        .from(user_experience)
+        .where(eq(user_experience.user_id, req.user!.id));
+      
+      if (existingExperience) {
+        // Update existing experience
+        const [updatedExperience] = await db
+          .update(user_experience)
+          .set({
+            ...req.body,
+            updated_at: new Date(),
+          })
+          .where(eq(user_experience.id, existingExperience.id))
+          .returning();
+        
+        return res.json(updatedExperience);
+      }
+      
+      // Create new experience
+      const [newExperience] = await db
+        .insert(user_experience)
+        .values({
+          user_id: req.user!.id,
+          ...req.body,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning();
+      
+      res.status(201).json(newExperience);
+    } catch (error) {
+      console.error('Error saving user experience:', error);
+      res.status(500).json({ message: 'Failed to save user experience' });
+    }
+  });
+
+  // Training preferences
+  app.get('/api/onboarding/training-preferences', requireAuth, async (req, res) => {
+    try {
+      const [preferences] = await db
+        .select()
+        .from(training_preferences)
+        .where(eq(training_preferences.user_id, req.user!.id));
+      
+      if (!preferences) {
+        return res.status(404).json({ message: 'Training preferences not found' });
+      }
+      
+      res.json(preferences);
+    } catch (error) {
+      console.error('Error fetching training preferences:', error);
+      res.status(500).json({ message: 'Failed to fetch training preferences' });
+    }
+  });
+
+  app.post('/api/onboarding/training-preferences', requireAuth, async (req, res) => {
+    try {
+      // Check if preferences already exist
+      const [existingPreferences] = await db
+        .select()
+        .from(training_preferences)
+        .where(eq(training_preferences.user_id, req.user!.id));
+      
+      if (existingPreferences) {
+        // Update existing preferences
+        const [updatedPreferences] = await db
+          .update(training_preferences)
+          .set({
+            ...req.body,
+            updated_at: new Date(),
+          })
+          .where(eq(training_preferences.id, existingPreferences.id))
+          .returning();
+        
+        return res.json(updatedPreferences);
+      }
+      
+      // Create new preferences
+      const [newPreferences] = await db
+        .insert(training_preferences)
+        .values({
+          user_id: req.user!.id,
+          ...req.body,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning();
+      
+      res.status(201).json(newPreferences);
+    } catch (error) {
+      console.error('Error saving training preferences:', error);
+      res.status(500).json({ message: 'Failed to save training preferences' });
+    }
+  });
+
+  // Complete onboarding endpoint
+  app.post('/api/onboarding/complete', requireAuth, async (req, res) => {
+    try {
+      // Update onboarding status to completed
+      const [status] = await db
+        .select()
+        .from(onboarding_status)
+        .where(eq(onboarding_status.user_id, req.user!.id));
+      
+      if (status) {
+        await db
+          .update(onboarding_status)
+          .set({
+            completed: true,
+            completed_at: new Date(),
+            updated_at: new Date(),
+          })
+          .where(eq(onboarding_status.id, status.id));
+      } else {
+        await db
+          .insert(onboarding_status)
+          .values({
+            user_id: req.user!.id,
+            completed: true,
+            completed_at: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
+          });
+      }
+      
+      // Also update the user's profile if needed
+      if (req.body.profile_updates) {
+        await db
+          .update(users)
+          .set(req.body.profile_updates)
+          .where(eq(users.id, req.user!.id));
+      }
+      
+      res.json({ success: true, message: 'Onboarding completed successfully' });
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      res.status(500).json({ message: 'Failed to complete onboarding' });
     }
   });
 
