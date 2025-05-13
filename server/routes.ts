@@ -26,7 +26,7 @@ import {
   subscription_plans,
   onboarding_status,
   fitness_goals,
-  user_experience,
+  experience_levels,
   training_preferences,
 } from "@shared/schema";
 
@@ -4158,8 +4158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const [experience] = await db
         .select()
-        .from(user_experience)
-        .where(eq(user_experience.user_id, req.user!.id));
+        .from(experience_levels)
+        .where(eq(experience_levels.user_id, req.user!.id));
       
       if (!experience) {
         return res.status(404).json({ message: 'User experience not found' });
@@ -4177,18 +4177,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if experience already exists
       const [existingExperience] = await db
         .select()
-        .from(user_experience)
-        .where(eq(user_experience.user_id, req.user!.id));
+        .from(experience_levels)
+        .where(eq(experience_levels.user_id, req.user!.id));
       
       if (existingExperience) {
         // Update existing experience
         const [updatedExperience] = await db
-          .update(user_experience)
+          .update(experience_levels)
           .set({
             ...req.body,
             updated_at: new Date(),
           })
-          .where(eq(user_experience.id, existingExperience.id))
+          .where(eq(experience_levels.id, existingExperience.id))
           .returning();
         
         return res.json(updatedExperience);
@@ -4196,7 +4196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create new experience
       const [newExperience] = await db
-        .insert(user_experience)
+        .insert(experience_levels)
         .values({
           user_id: req.user!.id,
           ...req.body,
