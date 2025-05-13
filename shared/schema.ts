@@ -370,6 +370,65 @@ export const health_metrics = pgTable("health_metrics", {
   };
 });
 
+// User onboarding and fitness profile
+export const onboarding_status = pgTable("onboarding_status", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  completed: boolean("completed").default(false),
+  current_step: varchar("current_step", { length: 50 }).default("welcome"),
+  steps_completed: text("steps_completed").array(), // Array of completed step IDs
+  last_updated: timestamp("last_updated").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// User fitness goals for onboarding
+export const fitness_goals = pgTable("fitness_goals", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  goal_type: varchar("goal_type", { length: 50 }).notNull(), // running, weight_loss, general_fitness, etc.
+  target_value: decimal("target_value"), // Numeric target value (if applicable)
+  target_unit: varchar("target_unit", { length: 20 }), // miles, kg, etc.
+  time_frame: integer("time_frame"), // Number of weeks/months
+  time_frame_unit: varchar("time_frame_unit", { length: 20 }), // weeks, months
+  start_date: date("start_date").defaultNow(),
+  target_date: date("target_date"),
+  status: varchar("status", { length: 20 }).default("active"), // active, completed, abandoned
+  notes: text("notes"),
+  priority: integer("priority").default(1), // 1 = highest priority
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// User experience level and running profile
+export const user_experience = pgTable("user_experience", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  experience_level: varchar("experience_level", { length: 20 }), // beginner, intermediate, advanced, elite
+  weekly_mileage: decimal("weekly_mileage"), // Current weekly mileage
+  running_years: integer("running_years"), // Years of running experience
+  recent_race_time: varchar("recent_race_time", { length: 20 }), // Format: HH:MM:SS
+  recent_race_distance: varchar("recent_race_distance", { length: 20 }), // 5k, 10k, half_marathon, marathon
+  preferred_run_days: text("preferred_run_days").array(), // Days of week preferred for running
+  max_run_days_per_week: integer("max_run_days_per_week").default(4),
+  preferred_run_times: text("preferred_run_times").array(), // morning, afternoon, evening
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// User training preferences
+export const training_preferences = pgTable("training_preferences", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  preferred_workout_types: text("preferred_workout_types").array(), // interval, tempo, trail, track, etc.
+  avoid_workout_types: text("avoid_workout_types").array(),
+  max_workout_duration: integer("max_workout_duration"), // in minutes
+  cross_training_activities: text("cross_training_activities").array(), // cycling, swimming, strength, yoga, etc.
+  cross_training_days: integer("cross_training_days").default(1),
+  rest_days: integer("rest_days").default(1),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Subscription plans
 export const subscription_plans = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),
