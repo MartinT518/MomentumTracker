@@ -3,6 +3,7 @@ import { MobileMenu } from "@/components/common/mobile-menu";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { GoalAchievementDemo } from "@/components/goals/goal-achievement-demo";
 import {
   Card,
   CardContent,
@@ -445,6 +446,13 @@ export default function GoalsPage() {
           </TabsContent>
           
           <TabsContent value="completed">
+            {/* Achievement Demo Section */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-4">Goal Achievement Celebrations</h3>
+              <GoalAchievementDemo />
+            </div>
+            
+            <h3 className="text-xl font-semibold mb-4">Completed Goals</h3>
             {completedGoals.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
