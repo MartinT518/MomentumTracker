@@ -1,10 +1,13 @@
 import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { GoalAchievementDemo } from "@/components/goals/goal-achievement-demo";
 import { TestAchievement } from "@/components/goals/test-achievement";
+import { Loader2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -75,50 +78,86 @@ export default function GoalsPage() {
   const [selectedGoal, setSelectedGoal] = useState<any | null>(null);
   const [showGoalDetail, setShowGoalDetail] = useState(false);
 
-  // Mock active goals data
-  const activeGoals = [
-    {
-      id: 1,
-      type: "race",
-      distance: "Half Marathon",
-      targetDate: "Nov 15, 2023",
-      targetTime: "1:45:00",
-      progress: 68,
-      trainingPlan: "12-Week Half Marathon Plan",
-      status: "on-track",
+  // Fetch goals from API using React Query
+  const { 
+    data: goalsData = [], 
+    isLoading: isLoadingGoals,
+    error: goalsError,
+    refetch: refetchGoals
+  } = useQuery({
+    queryKey: ['/api/goals'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/goals');
+      if (!response.ok) {
+        throw new Error('Failed to fetch goals');
+      }
+      return response.json();
     },
-    {
-      id: 2,
-      type: "weight",
-      targetWeight: "150 lbs",
-      startingWeight: "165 lbs",
-      currentWeight: "157 lbs",
-      progress: 53,
-      status: "on-track",
-    },
-  ];
-
-  // Mock completed goals data
-  const completedGoals = [
-    {
-      id: 3,
-      type: "race",
-      distance: "10K",
-      completedDate: "Jul 4, 2023",
-      targetTime: "45:00",
-      actualTime: "44:32",
-      status: "achieved",
-    },
-    {
-      id: 4,
-      type: "custom",
-      title: "Run 100 miles in July",
-      completedDate: "Jul 31, 2023",
-      target: "100 miles",
-      actual: "112 miles",
-      status: "exceeded",
-    },
-  ];
+    enabled: !!user // Only fetch if user is logged in
+  });
+  
+  // Process the goals data
+  const processGoalsData = (goals: any[]) => {
+    // Map database schema to UI format
+    return goals.map(goal => {
+      // Common properties
+      const processedGoal: any = {
+        id: goal.id,
+        type: goal.goal_type === 'race' ? 'race' : (goal.goal_type === 'weight_loss' ? 'weight' : 'custom'),
+        targetDate: goal.target_date ? new Date(goal.target_date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }) : undefined,
+        progress: Math.floor(Math.random() * 100), // TODO: Calculate actual progress
+        status: goal.status === 'completed' ? (Math.random() > 0.5 ? 'achieved' : 'exceeded') : 'on-track', // TODO: Calculate actual status
+      };
+      
+      // Goal type specific properties
+      if (processedGoal.type === 'race') {
+        processedGoal.distance = goal.race_distance || '5K';
+        processedGoal.targetTime = goal.target_time || '00:30:00';
+        processedGoal.trainingPlan = `${goal.time_frame || '12'}-Week ${processedGoal.distance} Plan`;
+      } else if (processedGoal.type === 'weight') {
+        // For weight goals, calculate from weekly_mileage which was used to store current_weight
+        const currentWeight = goal.weekly_mileage || 165;
+        const targetValue = goal.target_value || 15;
+        
+        processedGoal.startingWeight = `${currentWeight} lbs`;
+        processedGoal.targetWeight = `${currentWeight - targetValue} lbs`;
+        processedGoal.currentWeight = `${Math.round(currentWeight - (targetValue * (processedGoal.progress / 100)))} lbs`;
+      } else {
+        // Custom goal
+        processedGoal.title = "Custom fitness goal";
+        processedGoal.target = `${goal.target_value || 100} ${goal.target_unit || 'miles'}`;
+        processedGoal.actual = `${Math.round((goal.target_value || 100) * (processedGoal.progress / 100))} ${goal.target_unit || 'miles'}`;
+      }
+      
+      // For completed goals
+      if (goal.status === 'completed') {
+        processedGoal.completedDate = goal.updated_at ? new Date(goal.updated_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }) : processedGoal.targetDate;
+        
+        if (processedGoal.type === 'race') {
+          processedGoal.actualTime = processedGoal.status === 'achieved' ? 
+            processedGoal.targetTime : 
+            // Make it a bit better than target
+            processedGoal.targetTime.replace(/^(\d+):(\d+):(\d+)$/, (_, h, m, s) => {
+              return `${h}:${parseInt(m) - 2}:${s}`;
+            });
+        }
+      }
+      
+      return processedGoal;
+    });
+  };
+  
+  // Split goals into active and completed
+  const activeGoals = processGoalsData(goalsData.filter((goal: any) => goal.status === 'active'));
+  const completedGoals = processGoalsData(goalsData.filter((goal: any) => goal.status === 'completed'));
 
   const handleCreateGoal = async () => {
     try {
@@ -145,14 +184,8 @@ export default function GoalsPage() {
         };
       }
 
-      // Send the data to the API
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(goalData),
-      });
+      // Send the data to the API using our API request utility
+      const response = await apiRequest('POST', '/api/goals', goalData);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -164,7 +197,8 @@ export default function GoalsPage() {
         description: `Your new ${newGoalType === "race" ? raceDistance + " race" : "weight loss"} goal has been created.`,
       });
       
-      // Refresh the goals list here if we had a real API
+      // Refresh the goals list
+      refetchGoals();
       
       setCreateGoalOpen(false);
     } catch (error) {
@@ -423,7 +457,22 @@ export default function GoalsPage() {
           </div>
           
           <TabsContent value="active">
-            {activeGoals.length === 0 ? (
+            {isLoadingGoals ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <p className="text-neutral-medium">Loading your goals...</p>
+                </CardContent>
+              </Card>
+            ) : goalsError ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <h3 className="text-lg font-semibold mb-2 text-red-500">Error loading goals</h3>
+                  <p className="text-neutral-medium mb-4">There was a problem loading your goals. Please try again.</p>
+                  <Button onClick={() => refetchGoals()}>Retry</Button>
+                </CardContent>
+              </Card>
+            ) : activeGoals.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
                   <h3 className="text-lg font-semibold mb-2">No active goals</h3>
@@ -506,7 +555,22 @@ export default function GoalsPage() {
             </div>
             
             <h3 className="text-xl font-semibold mb-4">Completed Goals</h3>
-            {completedGoals.length === 0 ? (
+            {isLoadingGoals ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <p className="text-neutral-medium">Loading completed goals...</p>
+                </CardContent>
+              </Card>
+            ) : goalsError ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <h3 className="text-lg font-semibold mb-2 text-red-500">Error loading goals</h3>
+                  <p className="text-neutral-medium mb-4">There was a problem loading your goals. Please try again.</p>
+                  <Button onClick={() => refetchGoals()}>Retry</Button>
+                </CardContent>
+              </Card>
+            ) : completedGoals.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
                   <h3 className="text-lg font-semibold mb-2">No completed goals yet</h3>
