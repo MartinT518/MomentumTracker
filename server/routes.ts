@@ -2412,6 +2412,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch subscription plans" });
     }
   });
+  
+  // Developer endpoint to activate premium subscription for testing
+  app.post("/api/dev/activate-premium", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "You must be logged in" });
+    }
+    
+    try {
+      const user = req.user;
+      
+      // Set subscription to active for 30 days
+      const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+      
+      // Update user subscription status
+      await storage.updateUserSubscription(user.id, {
+        status: 'active',
+        endDate: endDate,
+        stripeSubscriptionId: 'dev_test_subscription'
+      });
+      
+      // Return updated user information
+      const updatedUser = await storage.getUser(user.id);
+      
+      res.json({
+        success: true,
+        message: "Premium features activated for testing",
+        expiresAt: endDate,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error activating premium features:", error);
+      res.status(500).json({ error: "Failed to activate premium features" });
+    }
+  });
 
   app.get("/api/subscription-plans/:id", async (req, res) => {
     try {
