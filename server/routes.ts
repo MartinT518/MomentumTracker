@@ -4186,6 +4186,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .update(experience_levels)
           .set({
             ...req.body,
+            // Map experience_level from client to current_level in database
+            current_level: req.body.experience_level,
             updated_at: new Date(),
           })
           .where(eq(experience_levels.id, existingExperience.id))
@@ -4200,6 +4202,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .values({
           user_id: req.user!.id,
           ...req.body,
+          // Map experience_level from client to current_level in database
+          current_level: req.body.experience_level,
           created_at: new Date(),
           updated_at: new Date(),
         })
