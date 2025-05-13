@@ -11,7 +11,10 @@ import { useForm } from "react-hook-form";
 import { insertUserSchema } from "@shared/schema";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, ChevronRight } from "lucide-react";
+import { Loader2, ChevronRight, Zap, Brain, LineChart, Dumbbell, Activity, Heart } from "lucide-react";
+import RunnerAnimation from "@/components/ui/runner-animation";
+import AITrainingGenerator from "@/components/ui/ai-training-generator";
+import FitnessIntegration from "@/components/ui/fitness-integration";
 
 // Login form schema
 const loginSchema = z.object({
@@ -257,29 +260,109 @@ export default function AuthPage() {
       </div>
 
       {/* Hero Column */}
-      <div className="flex-1 bg-secondary p-12 flex flex-col justify-center items-center text-white lg:min-h-screen hidden lg:flex">
-        <div className="max-w-md">
-          <h1 className="text-4xl font-bold mb-6">Transform Your Running Journey</h1>
-          <p className="text-lg mb-8">
-            MomentumRun is your AI-powered running platform that delivers personalized training plans and data-driven insights to help you achieve your fitness goals.
-          </p>
-          <ul className="space-y-4 mb-8">
-            <li className="flex items-start">
-              <ChevronRight className="h-6 w-6 mr-2 text-primary-foreground" />
-              <span>Personalized training plans based on your goals</span>
-            </li>
-            <li className="flex items-start">
-              <ChevronRight className="h-6 w-6 mr-2 text-primary-foreground" />
-              <span>Track your progress with detailed analytics</span>
-            </li>
-            <li className="flex items-start">
-              <ChevronRight className="h-6 w-6 mr-2 text-primary-foreground" />
-              <span>Get data-driven insights to improve performance</span>
-            </li>
-          </ul>
-          <Button onClick={() => setActiveTab("register")} className="bg-white text-secondary hover:bg-white/90">
-            Get Started Now
-          </Button>
+      <div className="flex-1 bg-gradient-to-br from-blue-900 to-indigo-900 p-8 flex flex-col justify-center lg:min-h-screen hidden lg:flex overflow-y-auto">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
+            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+              MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
+            </p>
+          </div>
+          
+          {/* Runner Animation */}
+          <div className="mb-8">
+            <RunnerAnimation />
+          </div>
+          
+          {/* Feature Grid */}
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
+              <div className="flex items-center mb-2">
+                <div className="bg-blue-600 p-2 rounded-lg mr-3">
+                  <Brain size={20} />
+                </div>
+                <h3 className="font-bold">AI-Powered Training</h3>
+              </div>
+              <p className="text-sm opacity-90">
+                Personalized plans built by Google's Gemini AI that adapt to your performance, goals, and recovery patterns in real-time.
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
+              <div className="flex items-center mb-2">
+                <div className="bg-purple-600 p-2 rounded-lg mr-3">
+                  <LineChart size={20} />
+                </div>
+                <h3 className="font-bold">Advanced Analytics</h3>
+              </div>
+              <p className="text-sm opacity-90">
+                Gain deep insights into your pace, heart rate, and energy levels with visualization tools that help identify patterns and improvements.
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
+              <div className="flex items-center mb-2">
+                <div className="bg-indigo-600 p-2 rounded-lg mr-3">
+                  <Activity size={20} />
+                </div>
+                <h3 className="font-bold">Platform Integration</h3>
+              </div>
+              <p className="text-sm opacity-90">
+                Sync your activities automatically from Strava, Garmin Connect, and Polar to keep all your training data in one place.
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
+              <div className="flex items-center mb-2">
+                <div className="bg-green-600 p-2 rounded-lg mr-3">
+                  <Heart size={20} />
+                </div>
+                <h3 className="font-bold">Health Intelligence</h3>
+              </div>
+              <p className="text-sm opacity-90">
+                Monitor energy levels calculated from HRV, resting heart rate, and sleep quality to optimize training and prevent overtraining.
+              </p>
+            </div>
+          </div>
+          
+          {/* Integration Visualization */}
+          <div className="mb-8">
+            <FitnessIntegration />
+          </div>
+          
+          {/* AI Training Generator */}
+          <div className="mb-8">
+            <AITrainingGenerator />
+          </div>
+          
+          {/* Premium Features */}
+          <div className="bg-gradient-to-r from-indigo-700/40 to-purple-700/40 rounded-xl p-6 mb-8 border border-indigo-500/30">
+            <div className="flex items-center mb-4">
+              <Zap size={24} className="text-yellow-400 mr-3" />
+              <h3 className="text-xl font-bold text-white">Premium Benefits</h3>
+            </div>
+            <ul className="space-y-3 mb-6">
+              <li className="flex items-start text-white">
+                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
+                <span className="text-sm">Access to human coaches for personalized guidance and plan adjustments</span>
+              </li>
+              <li className="flex items-start text-white">
+                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
+                <span className="text-sm">Advanced nutrition recommendations tailored to your training schedule</span>
+              </li>
+              <li className="flex items-start text-white">
+                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
+                <span className="text-sm">Detailed recovery analytics and recommendations based on your biometric data</span>
+              </li>
+              <li className="flex items-start text-white">
+                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
+                <span className="text-sm">Unlimited training plan generations and race-specific preparation</span>
+              </li>
+            </ul>
+            <Button onClick={() => setActiveTab("register")} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 border-0">
+              Start Your Running Journey
+            </Button>
+          </div>
         </div>
       </div>
     </div>
