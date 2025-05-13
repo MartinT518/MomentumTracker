@@ -4069,12 +4069,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (existingGoals) {
         // Update existing goals
+        // Extract only the fields that exist in our schema
+        const {
+          primary_goal,
+          goal_event_type,
+          goal_distance,
+          goal_time,
+          goal_date,
+          has_target_race,
+          weight_goal,
+          target_weight,
+          current_weight
+        } = req.body;
+        
+        // Map client data to database schema
+        const goalsData = {
+          goal_type: primary_goal || existingGoals.goal_type,
+          target_value: goal_distance,
+          target_unit: goal_event_type ? "km" : existingGoals.target_unit,
+          target_date: goal_date ? new Date(goal_date) : existingGoals.target_date,
+          notes: JSON.stringify({
+            has_target_race,
+            weight_goal,
+            current_weight,
+            target_weight,
+            goal_time,
+            goal_event_type
+          }),
+          updated_at: new Date(),
+        };
+        
         const [updatedGoals] = await db
           .update(fitness_goals)
-          .set({
-            ...req.body,
-            updated_at: new Date(),
-          })
+          .set(goalsData)
           .where(eq(fitness_goals.id, existingGoals.id))
           .returning();
         
@@ -4082,14 +4109,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create new goals
+      // Extract only the fields that exist in our schema
+      const {
+        primary_goal,
+        goal_event_type,
+        goal_distance,
+        goal_time,
+        goal_date,
+        has_target_race,
+        weight_goal,
+        target_weight,
+        current_weight
+      } = req.body;
+      
+      // Map client data to database schema
+      const goalsData = {
+        user_id: req.user!.id,
+        goal_type: primary_goal || "general_fitness",
+        target_value: goal_distance,
+        target_unit: goal_event_type ? "km" : null,
+        time_frame: null,
+        time_frame_unit: null,
+        start_date: new Date(),
+        target_date: goal_date ? new Date(goal_date) : null,
+        status: "active",
+        notes: JSON.stringify({
+          has_target_race,
+          weight_goal,
+          current_weight,
+          target_weight,
+          goal_time,
+          goal_event_type
+        }),
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      
       const [newGoals] = await db
         .insert(fitness_goals)
-        .values({
-          user_id: req.user!.id,
-          ...req.body,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
+        .values(goalsData)
         .returning();
       
       res.status(201).json(newGoals);
