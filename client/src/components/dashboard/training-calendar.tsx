@@ -100,12 +100,13 @@ export function TrainingCalendar() {
               <div 
                 key={`${weekIndex}-${dayIndex}`} 
                 className={cn(
-                  "calendar-day p-1 border-b border-gray-200 relative",
+                  "calendar-day p-1 border-b border-gray-200 relative cursor-pointer transition-colors hover:bg-neutral-lighter/70",
                   dayIndex < 6 && "border-r",
                   !day.isCurrentMonth && "text-neutral-light",
                   day.isToday && "bg-primary-light/30",
                   weekIndex === 2 && "border-b-0" // Last row, no bottom border
                 )}
+                onClick={() => day.isCurrentMonth && window.location.href = "/training-plan"}
               >
                 <div className="font-medium">{day.day}</div>
                 {day.workout && (

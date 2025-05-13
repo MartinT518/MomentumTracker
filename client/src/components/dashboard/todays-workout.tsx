@@ -68,12 +68,16 @@ export function TodaysWorkout() {
       </div>
       
       <div className="mt-4 flex space-x-3">
-        <Button className="flex-1">
-          Start Workout
-        </Button>
-        <Button variant="outline" size="icon">
-          <Calendar className="h-5 w-5" />
-        </Button>
+        <Link href="/activities/start">
+          <Button className="flex-1">
+            Start Workout
+          </Button>
+        </Link>
+        <Link href="/training-plan">
+          <Button variant="outline" size="icon">
+            <Calendar className="h-5 w-5" />
+          </Button>
+        </Link>
       </div>
     </div>
   );
