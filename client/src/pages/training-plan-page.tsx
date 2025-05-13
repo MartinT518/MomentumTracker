@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from "@/components/common/sidebar";
 import { MobileMenu } from "@/components/common/mobile-menu";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, BookUser, Sparkles, Loader2, Check, Zap } from "lucide-react";
 import { TrainingGoalOverview } from "@/components/training-plan/training-goal-overview";
@@ -345,10 +346,10 @@ export default function TrainingPlanPage() {
                   </ul>
                 </p>
                 <Button 
-                  onClick={() => setSelectedTab("subscription")}
                   size="lg"
+                  asChild
                 >
-                  Upgrade to Premium
+                  <Link href="/subscription">Upgrade to Premium</Link>
                 </Button>
               </div>
             ) : (
@@ -390,10 +391,10 @@ export default function TrainingPlanPage() {
                   </ul>
                 </p>
                 <Button 
-                  onClick={() => setSelectedTab("subscription")}
                   size="lg"
+                  asChild
                 >
-                  Upgrade to Premium
+                  <Link href="/subscription">Upgrade to Premium</Link>
                 </Button>
               </div>
             ) : !aiPlan ? (
@@ -424,10 +425,10 @@ export default function TrainingPlanPage() {
                   Access to human coaches is available to premium subscribers only. Upgrade your plan to connect with experienced coaches who can provide personalized guidance.
                 </p>
                 <Button 
-                  onClick={() => setSelectedTab("subscription")}
                   size="lg"
+                  asChild
                 >
-                  Upgrade to Premium
+                  <Link href="/subscription">Upgrade to Premium</Link>
                 </Button>
               </div>
             ) : coachView === 'select' ? (
