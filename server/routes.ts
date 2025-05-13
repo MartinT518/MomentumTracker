@@ -4245,12 +4245,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (existingPreferences) {
         // Update existing preferences
+        // Convert arrays to JSON strings for database storage
+        const preferenceData = {
+          rest_days: typeof req.body.rest_days === 'number' ? req.body.rest_days.toString() : req.body.rest_days,
+          cross_training: req.body.cross_training || false,
+          cross_training_activities: Array.isArray(req.body.cross_training_activities) 
+            ? JSON.stringify(req.body.cross_training_activities) 
+            : req.body.cross_training_activities,
+          updated_at: new Date(),
+        };
+        
+        // Add other fields that might be present
+        if (req.body.preferred_days) {
+          preferenceData.preferred_days = typeof req.body.preferred_days === 'object' 
+            ? JSON.stringify(req.body.preferred_days) 
+            : req.body.preferred_days;
+        }
+        
+        if (req.body.preferred_time) {
+          preferenceData.preferred_time = req.body.preferred_time;
+        }
+        
+        if (req.body.long_run_day) {
+          preferenceData.long_run_day = req.body.long_run_day;
+        }
+        
+        // Store additional data in notes field as JSON
+        const additionalData = {
+          preferred_workout_types: req.body.preferred_workout_types || [],
+          avoid_workout_types: req.body.avoid_workout_types || [],
+          cross_training_days: req.body.cross_training_days,
+          max_workout_duration: req.body.max_workout_duration
+        };
+        
+        preferenceData.notes = JSON.stringify(additionalData);
+        
         const [updatedPreferences] = await db
           .update(training_preferences)
-          .set({
-            ...req.body,
-            updated_at: new Date(),
-          })
+          .set(preferenceData)
           .where(eq(training_preferences.id, existingPreferences.id))
           .returning();
         
@@ -4258,14 +4290,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create new preferences
+      // Convert arrays to JSON strings for database storage
+      const preferenceData = {
+        user_id: req.user!.id,
+        rest_days: typeof req.body.rest_days === 'number' ? req.body.rest_days.toString() : req.body.rest_days,
+        cross_training: req.body.cross_training || false,
+        cross_training_activities: Array.isArray(req.body.cross_training_activities) 
+          ? JSON.stringify(req.body.cross_training_activities) 
+          : req.body.cross_training_activities,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      
+      // Add other fields that might be present
+      if (req.body.preferred_days) {
+        preferenceData.preferred_days = typeof req.body.preferred_days === 'object' 
+          ? JSON.stringify(req.body.preferred_days) 
+          : req.body.preferred_days;
+      }
+      
+      if (req.body.preferred_time) {
+        preferenceData.preferred_time = req.body.preferred_time;
+      }
+      
+      if (req.body.long_run_day) {
+        preferenceData.long_run_day = req.body.long_run_day;
+      }
+      
+      // Store additional data in notes field as JSON
+      const additionalData = {
+        preferred_workout_types: req.body.preferred_workout_types || [],
+        avoid_workout_types: req.body.avoid_workout_types || [],
+        cross_training_days: req.body.cross_training_days,
+        max_workout_duration: req.body.max_workout_duration
+      };
+      
+      preferenceData.notes = JSON.stringify(additionalData);
+      
       const [newPreferences] = await db
         .insert(training_preferences)
-        .values({
-          user_id: req.user!.id,
-          ...req.body,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
+        .values(preferenceData)
         .returning();
       
       res.status(201).json(newPreferences);

@@ -100,26 +100,46 @@ export default function SummaryStep({
     }
     
     // Injuries
-    if (experience.recent_injuries && experience.recent_injuries.length > 0) {
-      if (experience.recent_injuries.includes("none")) {
-        summary.push("No recent injuries");
-      } else {
-        const injuryLabels: Record<string, string> = {
-          "runner's_knee": "Runner's Knee",
-          "shin_splints": "Shin Splints",
-          "achilles_tendinitis": "Achilles Tendinitis",
-          "plantar_fasciitis": "Plantar Fasciitis",
-          "it_band_syndrome": "IT Band Syndrome",
-          "stress_fracture": "Stress Fracture",
-          "ankle_sprain": "Ankle Sprain",
-          "hamstring_strain": "Hamstring Strain"
-        };
-        
-        const injuryNames = experience.recent_injuries
-          .map(i => injuryLabels[i] || i)
-          .join(", ");
-        
-        summary.push(`Recent injuries: ${injuryNames}`);
+    if (experience.recent_injuries) {
+      // Handle both array and string formats
+      let injuriesArray = experience.recent_injuries;
+      
+      // If it's a string (from DB), try to parse it
+      if (typeof experience.recent_injuries === 'string') {
+        try {
+          // Try to parse as JSON if it's stored as a JSON string
+          injuriesArray = JSON.parse(experience.recent_injuries);
+        } catch (e) {
+          // If it's not valid JSON, treat it as a comma-separated string
+          injuriesArray = experience.recent_injuries.split(',');
+        }
+      }
+      
+      // Ensure it's an array before processing
+      if (Array.isArray(injuriesArray) && injuriesArray.length > 0) {
+        if (injuriesArray.includes("none")) {
+          summary.push("No recent injuries");
+        } else {
+          const injuryLabels: Record<string, string> = {
+            "runner's_knee": "Runner's Knee",
+            "shin_splints": "Shin Splints",
+            "achilles_tendinitis": "Achilles Tendinitis",
+            "plantar_fasciitis": "Plantar Fasciitis",
+            "it_band_syndrome": "IT Band Syndrome",
+            "stress_fracture": "Stress Fracture",
+            "ankle_sprain": "Ankle Sprain",
+            "hamstring_strain": "Hamstring Strain"
+          };
+          
+          const injuryNames = injuriesArray
+            .map(i => injuryLabels[i] || i)
+            .join(", ");
+          
+          summary.push(`Recent injuries: ${injuryNames}`);
+        }
+      } else if (typeof experience.recent_injuries === 'string') {
+        // If we couldn't parse it as an array, just display the raw string
+        summary.push(`Recent injuries: ${experience.recent_injuries}`);
       }
     }
     
@@ -148,12 +168,32 @@ export default function SummaryStep({
       "stride": "Strides"
     };
     
-    if (trainingPreferences.preferred_workout_types && trainingPreferences.preferred_workout_types.length > 0) {
-      const preferredWorkouts = trainingPreferences.preferred_workout_types
-        .map(w => workoutLabels[w] || w)
-        .join(", ");
+    if (trainingPreferences.preferred_workout_types) {
+      // Handle both array and string formats
+      let workoutArray = trainingPreferences.preferred_workout_types;
       
-      summary.push(`Preferred workouts: ${preferredWorkouts}`);
+      // If it's a string (from DB), try to parse it
+      if (typeof trainingPreferences.preferred_workout_types === 'string') {
+        try {
+          // Try to parse as JSON if it's stored as a JSON string
+          workoutArray = JSON.parse(trainingPreferences.preferred_workout_types);
+        } catch (e) {
+          // If it's not valid JSON, treat it as a comma-separated string
+          workoutArray = trainingPreferences.preferred_workout_types.split(',');
+        }
+      }
+      
+      // Ensure it's an array before mapping
+      if (Array.isArray(workoutArray) && workoutArray.length > 0) {
+        const preferredWorkouts = workoutArray
+          .map(w => workoutLabels[w] || w)
+          .join(", ");
+        
+        summary.push(`Preferred workouts: ${preferredWorkouts}`);
+      } else if (typeof trainingPreferences.preferred_workout_types === 'string') {
+        // If we couldn't parse it as an array, just display the raw string
+        summary.push(`Preferred workouts: ${trainingPreferences.preferred_workout_types}`);
+      }
     }
     
     // Cross-training
@@ -172,12 +212,32 @@ export default function SummaryStep({
       "core_workout": "Core Workouts"
     };
     
-    if (trainingPreferences.cross_training_activities && trainingPreferences.cross_training_activities.length > 0) {
-      const crossTraining = trainingPreferences.cross_training_activities
-        .map(a => crossTrainingLabels[a] || a)
-        .join(", ");
+    if (trainingPreferences.cross_training_activities) {
+      // Handle both array and string formats
+      let crossTrainingArray = trainingPreferences.cross_training_activities;
       
-      summary.push(`Cross-training: ${crossTraining}`);
+      // If it's a string (from DB), try to parse it
+      if (typeof trainingPreferences.cross_training_activities === 'string') {
+        try {
+          // Try to parse as JSON if it's stored as a JSON string
+          crossTrainingArray = JSON.parse(trainingPreferences.cross_training_activities);
+        } catch (e) {
+          // If it's not valid JSON, treat it as a comma-separated string
+          crossTrainingArray = trainingPreferences.cross_training_activities.split(',');
+        }
+      }
+      
+      // Ensure it's an array before mapping
+      if (Array.isArray(crossTrainingArray) && crossTrainingArray.length > 0) {
+        const crossTraining = crossTrainingArray
+          .map(a => crossTrainingLabels[a] || a)
+          .join(", ");
+        
+        summary.push(`Cross-training: ${crossTraining}`);
+      } else if (typeof trainingPreferences.cross_training_activities === 'string') {
+        // If we couldn't parse it as an array, just display the raw string
+        summary.push(`Cross-training: ${trainingPreferences.cross_training_activities}`);
+      }
     }
     
     // Schedule
