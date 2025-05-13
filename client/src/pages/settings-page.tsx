@@ -366,6 +366,21 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
           
+          {/* Training Preferences */}
+          <TabsContent value="training" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Training Preferences</CardTitle>
+                <CardDescription>
+                  Update your training preferences to get customized training plans and workouts.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TrainingPreferences />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
           {/* Integrations Settings */}
           <TabsContent value="integrations" className="space-y-4">
             <Card>

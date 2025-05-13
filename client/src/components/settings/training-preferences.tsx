@@ -14,6 +14,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { Loader2, RotateCw, Save } from "lucide-react";
 
+// Form data interface
+interface TrainingPreferencesFormData {
+  currentLevel: string;
+  weeklyMileage: string;
+  longRunDistance: string;
+  daysPerWeek: string;
+  preferredDays: string[];
+  preferredTime: string;
+  longRunDay: string;
+  goalType: string;
+  goalDistance: string;
+  targetRaceDate: string;
+  crossTraining: boolean;
+  crossTrainingActivities: string[];
+  preferredWorkoutTypes: string[];
+  notes: string;
+}
+
 // Cross training types
 const crossTrainingTypes = [
   { value: "cycling", label: "Cycling" },
@@ -60,7 +78,7 @@ export function TrainingPreferences() {
   const [saving, setSaving] = useState(false);
   
   // Initialize form with default values
-  const form = useForm({
+  const form = useForm<TrainingPreferencesFormData>({
     defaultValues: {
       currentLevel: "",
       weeklyMileage: "",
@@ -116,7 +134,7 @@ export function TrainingPreferences() {
             try {
               preferredDays = JSON.parse(preferredDays);
             } catch (e) {
-              preferredDays = preferredDays.split(',').map(day => day.trim());
+              preferredDays = preferredDays.split(',').map((day: string) => day.trim());
             }
           }
           
@@ -124,7 +142,7 @@ export function TrainingPreferences() {
             try {
               crossTrainingActivities = JSON.parse(crossTrainingActivities);
             } catch (e) {
-              crossTrainingActivities = crossTrainingActivities.split(',').map(activity => activity.trim());
+              crossTrainingActivities = crossTrainingActivities.split(',').map((activity: string) => activity.trim());
             }
           }
           
@@ -132,7 +150,7 @@ export function TrainingPreferences() {
             try {
               preferredWorkoutTypes = JSON.parse(preferredWorkoutTypes);
             } catch (e) {
-              preferredWorkoutTypes = preferredWorkoutTypes.split(',').map(type => type.trim());
+              preferredWorkoutTypes = preferredWorkoutTypes.split(',').map((type: string) => type.trim());
             }
           }
           
