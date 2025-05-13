@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
 import { AlertCircle, ArrowRight, CheckCircle, Clock, Dumbbell, Loader2, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -139,7 +140,9 @@ export const TrainingRecommendationsDashboard: React.FC<TrainingRecommendationsD
             Upgrade to premium for personalized training recommendations based on 
             your recent performance, health metrics, and training history.
           </p>
-          <Button>Upgrade to Premium</Button>
+          <Button asChild>
+            <Link href="/subscription">Upgrade to Premium</Link>
+          </Button>
         </CardContent>
       </Card>
     );
