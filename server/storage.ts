@@ -1363,14 +1363,14 @@ export class MemStorage implements IStorage {
   }
   
   // User experience
-  async getUserExperience(userId: number): Promise<UserExperience | undefined> {
+  async getUserExperience(userId: number): Promise<ExperienceLevel | undefined> {
     return Array.from(this.userExperiences.values())
       .find(exp => exp.user_id === userId);
   }
   
-  async createUserExperience(data: InsertUserExperience): Promise<UserExperience> {
+  async createUserExperience(data: InsertExperienceLevel): Promise<ExperienceLevel> {
     const id = this.currentId++;
-    const newExperience: UserExperience = {
+    const newExperience: ExperienceLevel = {
       ...data,
       id,
       max_run_days_per_week: data.max_run_days_per_week || 4,
@@ -1383,7 +1383,7 @@ export class MemStorage implements IStorage {
     return newExperience;
   }
   
-  async updateUserExperience(id: number, data: Partial<UserExperience>): Promise<UserExperience> {
+  async updateUserExperience(id: number, data: Partial<ExperienceLevel>): Promise<ExperienceLevel> {
     const experience = this.userExperiences.get(id);
     
     if (!experience) {
