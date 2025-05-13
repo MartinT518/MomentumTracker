@@ -20,9 +20,10 @@ import { SearchButton } from "@/components/common/search-dialog";
 
 interface SidebarProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, style }: SidebarProps) {
   const [location] = useLocation();
   const { logoutMutation } = useAuth();
   
@@ -98,7 +99,7 @@ export function Sidebar({ className }: SidebarProps) {
   ];
 
   return (
-    <aside className={cn("hidden md:flex flex-col w-64 bg-white border-r border-gray-200", className)}>
+    <aside className={cn("hidden md:flex flex-col w-64 bg-white border-r border-gray-200", className)} style={{display: "flex"}}>
       <div className="p-4 border-b border-gray-200">
         <h1 className="text-xl font-bold font-heading text-neutral-darker flex items-center">
           <span className="text-primary mr-2">Momentum</span>Run

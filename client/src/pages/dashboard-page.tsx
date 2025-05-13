@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen max-w-full overflow-hidden">
-      <Sidebar />
+      <Sidebar style={{display: "flex"}} />
       <MobileMenu />
 
       <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
