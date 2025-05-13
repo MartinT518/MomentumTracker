@@ -2479,6 +2479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }],
         payment_behavior: 'default_incomplete',
         payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
       }) as ExpandedSubscription;
       
       console.log("Subscription created:", {
@@ -2516,11 +2517,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const pi = await stripe.paymentIntents.retrieve(paymentIntent);
           clientSecret = pi.client_secret;
           console.log("Retrieved client secret from payment intent");
-        } else if (paymentIntent) {
+        } else if (paymentIntent && paymentIntent.client_secret) {
           clientSecret = paymentIntent.client_secret;
           console.log("Using embedded client secret from payment intent");
         } else {
-          console.log("No payment intent found on invoice");
+          console.log("No payment intent or client secret found on invoice");
+          
+          // Attempt to retrieve a fresh payment intent
+          if (latestInvoice.id) {
+            try {
+              const retrievedInvoice = await stripe.invoices.retrieve(latestInvoice.id, {
+                expand: ['payment_intent']
+              });
+              
+              if (retrievedInvoice.payment_intent && 
+                  typeof retrievedInvoice.payment_intent !== 'string' && 
+                  retrievedInvoice.payment_intent.client_secret) {
+                clientSecret = retrievedInvoice.payment_intent.client_secret;
+                console.log("Retrieved client secret from fetched invoice payment intent");
+              }
+            } catch (error) {
+              console.error("Error retrieving invoice:", error);
+            }
+          }
         }
       } else {
         console.log("No valid invoice found on subscription");

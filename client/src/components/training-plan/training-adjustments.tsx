@@ -444,7 +444,7 @@ export function TrainingAdjustments({ planId, plan, onPlanUpdated }: TrainingAdj
                           )}
                           
                           {workoutRecommendation.recommendedIntensity === 'recovery' && todaysWorkout.type.toLowerCase().includes('tempo') && (
-                            <Alert variant="warning" className="mt-2 bg-amber-50 border-amber-200 text-amber-800">
+                            <Alert variant="destructive" className="mt-2 bg-amber-50 border-amber-200 text-amber-800">
                               <AlertTriangle className="h-4 w-4" />
                               <AlertDescription className="text-xs">
                                 Consider switching to an easier workout today based on your energy level.
