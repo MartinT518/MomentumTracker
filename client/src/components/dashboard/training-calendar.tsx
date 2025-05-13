@@ -106,7 +106,7 @@ export function TrainingCalendar() {
                   day.isToday && "bg-primary-light/30",
                   weekIndex === 2 && "border-b-0" // Last row, no bottom border
                 )}
-                onClick={() => day.isCurrentMonth && window.location.href = "/training-plan"}
+                onClick={() => { if (day.isCurrentMonth) window.location.href = "/training-plan"; }}
               >
                 <div className="font-medium">{day.day}</div>
                 {day.workout && (
