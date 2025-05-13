@@ -147,20 +147,19 @@ export function MobileMenu() {
           <ul className="mt-2">
             {navItems.map((item) => (
               <li key={item.title}>
-                <Link href={item.href}>
-                  <a 
-                    className={cn(
-                      "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
-                      item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
-                    )}
-                    onClick={closeMenu}
-                  >
-                    <item.icon className={cn(
-                      "h-5 w-5 mr-3 text-neutral-medium",
-                      item.active && "text-primary"
-                    )} />
-                    {item.title}
-                  </a>
+                <Link 
+                  href={item.href}
+                  onClick={closeMenu}
+                  className={cn(
+                    "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
+                    item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "h-5 w-5 mr-3 text-neutral-medium",
+                    item.active && "text-primary"
+                  )} />
+                  {item.title}
                 </Link>
               </li>
             ))}
