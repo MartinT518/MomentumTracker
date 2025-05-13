@@ -669,6 +669,131 @@ export class DatabaseStorage implements IStorage {
     return updatedMetric;
   }
   
+  // Onboarding status
+  async getOnboardingStatus(userId: number): Promise<OnboardingStatus | undefined> {
+    const [status] = await db
+      .select()
+      .from(onboarding_status)
+      .where(eq(onboarding_status.user_id, userId));
+    return status;
+  }
+  
+  async createOnboardingStatus(data: InsertOnboardingStatus): Promise<OnboardingStatus> {
+    const [status] = await db
+      .insert(onboarding_status)
+      .values(data)
+      .returning();
+    return status;
+  }
+  
+  async updateOnboardingStatus(userId: number, data: Partial<OnboardingStatus>): Promise<OnboardingStatus> {
+    const [updatedStatus] = await db
+      .update(onboarding_status)
+      .set({ ...data, last_updated: new Date() })
+      .where(eq(onboarding_status.user_id, userId))
+      .returning();
+    
+    if (!updatedStatus) {
+      throw new Error(`Onboarding status for user ${userId} not found`);
+    }
+    
+    return updatedStatus;
+  }
+  
+  // Fitness goals
+  async getFitnessGoals(userId: number): Promise<FitnessGoal[]> {
+    const goals = await db
+      .select()
+      .from(fitness_goals)
+      .where(eq(fitness_goals.user_id, userId))
+      .orderBy(asc(fitness_goals.priority));
+    return goals;
+  }
+  
+  async createFitnessGoal(data: InsertFitnessGoal): Promise<FitnessGoal> {
+    const [goal] = await db
+      .insert(fitness_goals)
+      .values(data)
+      .returning();
+    return goal;
+  }
+  
+  async updateFitnessGoal(id: number, data: Partial<FitnessGoal>): Promise<FitnessGoal> {
+    const [updatedGoal] = await db
+      .update(fitness_goals)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(fitness_goals.id, id))
+      .returning();
+    
+    if (!updatedGoal) {
+      throw new Error(`Fitness goal with ID ${id} not found`);
+    }
+    
+    return updatedGoal;
+  }
+  
+  // User experience
+  async getUserExperience(userId: number): Promise<UserExperience | undefined> {
+    const [experience] = await db
+      .select()
+      .from(user_experience)
+      .where(eq(user_experience.user_id, userId));
+    return experience;
+  }
+  
+  async createUserExperience(data: InsertUserExperience): Promise<UserExperience> {
+    const [experience] = await db
+      .insert(user_experience)
+      .values(data)
+      .returning();
+    return experience;
+  }
+  
+  async updateUserExperience(id: number, data: Partial<UserExperience>): Promise<UserExperience> {
+    const [updatedExperience] = await db
+      .update(user_experience)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(user_experience.id, id))
+      .returning();
+    
+    if (!updatedExperience) {
+      throw new Error(`User experience with ID ${id} not found`);
+    }
+    
+    return updatedExperience;
+  }
+  
+  // Training preferences
+  async getTrainingPreferences(userId: number): Promise<TrainingPreference | undefined> {
+    const [preferences] = await db
+      .select()
+      .from(training_preferences)
+      .where(eq(training_preferences.user_id, userId));
+    return preferences;
+  }
+  
+  async createTrainingPreferences(data: InsertTrainingPreference): Promise<TrainingPreference> {
+    const [preferences] = await db
+      .insert(training_preferences)
+      .values(data)
+      .returning();
+    return preferences;
+  }
+  
+  async updateTrainingPreferences(id: number, data: Partial<TrainingPreference>): Promise<TrainingPreference> {
+    const [updatedPreferences] = await db
+      .update(training_preferences)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(training_preferences.id, id))
+      .returning();
+    
+    if (!updatedPreferences) {
+      throw new Error(`Training preferences with ID ${id} not found`);
+    }
+    
+    return updatedPreferences;
+  }
+  
   // Integration connections
   async getIntegrationConnections(userId: number): Promise<IntegrationConnection[]> {
     return db
