@@ -396,10 +396,22 @@ export default function SubscriptionPage() {
                   <FeatureItem included={true} text="Early access to new features" />
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  Manage Subscription
+              <CardFooter className="flex flex-col gap-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.location.href = '/'} 
+                >
+                  Return to Dashboard
                 </Button>
+                {user.stripe_subscription_id && user.stripe_subscription_id !== 'dev_test_subscription' && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Manage Subscription
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           </div>
