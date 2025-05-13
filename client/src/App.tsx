@@ -6,6 +6,7 @@ import { AchievementsProvider } from "@/hooks/use-achievements";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { SupportChatBot } from "@/components/support/support-chat-bot";
+import { GoalAchievementPopup } from "@/components/goals/goal-achievement-popup";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
@@ -55,6 +56,7 @@ function App() {
             <Toaster />
             <Router />
             <SupportChatBot />
+            <GoalAchievementPopup />
           </TooltipProvider>
         </AchievementsProvider>
       </AuthProvider>

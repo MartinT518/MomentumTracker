@@ -1077,6 +1077,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up integration sync routes
   setupIntegrationRoutes(app);
   
+  // Achievement routes
+  // Get user's achievements
+  app.get("/api/users/:userId/achievements", checkAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (userId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ error: "Not authorized to view other user's achievements" });
+      }
+      
+      const userAchievements = await db.select().from(user_achievements)
+        .where(eq(user_achievements.user_id, userId))
+        .orderBy(desc(user_achievements.earned_at));
+      
+      res.json(userAchievements);
+    } catch (error) {
+      console.error("Error fetching user achievements:", error);
+      res.status(500).json({ error: "Failed to fetch achievements" });
+    }
+  });
+  
+  // Get unviewed achievements for current user
+  app.get("/api/achievements/unviewed", checkAuth, async (req, res) => {
+    try {
+      const userAchievements = await db.select().from(user_achievements)
+        .where(and(
+          eq(user_achievements.user_id, req.user.id),
+          eq(user_achievements.viewed, false)
+        ))
+        .orderBy(desc(user_achievements.earned_at));
+      
+      res.json(userAchievements);
+    } catch (error) {
+      console.error("Error fetching unviewed achievements:", error);
+      res.status(500).json({ error: "Failed to fetch unviewed achievements" });
+    }
+  });
+  
+  // Mark achievement as viewed
+  app.patch("/api/achievements/:achievementId/viewed", checkAuth, async (req, res) => {
+    try {
+      const achievementId = parseInt(req.params.achievementId);
+      
+      // Get the achievement to verify ownership
+      const [achievement] = await db.select().from(user_achievements)
+        .where(eq(user_achievements.id, achievementId));
+      
+      if (!achievement) {
+        return res.status(404).json({ error: "Achievement not found" });
+      }
+      
+      if (achievement.user_id !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ error: "Not authorized to modify this achievement" });
+      }
+      
+      await db.update(user_achievements)
+        .set({ viewed: true })
+        .where(eq(user_achievements.id, achievementId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking achievement as viewed:", error);
+      res.status(500).json({ error: "Failed to update achievement" });
+    }
+  });
+  
+  // Process activity completion and check for achievements
+  app.post("/api/achievements/check", checkAuth, async (req, res) => {
+    try {
+      const { activity } = req.body;
+      
+      if (!activity) {
+        return res.status(400).json({ error: "Activity data required" });
+      }
+      
+      // Get user's previous activities
+      const previousActivities = await db.select().from(activities)
+        .where(eq(activities.user_id, req.user.id));
+      
+      // Set for tracking earned achievements
+      const earnedAchievements = [];
+      
+      // Check for first run (if this is the first activity)
+      if (previousActivities.length === 0) {
+        const firstRunAchievement = {
+          user_id: req.user.id,
+          title: "First Steps",
+          description: "Completed your first run",
+          achievement_type: "milestone",
+          earned_at: new Date(),
+          times_earned: 1,
+          viewed: false,
+          achievement_data: {}
+        };
+        
+        const [savedAchievement] = await db.insert(user_achievements)
+          .values(firstRunAchievement)
+          .returning();
+          
+        earnedAchievements.push(savedAchievement);
+      }
+      
+      // Check for personal best
+      // (We would implement logic similar to client-side checkForPersonalBest)
+      
+      // Check for distance milestones
+      // (We would implement logic similar to client-side checkForCumulativeAchievements)
+      
+      // Check for streak achievements
+      // (We would implement logic similar to client-side checkForStreakAchievements)
+      
+      // Check for race completion
+      if (activity.is_race) {
+        let raceType = "Race";
+        
+        // Determine race type based on distance
+        const distance = activity.distance;
+        if (distance >= 3 && distance < 3.5) raceType = "5K";
+        else if (distance >= 6 && distance < 6.5) raceType = "10K";
+        else if (distance >= 13 && distance < 13.5) raceType = "Half Marathon";
+        else if (distance >= 26 && distance < 26.5) raceType = "Marathon";
+        else if (distance >= 31) raceType = "Ultra";
+        
+        const raceAchievement = {
+          user_id: req.user.id,
+          title: `${raceType} Finisher`,
+          description: `Completed a ${raceType} race`,
+          achievement_type: "race",
+          earned_at: new Date(),
+          times_earned: 1,
+          viewed: false,
+          achievement_data: {
+            race_type: raceType,
+            distance: activity.distance,
+            time: activity.duration
+          }
+        };
+        
+        const [savedRaceAchievement] = await db.insert(user_achievements)
+          .values(raceAchievement)
+          .returning();
+          
+        earnedAchievements.push(savedRaceAchievement);
+      }
+      
+      res.json(earnedAchievements);
+    } catch (error) {
+      console.error("Error checking for achievements:", error);
+      res.status(500).json({ error: "Failed to process achievement check" });
+    }
+  });
+  
+  // Create test achievement (for development/testing)
+  app.post("/api/achievements/test", checkAuth, async (req, res) => {
+    try {
+      if (!req.user.isAdmin && process.env.NODE_ENV === "production") {
+        return res.status(403).json({ error: "Not authorized to create test achievements in production" });
+      }
+      
+      const achievementData = {
+        user_id: req.user.id,
+        title: req.body.title || "Test Achievement",
+        description: req.body.description || "This is a test achievement",
+        achievement_type: req.body.type || "milestone",
+        badge_image: req.body.badge_image,
+        earned_at: new Date(),
+        times_earned: 1,
+        viewed: false,
+        achievement_data: req.body.achievement_data || {}
+      };
+      
+      const [savedAchievement] = await db.insert(user_achievements)
+        .values(achievementData)
+        .returning();
+        
+      res.status(201).json(savedAchievement);
+    } catch (error) {
+      console.error("Error creating test achievement:", error);
+      res.status(500).json({ error: "Failed to create test achievement" });
+    }
+  });
+  
   // Initialize Stripe
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('Missing STRIPE_SECRET_KEY environment variable. Stripe integration will not work.');
