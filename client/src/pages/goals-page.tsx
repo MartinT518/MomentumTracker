@@ -120,13 +120,61 @@ export default function GoalsPage() {
     },
   ];
 
-  const handleCreateGoal = () => {
-    // In a real app, this would send data to an API
-    toast({
-      title: "Goal Created",
-      description: `Your new ${newGoalType === "race" ? raceDistance + " race" : "weight loss"} goal has been created.`,
-    });
-    setCreateGoalOpen(false);
+  const handleCreateGoal = async () => {
+    try {
+      // Prepare the data based on the goal type
+      let goalData: any = {
+        primary_goal: newGoalType,
+        goal_date: targetDate?.toISOString(),
+      };
+      
+      if (newGoalType === "race") {
+        goalData = {
+          ...goalData,
+          goal_event_type: raceDistance,
+          goal_time: targetTime,
+          has_target_race: true,
+          experience_level: experience,
+        };
+      } else if (newGoalType === "weight") {
+        goalData = {
+          ...goalData,
+          weight_goal: "weight_loss",
+          current_weight: startingWeight,
+          target_weight: (parseFloat(startingWeight) - parseFloat(weightLossAmount)).toString(),
+        };
+      }
+
+      // Send the data to the API
+      const response = await fetch('/api/goals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(goalData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create goal');
+      }
+      
+      toast({
+        title: "Goal Created",
+        description: `Your new ${newGoalType === "race" ? raceDistance + " race" : "weight loss"} goal has been created.`,
+      });
+      
+      // Refresh the goals list here if we had a real API
+      
+      setCreateGoalOpen(false);
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to create goal',
+        variant: "destructive",
+      });
+    }
   };
   
   // Handler for viewing goal details
