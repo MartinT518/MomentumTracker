@@ -2,7 +2,7 @@ import {
   users, groups, group_members, buddies, challenges, challenge_participants, 
   achievements, user_achievements, nutrition_logs, coaches, coaching_sessions,
   subscription_plans, integration_connections, health_metrics,
-  onboarding_status, fitness_goals, user_experience, training_preferences,
+  onboarding_status, fitness_goals, experience_levels, training_preferences,
   type User, type InsertUser, type Group, type InsertGroup, 
   type GroupMember, type InsertGroupMember, type Buddy, type InsertBuddy,
   type Challenge, type InsertChallenge, type NutritionLog, type InsertNutritionLog, 

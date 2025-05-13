@@ -403,35 +403,34 @@ export const fitness_goals = pgTable("fitness_goals", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// User experience level and running profile
-export const user_experience = pgTable("user_experience", {
+// User experience level - matches experience_levels table
+export const experience_levels = pgTable("experience_levels", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").references(() => users.id).notNull(),
-  experience_level: varchar("experience_level", { length: 20 }), // beginner, intermediate, advanced, elite
-  weekly_mileage: decimal("weekly_mileage"), // Current weekly mileage
   running_years: integer("running_years"), // Years of running experience
-  recent_race_time: varchar("recent_race_time", { length: 20 }), // Format: HH:MM:SS
-  recent_race_distance: varchar("recent_race_distance", { length: 20 }), // 5k, 10k, half_marathon, marathon
-  preferred_run_days: text("preferred_run_days").array(), // Days of week preferred for running
-  max_run_days_per_week: integer("max_run_days_per_week").default(4),
-  preferred_run_times: text("preferred_run_times").array(), // morning, afternoon, evening
+  weekly_mileage: decimal("weekly_mileage"), // Current weekly mileage
+  current_level: varchar("current_level", { length: 50 }), // beginner, intermediate, advanced
+  races_completed: text("races_completed"), // Stored as text, not array
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// User training preferences
+// User training preferences - matches training_preferences table
 export const training_preferences = pgTable("training_preferences", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").references(() => users.id).notNull(),
-  preferred_workout_types: text("preferred_workout_types").array(), // interval, tempo, trail, track, etc.
-  avoid_workout_types: text("avoid_workout_types").array(),
-  max_workout_duration: integer("max_workout_duration"), // in minutes
-  cross_training_activities: text("cross_training_activities").array(), // cycling, swimming, strength, yoga, etc.
-  cross_training_days: integer("cross_training_days").default(1),
-  rest_days: integer("rest_days").default(1),
+  cross_training: boolean("cross_training").default(false),
+  rest_days: text("rest_days"), // Stored as text, list of rest days
+  cross_training_activities: text("cross_training_activities"), // Stored as text
+  preferred_days: text("preferred_days"), // Days of week preferred for running
+  preferred_time: varchar("preferred_time", { length: 20 }), // morning, afternoon, evening
+  long_run_day: varchar("long_run_day", { length: 10 }), // day of week for long run
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
+
+// Note: We already have a training_preferences table defined above
+// that matches the actual database structure
 
 
 
@@ -593,7 +592,7 @@ export const insertFitnessGoalSchema = createInsertSchema(fitness_goals).omit({
   updated_at: true,
 });
 
-export const insertUserExperienceSchema = createInsertSchema(user_experience).omit({
+export const insertExperienceLevelSchema = createInsertSchema(experience_levels).omit({
   id: true,
   created_at: true,
   updated_at: true,
