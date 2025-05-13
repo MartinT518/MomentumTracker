@@ -15,8 +15,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Shield, Unlock, UserCog, BellRing, ArrowLeft } from 'lucide-react';
+import { Shield, Unlock, UserCog, BellRing, ArrowLeft, Activity } from 'lucide-react';
 import { IntegrationSettings } from '@/components/settings/integration-settings';
+import { TrainingPreferences } from '@/components/settings/training-preferences';
 import { Link } from 'wouter';
 
 const profileFormSchema = z.object({
@@ -229,7 +230,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-4 h-auto md:grid-cols-4">
+          <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-5 h-auto md:grid-cols-5">
             <TabsTrigger value="account" className="flex flex-col md:flex-row items-center gap-2 py-2">
               <UserCog className="h-5 w-5" />
               <span>Account</span>
@@ -237,6 +238,10 @@ export default function SettingsPage() {
             <TabsTrigger value="security" className="flex flex-col md:flex-row items-center gap-2 py-2">
               <Shield className="h-5 w-5" />
               <span>Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="training" className="flex flex-col md:flex-row items-center gap-2 py-2">
+              <Activity className="h-5 w-5" />
+              <span>Training</span>
             </TabsTrigger>
             <TabsTrigger value="integrations" className="flex flex-col md:flex-row items-center gap-2 py-2">
               <Unlock className="h-5 w-5" />
