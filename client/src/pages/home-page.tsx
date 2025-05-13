@@ -86,22 +86,22 @@ export default function HomePage() {
       <section className="pt-24 pb-16 bg-gradient-to-br from-blue-900 to-indigo-900 text-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+            <div className="space-y-6 mt-8 lg:mt-0">
+              <h1 className="text-3xl md:text-5xl font-bold leading-tight">
                 Transform Your Running Journey with AI Power
               </h1>
               <p className="text-lg text-blue-100 leading-relaxed">
                 MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
               </p>
-              <div className="flex space-x-4 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
                 <Link href="/auth?tab=register">
-                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 border-0">
+                  <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 border-0">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link href="/auth">
-                  <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20">
                     Learn More
                   </Button>
                 </Link>
@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center mb-4">
-                <div className="bg-blue-600 p-2 rounded-lg mr-3 text-white">
+                <div className="bg-blue-600 p-2 rounded-lg mr-3 text-white flex-shrink-0">
                   <Brain size={24} />
                 </div>
                 <h3 className="font-bold text-lg">AI-Powered Training</h3>
@@ -137,7 +137,7 @@ export default function HomePage() {
             
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center mb-4">
-                <div className="bg-purple-600 p-2 rounded-lg mr-3 text-white">
+                <div className="bg-purple-600 p-2 rounded-lg mr-3 text-white flex-shrink-0">
                   <LineChart size={24} />
                 </div>
                 <h3 className="font-bold text-lg">Advanced Analytics</h3>
@@ -149,7 +149,7 @@ export default function HomePage() {
             
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center mb-4">
-                <div className="bg-indigo-600 p-2 rounded-lg mr-3 text-white">
+                <div className="bg-indigo-600 p-2 rounded-lg mr-3 text-white flex-shrink-0">
                   <Activity size={24} />
                 </div>
                 <h3 className="font-bold text-lg">Platform Integration</h3>
@@ -161,7 +161,7 @@ export default function HomePage() {
             
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center mb-4">
-                <div className="bg-green-600 p-2 rounded-lg mr-3 text-white">
+                <div className="bg-green-600 p-2 rounded-lg mr-3 text-white flex-shrink-0">
                   <Heart size={24} />
                 </div>
                 <h3 className="font-bold text-lg">Health Intelligence</h3>
@@ -177,15 +177,23 @@ export default function HomePage() {
       {/* AI Training Generator Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
+          <div className="text-center lg:hidden mb-8">
+            <h2 className="text-3xl font-bold">Intelligent Training Plans</h2>
+            <p className="text-neutral-dark mt-2">
+              Experience AI-powered training that adapts to your performance
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="mx-auto w-full max-w-md lg:max-w-none">
               <AITrainingGenerator />
             </div>
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold">Intelligent Training Plans</h2>
-              <p className="text-neutral-dark">
-                Our AI analyzes your running history, fitness level, and goals to create personalized training plans that evolve with you. Experience adaptive training that adjusts based on your performance and recovery metrics.
-              </p>
+              <div className="hidden lg:block">
+                <h2 className="text-3xl font-bold">Intelligent Training Plans</h2>
+                <p className="text-neutral-dark mt-2">
+                  Our AI analyzes your running history, fitness level, and goals to create personalized training plans that evolve with you.
+                </p>
+              </div>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <ChevronRight className="h-5 w-5 mr-2 text-primary flex-shrink-0 mt-0.5" />
@@ -208,12 +216,20 @@ export default function HomePage() {
       {/* Integration Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="text-center lg:hidden mb-8">
+            <h2 className="text-3xl font-bold">Seamless Device Integration</h2>
+            <p className="text-neutral-dark mt-2">
+              Connect all your fitness platforms in one place
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="space-y-6 order-last lg:order-first">
-              <h2 className="text-3xl font-bold">Seamless Device Integration</h2>
-              <p className="text-neutral-dark">
-                Connect your favorite fitness devices and platforms to MomentumRun for a comprehensive view of your training and health metrics. Our platform works with all major fitness ecosystems.
-              </p>
+              <div className="hidden lg:block">
+                <h2 className="text-3xl font-bold">Seamless Device Integration</h2>
+                <p className="text-neutral-dark mt-2">
+                  Connect your favorite fitness devices and platforms to MomentumRun for a comprehensive view of your training and health metrics.
+                </p>
+              </div>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <ChevronRight className="h-5 w-5 mr-2 text-primary flex-shrink-0 mt-0.5" />
@@ -229,7 +245,7 @@ export default function HomePage() {
                 </li>
               </ul>
             </div>
-            <div>
+            <div className="mx-auto w-full max-w-md lg:max-w-none">
               <FitnessIntegration />
             </div>
           </div>
@@ -239,7 +255,7 @@ export default function HomePage() {
       {/* Premium Benefits */}
       <section className="py-16 bg-gradient-to-r from-indigo-900 to-purple-900 text-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <h2 className="text-3xl font-bold">Premium Benefits</h2>
             <p className="text-blue-100 mt-2">Unlock advanced features with MomentumRun Premium</p>
           </div>
@@ -247,7 +263,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
               <div className="flex items-center mb-4">
-                <Zap className="text-yellow-400 mr-3" size={24} />
+                <Zap className="text-yellow-400 mr-3 flex-shrink-0" size={24} />
                 <h3 className="font-bold text-lg">Human Coach Access</h3>
               </div>
               <p className="text-white/80">
@@ -257,7 +273,7 @@ export default function HomePage() {
             
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
               <div className="flex items-center mb-4">
-                <Heart className="text-red-400 mr-3" size={24} />
+                <Heart className="text-red-400 mr-3 flex-shrink-0" size={24} />
                 <h3 className="font-bold text-lg">Advanced Nutrition</h3>
               </div>
               <p className="text-white/80">
@@ -267,7 +283,7 @@ export default function HomePage() {
             
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
               <div className="flex items-center mb-4">
-                <Activity className="text-blue-400 mr-3" size={24} />
+                <Activity className="text-blue-400 mr-3 flex-shrink-0" size={24} />
                 <h3 className="font-bold text-lg">Recovery Analysis</h3>
               </div>
               <p className="text-white/80">
@@ -276,9 +292,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 md:mt-12">
             <Link href="/auth?tab=register">
-              <Button size="lg" className="bg-white text-indigo-900 hover:bg-white/90">
+              <Button size="lg" className="w-full sm:w-auto bg-white text-indigo-900 hover:bg-white/90">
                 Start 14-Day Free Trial
               </Button>
             </Link>
@@ -289,8 +305,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-12 bg-gray-900 text-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
               <h1 className="text-xl font-bold font-heading flex items-center mb-4">
                 <span className="text-primary mr-2">Momentum</span>Run
               </h1>
