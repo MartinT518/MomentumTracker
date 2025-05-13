@@ -99,7 +99,7 @@ export function Sidebar({ className, style }: SidebarProps) {
   ];
 
   return (
-    <aside className={cn("hidden md:flex flex-col w-64 bg-white border-r border-gray-200", className)} style={{display: "flex"}}>
+    <aside className={cn("md:flex flex-col w-64 bg-white border-r border-gray-200", className)} style={style || {display: "flex"}}>
       <div className="p-4 border-b border-gray-200">
         <h1 className="text-xl font-bold font-heading text-neutral-darker flex items-center">
           <span className="text-primary mr-2">Momentum</span>Run
