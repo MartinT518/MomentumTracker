@@ -4353,8 +4353,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .update(onboarding_status)
           .set({
             completed: true,
-            completed_at: new Date(),
-            updated_at: new Date(),
+            current_step: "completed",
+            last_updated: new Date(),
           })
           .where(eq(onboarding_status.id, status.id));
       } else {
@@ -4363,9 +4363,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .values({
             user_id: req.user!.id,
             completed: true,
-            completed_at: new Date(),
+            current_step: "completed",
+            steps_completed: ["welcome", "fitness-goals", "experience", "training-preferences", "summary"],
+            last_updated: new Date(),
             created_at: new Date(),
-            updated_at: new Date(),
           });
       }
       
