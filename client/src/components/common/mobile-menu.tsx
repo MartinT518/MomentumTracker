@@ -15,7 +15,9 @@ import {
   Dumbbell,
   Heart,
   Apple,
+  Search,
 } from "lucide-react";
+import { SearchButton } from "@/components/common/search-dialog";
 
 export function MobileMenu() {
   const [location] = useLocation();
@@ -100,12 +102,15 @@ export function MobileMenu() {
           <h1 className="text-xl font-bold font-heading text-neutral-darker flex items-center">
             <span className="text-primary mr-1">Momentum</span>Run
           </h1>
-          <button 
-            className="p-1 rounded-md hover:bg-neutral-lighter"
-            onClick={toggleMenu}
-          >
-            <Menu className="h-6 w-6 text-neutral-darker" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <SearchButton />
+            <button 
+              className="p-1 rounded-md hover:bg-neutral-lighter"
+              onClick={toggleMenu}
+            >
+              <Menu className="h-6 w-6 text-neutral-darker" />
+            </button>
+          </div>
         </div>
       </div>
 
