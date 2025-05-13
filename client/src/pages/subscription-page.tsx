@@ -154,8 +154,9 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
     try {
       // First, determine if this is a PaymentIntent or SetupIntent based on client secret format
       // SetupIntents have _seti_ in their client secret, PaymentIntents have _pi_
+      const clientSecretFromElements = elements.getElement(PaymentElement)?.options?.clientSecret;
       const isSetupIntent = window.location.href.includes('setup_intent') || 
-                            (clientSecret && clientSecret.includes('_seti_'));
+                            (clientSecretFromElements && clientSecretFromElements.includes('_seti_'));
       
       console.log(`Confirming ${isSetupIntent ? 'setup' : 'payment'} with Stripe...`);
       
@@ -244,6 +245,7 @@ export default function SubscriptionPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [clientSecret, setClientSecret] = useState("");
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
+  const [isActivatingTest, setIsActivatingTest] = useState(false);
 
   // Fetch available subscription plans
   const { data: plans, isLoading: isLoadingPlans } = useQuery({
@@ -255,6 +257,35 @@ export default function SubscriptionPage() {
     },
   });
 
+  // Mutation to activate test premium mode
+  const activateTestPremiumMutation = useMutation({
+    mutationFn: async () => {
+      setIsActivatingTest(true);
+      const res = await apiRequest('POST', '/api/dev/activate-premium');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to activate test premium');
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setIsActivatingTest(false);
+      toast({
+        title: "Test Premium Activated",
+        description: `Premium features are now available until ${new Date(data.expiresAt).toLocaleDateString()}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+    onError: (error: Error) => {
+      setIsActivatingTest(false);
+      toast({
+        title: "Activation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Mutation to create a subscription
   const createSubscriptionMutation = useMutation({
     mutationFn: async ({ priceId, planId }: { priceId: string, planId: number }) => {
@@ -489,6 +520,40 @@ export default function SubscriptionPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Developer Test Card */}
+          <Card className="border-2 border-violet-500">
+            <CardHeader className="bg-violet-50 dark:bg-violet-950">
+              <div className="flex justify-between items-center">
+                <CardTitle>Developer Testing</CardTitle>
+                <Badge variant="outline" className="bg-violet-100 text-violet-700 hover:bg-violet-100 border-violet-300">Test Mode</Badge>
+              </div>
+              <CardDescription>Activate premium features for testing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div>
+                <span className="text-3xl font-bold">$0</span>
+                <span className="text-muted-foreground">/30 days</span>
+              </div>
+              <div className="space-y-2">
+                <FeatureItem included={true} text="All premium features" />
+                <FeatureItem included={true} text="Advanced training analytics" />
+                <FeatureItem included={true} text="AI-powered recommendations" />
+                <FeatureItem included={true} text="Unlimited training history" />
+                <FeatureItem included={true} text="No payment required" />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant="default" 
+                className="w-full bg-violet-600 hover:bg-violet-700" 
+                onClick={() => activateTestPremiumMutation.mutate()}
+                disabled={isActivatingTest}
+              >
+                {isActivatingTest ? "Activating..." : "Activate Test Mode"}
+              </Button>
+            </CardFooter>
+          </Card>
+          
           {/* Free Plan */}
           <Card className="border-2 border-muted">
             <CardHeader>
