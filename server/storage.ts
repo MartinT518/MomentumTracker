@@ -877,6 +877,10 @@ export class MemStorage implements IStorage {
   private userAchievements: Map<number, UserAchievement>;
   private healthMetrics: Map<number, HealthMetric>;
   private integrationConnections: Map<number, IntegrationConnection>;
+  private onboardingStatuses: Map<number, OnboardingStatus>;
+  private fitnessGoals: Map<number, FitnessGoal>;
+  private userExperiences: Map<number, UserExperience>;
+  private trainingPreferences: Map<number, TrainingPreference>;
   
   currentId: number;
   sessionStore: session.SessionStore;
@@ -896,6 +900,10 @@ export class MemStorage implements IStorage {
     this.userAchievements = new Map();
     this.healthMetrics = new Map();
     this.integrationConnections = new Map();
+    this.onboardingStatuses = new Map();
+    this.fitnessGoals = new Map();
+    this.userExperiences = new Map();
+    this.trainingPreferences = new Map();
     
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
@@ -1274,6 +1282,162 @@ export class MemStorage implements IStorage {
     const updatedMetric = { ...metric, ...data };
     this.healthMetrics.set(id, updatedMetric);
     return updatedMetric;
+  }
+  
+  // Onboarding status
+  async getOnboardingStatus(userId: number): Promise<OnboardingStatus | undefined> {
+    return Array.from(this.onboardingStatuses.values())
+      .find(status => status.user_id === userId);
+  }
+  
+  async createOnboardingStatus(data: InsertOnboardingStatus): Promise<OnboardingStatus> {
+    const id = this.currentId++;
+    const newStatus: OnboardingStatus = {
+      ...data,
+      id,
+      completed: data.completed || false,
+      current_step: data.current_step || "welcome",
+      steps_completed: data.steps_completed || [],
+      last_updated: new Date(),
+      created_at: new Date()
+    };
+    this.onboardingStatuses.set(id, newStatus);
+    return newStatus;
+  }
+  
+  async updateOnboardingStatus(userId: number, data: Partial<OnboardingStatus>): Promise<OnboardingStatus> {
+    const status = Array.from(this.onboardingStatuses.values())
+      .find(status => status.user_id === userId);
+      
+    if (!status) {
+      throw new Error(`Onboarding status for user ${userId} not found`);
+    }
+    
+    const updatedStatus = { 
+      ...status, 
+      ...data, 
+      last_updated: new Date() 
+    };
+    
+    this.onboardingStatuses.set(status.id, updatedStatus);
+    return updatedStatus;
+  }
+  
+  // Fitness goals
+  async getFitnessGoals(userId: number): Promise<FitnessGoal[]> {
+    return Array.from(this.fitnessGoals.values())
+      .filter(goal => goal.user_id === userId)
+      .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+  }
+  
+  async createFitnessGoal(data: InsertFitnessGoal): Promise<FitnessGoal> {
+    const id = this.currentId++;
+    const newGoal: FitnessGoal = {
+      ...data,
+      id,
+      status: data.status || "active",
+      priority: data.priority || 1,
+      start_date: data.start_date || new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    this.fitnessGoals.set(id, newGoal);
+    return newGoal;
+  }
+  
+  async updateFitnessGoal(id: number, data: Partial<FitnessGoal>): Promise<FitnessGoal> {
+    const goal = this.fitnessGoals.get(id);
+    
+    if (!goal) {
+      throw new Error(`Fitness goal with ID ${id} not found`);
+    }
+    
+    const updatedGoal = { 
+      ...goal, 
+      ...data, 
+      updated_at: new Date() 
+    };
+    
+    this.fitnessGoals.set(id, updatedGoal);
+    return updatedGoal;
+  }
+  
+  // User experience
+  async getUserExperience(userId: number): Promise<UserExperience | undefined> {
+    return Array.from(this.userExperiences.values())
+      .find(exp => exp.user_id === userId);
+  }
+  
+  async createUserExperience(data: InsertUserExperience): Promise<UserExperience> {
+    const id = this.currentId++;
+    const newExperience: UserExperience = {
+      ...data,
+      id,
+      max_run_days_per_week: data.max_run_days_per_week || 4,
+      preferred_run_days: data.preferred_run_days || [],
+      preferred_run_times: data.preferred_run_times || [],
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    this.userExperiences.set(id, newExperience);
+    return newExperience;
+  }
+  
+  async updateUserExperience(id: number, data: Partial<UserExperience>): Promise<UserExperience> {
+    const experience = this.userExperiences.get(id);
+    
+    if (!experience) {
+      throw new Error(`User experience with ID ${id} not found`);
+    }
+    
+    const updatedExperience = { 
+      ...experience, 
+      ...data, 
+      updated_at: new Date() 
+    };
+    
+    this.userExperiences.set(id, updatedExperience);
+    return updatedExperience;
+  }
+  
+  // Training preferences
+  async getTrainingPreferences(userId: number): Promise<TrainingPreference | undefined> {
+    return Array.from(this.trainingPreferences.values())
+      .find(prefs => prefs.user_id === userId);
+  }
+  
+  async createTrainingPreferences(data: InsertTrainingPreference): Promise<TrainingPreference> {
+    const id = this.currentId++;
+    const newPreferences: TrainingPreference = {
+      ...data,
+      id,
+      preferred_workout_types: data.preferred_workout_types || [],
+      avoid_workout_types: data.avoid_workout_types || [],
+      cross_training_activities: data.cross_training_activities || [],
+      cross_training_days: data.cross_training_days || 1,
+      rest_days: data.rest_days || 1,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    this.trainingPreferences.set(id, newPreferences);
+    return newPreferences;
+  }
+  
+  async updateTrainingPreferences(id: number, data: Partial<TrainingPreference>): Promise<TrainingPreference> {
+    const preferences = this.trainingPreferences.get(id);
+    
+    if (!preferences) {
+      throw new Error(`Training preferences with ID ${id} not found`);
+    }
+    
+    const updatedPreferences = { 
+      ...preferences, 
+      ...data, 
+      updated_at: new Date() 
+    };
+    
+    this.trainingPreferences.set(id, updatedPreferences);
+    return updatedPreferences;
   }
   
   // Integration connections methods
