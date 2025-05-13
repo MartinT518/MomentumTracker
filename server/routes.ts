@@ -4082,20 +4082,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           current_weight
         } = req.body;
         
-        // Map client data to database schema
+        // Map client data to database schema - avoiding using 'notes' which doesn't exist
         const goalsData = {
           goal_type: primary_goal || existingGoals.goal_type,
           target_value: goal_distance,
           target_unit: goal_event_type ? "km" : existingGoals.target_unit,
           target_date: goal_date ? new Date(goal_date) : existingGoals.target_date,
-          notes: JSON.stringify({
-            has_target_race,
-            weight_goal,
-            current_weight,
-            target_weight,
-            goal_time,
-            goal_event_type
-          }),
+          // Store additional information in available fields
+          race_distance: goal_event_type || existingGoals.race_distance,
+          target_time: goal_time || existingGoals.target_time,
+          experience_level: weight_goal || existingGoals.experience_level,
+          weekly_mileage: current_weight || existingGoals.weekly_mileage,
+          frequency_per_week: has_target_race ? 3 : 2, // Default frequency based on whether they have a race goal
           updated_at: new Date(),
         };
         
@@ -4122,7 +4120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         current_weight
       } = req.body;
       
-      // Map client data to database schema
+      // Map client data to database schema - avoiding using 'notes' which doesn't exist
       const goalsData = {
         user_id: req.user!.id,
         goal_type: primary_goal || "general_fitness",
@@ -4133,14 +4131,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         start_date: new Date(),
         target_date: goal_date ? new Date(goal_date) : null,
         status: "active",
-        notes: JSON.stringify({
-          has_target_race,
-          weight_goal,
-          current_weight,
-          target_weight,
-          goal_time,
-          goal_event_type
-        }),
+        // Store goal_time in race_distance since we don't have notes field
+        race_distance: goal_event_type || null,
+        target_time: goal_time || null,
+        experience_level: weight_goal || "intermediate",
+        weekly_mileage: current_weight, // Use an existing numeric field
+        frequency_per_week: has_target_race ? 3 : 2, // Default frequency based on whether they have a race goal
         created_at: new Date(),
         updated_at: new Date(),
       };
