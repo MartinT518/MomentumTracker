@@ -53,6 +53,15 @@ const searchData: SearchResult[] = [
     keywords: ['home', 'overview', 'main', 'stats', 'summary'],
   },
   {
+    id: 'coach',
+    title: 'Personal Coach',
+    category: 'Features',
+    description: 'Chat with your AI running coach or get human coaching',
+    url: '/training-plan?tab=coach',
+    icon: <Sparkles className="h-4 w-4" />,
+    keywords: ['coach', 'coaching', 'advice', 'trainer', 'guidance', 'feedback', 'human coach', 'personal trainer'],
+  },
+  {
     id: 'training-plan',
     title: 'Training Plan',
     category: 'Pages',
@@ -207,7 +216,17 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, {} as Record<string, SearchResult[]>);
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog 
+      open={open} 
+      onOpenChange={onOpenChange}
+      // Add an accessible title and description
+      aria-labelledby="search-dialog-title" 
+      aria-describedby="search-dialog-description"
+    >
+      <div id="search-dialog-title" className="sr-only">Search MomentumRun</div>
+      <div id="search-dialog-description" className="sr-only">
+        Type to search for pages, features, or training resources
+      </div>
       <CommandInput 
         placeholder="Search for pages, features, or settings..." 
         value={query}
