@@ -106,11 +106,11 @@ export function TrainingPreferences() {
         const response = await apiRequest('GET', '/api/onboarding/training-preferences');
         
         if (response.ok) {
-          const trainingPrefs = await response.json();
+          const trainingPrefs: Record<string, any> = await response.json();
           
           // Then get experience data
           const expResponse = await apiRequest('GET', '/api/onboarding/experience');
-          let expData = {};
+          let expData: Record<string, any> = {};
           
           if (expResponse.ok) {
             expData = await expResponse.json();
@@ -118,7 +118,7 @@ export function TrainingPreferences() {
           
           // Then get goals data
           const goalResponse = await apiRequest('GET', '/api/onboarding/fitness-goals');
-          let goalData = {};
+          let goalData: Record<string, any> = {};
           
           if (goalResponse.ok) {
             goalData = await goalResponse.json();
@@ -190,7 +190,7 @@ export function TrainingPreferences() {
   }, [form, toast]);
   
   // Handle form submission
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: TrainingPreferencesFormData) => {
     try {
       setSaving(true);
       
