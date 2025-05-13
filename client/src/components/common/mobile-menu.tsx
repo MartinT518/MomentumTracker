@@ -16,6 +16,7 @@ import {
   Heart,
   Apple,
   Search,
+  CreditCard,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog";
 
@@ -92,6 +93,12 @@ export function MobileMenu() {
       href: "/settings",
       icon: Settings,
       active: location === "/settings",
+    },
+    {
+      title: "Subscription",
+      href: "/subscription",
+      icon: CreditCard,
+      active: location === "/subscription" || location.startsWith("/subscription/"),
     },
   ];
 
