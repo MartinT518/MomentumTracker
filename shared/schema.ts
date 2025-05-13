@@ -661,8 +661,8 @@ export type InsertOnboardingStatus = z.infer<typeof insertOnboardingStatusSchema
 export type FitnessGoal = typeof fitness_goals.$inferSelect;
 export type InsertFitnessGoal = z.infer<typeof insertFitnessGoalSchema>;
 
-export type UserExperience = typeof user_experience.$inferSelect;
-export type InsertUserExperience = z.infer<typeof insertUserExperienceSchema>;
+export type ExperienceLevel = typeof experience_levels.$inferSelect;
+export type InsertExperienceLevel = z.infer<typeof insertExperienceLevelSchema>;
 
 export type TrainingPreference = typeof training_preferences.$inferSelect;
 export type InsertTrainingPreference = z.infer<typeof insertTrainingPreferencesSchema>;

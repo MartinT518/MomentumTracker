@@ -12,7 +12,7 @@ import {
   type HealthMetric, type InsertHealthMetric,
   type OnboardingStatus, type InsertOnboardingStatus,
   type FitnessGoal, type InsertFitnessGoal,
-  type UserExperience, type InsertUserExperience,
+  type ExperienceLevel, type InsertExperienceLevel,
   type TrainingPreference, type InsertTrainingPreference
 } from "@shared/schema";
 import { db } from "./db";
@@ -121,9 +121,9 @@ export interface IStorage {
   updateFitnessGoal(id: number, data: Partial<FitnessGoal>): Promise<FitnessGoal>;
   
   // User experience
-  getUserExperience(userId: number): Promise<UserExperience | undefined>;
-  createUserExperience(data: InsertUserExperience): Promise<UserExperience>;
-  updateUserExperience(id: number, data: Partial<UserExperience>): Promise<UserExperience>;
+  getUserExperience(userId: number): Promise<ExperienceLevel | undefined>;
+  createUserExperience(data: InsertExperienceLevel): Promise<ExperienceLevel>;
+  updateUserExperience(id: number, data: Partial<ExperienceLevel>): Promise<ExperienceLevel>;
   
   // Training preferences
   getTrainingPreferences(userId: number): Promise<TrainingPreference | undefined>;
@@ -736,24 +736,24 @@ export class DatabaseStorage implements IStorage {
   async getUserExperience(userId: number): Promise<UserExperience | undefined> {
     const [experience] = await db
       .select()
-      .from(user_experience)
-      .where(eq(user_experience.user_id, userId));
+      .from(experience_levels)
+      .where(eq(experience_levels.user_id, userId));
     return experience;
   }
   
-  async createUserExperience(data: InsertUserExperience): Promise<UserExperience> {
+  async createUserExperience(data: InsertExperienceLevel): Promise<ExperienceLevel> {
     const [experience] = await db
-      .insert(user_experience)
+      .insert(experience_levels)
       .values(data)
       .returning();
     return experience;
   }
   
-  async updateUserExperience(id: number, data: Partial<UserExperience>): Promise<UserExperience> {
+  async updateUserExperience(id: number, data: Partial<ExperienceLevel>): Promise<ExperienceLevel> {
     const [updatedExperience] = await db
-      .update(user_experience)
+      .update(experience_levels)
       .set({ ...data, updated_at: new Date() })
-      .where(eq(user_experience.id, id))
+      .where(eq(experience_levels.id, id))
       .returning();
     
     if (!updatedExperience) {
@@ -879,7 +879,7 @@ export class MemStorage implements IStorage {
   private integrationConnections: Map<number, IntegrationConnection>;
   private onboardingStatuses: Map<number, OnboardingStatus>;
   private fitnessGoals: Map<number, FitnessGoal>;
-  private userExperiences: Map<number, UserExperience>;
+  private userExperiences: Map<number, ExperienceLevel>;
   private trainingPreferences: Map<number, TrainingPreference>;
   
   currentId: number;
