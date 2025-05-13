@@ -27,29 +27,29 @@ export interface Achievement {
  * Distance milestones for achievements (in kilometers)
  */
 export const distanceMilestones = [
-  { distance: 50, title: '50km Club', description: 'You've run a total of 50 kilometers!' },
-  { distance: 100, title: '100km Club', description: 'You've run a total of 100 kilometers!' },
-  { distance: 250, title: '250km Club', description: 'You've run a total of 250 kilometers!' },
-  { distance: 500, title: '500km Club', description: 'You've run a total of 500 kilometers!' },
-  { distance: 1000, title: '1,000km Club', description: 'You've run a total of 1,000 kilometers!' },
-  { distance: 2500, title: '2,500km Club', description: 'You've run a total of 2,500 kilometers!' },
-  { distance: 5000, title: '5,000km Club', description: 'You've run a total of 5,000 kilometers!' },
-  { distance: 10000, title: '10,000km Club', description: 'You've run a total of 10,000 kilometers!' },
+  { distance: 50, title: '50km Club', description: "You've run a total of 50 kilometers!" },
+  { distance: 100, title: '100km Club', description: "You've run a total of 100 kilometers!" },
+  { distance: 250, title: '250km Club', description: "You've run a total of 250 kilometers!" },
+  { distance: 500, title: '500km Club', description: "You've run a total of 500 kilometers!" },
+  { distance: 1000, title: '1,000km Club', description: "You've run a total of 1,000 kilometers!" },
+  { distance: 2500, title: '2,500km Club', description: "You've run a total of 2,500 kilometers!" },
+  { distance: 5000, title: '5,000km Club', description: "You've run a total of 5,000 kilometers!" },
+  { distance: 10000, title: '10,000km Club', description: "You've run a total of 10,000 kilometers!" },
 ];
 
 /**
  * Streak thresholds for achievements (in days)
  */
 export const streakThresholds = [
-  { days: 3, title: '3-Day Streak', description: 'You've completed workouts for 3 consecutive days!' },
-  { days: 7, title: '7-Day Streak', description: 'You've completed workouts for 7 consecutive days!' },
-  { days: 14, title: '14-Day Streak', description: 'You've completed workouts for 2 weeks straight!' },
-  { days: 21, title: '21-Day Streak', description: 'You've completed workouts for 3 weeks straight!' },
-  { days: 30, title: '30-Day Streak', description: 'You've completed workouts for a full month!' },
-  { days: 60, title: '60-Day Streak', description: 'You've completed workouts for 2 months straight!' },
-  { days: 90, title: '90-Day Streak', description: 'You've completed workouts for 3 months straight!' },
-  { days: 180, title: '180-Day Streak', description: 'You've completed workouts for 6 months straight!' },
-  { days: 365, title: '365-Day Streak', description: 'You've completed workouts for a full year!' },
+  { days: 3, title: '3-Day Streak', description: "You've completed workouts for 3 consecutive days!" },
+  { days: 7, title: '7-Day Streak', description: "You've completed workouts for 7 consecutive days!" },
+  { days: 14, title: '14-Day Streak', description: "You've completed workouts for 2 weeks straight!" },
+  { days: 21, title: '21-Day Streak', description: "You've completed workouts for 3 weeks straight!" },
+  { days: 30, title: '30-Day Streak', description: "You've completed workouts for a full month!" },
+  { days: 60, title: '60-Day Streak', description: "You've completed workouts for 2 months straight!" },
+  { days: 90, title: '90-Day Streak', description: "You've completed workouts for 3 months straight!" },
+  { days: 180, title: '180-Day Streak', description: "You've completed workouts for 6 months straight!" },
+  { days: 365, title: '365-Day Streak', description: "You've completed workouts for a full year!" },
 ];
 
 /**
