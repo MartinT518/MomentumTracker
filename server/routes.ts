@@ -4348,26 +4348,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(onboarding_status)
         .where(eq(onboarding_status.user_id, req.user!.id));
       
-      if (status) {
-        await db
-          .update(onboarding_status)
-          .set({
-            completed: true,
-            current_step: "completed",
-            last_updated: new Date(),
-          })
-          .where(eq(onboarding_status.id, status.id));
-      } else {
-        await db
-          .insert(onboarding_status)
-          .values({
-            user_id: req.user!.id,
-            completed: true,
-            current_step: "completed",
-            steps_completed: ["welcome", "fitness-goals", "experience", "training-preferences", "summary"],
-            last_updated: new Date(),
-            created_at: new Date(),
-          });
+      try {
+        if (status) {
+          // Use raw SQL to update all fields including the 'step' field that isn't in our schema
+          await db.execute(`
+            UPDATE onboarding_status 
+            SET completed = true, 
+                current_step = 'completed', 
+                step = 'completed',
+                last_updated = NOW(),
+                updated_at = NOW()
+            WHERE id = ${status.id}
+          `);
+        } else {
+          // Use raw SQL to insert with all required fields
+          await db.execute(`
+            INSERT INTO onboarding_status 
+            (user_id, completed, current_step, step, steps_completed, last_updated, created_at, updated_at)
+            VALUES 
+            (
+              ${req.user!.id}, 
+              true, 
+              'completed', 
+              'completed', 
+              ARRAY['welcome', 'fitness-goals', 'experience', 'training-preferences', 'summary'], 
+              NOW(), 
+              NOW(), 
+              NOW()
+            )
+          `);
+        }
+      } catch (error) {
+        console.error('Error updating onboarding status with raw SQL:', error);
+        throw error;
       }
       
       // Also update the user's profile if needed
