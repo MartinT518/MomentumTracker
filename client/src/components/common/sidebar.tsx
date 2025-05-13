@@ -75,6 +75,27 @@ export function Sidebar({ className, style }: SidebarProps) {
       active: location === "/goals",
     },
   ];
+  
+  const accountNavItems = [
+    {
+      title: "Profile",
+      href: "/profile",
+      icon: User,
+      active: location === "/profile",
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: Settings,
+      active: location === "/settings",
+    },
+    {
+      title: "Subscription",
+      href: "/subscription",
+      icon: CreditCard,
+      active: location === "/subscription",
+    },
+  ];
 
   const accountItems = [
     {
