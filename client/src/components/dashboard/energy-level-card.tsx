@@ -1,220 +1,132 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Battery, Heart, Zap, Moon } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { Progress } from "@/components/ui/progress";
-
-interface EnergyLevelData {
-  readinessScore: number;
-  hrvScore: number;
-  restingHR: number;
-  sleepScore: number;
-  readinessCategory: 'low' | 'moderate' | 'optimal';
-  recommendation: string;
-}
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/hooks/use-auth';
+import { getTrainingRecommendation, getEnergyLevelLabel, getEnergyLevelColor } from '@/lib/energy-calculator';
+import { getLatestEnergyLevel } from '@/lib/health-metrics-service';
+import { Loader2, BarChart2, AlertTriangle } from 'lucide-react';
+import { Link } from 'wouter';
 
 export function EnergyLevelCard() {
-  // In a real app, this would come from an API
-  const energyData: EnergyLevelData = {
-    readinessScore: 78,
-    hrvScore: 82,
-    restingHR: 54,
-    sleepScore: 76,
-    readinessCategory: 'moderate',
-    recommendation: 'You can train with moderate intensity today.',
-  };
-  
-  const getReadinessColor = (category: string) => {
-    switch (category) {
-      case 'low':
-        return 'text-red-500';
-      case 'moderate':
-        return 'text-yellow-500';
-      case 'optimal':
-        return 'text-green-500';
-      default:
-        return 'text-neutral-500';
+  const { user } = useAuth();
+  const [energyLevel, setEnergyLevel] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchEnergyLevel() {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const level = await getLatestEnergyLevel(user.id);
+        setEnergyLevel(level);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch energy level:', err);
+        setError('Could not load your energy data');
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    fetchEnergyLevel();
+  }, [user]);
+
+  // Function to get energy level label text
+  const getEnergyText = () => {
+    if (energyLevel === null) return 'No data available';
+    return getEnergyLevelLabel(energyLevel);
   };
-  
-  const getReadinessText = (score: number) => {
-    if (score < 60) return 'Low';
-    if (score < 80) return 'Moderate';
-    return 'Optimal';
+
+  // Function to get recommendation text
+  const getRecommendationText = () => {
+    if (energyLevel === null) return 'No recommendation available';
+    return getTrainingRecommendation(energyLevel);
   };
-  
-  const getProgressColor = (score: number) => {
-    if (score < 60) return 'bg-red-500';
-    if (score < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+
+  // Function to get color based on energy level
+  const getColor = () => {
+    if (energyLevel === null) return '#94a3b8'; // slate-400
+    return getEnergyLevelColor(energyLevel);
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">Energy Level</CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Battery className={`w-5 h-5 ${getReadinessColor(energyData.readinessCategory)}`} />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Based on your biometric data</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <CardDescription>Today's training readiness based on biometrics</CardDescription>
+        <CardTitle className="text-xl flex items-center">
+          <BarChart2 className="mr-2 h-5 w-5" />
+          Energy Level
+        </CardTitle>
+        <CardDescription>
+          Based on your health metrics
+        </CardDescription>
       </CardHeader>
-      <CardContent className="pt-1 pb-3">
-        <div className="space-y-4">
-          <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-1 space-y-2 md:space-y-0">
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <Alert variant="destructive" className="mt-2">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : energyLevel === null ? (
+          <div className="space-y-4">
+            <div className="text-center p-4 bg-neutral-50 rounded-lg">
+              <p className="mb-2 font-medium">No recent health data available</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Connect a fitness tracker or manually log your health metrics to see your energy level
+              </p>
+              <div className="space-x-2">
+                <Link href="/health-metrics">
+                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                    Log Metrics
+                  </button>
+                </Link>
+                <Link href="/settings">
+                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                    Connect Device
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
             <div>
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
-                <Zap className={`w-4 h-4 mr-2 ${getReadinessColor(energyData.readinessCategory)}`} />
-                <span className={`font-medium ${getReadinessColor(energyData.readinessCategory)}`}>
-                  {getReadinessText(energyData.readinessScore)} Energy
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">Today's Energy</span>
+                <span className="text-sm font-medium" style={{ color: getColor() }}>
+                  {energyLevel}%
                 </span>
               </div>
-              <p className="text-sm text-neutral-600 mt-2 md:max-w-md">{energyData.recommendation}</p>
-            </div>
-            
-            <div className="flex justify-center">
-              <div className="h-32 w-32 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Score', value: energyData.readinessScore },
-                        { name: 'Remaining', value: 100 - energyData.readinessScore }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={38}
-                      outerRadius={56}
-                      fill="#8884d8"
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <Cell key="cell-0" fill={
-                        energyData.readinessCategory === 'low' ? '#ef4444' : 
-                        energyData.readinessCategory === 'moderate' ? '#eab308' : '#22c55e'
-                      } />
-                      <Cell key="cell-1" fill="#f3f4f6" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Zap className={`w-6 h-6 ${getReadinessColor(energyData.readinessCategory)}`} />
-                  <p className={`text-xl font-bold ${getReadinessColor(energyData.readinessCategory)}`}>
-                    {energyData.readinessScore}%
-                  </p>
-                </div>
+              <Progress 
+                value={energyLevel} 
+                className="h-2" 
+                style={{ '--progress-background': getColor() } as React.CSSProperties} 
+              />
+              <div className="mt-2">
+                <span className="text-2xl font-bold" style={{ color: getColor() }}>
+                  {getEnergyText()}
+                </span>
               </div>
+            </div>
+
+            <div className="p-3 rounded-md" style={{ backgroundColor: `${getColor()}15` }}>
+              <h4 className="font-medium mb-1">Training Recommendation</h4>
+              <p className="text-sm">{getRecommendationText()}</p>
+            </div>
+
+            <div className="text-xs text-muted-foreground flex justify-between items-center">
+              <Link href="/health-metrics" className="hover:underline">
+                View full health data
+              </Link>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 justify-center">
-            {/* HRV Score */}
-            <div className="flex flex-col items-center">
-              <div className="h-28 w-28 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Score', value: energyData.hrvScore },
-                        { name: 'Remaining', value: 100 - energyData.hrvScore }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={32}
-                      outerRadius={48}
-                      fill="#8884d8"
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <Cell key="cell-0" fill="#ef4444" />
-                      <Cell key="cell-1" fill="#f3f4f6" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Heart className="w-5 h-5 text-red-500" />
-                  <p className="text-base font-bold mt-0.5">{energyData.hrvScore}</p>
-                </div>
-              </div>
-              <p className="text-xs font-medium mt-1">HRV Score</p>
-            </div>
-            
-            {/* Resting HR */}
-            <div className="flex flex-col items-center">
-              <div className="h-28 w-28 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Score', value: 100 - ((energyData.restingHR - 40) / 40) * 100 },
-                        { name: 'Remaining', value: ((energyData.restingHR - 40) / 40) * 100 }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={32}
-                      outerRadius={48}
-                      fill="#8884d8"
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <Cell key="cell-0" fill="#a855f7" />
-                      <Cell key="cell-1" fill="#f3f4f6" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Heart className="w-5 h-5 text-purple-500" />
-                  <p className="text-base font-bold mt-0.5">{energyData.restingHR} <span className="text-xs">bpm</span></p>
-                </div>
-              </div>
-              <p className="text-xs font-medium mt-1">Resting HR</p>
-            </div>
-            
-            {/* Sleep Score */}
-            <div className="flex flex-col items-center">
-              <div className="h-28 w-28 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Score', value: energyData.sleepScore },
-                        { name: 'Remaining', value: 100 - energyData.sleepScore }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={32}
-                      outerRadius={48}
-                      fill="#8884d8"
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <Cell key="cell-0" fill="#3b82f6" />
-                      <Cell key="cell-1" fill="#f3f4f6" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Moon className="w-5 h-5 text-blue-500" />
-                  <p className="text-base font-bold mt-0.5">{energyData.sleepScore}</p>
-                </div>
-              </div>
-              <p className="text-xs font-medium mt-1">Sleep Score</p>
-            </div>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
