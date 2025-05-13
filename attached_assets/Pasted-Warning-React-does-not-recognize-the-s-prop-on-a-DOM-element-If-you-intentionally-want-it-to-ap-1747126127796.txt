@@ -1,0 +1,24 @@
+Warning: React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.%s indicatorClassName indicatorclassname 
+    at div
+    at https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IWFJIMEQ.js?v=11fd0e21:42:13
+    at Provider (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=11fd0e21:38:15)
+    at https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-progress.js?v=11fd0e21:31:7
+    at _c (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/src/components/ui/progress.tsx:22:11)
+    at div
+    at div
+    at div
+    at WeeklyProgress (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/src/components/dashboard/weekly-progress.tsx:22:31)
+    at div
+    at div
+    at main
+    at div
+    at DashboardPage (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/src/pages/dashboard-page.tsx:35:20)
+    at Route (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=11fd0e21:338:16)
+    at ProtectedRoute (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/src/lib/protected-route.tsx:23:3)
+    at Switch (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=11fd0e21:394:17)
+    at Router
+    at Provider (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=11fd0e21:38:15)
+    at TooltipProvider (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=11fd0e21:955:5)
+    at AuthProvider (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://2b0ded2e-c940-4287-b838-14480a59d7e4-00-3nblxy6xburzi.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=11fd0e21:2881:3)
+    at App
