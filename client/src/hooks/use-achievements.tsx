@@ -1,138 +1,103 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { achievementService } from '@/lib/achievement-service';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Achievement } from '@/lib/achievements';
-import { queryClient } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface AchievementsContextType {
   achievements: Achievement[];
   unviewedAchievements: Achievement[];
-  currentAchievement: Achievement | null;
   isLoading: boolean;
   error: Error | null;
-  showAchievement: (achievement: Achievement) => void;
-  hideAchievement: () => void;
-  markAchievementViewed: (id: number) => Promise<void>;
-  createTestAchievement: (data: any) => Promise<void>;
+  markAchievementAsViewed: (achievementId: number) => Promise<void>;
+  createTestAchievement: (achievementData: any) => Promise<void>;
 }
 
 const AchievementsContext = createContext<AchievementsContextType | null>(null);
 
 export function AchievementsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null);
-  
-  // Get all user achievements
+  const queryClient = useQueryClient();
+  const [dispatchedEvents, setDispatchedEvents] = useState<Record<number, boolean>>({});
+
+  // Fetch all user achievements
   const {
     data: achievements = [],
-    isLoading: isLoadingAchievements,
-    error: achievementsError,
+    isLoading,
+    error,
   } = useQuery({
-    queryKey: ['/api/achievements', user?.id],
-    queryFn: () => (user ? achievementService.getUserAchievements(user.id) : Promise.resolve([])),
+    queryKey: ['/api/achievements'],
+    queryFn: async () => {
+      if (!user) return [];
+      const res = await apiRequest('GET', '/api/achievements');
+      return await res.json();
+    },
     enabled: !!user,
   });
-  
-  // Get unviewed achievements
-  const {
-    data: unviewedAchievements = [],
-    isLoading: isLoadingUnviewed,
-    error: unviewedError,
-  } = useQuery({
-    queryKey: ['/api/achievements/unviewed'],
-    queryFn: achievementService.getUnviewedAchievements,
-    enabled: !!user,
-  });
-  
+
+  // Filter for unviewed achievements
+  const unviewedAchievements = achievements.filter(
+    (achievement) => !achievement.viewed
+  );
+
   // Mutation to mark achievement as viewed
-  const markViewedMutation = useMutation({
-    mutationFn: achievementService.markAchievementViewed,
+  const markAsViewedMutation = useMutation({
+    mutationFn: async (achievementId: number) => {
+      await apiRequest('POST', `/api/achievements/${achievementId}/viewed`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/achievements'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/achievements/unviewed'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: `Failed to mark achievement as viewed: ${error.message}`,
-        variant: 'destructive',
-      });
     },
   });
-  
-  // Mutation to create test achievement (for development)
-  const createTestMutation = useMutation({
-    mutationFn: achievementService.createTestAchievement,
-    onSuccess: (achievement) => {
+
+  // Mutation to create a test achievement
+  const createTestAchievementMutation = useMutation({
+    mutationFn: async (achievementData: any) => {
+      await apiRequest('POST', '/api/achievements/test', achievementData);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/achievements'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/achievements/unviewed'] });
-      
-      // Show the newly created achievement
-      showAchievement(achievement);
-      
-      toast({
-        title: 'Achievement Created',
-        description: 'Test achievement was successfully created',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: `Failed to create test achievement: ${error.message}`,
-        variant: 'destructive',
-      });
     },
   });
-  
-  // Auto-display first unviewed achievement when they're loaded
+
+  // Dispatch events for unviewed achievements
   useEffect(() => {
-    if (unviewedAchievements.length > 0 && !currentAchievement) {
-      showAchievement(unviewedAchievements[0]);
-    }
-  }, [unviewedAchievements, currentAchievement]);
-  
-  // Show an achievement
-  const showAchievement = (achievement: Achievement) => {
-    setCurrentAchievement(achievement);
+    if (!user) return;
+
+    unviewedAchievements.forEach((achievement) => {
+      // Don't dispatch events for achievements we've already dispatched
+      if (dispatchedEvents[achievement.id]) return;
+
+      // Create and dispatch the custom event
+      const event = new CustomEvent('achievement-earned', {
+        detail: { achievement },
+      });
+      window.dispatchEvent(event);
+
+      // Mark this achievement as having had an event dispatched
+      setDispatchedEvents((prev) => ({
+        ...prev,
+        [achievement.id]: true,
+      }));
+    });
+  }, [unviewedAchievements, dispatchedEvents, user]);
+
+  const markAchievementAsViewed = async (achievementId: number) => {
+    await markAsViewedMutation.mutateAsync(achievementId);
   };
-  
-  // Hide the current achievement
-  const hideAchievement = () => {
-    if (currentAchievement?.id) {
-      markViewedMutation.mutate(currentAchievement.id);
-    }
-    setCurrentAchievement(null);
+
+  const createTestAchievement = async (achievementData: any) => {
+    await createTestAchievementMutation.mutateAsync(achievementData);
   };
-  
-  // Mark an achievement as viewed
-  const markAchievementViewed = async (id: number) => {
-    await markViewedMutation.mutateAsync(id);
-    
-    // If this was the current achievement, hide it
-    if (currentAchievement?.id === id) {
-      setCurrentAchievement(null);
-    }
-  };
-  
-  // Create a test achievement
-  const createTestAchievement = async (data: any) => {
-    await createTestMutation.mutateAsync(data);
-  };
-  
+
   return (
     <AchievementsContext.Provider
       value={{
         achievements,
         unviewedAchievements,
-        currentAchievement,
-        isLoading: isLoadingAchievements || isLoadingUnviewed,
-        error: achievementsError || unviewedError,
-        showAchievement,
-        hideAchievement,
-        markAchievementViewed,
+        isLoading,
+        error,
+        markAchievementAsViewed,
         createTestAchievement,
       }}
     >
