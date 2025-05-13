@@ -1,6 +1,8 @@
-import { Activity } from '@shared/schema';
+import confetti from 'canvas-confetti';
 
-// Define Achievement type used throughout the application
+/**
+ * Achievement interface describing the structure of achievement objects
+ */
 export interface Achievement {
   id: number;
   user_id: number;
@@ -21,26 +23,33 @@ export interface Achievement {
   };
 }
 
-// Map to define milestone achievements based on cumulative distances
+/**
+ * Distance milestones for achievements (in kilometers)
+ */
 export const distanceMilestones = [
-  { distance: 5, title: "5K Club", description: "Run a total of 5 kilometers" },
-  { distance: 10, title: "10K Club", description: "Run a total of 10 kilometers" },
-  { distance: 21.1, title: "Half Marathon Distance", description: "Run a total of 21.1 kilometers" },
-  { distance: 42.2, title: "Marathon Distance", description: "Run a total of 42.2 kilometers" },
-  { distance: 100, title: "Century Club", description: "Run a total of 100 kilometers" },
-  { distance: 250, title: "250K Club", description: "Run a total of 250 kilometers" },
-  { distance: 500, title: "500K Club", description: "Run a total of 500 kilometers" },
-  { distance: 1000, title: "1000K Club", description: "Run a total of 1000 kilometers" },
+  { distance: 50, title: '50km Club', description: 'You've run a total of 50 kilometers!' },
+  { distance: 100, title: '100km Club', description: 'You've run a total of 100 kilometers!' },
+  { distance: 250, title: '250km Club', description: 'You've run a total of 250 kilometers!' },
+  { distance: 500, title: '500km Club', description: 'You've run a total of 500 kilometers!' },
+  { distance: 1000, title: '1,000km Club', description: 'You've run a total of 1,000 kilometers!' },
+  { distance: 2500, title: '2,500km Club', description: 'You've run a total of 2,500 kilometers!' },
+  { distance: 5000, title: '5,000km Club', description: 'You've run a total of 5,000 kilometers!' },
+  { distance: 10000, title: '10,000km Club', description: 'You've run a total of 10,000 kilometers!' },
 ];
 
-// Define streak thresholds for streak-based achievements
+/**
+ * Streak thresholds for achievements (in days)
+ */
 export const streakThresholds = [
-  { days: 3, title: "3-Day Streak", description: "Complete activities for 3 consecutive days" },
-  { days: 7, title: "7-Day Streak", description: "Complete activities for 7 consecutive days" },
-  { days: 14, title: "2-Week Streak", description: "Complete activities for 14 consecutive days" },
-  { days: 30, title: "30-Day Streak", description: "Complete activities for 30 consecutive days" },
-  { days: 50, title: "50-Day Streak", description: "Complete activities for 50 consecutive days" },
-  { days: 100, title: "100-Day Streak", description: "Complete activities for 100 consecutive days" },
+  { days: 3, title: '3-Day Streak', description: 'You've completed workouts for 3 consecutive days!' },
+  { days: 7, title: '7-Day Streak', description: 'You've completed workouts for 7 consecutive days!' },
+  { days: 14, title: '14-Day Streak', description: 'You've completed workouts for 2 weeks straight!' },
+  { days: 21, title: '21-Day Streak', description: 'You've completed workouts for 3 weeks straight!' },
+  { days: 30, title: '30-Day Streak', description: 'You've completed workouts for a full month!' },
+  { days: 60, title: '60-Day Streak', description: 'You've completed workouts for 2 months straight!' },
+  { days: 90, title: '90-Day Streak', description: 'You've completed workouts for 3 months straight!' },
+  { days: 180, title: '180-Day Streak', description: 'You've completed workouts for 6 months straight!' },
+  { days: 365, title: '365-Day Streak', description: 'You've completed workouts for a full year!' },
 ];
 
 /**
@@ -50,61 +59,59 @@ export const streakThresholds = [
  * @returns Achievement object if a personal best was achieved, null otherwise
  */
 export function checkForPersonalBest(
-  newActivity: Activity, 
-  previousActivities: Activity[]
+  newActivity: any, 
+  previousActivities: any[]
 ): Achievement | null {
-  // Ensure we have a valid activity with distance and duration
-  if (!newActivity.distance || !newActivity.duration) {
-    return null;
-  }
-  
-  // Calculate pace (minutes per km)
-  const newPace = newActivity.duration / (newActivity.distance / 1000);
-  
-  // Find comparable activities (similar distance)
+  // Filter activities of the same type and similar distance
   const similarActivities = previousActivities.filter(activity => {
-    // Similar distance (within 10%)
-    const distanceDiff = Math.abs(activity.distance - newActivity.distance) / newActivity.distance;
-    return (
-      activity.activity_type === newActivity.activity_type && // Same activity type
-      distanceDiff < 0.1 && // Within 10% distance
-      activity.distance > 1 && // Ignore very short activities
-      activity.duration > 0 // Must have a duration
-    );
+    return activity.activity_type === newActivity.activity_type &&
+           Math.abs(activity.distance - newActivity.distance) < 0.5; // Within 0.5km
   });
   
   if (similarActivities.length === 0) {
-    return null; // No comparable activities
+    return null; // No similar activities to compare with
   }
   
-  // Calculate paces for all similar activities
-  const previousPaces = similarActivities.map(activity => 
-    activity.duration / (activity.distance / 1000)
+  // Sort by pace (seconds per kilometer)
+  const activityWithPace = {
+    ...newActivity,
+    pace: newActivity.duration / (newActivity.distance / 1000) // Seconds per kilometer
+  };
+  
+  const previousBestPace = Math.min(
+    ...similarActivities.map(activity => activity.duration / (activity.distance / 1000))
   );
   
-  // Find best previous pace
-  const bestPreviousPace = Math.min(...previousPaces);
-  
-  // Compare with new pace
-  if (newPace < bestPreviousPace) {
+  // Check if new activity is faster than previous best
+  if (activityWithPace.pace < previousBestPace) {
     // Calculate improvement percentage
-    const improvementPercent = ((bestPreviousPace - newPace) / bestPreviousPace) * 100;
+    const improvementSeconds = previousBestPace - activityWithPace.pace;
+    const improvementPercentage = (improvementSeconds / previousBestPace) * 100;
     
+    // Format improvement nicely
+    const formatTime = (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+    
+    // Create achievement
     return {
-      id: 0, // Will be set by backend
+      id: 0, // Will be assigned by server
       user_id: newActivity.user_id,
-      title: "Personal Best",
-      description: `New personal best pace for ${newActivity.distance.toFixed(1)}km ${newActivity.activity_type}!`,
-      achievement_type: "personal_best",
+      title: `${newActivity.activity_type} Personal Best`,
+      description: `You set a new personal record for ${newActivity.activity_type} with a pace of ${formatTime(activityWithPace.pace)} min/km!`,
+      achievement_type: 'personal_best',
       earned_at: new Date(),
       times_earned: 1,
       viewed: false,
       achievement_data: {
+        old_pace: formatTime(previousBestPace),
+        new_pace: formatTime(activityWithPace.pace),
+        improvement_seconds: improvementSeconds,
+        improvement_percentage: improvementPercentage.toFixed(1),
         activity_type: newActivity.activity_type,
-        distance: newActivity.distance,
-        old_pace: bestPreviousPace,
-        new_pace: newPace,
-        improvement_percent: improvementPercent.toFixed(1)
+        distance: newActivity.distance
       }
     };
   }
@@ -117,34 +124,37 @@ export function checkForPersonalBest(
  * @param activities Array of all user activities 
  * @returns Array of earned milestone achievements
  */
-export function checkForCumulativeAchievements(activities: Activity[]): Achievement[] {
+export function checkForCumulativeAchievements(activities: any[]): Achievement[] {
+  const achievements: Achievement[] = [];
+  
   // Calculate total distance
-  const totalDistance = activities.reduce((sum, activity) => sum + activity.distance, 0);
+  const totalDistance = activities.reduce(
+    (sum, activity) => sum + (activity.distance || 0), 
+    0
+  ) / 1000; // Convert to kilometers
   
-  // Find eligible milestones
-  const earnedAchievements: Achievement[] = [];
-  
+  // Check which milestones have been achieved
   for (const milestone of distanceMilestones) {
     if (totalDistance >= milestone.distance) {
-      earnedAchievements.push({
-        id: 0, // Will be set by backend
-        user_id: activities[0]?.user_id || 0,
+      achievements.push({
+        id: 0, // Will be assigned by server
+        user_id: activities[0]?.user_id,
         title: milestone.title,
         description: milestone.description,
-        achievement_type: "milestone",
+        achievement_type: 'milestone',
         earned_at: new Date(),
         times_earned: 1,
         viewed: false,
         progress: {
           current: totalDistance,
           target: milestone.distance,
-          unit: "km"
+          unit: 'km'
         }
       });
     }
   }
   
-  return earnedAchievements;
+  return achievements;
 }
 
 /**
@@ -152,131 +162,113 @@ export function checkForCumulativeAchievements(activities: Activity[]): Achievem
  * @param activities Array of all user activities sorted by date
  * @returns Array of earned streak achievements
  */
-export function checkForStreakAchievements(activities: Activity[]): Achievement[] {
-  if (!activities.length) return [];
+export function checkForStreakAchievements(activities: any[]): Achievement[] {
+  const achievements: Achievement[] = [];
   
-  // Sort activities by date (newest first)
-  const sortedActivities = [...activities].sort((a, b) => 
-    new Date(b.activity_date).getTime() - new Date(a.activity_date).getTime()
-  );
+  if (!activities.length) return achievements;
+  
+  // Group activities by date
+  const activitiesByDate = new Map<string, any[]>();
+  
+  activities.forEach(activity => {
+    const date = new Date(activity.activity_date).toISOString().split('T')[0];
+    if (!activitiesByDate.has(date)) {
+      activitiesByDate.set(date, []);
+    }
+    activitiesByDate.get(date)?.push(activity);
+  });
+  
+  // Get unique dates with activities
+  const dates = Array.from(activitiesByDate.keys()).sort();
   
   // Calculate current streak
   let currentStreak = 1;
-  let lastDate = new Date(sortedActivities[0].activity_date);
+  let maxStreak = 1;
   
-  // Group activities by date (to handle multiple activities on same day)
-  const activityDates = new Set<string>();
-  sortedActivities.forEach(activity => {
-    activityDates.add(activity.activity_date.substring(0, 10)); // Get YYYY-MM-DD part
-  });
-  
-  // Convert to array and sort
-  const dates = Array.from(activityDates).sort().reverse(); // Newest first
-  
-  // Calculate streak
   for (let i = 1; i < dates.length; i++) {
-    const currentDate = new Date(dates[i-1]);
-    const prevDate = new Date(dates[i]);
+    const prevDate = new Date(dates[i - 1]);
+    const currDate = new Date(dates[i]);
     
     // Check if dates are consecutive
-    const diffTime = Math.abs(currentDate.getTime() - prevDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffDays === 1) {
       currentStreak++;
+      maxStreak = Math.max(maxStreak, currentStreak);
     } else {
-      break; // Streak broken
+      currentStreak = 1;
     }
   }
   
-  // Check if any streak thresholds were met
-  const earnedAchievements: Achievement[] = [];
-  
+  // Check which streak thresholds have been reached
   for (const threshold of streakThresholds) {
-    if (currentStreak >= threshold.days) {
-      earnedAchievements.push({
-        id: 0, // Will be set by backend
-        user_id: activities[0]?.user_id || 0,
+    if (maxStreak >= threshold.days) {
+      achievements.push({
+        id: 0, // Will be assigned by server
+        user_id: activities[0]?.user_id,
         title: threshold.title,
         description: threshold.description,
-        achievement_type: "streak",
+        achievement_type: 'streak',
         earned_at: new Date(),
         times_earned: 1,
         viewed: false,
         progress: {
-          current: currentStreak,
+          current: maxStreak,
           target: threshold.days,
-          unit: "days"
+          unit: 'days'
         }
       });
     }
   }
   
-  return earnedAchievements;
+  return achievements;
 }
 
 /**
  * Create confetti animation to celebrate achievement
  */
 export function celebrateWithConfetti() {
-  // Simple implementation using DOM elements
-  const confettiContainer = document.createElement('div');
-  confettiContainer.style.position = 'fixed';
-  confettiContainer.style.top = '0';
-  confettiContainer.style.left = '0';
-  confettiContainer.style.width = '100vw';
-  confettiContainer.style.height = '100vh';
-  confettiContainer.style.pointerEvents = 'none';
-  confettiContainer.style.zIndex = '9999';
-  document.body.appendChild(confettiContainer);
-  
-  // Create confetti pieces
-  const colors = ['#2563eb', '#16a34a', '#ef4444', '#eab308', '#8b5cf6'];
-  const confettiCount = 150;
-  
-  for (let i = 0; i < confettiCount; i++) {
-    const confetti = document.createElement('div');
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Random styles for variety
-    confetti.style.position = 'absolute';
-    confetti.style.width = `${Math.random() * 10 + 5}px`;
-    confetti.style.height = `${Math.random() * 5 + 5}px`;
-    confetti.style.backgroundColor = color;
-    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
-    confetti.style.top = '-20px';
-    confetti.style.left = `${Math.random() * 100}vw`;
-    confetti.style.opacity = '1';
-    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-    
-    confettiContainer.appendChild(confetti);
-    
-    // Animate confetti falling with CSS
-    const duration = Math.random() * 3 + 2; // 2-5 seconds
-    const horizontalMovement = (Math.random() - 0.5) * 100; // -50px to 50px
-    
-    confetti.animate(
-      [
-        { transform: `translateY(0) translateX(0) rotate(0deg)`, opacity: 1 },
-        { transform: `translateY(70vh) translateX(${horizontalMovement}px) rotate(${Math.random() * 360}deg)`, opacity: 0.7 },
-        { transform: `translateY(100vh) translateX(${horizontalMovement * 2}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
-      ],
-      {
-        duration: duration * 1000,
-        easing: 'cubic-bezier(.21,.98,.6,.94)'
-      }
-    );
-    
-    // Remove confetti after animation
-    setTimeout(() => {
-      confetti.remove();
-      
-      // Remove container when all confetti are gone
-      if (i === confettiCount - 1) {
-        setTimeout(() => {
-          confettiContainer.remove();
-        }, duration * 1000);
-      }
-    }, duration * 1000);
+  // Default to center if canvas-confetti can't determine window size
+  const defaults = {
+    origin: { y: 0.7 },
+    zIndex: 9999
+  };
+
+  // Fire confetti from left and right sides
+  function fire(particleRatio: number, opts: any) {
+    confetti({
+      ...defaults,
+      ...opts,
+      particleCount: Math.floor(200 * particleRatio)
+    });
   }
+
+  // Rainbow confetti
+  fire(0.25, {
+    spread: 26,
+    startVelocity: 55,
+    origin: { x: 0.2 }
+  });
+  fire(0.2, {
+    spread: 60,
+    origin: { x: 0.8 }
+  });
+  fire(0.35, {
+    spread: 100,
+    decay: 0.91,
+    scalar: 0.8,
+    origin: { x: 0.5 }
+  });
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 25,
+    decay: 0.92,
+    scalar: 1.2,
+    origin: { x: 0.3 }
+  });
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 45,
+    origin: { x: 0.7 }
+  });
 }
