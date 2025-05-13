@@ -2,13 +2,18 @@ import {
   users, groups, group_members, buddies, challenges, challenge_participants, 
   achievements, user_achievements, nutrition_logs, coaches, coaching_sessions,
   subscription_plans, integration_connections, health_metrics,
+  onboarding_status, fitness_goals, user_experience, training_preferences,
   type User, type InsertUser, type Group, type InsertGroup, 
   type GroupMember, type InsertGroupMember, type Buddy, type InsertBuddy,
   type Challenge, type InsertChallenge, type NutritionLog, type InsertNutritionLog, 
   type Coach, type InsertCoach, type CoachingSession, type InsertCoachingSession,
   type SubscriptionPlan, type InsertSubscriptionPlan,
   type IntegrationConnection, type InsertIntegrationConnection,
-  type HealthMetric, type InsertHealthMetric
+  type HealthMetric, type InsertHealthMetric,
+  type OnboardingStatus, type InsertOnboardingStatus,
+  type FitnessGoal, type InsertFitnessGoal,
+  type UserExperience, type InsertUserExperience,
+  type TrainingPreference, type InsertTrainingPreference
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, sql, asc, desc, gte, lte } from "drizzle-orm";
@@ -104,6 +109,26 @@ export interface IStorage {
       endDate?: Date 
     }
   ): Promise<User>;
+  
+  // Onboarding
+  getOnboardingStatus(userId: number): Promise<OnboardingStatus | undefined>;
+  createOnboardingStatus(data: InsertOnboardingStatus): Promise<OnboardingStatus>;
+  updateOnboardingStatus(userId: number, data: Partial<OnboardingStatus>): Promise<OnboardingStatus>;
+  
+  // Fitness goals
+  getFitnessGoals(userId: number): Promise<FitnessGoal[]>;
+  createFitnessGoal(data: InsertFitnessGoal): Promise<FitnessGoal>;
+  updateFitnessGoal(id: number, data: Partial<FitnessGoal>): Promise<FitnessGoal>;
+  
+  // User experience
+  getUserExperience(userId: number): Promise<UserExperience | undefined>;
+  createUserExperience(data: InsertUserExperience): Promise<UserExperience>;
+  updateUserExperience(id: number, data: Partial<UserExperience>): Promise<UserExperience>;
+  
+  // Training preferences
+  getTrainingPreferences(userId: number): Promise<TrainingPreference | undefined>;
+  createTrainingPreferences(data: InsertTrainingPreference): Promise<TrainingPreference>;
+  updateTrainingPreferences(id: number, data: Partial<TrainingPreference>): Promise<TrainingPreference>;
   
   sessionStore: session.SessionStore;
 }

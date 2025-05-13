@@ -575,6 +575,30 @@ export const insertNutritionPreferenceSchema = createInsertSchema(nutrition_pref
   updated_at: true,
 });
 
+// Onboarding schema inserts
+export const insertOnboardingStatusSchema = createInsertSchema(onboarding_status).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertFitnessGoalSchema = createInsertSchema(fitness_goals).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertUserExperienceSchema = createInsertSchema(user_experience).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertTrainingPreferencesSchema = createInsertSchema(training_preferences).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -624,3 +648,16 @@ export type InsertMealFoodItem = z.infer<typeof insertMealFoodItemSchema>;
 
 export type NutritionPreference = typeof nutrition_preferences.$inferSelect;
 export type InsertNutritionPreference = z.infer<typeof insertNutritionPreferenceSchema>;
+
+// Onboarding types
+export type OnboardingStatus = typeof onboarding_status.$inferSelect;
+export type InsertOnboardingStatus = z.infer<typeof insertOnboardingStatusSchema>;
+
+export type FitnessGoal = typeof fitness_goals.$inferSelect;
+export type InsertFitnessGoal = z.infer<typeof insertFitnessGoalSchema>;
+
+export type UserExperience = typeof user_experience.$inferSelect;
+export type InsertUserExperience = z.infer<typeof insertUserExperienceSchema>;
+
+export type TrainingPreference = typeof training_preferences.$inferSelect;
+export type InsertTrainingPreference = z.infer<typeof insertTrainingPreferencesSchema>;
