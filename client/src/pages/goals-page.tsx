@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { GoalAchievementDemo } from "@/components/goals/goal-achievement-demo";
+import { TestAchievement } from "@/components/goals/test-achievement";
 import {
   Card,
   CardContent,
@@ -366,6 +367,10 @@ export default function GoalsPage() {
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Completed
               </TabsTrigger>
+              <TabsTrigger value="achievements" className="flex items-center">
+                <Award className="mr-2 h-4 w-4" />
+                Achievements
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -517,6 +522,22 @@ export default function GoalsPage() {
                 ))}
               </div>
             )}
+          </TabsContent>
+          
+          <TabsContent value="achievements">
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Achievement Test Interface</CardTitle>
+                  <CardDescription>
+                    Use this interface to test the achievement popup functionality
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TestAchievement />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
         {/* Goal Detail Dialog */}
