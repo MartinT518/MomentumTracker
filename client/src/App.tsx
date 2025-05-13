@@ -18,6 +18,7 @@ import SubscriptionPage from "@/pages/subscription-page";
 import StrengthExercisesPage from "@/pages/strength-exercises-page";
 import HealthMetricsPage from "@/pages/health-metrics-page";
 import NutritionPage from "@/pages/nutrition-page";
+import OnboardingPage from "@/pages/onboarding-page";
 import IntegrationCallbackPage from "@/pages/integration-callback-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
+      <ProtectedRoute path="/onboarding" component={OnboardingPage} />
       <ProtectedRoute path="/training-plan" component={TrainingPlanPage} />
       <ProtectedRoute path="/activities" component={ActivitiesPage} />
       <ProtectedRoute path="/goals" component={GoalsPage} />
