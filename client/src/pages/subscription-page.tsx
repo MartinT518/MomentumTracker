@@ -47,52 +47,93 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
     }
 
     // Check URL for potential payment result from redirect
-    const clientSecret = new URLSearchParams(window.location.search).get(
+    const paymentIntentSecret = new URLSearchParams(window.location.search).get(
       "payment_intent_client_secret"
     );
     
-    if (!clientSecret) {
-      return;
-    }
+    const setupIntentSecret = new URLSearchParams(window.location.search).get(
+      "setup_intent_client_secret"
+    );
     
-    console.log("Found payment intent client secret in URL");
-    
-    stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
-      console.log("Retrieved payment intent:", paymentIntent?.status);
+    if (paymentIntentSecret) {
+      console.log("Found payment intent client secret in URL");
       
-      switch (paymentIntent?.status) {
-        case "succeeded":
-          toast({
-            title: "Payment Successful",
-            description: "Thank you for your subscription!",
-            variant: "default",
-          });
-          break;
-        case "processing":
-          toast({
-            title: "Payment Processing",
-            description: "Your payment is processing.",
-            variant: "default",
-          });
-          break;
-        case "requires_payment_method":
-          setPaymentError("Your payment was not successful, please try again.");
-          toast({
-            title: "Payment Failed",
-            description: "Your payment method was declined. Please try again with a different payment method.",
-            variant: "destructive",
-          });
-          break;
-        default:
-          setPaymentError("Something went wrong with your payment.");
-          toast({
-            title: "Payment Error",
-            description: "Something went wrong with your payment. Please try again.",
-            variant: "destructive",
-          });
-          break;
-      }
-    });
+      stripe.retrievePaymentIntent(paymentIntentSecret).then(({ paymentIntent }) => {
+        console.log("Retrieved payment intent:", paymentIntent?.status);
+        
+        switch (paymentIntent?.status) {
+          case "succeeded":
+            toast({
+              title: "Payment Successful",
+              description: "Thank you for your subscription!",
+              variant: "default",
+            });
+            break;
+          case "processing":
+            toast({
+              title: "Payment Processing",
+              description: "Your payment is processing.",
+              variant: "default",
+            });
+            break;
+          case "requires_payment_method":
+            setPaymentError("Your payment was not successful, please try again.");
+            toast({
+              title: "Payment Failed",
+              description: "Your payment method was declined. Please try again with a different payment method.",
+              variant: "destructive",
+            });
+            break;
+          default:
+            setPaymentError("Something went wrong with your payment.");
+            toast({
+              title: "Payment Error",
+              description: "Something went wrong with your payment. Please try again.",
+              variant: "destructive",
+            });
+            break;
+        }
+      });
+    } else if (setupIntentSecret) {
+      console.log("Found setup intent client secret in URL");
+      
+      stripe.retrieveSetupIntent(setupIntentSecret).then(({ setupIntent }) => {
+        console.log("Retrieved setup intent:", setupIntent?.status);
+        
+        switch (setupIntent?.status) {
+          case "succeeded":
+            toast({
+              title: "Setup Successful",
+              description: "Your payment method has been saved and your subscription is now active!",
+              variant: "default",
+            });
+            break;
+          case "processing":
+            toast({
+              title: "Setup Processing",
+              description: "Your payment method is being processed.",
+              variant: "default",
+            });
+            break;
+          case "requires_payment_method":
+            setPaymentError("Setting up your payment method failed, please try again.");
+            toast({
+              title: "Setup Failed",
+              description: "Your payment method setup failed. Please try again with a different payment method.",
+              variant: "destructive",
+            });
+            break;
+          default:
+            setPaymentError("Something went wrong with setting up your payment method.");
+            toast({
+              title: "Setup Error",
+              description: "Something went wrong with setting up your payment method. Please try again.",
+              variant: "destructive",
+            });
+            break;
+        }
+      });
+    }
   }, [stripe, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,33 +150,54 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: Plan | null }) => {
 
     setIsProcessing(true);
     setPaymentError(null);
-
+    
     try {
-      console.log("Confirming payment with Stripe...");
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/subscription/success`,
-        },
-      });
+      // First, determine if this is a PaymentIntent or SetupIntent based on client secret format
+      // SetupIntents have _seti_ in their client secret, PaymentIntents have _pi_
+      const isSetupIntent = window.location.href.includes('setup_intent') || 
+                            (clientSecret && clientSecret.includes('_seti_'));
+      
+      console.log(`Confirming ${isSetupIntent ? 'setup' : 'payment'} with Stripe...`);
+      
+      let error;
+      
+      if (isSetupIntent) {
+        // Handle SetupIntent confirmation
+        const result = await stripe.confirmSetup({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/subscription/success`,
+          },
+        });
+        error = result.error;
+      } else {
+        // Handle PaymentIntent confirmation
+        const result = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/subscription/success`,
+          },
+        });
+        error = result.error;
+      }
 
       if (error) {
-        console.error("Payment confirmation error:", error);
+        console.error(`${isSetupIntent ? 'Setup' : 'Payment'} confirmation error:`, error);
         setPaymentError(error.message || "Unknown error");
         toast({
-          title: "Payment Failed",
+          title: `${isSetupIntent ? 'Setup' : 'Payment'} Failed`,
           description: error.message,
           variant: "destructive",
         });
       } else {
-        console.log("Payment confirmation initiated successfully");
+        console.log(`${isSetupIntent ? 'Setup' : 'Payment'} confirmation initiated successfully`);
         toast({
-          title: "Payment Processing",
+          title: `${isSetupIntent ? 'Setup' : 'Payment'} Processing`,
           description: "Your subscription is being processed. You'll be redirected shortly.",
         });
       }
     } catch (err: any) {
-      console.error("Payment exception:", err);
+      console.error("Payment processing exception:", err);
       setPaymentError(err.message || "An unexpected error occurred");
       toast({
         title: "Payment Error",
