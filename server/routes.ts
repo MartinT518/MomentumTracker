@@ -4437,6 +4437,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch training preferences' });
     }
   });
+  
+  // Update onboarding preferences (for updating from settings page)
+  app.put('/api/onboarding/update-preferences', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { training_preferences: trainingPrefs, experience, fitness_goals: goals } = req.body;
+      
+      // Update training preferences
+      if (trainingPrefs) {
+        const existingPrefs = await db.query.training_preferences.findFirst({
+          where: eq(training_preferences.user_id, userId)
+        });
+        
+        if (existingPrefs) {
+          await db.update(training_preferences)
+            .set({
+              ...trainingPrefs,
+              updated_at: new Date()
+            })
+            .where(eq(training_preferences.user_id, userId));
+        } else {
+          await db.insert(training_preferences).values({
+            user_id: userId,
+            ...trainingPrefs,
+            created_at: new Date(),
+            updated_at: new Date()
+          });
+        }
+      }
+      
+      // Update experience level
+      if (experience) {
+        const existingExp = await db.query.experience_levels.findFirst({
+          where: eq(experience_levels.user_id, userId)
+        });
+        
+        if (existingExp) {
+          await db.update(experience_levels)
+            .set({
+              ...experience,
+              updated_at: new Date()
+            })
+            .where(eq(experience_levels.user_id, userId));
+        } else {
+          await db.insert(experience_levels).values({
+            user_id: userId,
+            ...experience,
+            created_at: new Date(),
+            updated_at: new Date()
+          });
+        }
+      }
+      
+      // Update fitness goals
+      if (goals) {
+        const existingGoals = await db.query.fitness_goals.findFirst({
+          where: eq(fitness_goals.user_id, userId)
+        });
+        
+        if (existingGoals) {
+          await db.update(fitness_goals)
+            .set({
+              ...goals,
+              updated_at: new Date()
+            })
+            .where(eq(fitness_goals.user_id, userId));
+        } else {
+          await db.insert(fitness_goals).values({
+            user_id: userId,
+            ...goals,
+            created_at: new Date(),
+            updated_at: new Date()
+          });
+        }
+      }
+      
+      res.status(200).json({ message: 'Preferences updated successfully' });
+    } catch (error) {
+      console.error('Error updating preferences:', error);
+      res.status(500).json({ message: 'Failed to update preferences' });
+    }
+  });
 
   app.post('/api/onboarding/training-preferences', requireAuth, async (req, res) => {
     try {
