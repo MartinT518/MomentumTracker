@@ -2547,22 +2547,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create a payment intent if we don't have a client secret yet
       if (!clientSecret) {
-        console.log("No client secret found, creating a payment intent");
+        console.log("No client secret found, creating a setup intent instead");
         try {
-          const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(Number(subscriptionPlan.price) * 100), // Convert to cents
-            currency: 'usd',
+          // For subscriptions, a SetupIntent is more appropriate than a PaymentIntent
+          // when we don't have a payment_intent from the subscription process
+          const setupIntent = await stripe.setupIntents.create({
             customer: user.stripe_customer_id!,
-            setup_future_usage: 'off_session',
+            payment_method_types: ['card'],
+            usage: 'off_session',
             metadata: {
               subscription_id: subscription.id,
             },
           });
           
-          clientSecret = paymentIntent.client_secret;
-          console.log("Created new payment intent with client secret");
-        } catch (piError) {
-          console.error("Error creating payment intent:", piError);
+          clientSecret = setupIntent.client_secret;
+          console.log("Created setup intent with client secret:", setupIntent.id);
+          
+          // Associate the setup intent with the subscription
+          await stripe.subscriptions.update(subscription.id, {
+            expand: ['latest_invoice.payment_intent'],
+            metadata: {
+              setup_intent_id: setupIntent.id
+            }
+          });
+        } catch (siError) {
+          console.error("Error creating setup intent:", siError);
+          
+          // Fallback to regular payment intent if setup intent fails
+          try {
+            const paymentIntent = await stripe.paymentIntents.create({
+              amount: Math.round(Number(subscriptionPlan.price) * 100), // Convert to cents
+              currency: 'usd',
+              customer: user.stripe_customer_id!,
+              setup_future_usage: 'off_session',
+              metadata: {
+                subscription_id: subscription.id,
+              },
+            });
+            
+            clientSecret = paymentIntent.client_secret;
+            console.log("Created fallback payment intent with client secret:", paymentIntent.id);
+          } catch (piError) {
+            console.error("Error creating fallback payment intent:", piError);
+          }
         }
       }
       
@@ -2619,8 +2646,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: subscription.status,
             endDate: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : undefined
           });
+          console.log(`Updated subscription status to ${subscription.status} for user ${user.id}`);
         }
         break;
+        
+      case 'invoice.payment_succeeded':
+        const invoice = event.data.object as Stripe.Invoice;
+        
+        if (invoice.subscription && typeof invoice.subscription === 'string') {
+          try {
+            // Find the user with this subscription
+            const [userRow] = await db
+              .select()
+              .from(users)
+              .where(eq(users.stripe_subscription_id, invoice.subscription));
+            
+            if (userRow) {
+              console.log(`Processing successful payment for user ${userRow.id}`);
+              
+              // Get subscription details to calculate correct end date
+              const subDetails = await stripe.subscriptions.retrieve(invoice.subscription);
+              let endDate = new Date();
+              
+              if (subDetails.current_period_end) {
+                // Use the period end from subscription
+                endDate = new Date(subDetails.current_period_end * 1000);
+              } else {
+                // Calculate based on interval
+                const interval = subDetails.items.data[0]?.price?.recurring?.interval;
+                if (interval === 'month') {
+                  endDate = new Date(endDate.setMonth(endDate.getMonth() + 1));
+                } else if (interval === 'year') {
+                  endDate = new Date(endDate.setFullYear(endDate.getFullYear() + 1));
+                } else {
+                  // Default to 30 days
+                  endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                }
+              }
+              
+              // Update the subscription status to active with end date
+              await storage.updateUserSubscription(userRow.id, {
+                status: 'active',
+                endDate: endDate
+              });
+              console.log(`Updated subscription to active until ${endDate.toISOString()} for user ${userRow.id}`);
+            }
+          } catch (error) {
+            console.error('Error processing invoice payment success:', error);
+          }
+        }
+        break;
+        
+      case 'invoice.payment_failed':
+        const failedInvoice = event.data.object as Stripe.Invoice;
+        
+        if (failedInvoice.subscription && typeof failedInvoice.subscription === 'string') {
+          try {
+            // Find the user with this subscription
+            const [userRow] = await db
+              .select()
+              .from(users)
+              .where(eq(users.stripe_subscription_id, failedInvoice.subscription));
+            
+            if (userRow) {
+              console.log(`Updating subscription status to 'past_due' for user ${userRow.id}`);
+              
+              // Update the subscription status to past_due
+              await storage.updateUserSubscription(userRow.id, {
+                status: 'past_due'
+              });
+            }
+          } catch (error) {
+            console.error('Error processing invoice payment failure:', error);
+          }
+        }
+        break;
+        
+      case 'setup_intent.succeeded':
+        const setupIntent = event.data.object as Stripe.SetupIntent;
+        
+        try {
+          // Check for subscription ID in metadata
+          const subscriptionId = setupIntent.metadata?.subscription_id;
+          
+          if (subscriptionId) {
+            console.log(`Setup intent succeeded for subscription ${subscriptionId}`);
+            
+            // Get the payment method that was set up
+            const paymentMethodId = setupIntent.payment_method;
+            
+            if (paymentMethodId && typeof paymentMethodId === 'string') {
+              // Attach payment method to subscription
+              await stripe.subscriptions.update(subscriptionId, {
+                default_payment_method: paymentMethodId,
+              });
+              
+              // Find the user with this subscription
+              const [userRow] = await db
+                .select()
+                .from(users)
+                .where(eq(users.stripe_subscription_id, subscriptionId));
+              
+              if (userRow) {
+                console.log(`Payment method set up for user ${userRow.id}`);
+                
+                // Update subscription to active
+                await storage.updateUserSubscription(userRow.id, {
+                  status: 'active'
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error processing setup intent success:', error);
+        }
+        break;
+        
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
