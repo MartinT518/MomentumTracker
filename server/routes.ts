@@ -1124,6 +1124,31 @@ import { setupDevSubscription } from "./dev-subscription";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup developer endpoints for testing
   setupDevSubscription(app);
+  
+  // Endpoint for user subscription status
+  app.get("/api/user/subscription", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // Get the current user
+      const user = req.user;
+      
+      // Format subscription data with isActive flag for frontend
+      const subscriptionData = {
+        status: user.subscription_status,
+        endDate: user.subscription_end_date,
+        planId: user.subscription_plan_id,
+        stripeSubscriptionId: user.stripe_subscription_id,
+        isActive: user.subscription_status === 'active'
+      };
+      
+      console.log("Subscription data:", subscriptionData);
+      res.json(subscriptionData);
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ error: "Failed to fetch subscription status" });
+    }
+  });
   // Set up coaching routes (annual subscribers only)
   app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
     try {
@@ -3701,7 +3726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Generate AI meal plan recommendations
-  app.post("/api/nutrition/generate", checkAuth, /* isSubscribed */ async (req, res) => {
+  app.post("/api/nutrition/generate", checkAuth, isSubscribed, async (req, res) => {
     try {
       const deepSeekEnabled = process.env.DEEPSEEK_API_KEY ? true : false;
       
