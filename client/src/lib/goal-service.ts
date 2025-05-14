@@ -1,4 +1,10 @@
 import { apiRequest } from './queryClient';
+import { 
+  calculateRaceProgress,
+  formatTimeImprovement,
+  predictTime,
+  calculatePace
+} from './pace-calculator';
 
 export interface GoalProgress {
   currentProgress: number;
