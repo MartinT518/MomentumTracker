@@ -225,7 +225,7 @@ interface SearchDialogProps {
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>(searchData);
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!query) {
@@ -233,28 +233,37 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       return;
     }
 
-    const queryLower = query.toLowerCase();
+    const queryLower = query.toLowerCase().trim();
+    const queryTerms = queryLower.split(/\s+/); // Split by whitespace to search for multiple terms
     
     const filtered = searchData.filter(item => {
-      // Convert all searchable fields to lowercase for case-insensitive search
-      const searchTerms = [
+      // Create an array of all searchable content, lowercased
+      const itemSearchContent = [
         item.title.toLowerCase(),
         item.description.toLowerCase(),
         item.category.toLowerCase(),
         ...(item.keywords?.map(keyword => keyword.toLowerCase()) || [])
       ];
       
-      // Check if any search term includes the query
-      return searchTerms.some(term => term.includes(queryLower));
+      // Join all content into a single string for more comprehensive matching
+      const fullSearchText = itemSearchContent.join(' ');
+      
+      // Item matches if ALL query terms are found in any of the searchable content
+      return queryTerms.every(term => fullSearchText.includes(term));
     });
 
     setResults(filtered);
   }, [query]);
 
   const handleSelect = (item: SearchResult) => {
-    // Use window.location.href for more reliable navigation
-    window.location.href = item.url;
+    // Close the dialog first
     onOpenChange(false);
+    
+    // Short delay to ensure dialog closes before navigation
+    setTimeout(() => {
+      // Use the wouter location hook for navigation
+      setLocation(item.url);
+    }, 10);
   };
 
   const groupedResults = results.reduce((acc, item) => {
@@ -270,10 +279,11 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       open={open} 
       onOpenChange={onOpenChange}
     >
-      <Command.DialogTitle className="sr-only">Search MomentumRun</Command.DialogTitle>
-      <Command.DialogDescription className="sr-only">
+      {/* Hidden title/description for accessibility */}
+      <div className="sr-only" id="search-dialog-title">Search MomentumRun</div>
+      <div className="sr-only" id="search-dialog-description">
         Type to search for pages, features, or training resources
-      </Command.DialogDescription>
+      </div>
       <CommandInput 
         placeholder="Search for pages, features, or settings..." 
         value={query}
