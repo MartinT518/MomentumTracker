@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { storage } from "./storage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { users } from "@shared/schema";
 
 export function setupDevSubscription(app: any) {
   // Development only endpoint to set subscription status for any user by ID
@@ -20,13 +23,13 @@ export function setupDevSubscription(app: any) {
       
       // Update subscription plan ID if available in the storage interface
       try {
-        const [user] = await storage.db.select().from(storage.users).where(storage.eq(storage.users.id, userId));
+        const [user] = await db.select().from(users).where(eq(users.id, userId));
         
         if (user) {
           // Set plan ID to 2 (Annual Plan)
-          await storage.db.update(storage.users)
+          await db.update(users)
             .set({ subscription_plan_id: 2 })
-            .where(storage.eq(storage.users.id, userId));
+            .where(eq(users.id, userId));
         }
       } catch (planError) {
         console.log("Could not update plan ID, but subscription is still active");
