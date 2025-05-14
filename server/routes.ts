@@ -3781,10 +3781,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ${recoverySituation ? `Recovery Situation: ${recoverySituation}` : ""}
       
       Dietary Preferences:
-      ${userPreferences.dietaryRestrictions ? `Restrictions: ${userPreferences.dietaryRestrictions.join(", ")}` : "No specific dietary restrictions"}
-      ${userPreferences.allergies ? `Allergies: ${userPreferences.allergies.join(", ")}` : "No allergies"}
-      ${userPreferences.dislikedFoods ? `Dislikes: ${userPreferences.dislikedFoods.join(", ")}` : ""}
-      ${userPreferences.favoriteFoods ? `Favorites: ${userPreferences.favoriteFoods.join(", ")}` : ""}
+      ${userPreferences.dietaryRestrictions ? `Restrictions: ${Array.isArray(userPreferences.dietaryRestrictions) ? userPreferences.dietaryRestrictions.join(", ") : userPreferences.dietaryRestrictions}` : "No specific dietary restrictions"}
+      ${userPreferences.allergies ? `Allergies: ${Array.isArray(userPreferences.allergies) ? userPreferences.allergies.join(", ") : userPreferences.allergies}` : "No allergies"}
+      ${userPreferences.dislikedFoods ? `Dislikes: ${Array.isArray(userPreferences.dislikedFoods) ? userPreferences.dislikedFoods.join(", ") : userPreferences.dislikedFoods}` : ""}
+      ${userPreferences.favoriteFoods ? `Favorites: ${Array.isArray(userPreferences.favoriteFoods) ? userPreferences.favoriteFoods.join(", ") : userPreferences.favoriteFoods}` : ""}
       
       Nutrition Targets:
       ${userPreferences.calorieGoal ? `Calories: ${userPreferences.calorieGoal} calories` : ""}
