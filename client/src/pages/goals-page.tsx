@@ -263,24 +263,23 @@ export default function GoalsPage() {
     try {
       // Prepare the data based on the goal type
       let goalData: any = {
-        primary_goal: newGoalType,
-        goal_date: targetDate?.toISOString(),
+        goal_type: newGoalType,
+        target_date: targetDate?.toISOString(),
       };
       
       if (newGoalType === "race") {
         goalData = {
           ...goalData,
-          goal_event_type: raceDistance,
-          goal_time: targetTime,
-          has_target_race: true,
+          race_distance: raceDistance,
+          target_time: targetTime,
           experience_level: experience,
         };
       } else if (newGoalType === "weight") {
+        const targetWeight = (parseFloat(startingWeight) - parseFloat(weightLossAmount)).toString();
         goalData = {
           ...goalData,
-          weight_goal: "weight_loss",
-          current_weight: startingWeight,
-          target_weight: (parseFloat(startingWeight) - parseFloat(weightLossAmount)).toString(),
+          target_value: targetWeight,
+          target_unit: "lbs",
         };
       }
       
