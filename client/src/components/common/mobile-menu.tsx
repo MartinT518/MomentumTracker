@@ -18,7 +18,7 @@ import {
   Search,
   CreditCard,
 } from "lucide-react";
-import { SearchButton } from "@/components/common/search-dialog";
+import { SearchButton } from "@/components/common/search-dialog-fixed";
 
 export function MobileMenu() {
   const [location] = useLocation();

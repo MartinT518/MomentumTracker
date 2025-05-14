@@ -16,7 +16,7 @@ import {
   Apple,
   Search,
 } from "lucide-react";
-import { SearchButton } from "@/components/common/search-dialog";
+import { SearchButton } from "@/components/common/search-dialog-fixed";
 
 interface SidebarProps {
   className?: string;
