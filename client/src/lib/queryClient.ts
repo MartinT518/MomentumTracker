@@ -41,6 +41,26 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Helper function to check subscription status directly
+export async function checkSubscriptionStatus(): Promise<boolean> {
+  try {
+    // Try to access the subscription status endpoint
+    const response = await fetch('/api/user/subscription', {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      return false;
+    }
+    
+    const data = await response.json();
+    return data.status === 'active';
+  } catch (error) {
+    console.error('Error checking subscription status:', error);
+    return false;
+  }
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
