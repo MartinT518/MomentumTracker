@@ -107,6 +107,9 @@ export default function HealthMetricsPage() {
   const { toast } = useToast();
   const [timeRange, setTimeRange] = useState("7days");
   const [addMetricOpen, setAddMetricOpen] = useState(false);
+  const [importGarminOpen, setImportGarminOpen] = useState(false);
+  const [garminConsentGiven, setGarminConsentGiven] = useState(false);
+  const [isImportingGarmin, setIsImportingGarmin] = useState(false);
 
   const getDateRange = () => {
     const end = endOfDay(new Date());
@@ -163,6 +166,34 @@ export default function HealthMetricsPage() {
         description: error.message || "An error occurred. Please try again.",
         variant: "destructive",
       });
+    },
+  });
+  
+  // Mutation for importing Garmin health data
+  const importGarminDataMutation = useMutation({
+    mutationFn: async () => {
+      setIsImportingGarmin(true);
+      const res = await apiRequest("POST", "/api/garmin/health-metrics/import", {
+        consent: garminConsentGiven
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Garmin data imported",
+        description: `Successfully imported ${data.count || 0} health metrics from Garmin.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/health-metrics"] });
+      setImportGarminOpen(false);
+      setIsImportingGarmin(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Import failed",
+        description: error.message || "Failed to import data from Garmin. Please try again.",
+        variant: "destructive",
+      });
+      setIsImportingGarmin(false);
     },
   });
 
