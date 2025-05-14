@@ -132,10 +132,11 @@ export function MobileMenu() {
       {/* Mobile Menu Panel */}
       <div 
         className={cn(
-          "fixed inset-y-0 left-0 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-30",
+          "fixed inset-y-0 left-0 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-30 flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
+        {/* Fixed Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <h1 className="text-xl font-bold font-heading text-neutral-darker">
             <span className="text-primary mr-2">Momentum</span>Run
@@ -148,34 +149,39 @@ export function MobileMenu() {
           </button>
         </div>
         
+        {/* Search Bar */}
         <div className="px-4 py-3 border-b border-gray-200">
           <SearchButton />
         </div>
 
-        <nav className="overflow-y-auto">
-          <ul className="mt-2">
-            {navItems.map((item) => (
-              <li key={item.title}>
-                <Link 
-                  href={item.href}
-                  onClick={closeMenu}
-                  className={cn(
-                    "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
-                    item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
-                  )}
-                >
-                  <item.icon className={cn(
-                    "h-5 w-5 mr-3 text-neutral-medium",
-                    item.active && "text-primary"
-                  )} />
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {/* Scrollable Navigation Section */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <nav className="overflow-y-auto flex-1 pb-4">
+            <ul className="mt-2">
+              {navItems.map((item) => (
+                <li key={item.title}>
+                  <Link 
+                    href={item.href}
+                    onClick={closeMenu}
+                    className={cn(
+                      "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
+                      item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-5 w-5 mr-3 text-neutral-medium",
+                      item.active && "text-primary"
+                    )} />
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
 
-        <div className="p-4 border-t border-gray-200 mt-4">
+        {/* Fixed Footer */}
+        <div className="p-4 border-t border-gray-200 bg-white">
           <button 
             onClick={handleLogout}
             disabled={logoutMutation.isPending}
