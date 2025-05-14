@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -35,8 +35,28 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Flag, TrendingUp, BarChart as BarChartIcon, PieChart as PieChartIcon, Activity, Award } from "lucide-react";
+import { 
+  Calendar, 
+  Clock, 
+  Flag, 
+  TrendingUp, 
+  BarChart as BarChartIcon, 
+  PieChart as PieChartIcon, 
+  Activity, 
+  Award, 
+  Loader2 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  getGoalProgressData, 
+  getGoalPaceData, 
+  getGoalComparisonData, 
+  getWeightProgressData,
+  GoalProgress,
+  GoalPaceData,
+  GoalComparisonData,
+  WeightProgressData
+} from "@/lib/goal-service";
 
 interface GoalVisualizationProps {
   goal: any;
@@ -47,9 +67,61 @@ interface GoalVisualizationProps {
 export function GoalVisualization({ goal, activities = [], className }: GoalVisualizationProps) {
   const [chartType, setChartType] = useState<"progress" | "pace" | "comparison" | "prediction">("progress");
   const [viewMode, setViewMode] = useState<"weekly" | "monthly">("weekly");
-
+  
+  // State for holding data from our service
+  const [loading, setLoading] = useState<boolean>(true);
+  const [progressData, setProgressData] = useState<GoalProgress | null>(null);
+  const [paceData, setPaceData] = useState<GoalPaceData | null>(null);
+  const [comparisonData, setComparisonData] = useState<GoalComparisonData | null>(null);
+  const [weightData, setWeightData] = useState<WeightProgressData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch data when component mounts or when goal/chart type changes
+  useEffect(() => {
+    async function fetchData() {
+      if (!goal || !goal.id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch progress data for all chart types
+        const progress = await getGoalProgressData(goal.id);
+        setProgressData(progress);
+        
+        // Fetch data specific to the current chart type
+        if (chartType === "pace" && goal.type === "race") {
+          const pace = await getGoalPaceData(goal.id);
+          setPaceData(pace);
+        } else if (chartType === "comparison") {
+          const comparison = await getGoalComparisonData(goal.id);
+          setComparisonData(comparison);
+        } else if (goal.type === "weight") {
+          const weight = await getWeightProgressData(goal.id);
+          setWeightData(weight);
+        }
+      } catch (err) {
+        console.error("Error fetching goal visualization data:", err);
+        setError("Failed to load goal data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, [goal, chartType]);
+  
   // Generate forecasted data based on goal progress and target date
   const generateForecastData = () => {
+    // If we have data from the service, use it
+    if (progressData && progressData.forecastData) {
+      return progressData.forecastData;
+    }
+    
+    // Otherwise, generate fallback data
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
     const totalDays = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -82,10 +154,14 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
   
   // Generate pace or performance data (for race goals)
   const generatePaceData = () => {
+    // If we have data from the service, use it
+    if (paceData && paceData.paceData) {
+      return paceData.paceData;
+    }
+    
     if (goal.type !== "race") return [];
     
-    // For demo purposes, generate some pace data
-    // In a real app, this would come from actual user activities
+    // Fallback pace data
     const paceImprovementData = [
       { date: "Jan", pace: 10.2, target: 9.5 },
       { date: "Feb", pace: 9.8, target: 9.3 },
@@ -101,9 +177,13 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
   
   // Generate comparison data (compare with similar goals by other users)
   const generateComparisonData = () => {
-    // For demo purposes, show how the user compares to others with similar goals
-    // In a real app, this would be calculated from actual user data
-    const comparisonData = [
+    // If we have data from the service, use it
+    if (comparisonData && comparisonData.comparisonData) {
+      return comparisonData.comparisonData;
+    }
+    
+    // Fallback comparison data
+    const fallbackData = [
       { name: "Week 1", you: 10, average: 8, top: 15 },
       { name: "Week 2", you: 18, average: 15, top: 22 },
       { name: "Week 3", you: 25, average: 22, top: 30 },
@@ -113,11 +193,16 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
       { name: "Current", you: goal.progress, average: 50, top: 65 },
     ];
     
-    return comparisonData;
+    return fallbackData;
   };
   
   // For weight loss goals, generate projection chart
   const generateWeightProjection = () => {
+    // If we have data from the service, use it
+    if (weightData && weightData.weightData) {
+      return weightData.weightData;
+    }
+    
     if (goal.type !== "weight") return [];
     
     const startingWeightNum = parseInt(goal.startingWeight.replace(" lbs", ""));
@@ -170,9 +255,19 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
   
   // Generate predicted achievement date based on current progress
   const generatePredictionData = () => {
+    // If we have data from the service, use it
+    if (progressData && progressData.forecastData) {
+      return progressData.forecastData;
+    }
+    
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
     const totalDays = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // For prediction tracking, we need to estimate progress per day
+    const startingWeight = goal.type === "weight" ? parseInt(goal.startingWeight.replace(" lbs", "")) : 0;
+    const currentWeight = goal.type === "weight" ? parseInt(goal.currentWeight.replace(" lbs", "")) : 0;
+    const targetWeight = goal.type === "weight" ? parseInt(goal.targetWeight.replace(" lbs", "")) : 0;
     
     // Calculate rate of progress
     const progressPerDay = goal.progress / (goal.type === "weight" 
@@ -387,7 +482,7 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
     );
   };
 
-  // If no goal is provided, return a loading or empty state
+  // If no goal is provided, return an empty state
   if (!goal) {
     return (
       <Card className={cn("w-full", className)}>
@@ -397,6 +492,40 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
         </CardHeader>
         <CardContent className="flex items-center justify-center min-h-[300px]">
           <div className="text-neutral-medium">No goal selected</div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Show loading state
+  if (loading) {
+    return (
+      <Card className={cn("w-full", className)}>
+        <CardHeader>
+          <CardTitle>Goal Visualization</CardTitle>
+          <CardDescription>Loading visualization data...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center min-h-[300px]">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <div className="text-neutral-medium">Loading goal data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Show error state if there was a problem loading data
+  if (error) {
+    return (
+      <Card className={cn("w-full", className)}>
+        <CardHeader>
+          <CardTitle>Goal Visualization</CardTitle>
+          <CardDescription>Error loading data</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center min-h-[300px]">
+          <div className="text-red-500 mb-4">Failed to load goal data</div>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
@@ -485,13 +614,90 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-neutral-50 rounded-lg p-3">
             <div className="text-sm text-neutral-500 mb-1">Current Progress</div>
-            <div className="font-semibold text-lg">{goal.progress}%</div>
+            <div className="font-semibold text-lg">
+              {progressData ? `${progressData.currentProgress}%` : `${goal.progress}%`}
+            </div>
           </div>
           
           <div className="bg-neutral-50 rounded-lg p-3">
             <div className="text-sm text-neutral-500 mb-1">Status</div>
-            <div className="font-semibold text-lg">{goal.status === "on-track" ? "On Track" : goal.status === "at-risk" ? "At Risk" : goal.status === "behind" ? "Behind" : goal.status === "achieved" ? "Achieved" : "Exceeded"}</div>
+            <div className="font-semibold text-lg">
+              {progressData ? 
+                (progressData.prediction.isOnTrack ? 
+                  <span className="flex items-center text-green-600">
+                    <TrendingUp className="w-4 h-4 mr-1.5" />
+                    On Track
+                  </span> : 
+                  <span className="flex items-center text-yellow-600">
+                    <Clock className="w-4 h-4 mr-1.5" />
+                    Behind Schedule
+                  </span>
+                ) :
+                (goal.status === "on-track" ? "On Track" : 
+                 goal.status === "at-risk" ? "At Risk" : 
+                 goal.status === "behind" ? "Behind" : 
+                 goal.status === "achieved" ? "Achieved" : "Exceeded")
+              }
+            </div>
           </div>
+          
+          <div className="bg-neutral-50 rounded-lg p-3">
+            <div className="text-sm text-neutral-500 mb-1">Estimated Completion</div>
+            <div className="font-semibold text-lg">
+              {progressData && progressData.prediction.estimatedCompletionDate ? 
+                new Date(progressData.prediction.estimatedCompletionDate).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                }) :
+                goal.targetDate
+              }
+            </div>
+            <div className="text-xs text-neutral-500 mt-1">
+              {progressData && progressData.prediction.daysAhead ? 
+                <span className="text-green-600">{progressData.prediction.daysAhead} days ahead</span> :
+                progressData && progressData.prediction.daysBehind ?
+                <span className="text-yellow-600">{progressData.prediction.daysBehind} days behind</span> :
+                "On schedule"
+              }
+            </div>
+          </div>
+          
+          {(chartType === "pace" && goal.type === "race" && paceData) && (
+            <div className="bg-neutral-50 rounded-lg p-3">
+              <div className="text-sm text-neutral-500 mb-1">Pace Improvement</div>
+              <div className="font-semibold text-lg">
+                {paceData.improvement.percentage > 0 ? 
+                  <span className="text-green-600">+{paceData.improvement.percentage}%</span> :
+                  <span className="text-red-600">{paceData.improvement.percentage}%</span>
+                }
+              </div>
+              <div className="text-xs text-neutral-500 mt-1">
+                {paceData.improvement.absolute > 0 ? 
+                  `${paceData.improvement.absolute} min/mile faster` :
+                  `${Math.abs(paceData.improvement.absolute)} min/mile slower`
+                }
+              </div>
+            </div>
+          )}
+          
+          {(chartType === "comparison" && comparisonData) && (
+            <div className="bg-neutral-50 rounded-lg p-3">
+              <div className="text-sm text-neutral-500 mb-1">User Ranking</div>
+              <div className="font-semibold text-lg">
+                {comparisonData.ranking.position || `${comparisonData.ranking.percentile}th percentile`}
+              </div>
+              <div className="text-xs text-neutral-500 mt-1">
+                {comparisonData.ranking.percentile > 75 ? 
+                  "Top performer" :
+                  comparisonData.ranking.percentile > 50 ?
+                  "Above average" :
+                  comparisonData.ranking.percentile > 25 ?
+                  "Average" :
+                  "Below average"
+                }
+              </div>
+            </div>
+          )}
           
           {goal.type === "race" && (
             <>
@@ -500,10 +706,12 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
                 <div className="font-semibold text-lg">{goal.targetTime}</div>
               </div>
               
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="text-sm text-neutral-500 mb-1">Training Plan</div>
-                <div className="font-semibold text-lg">{goal.trainingPlan.split('-').pop().trim()}</div>
-              </div>
+              {chartType !== "comparison" && chartType !== "pace" && (
+                <div className="bg-neutral-50 rounded-lg p-3">
+                  <div className="text-sm text-neutral-500 mb-1">Training Plan</div>
+                  <div className="font-semibold text-lg">{goal.trainingPlan?.split('-').pop().trim() || "Custom"}</div>
+                </div>
+              )}
             </>
           )}
           
@@ -511,13 +719,33 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
             <>
               <div className="bg-neutral-50 rounded-lg p-3">
                 <div className="text-sm text-neutral-500 mb-1">Current Weight</div>
-                <div className="font-semibold text-lg">{goal.currentWeight}</div>
+                <div className="font-semibold text-lg">
+                  {weightData ? 
+                    `${weightData.currentWeight} lbs` :
+                    goal.currentWeight
+                  }
+                </div>
               </div>
               
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="text-sm text-neutral-500 mb-1">Target Weight</div>
-                <div className="font-semibold text-lg">{goal.targetWeight}</div>
-              </div>
+              {weightData && (
+                <div className="bg-neutral-50 rounded-lg p-3">
+                  <div className="text-sm text-neutral-500 mb-1">Projected Final</div>
+                  <div className="font-semibold text-lg">{weightData.projection.expectedFinalWeight} lbs</div>
+                  <div className="text-xs text-neutral-500 mt-1">
+                    {weightData.projection.expectedFinalWeight <= weightData.targetWeight ? 
+                      <span className="text-green-600">Will reach target</span> :
+                      <span className="text-yellow-600">{weightData.projection.expectedFinalWeight - weightData.targetWeight} lbs short</span>
+                    }
+                  </div>
+                </div>
+              )}
+              
+              {(!weightData || chartType !== "progress") && (
+                <div className="bg-neutral-50 rounded-lg p-3">
+                  <div className="text-sm text-neutral-500 mb-1">Target Weight</div>
+                  <div className="font-semibold text-lg">{goal.targetWeight}</div>
+                </div>
+              )}
             </>
           )}
           
