@@ -26,7 +26,8 @@ export default function NutritionPage() {
     enabled: !!user,
   });
   
-  const hasSubscription = !!subscriptionStatus?.isActive;
+  // Use both legacy isActive flag or direct status check
+  const hasSubscription = !!subscriptionStatus?.isActive || subscriptionStatus?.status === 'active';
 
   // Fetch nutrition preferences
   const { data: preferences, isLoading: preferencesLoading } = useQuery({
