@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { checkSubscriptionStatus } from "@/lib/queryClient";
 import { PageTitle } from "@/components/common/page-title";
 import { PageLayout } from "@/components/common/page-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,8 +27,27 @@ export default function NutritionPage() {
     enabled: !!user,
   });
   
-  // Use both legacy isActive flag or direct status check
-  const hasSubscription = !!subscriptionStatus?.isActive || subscriptionStatus?.status === 'active';
+  // Direct subscription check with a fallback
+  const [hasSubscription, setHasSubscription] = useState(false);
+  
+  // Use our direct check function or fallback to data from the query
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        // Use our direct check first
+        const isActive = await checkSubscriptionStatus();
+        setHasSubscription(isActive);
+      } catch (error) {
+        // Fallback to query data if direct check fails
+        const isActive = subscriptionStatus?.status === 'active' || !!subscriptionStatus?.isActive;
+        setHasSubscription(isActive);
+      }
+    }
+    
+    if (user) {
+      checkStatus();
+    }
+  }, [user, subscriptionStatus]);
 
   // Fetch nutrition preferences
   const { data: preferences, isLoading: preferencesLoading } = useQuery({
