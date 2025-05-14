@@ -452,14 +452,7 @@ export default function ActivitiesPage() {
             </div>
             
             <TabsContent value="all" className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                </div>
-                
+              <div className="flex justify-end items-center mb-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-muted-foreground">Show:</span>
                   <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
