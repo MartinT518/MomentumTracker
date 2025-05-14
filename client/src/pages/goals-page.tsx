@@ -655,7 +655,7 @@ export default function GoalsPage() {
         </Tabs>
         {/* Goal Detail Dialog */}
         <Dialog open={showGoalDetail} onOpenChange={setShowGoalDetail}>
-          <DialogContent className="max-w-5xl">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center">
                 {selectedGoal && (
