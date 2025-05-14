@@ -571,15 +571,28 @@ let googleAI: GoogleGenerativeAI | null = null;
 let geminiModel: any = null;
 
 try {
+  // Initialize primary and fallback AI providers
+  let deepSeekEnabled = false;
+  
   if (process.env.GOOGLE_AI_API_KEY) {
     googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
     geminiModel = googleAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     console.log("Google AI model initialized successfully");
   } else {
-    console.warn("GOOGLE_AI_API_KEY not set. AI features will be disabled.");
+    console.warn("GOOGLE_AI_API_KEY not set. Checking for alternative AI providers.");
+  }
+  
+  // Check if DeepSeek API key is available as an alternative
+  if (process.env.DEEPSEEK_API_KEY) {
+    deepSeekEnabled = true;
+    console.log("DeepSeek API enabled as an alternative AI provider");
+  }
+  
+  if (!process.env.GOOGLE_AI_API_KEY && !deepSeekEnabled) {
+    console.warn("No AI API keys available. AI features will be disabled.");
   }
 } catch (error) {
-  console.error("Failed to initialize Google AI model:", error);
+  console.error("Failed to initialize AI models:", error);
 }
 import { 
   insertGroupSchema, 
@@ -3625,7 +3638,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate AI meal plan recommendations
   app.post("/api/nutrition/generate", checkAuth, /* isSubscribed */ async (req, res) => {
     try {
-      if (!googleAI) {
+      const deepSeekEnabled = process.env.DEEPSEEK_API_KEY ? true : false;
+      
+      // Check if we have any AI service available
+      if (!googleAI && !deepSeekEnabled) {
         return res.status(503).json({ error: "AI service is not available" });
       }
       
