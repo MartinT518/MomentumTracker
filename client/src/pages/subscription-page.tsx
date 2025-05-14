@@ -369,80 +369,11 @@ export default function SubscriptionPage() {
     </div>
   );
 
-  // If the user already has an active subscription
-  if (user?.subscription_status === 'active') {
-    return (
-      <div className="flex min-h-screen bg-background">
-        <Sidebar />
-        <div className="flex-1 space-y-4 p-8 pt-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold tracking-tight">Your Subscription</h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  Active Subscription
-                </CardTitle>
-                <CardDescription>
-                  Your premium features are active
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg">Your subscription is active until {user.subscription_end_date 
-                  ? new Date(user.subscription_end_date).toLocaleDateString() 
-                  : 'your next billing cycle'}</p>
-                <div className="mt-4">
-                  <h4 className="font-semibold mb-2">Your Premium Features:</h4>
-                  
-                  {/* Display different features based on plan type */}
-                  {user.subscription_status === 'active' && (
-                    <div>
-                      {/* Common features for all plans */}
-                      <FeatureItem included={true} text="Advanced training analytics" />
-                      <FeatureItem included={true} text="AI training plans" />
-                      <FeatureItem included={true} text="Training history" />
-                      
-                      {/* Check if user has annual plan by looking at subscription_end_date */}
-                      {user.subscription_end_date && 
-                        new Date(user.subscription_end_date).getTime() - new Date().getTime() > 31536000000 / 2 && (
-                        <>
-                          {/* Annual-only features */}
-                          <FeatureItem included={true} isHighlighted={true} text="Human coach access" />
-                          <FeatureItem included={true} isHighlighted={true} text="Video form analysis" />
-                          <FeatureItem included={true} isHighlighted={true} text="Advanced recovery analytics" />
-                          <FeatureItem included={true} isHighlighted={true} text="Personalized race nutrition strategies" />
-                          <FeatureItem included={true} isHighlighted={true} text="Priority support" />
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col gap-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.location.href = '/'} 
-                >
-                  Return to Dashboard
-                </Button>
-                {user.stripe_subscription_id && user.stripe_subscription_id !== 'dev_test_subscription' && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                  >
-                    Manage Subscription
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Calculate subscription type information
+  const isSubscribed = user?.subscription_status === 'active';
+  const isAnnualPlan = isSubscribed && user.subscription_end_date && 
+    new Date(user.subscription_end_date).getTime() - new Date().getTime() > 31536000000 / 2;
+  const currentPlanInterval = isAnnualPlan ? 'year' : 'month';
 
   // Loading state
   if (isLoadingPlans) {
@@ -555,6 +486,31 @@ export default function SubscriptionPage() {
           <p className="text-muted-foreground">Choose the perfect plan for your training needs</p>
         </div>
 
+        {/* Current subscription info card */}
+        {isSubscribed && (
+          <Card className="mb-8 border-2 border-green-200 bg-green-50/30 dark:bg-green-950/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                Active Subscription
+              </CardTitle>
+              <CardDescription>
+                Your premium features are active
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg">Your subscription is active until {user?.subscription_end_date 
+                ? new Date(user.subscription_end_date).toLocaleDateString() 
+                : 'your next billing cycle'}</p>
+              <div className="mt-2">
+                <span className="text-sm text-muted-foreground">
+                  {isAnnualPlan ? 'Annual Plan' : 'Monthly Plan'} - You have access to {isAnnualPlan ? 'all premium features' : 'standard premium features'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Developer Test Card */}
           <Card className="border-2 border-violet-500">
@@ -595,7 +551,7 @@ export default function SubscriptionPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Free Plan</CardTitle>
-                <Badge variant="outline">Current</Badge>
+                {!isSubscribed && <Badge variant="outline">Current</Badge>}
               </div>
               <CardDescription>Basic training features</CardDescription>
             </CardHeader>
@@ -614,9 +570,19 @@ export default function SubscriptionPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button disabled variant="outline" className="w-full">
-                Current Plan
-              </Button>
+              {!isSubscribed ? (
+                <Button disabled variant="outline" className="w-full">
+                  Current Plan
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleSelectPlan({ id: 0, name: 'Free Plan', description: 'Cancel subscription', price: '0', billing_interval: 'month', stripe_price_id: 'cancel', features: [], is_active: false })}
+                >
+                  Cancel Subscription
+                </Button>
+              )}
             </CardFooter>
           </Card>
 
@@ -632,7 +598,9 @@ export default function SubscriptionPage() {
                 <CardHeader className={`${isAnnual ? 'bg-purple-50 dark:bg-purple-950/20' : ''}`}>
                   <div className="flex justify-between items-center">
                     <CardTitle>{plan.name}</CardTitle>
-                    {isAnnual ? (
+                    {isSubscribed && isAnnual === isAnnualPlan && plan.billing_interval === currentPlanInterval ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Current</Badge>
+                    ) : isAnnual ? (
                       <Badge className="bg-purple-600 hover:bg-purple-700">Best Value</Badge>
                     ) : (
                       <Badge>Basic Plan</Badge>
@@ -683,16 +651,26 @@ export default function SubscriptionPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button 
-                    onClick={() => handleSelectPlan(plan)} 
-                    className="w-full"
-                    disabled={loadingPlanId === plan.id || createSubscriptionMutation.isPending}
-                    variant="default"
-                    style={isAnnual ? {backgroundColor: 'rgb(147, 51, 234)', borderColor: 'rgb(147, 51, 234)'} : {}}
-                  >
-                    {loadingPlanId === plan.id ? 'Processing...' : 'Subscribe'} 
-                    {loadingPlanId !== plan.id && !createSubscriptionMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
+                  {isSubscribed && isAnnual === isAnnualPlan && plan.billing_interval === currentPlanInterval ? (
+                    <Button 
+                      disabled
+                      className="w-full"
+                      variant="outline"
+                    >
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => handleSelectPlan(plan)} 
+                      className="w-full"
+                      disabled={loadingPlanId === plan.id || createSubscriptionMutation.isPending}
+                      variant="default"
+                      style={isAnnual ? {backgroundColor: 'rgb(147, 51, 234)', borderColor: 'rgb(147, 51, 234)'} : {}}
+                    >
+                      {loadingPlanId === plan.id ? 'Processing...' : 'Subscribe'} 
+                      {loadingPlanId !== plan.id && !createSubscriptionMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             );
