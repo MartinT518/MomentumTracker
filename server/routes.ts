@@ -1118,7 +1118,12 @@ function hasAnnualSubscription(req: Request, res: Response, next: NextFunction) 
   });
 }
 
+// Import the developer subscription endpoint
+import { setupDevSubscription } from "./dev-subscription";
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup developer endpoints for testing
+  setupDevSubscription(app);
   // Set up coaching routes (annual subscribers only)
   app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
     try {
