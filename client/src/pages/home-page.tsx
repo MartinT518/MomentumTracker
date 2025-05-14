@@ -131,7 +131,7 @@ export default function HomePage() {
                 <h3 className="font-bold text-lg">AI-Powered Training</h3>
               </div>
               <p className="text-neutral-dark">
-                Personalized plans built by Google's Gemini AI that adapt to your performance, goals, and recovery patterns in real-time.
+                Personalized plans built by OpenAI that adapt to your performance, goals, and recovery patterns in real-time.
               </p>
             </div>
             

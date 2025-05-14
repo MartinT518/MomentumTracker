@@ -82,7 +82,7 @@ export async function getMealPlan(userId: number, date: string): Promise<AIGener
 }
 
 /**
- * Generates a new meal plan using the Google Gemini AI model
+ * Generates a new meal plan using the OpenAI API
  * @param userId The user ID
  * @param preferences The user's nutrition preferences
  * @param trainingLoad Information about the user's training for the day
