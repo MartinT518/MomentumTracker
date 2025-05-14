@@ -6,6 +6,7 @@ import { MobileMenu } from "@/components/common/mobile-menu";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -465,6 +466,61 @@ export default function HealthMetricsPage() {
             <p className="text-muted-foreground">Track your biometric data and energy levels</p>
           </div>
           <div className="flex items-center gap-2 mt-4 md:mt-0">
+            <Dialog open={importGarminOpen} onOpenChange={setImportGarminOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Wifi className="mr-2 h-4 w-4" />
+                  Import from Garmin
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Import Health Data from Garmin</DialogTitle>
+                  <DialogDescription>
+                    Import your health metrics from Garmin Connect including HRV, resting heart rate, and sleep data.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                    <div className="flex items-start">
+                      <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-amber-800">Consent Required</h4>
+                        <p className="text-sm text-amber-700 mt-1">
+                          By importing data from Garmin Connect, you consent to MomentumRun accessing your health metrics. 
+                          We will only import data from the last 2 months and only store what's needed for training recommendations.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="consent" 
+                      checked={garminConsentGiven}
+                      onCheckedChange={(checked) => setGarminConsentGiven(checked === true)}
+                    />
+                    <label 
+                      htmlFor="consent" 
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      I consent to MomentumRun accessing my Garmin health data
+                    </label>
+                  </div>
+                </div>
+                
+                <DialogFooter>
+                  <Button
+                    onClick={() => importGarminDataMutation.mutate()}
+                    disabled={!garminConsentGiven || isImportingGarmin}
+                  >
+                    {isImportingGarmin && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Import Health Data
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
             <Dialog open={addMetricOpen} onOpenChange={setAddMetricOpen}>
               <DialogTrigger asChild>
                 <Button>
