@@ -1126,8 +1126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupDevSubscription(app);
   
   // Endpoint for user subscription status
-  app.get("/api/user/subscription", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/user/subscription", checkAuth, async (req, res) => {
     
     try {
       // Get the current user
