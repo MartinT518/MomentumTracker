@@ -138,7 +138,7 @@ export function SimpleMealPlan({ onUpdateMealPlan }: SimpleMealPlanProps) {
 
   if (!mealPlan) {
     return (
-      <Card className="w-full">
+      <Card className="w-full -ml-4">
         <CardHeader>
           <CardTitle>Personalized Meal Plan</CardTitle>
           <CardDescription>Generate a meal plan tailored to your body metrics, activity level, and dietary restrictions</CardDescription>
@@ -161,7 +161,7 @@ export function SimpleMealPlan({ onUpdateMealPlan }: SimpleMealPlanProps) {
   const { dailyPlan } = mealPlan;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full -ml-4">
       <CardHeader>
         <CardTitle>Your Daily Meal Plan</CardTitle>
         <CardDescription>
