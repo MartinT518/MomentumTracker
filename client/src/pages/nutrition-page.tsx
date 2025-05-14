@@ -97,28 +97,47 @@ export default function NutritionPage() {
       
       console.log("Using preferences:", preferences || defaultPreference);
 
-      const result = await generateMealPlan(
-        user.id,
-        preferences || defaultPreference
-      );
+      try {
+        const result = await generateMealPlan(
+          user.id,
+          preferences || defaultPreference
+        );
 
-      if (result) {
-        // Invalidate the meal plan query to refetch
-        queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user.id] });
+        if (result) {
+          // Invalidate the meal plan query to refetch
+          queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user.id] });
+          
+          // Switch to overview tab to show the new plan
+          setActiveTab("overview");
+          
+          toast({
+            title: "Meal plan generated",
+            description: "Your personalized weekly meal plan is ready!"
+          });
+        } else {
+          toast({
+            title: "Failed to generate meal plan",
+            description: "Please try again later",
+            variant: "destructive"
+          });
+        }
+      } catch (apiError: any) {
+        console.error("API Error:", apiError);
         
-        // Switch to overview tab to show the new plan
-        setActiveTab("overview");
-        
-        toast({
-          title: "Meal plan generated",
-          description: "Your personalized weekly meal plan is ready!"
-        });
-      } else {
-        toast({
-          title: "Failed to generate meal plan",
-          description: "Please try again later",
-          variant: "destructive"
-        });
+        // Check if it's a quota exceeded error
+        if (apiError.message && apiError.message.includes('quota')) {
+          toast({
+            title: "AI Service Limit Reached",
+            description: "The AI service has reached its quota limit. Please try again in a few minutes.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error Generating Meal Plan",
+            description: apiError.message || "An unexpected error occurred",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.error("Error generating meal plan:", error);
