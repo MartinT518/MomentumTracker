@@ -112,28 +112,72 @@ export function getOpenAIConfig(modelName = "gpt-4o", systemPrompt?: string) {
  */
 export async function generateText(prompt: string, systemPrompt?: string): Promise<string> {
   try {
-    if (!openaiClient) {
-      throw new Error("OpenAI not initialized");
+    // First try server API route
+    try {
+      const response = await fetch('/api/ai/generate-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          systemPrompt
+        }),
+      });
+      
+      if (!response.ok) {
+        // If server returns 401 or 403, it might be an authentication issue
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Authentication error. Please log in again.");
+        }
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.text || "";
+    } catch (serverError) {
+      console.warn("Server API failed, falling back to client-side generation:", serverError);
+      
+      // Fall back to client-side generation
+      if (!openaiClient) {
+        // Try to initialize OpenAI one more time
+        const client = initializeOpenAI();
+        if (!client) {
+          throw new Error("OpenAI API key missing or invalid. Please check your environment variables.");
+        }
+      }
+      
+      const config = getOpenAIConfig("gpt-4o", systemPrompt);
+      
+      // Add user message
+      const messages = [...config.messages, {
+        role: "user",
+        content: prompt
+      }];
+      
+      const completion = await openaiClient.chat.completions.create({
+        model: config.model,
+        messages: messages,
+        temperature: config.temperature,
+        max_tokens: config.max_tokens
+      });
+      
+      return completion.choices[0].message.content || "";
     }
-    
-    const config = getOpenAIConfig("gpt-4o", systemPrompt);
-    
-    // Add user message
-    const messages = [...config.messages, {
-      role: "user",
-      content: prompt
-    }];
-    
-    const completion = await openaiClient.chat.completions.create({
-      model: config.model,
-      messages: messages,
-      temperature: config.temperature,
-      max_tokens: config.max_tokens
-    });
-    
-    return completion.choices[0].message.content || "";
   } catch (error) {
     console.error("Error generating text:", error);
+    
+    // Provide more detailed error messages for common issues
+    if (error instanceof Error) {
+      if (error.message.includes("API key")) {
+        throw new Error("OpenAI API key is missing or invalid. Please check your account settings.");
+      } else if (error.message.includes("rate limit")) {
+        throw new Error("Rate limit exceeded. Please try again in a few minutes.");
+      } else if (error.message.includes("network")) {
+        throw new Error("Network error. Please check your internet connection and try again.");
+      }
+    }
+    
     throw new Error(`Failed to generate text: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
