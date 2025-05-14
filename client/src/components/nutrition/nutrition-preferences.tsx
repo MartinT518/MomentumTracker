@@ -59,11 +59,11 @@ export function NutritionPreferences() {
   const form = useForm<NutritionPreferencesFormValues>({
     resolver: zodResolver(nutritionPreferencesSchema),
     defaultValues: {
-      dietary_restrictions: preferences?.dietary_restrictions || [],
-      calorie_goal: preferences?.calorie_goal || 2500,
-      protein_goal: preferences?.protein_goal || 150,
-      carbs_goal: preferences?.carbs_goal || 300,
-      fat_goal: preferences?.fat_goal || 70,
+      dietary_restrictions: Array.isArray(preferences?.dietary_restrictions) ? preferences.dietary_restrictions : [],
+      calorie_goal: preferences?.calorie_target || 2500,
+      protein_goal: preferences?.protein_target || 150,
+      carbs_goal: preferences?.carbs_target || 300,
+      fat_goal: preferences?.fat_target || 70,
       meal_count: preferences?.meal_count || 4,
     },
   });
@@ -72,11 +72,11 @@ export function NutritionPreferences() {
   useState(() => {
     if (preferences) {
       form.reset({
-        dietary_restrictions: preferences.dietary_restrictions || [],
-        calorie_goal: preferences.calorie_goal || 2500,
-        protein_goal: preferences.protein_goal || 150,
-        carbs_goal: preferences.carbs_goal || 300,
-        fat_goal: preferences.fat_goal || 70,
+        dietary_restrictions: Array.isArray(preferences.dietary_restrictions) ? preferences.dietary_restrictions : [],
+        calorie_goal: preferences.calorie_target || 2500,
+        protein_goal: preferences.protein_target || 150,
+        carbs_goal: preferences.carbs_target || 300,
+        fat_goal: preferences.fat_target || 70,
         meal_count: preferences.meal_count || 4,
       });
     }
@@ -156,7 +156,7 @@ export function NutritionPreferences() {
             <div>
               <h3 className="font-medium mb-2">Dietary Restrictions</h3>
               <div className="flex flex-wrap gap-2">
-                {preferences?.dietary_restrictions && preferences.dietary_restrictions.length > 0 ? (
+                {preferences?.dietary_restrictions && Array.isArray(preferences.dietary_restrictions) && preferences.dietary_restrictions.length > 0 ? (
                   preferences.dietary_restrictions.map((restriction) => (
                     <span key={restriction} className="px-2 py-1 bg-muted rounded-full text-sm">
                       {restriction.charAt(0).toUpperCase() + restriction.slice(1)}
