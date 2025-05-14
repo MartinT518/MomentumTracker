@@ -2813,6 +2813,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel an active subscription
+  app.post('/api/cancel-subscription', requireAuth, async (req, res) => {
+    try {
+      const user = req.user as Express.User;
+      
+      if (!user.stripe_subscription_id) {
+        return res.status(400).json({ error: 'No active subscription found' });
+      }
+      
+      if (user.stripe_subscription_id === 'dev_test_subscription') {
+        await db.update(users)
+          .set({
+            subscription_status: null,
+            subscription_end_date: null,
+            stripe_subscription_id: null,
+            has_active_subscription: false,
+          })
+          .where(eq(users.id, user.id));
+          
+        return res.status(200).json({ message: 'Test subscription canceled' });
+      }
+      
+      // Cancel the subscription with Stripe
+      const subscription = await stripe.subscriptions.update(
+        user.stripe_subscription_id,
+        { cancel_at_period_end: true }
+      );
+      
+      // Update the user record with the subscription end date
+      await db.update(users)
+        .set({
+          subscription_end_date: new Date(subscription.cancel_at * 1000),
+        })
+        .where(eq(users.id, user.id));
+      
+      return res.status(200).json({ 
+        message: 'Subscription canceled',
+        cancelAt: new Date(subscription.cancel_at * 1000)
+      });
+    } catch (error: any) {
+      console.error('Error canceling subscription:', error);
+      return res.status(500).json({ error: error.message || 'Failed to cancel subscription' });
+    }
+  });
+
   app.post('/api/get-or-create-subscription', async (req, res) => {
     console.log("Subscription request received:", req.body);
     
