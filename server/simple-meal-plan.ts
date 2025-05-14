@@ -11,20 +11,8 @@ let geminiModel: any = null;
 if (process.env.GOOGLE_AI_API_KEY) {
   try {
     googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    geminiModel = googleAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    
-    // Configure system prompt for nutrition
-    geminiModel = geminiModel.startChat({
-      history: [
-        {
-          role: "user",
-          parts: "I need your help as a professional sports nutritionist for athletes, particularly runners. Create meal plans that match their dietary restrictions, macro targets, and activity level."
-        },
-        {
-          role: "model", 
-          parts: "I'll help you create personalized meal plans for athletes based on their specific needs. For each plan, I'll consider dietary restrictions (like keto, vegan, lactose-intolerance), their physical characteristics (weight, height), activity level, and macro targets. Just provide me with the relevant information, and I'll generate practical, nutritionally balanced meal plans optimized for athletic performance."
-        }
-      ],
+    geminiModel = googleAI.getGenerativeModel({ 
+      model: "gemini-1.5-pro",
       generationConfig: {
         temperature: 0.7,
         topK: 1,
