@@ -285,7 +285,7 @@ export default function GoalsPage() {
       }
       
       // Send the data to the API
-      const response = await apiRequest('PATCH', `/api/goals/${selectedGoal.id}`, goalData);
+      const response = await apiRequest('PUT', `/api/goals/${selectedGoal.id}`, goalData);
       
       if (!response.ok) {
         throw new Error('Failed to update goal');
@@ -932,6 +932,121 @@ export default function GoalsPage() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              </div>
+            )}
+            
+            {selectedGoal && isEditMode && (
+              <div className="py-4">
+                <div className="space-y-4 p-4 border rounded-lg bg-neutral-50">
+                  <div className="space-y-2">
+                    <Label htmlFor="goal-type">Goal Type</Label>
+                    <Select 
+                      value={newGoalType}
+                      onValueChange={setNewGoalType}
+                      disabled
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a goal type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="race">Race</SelectItem>
+                        <SelectItem value="weight">Weight Loss</SelectItem>
+                        <SelectItem value="fitness">General Fitness</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Goal type cannot be changed</p>
+                  </div>
+                  
+                  {newGoalType === "race" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="race-distance">Race Distance</Label>
+                        <Select 
+                          value={raceDistance}
+                          onValueChange={setRaceDistance}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select race distance" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5k">5K</SelectItem>
+                            <SelectItem value="10k">10K</SelectItem>
+                            <SelectItem value="half-marathon">Half Marathon</SelectItem>
+                            <SelectItem value="marathon">Marathon</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="target-time">Target Time (hh:mm:ss)</Label>
+                        <Input 
+                          id="target-time" 
+                          value={targetTime}
+                          onChange={(e) => setTargetTime(e.target.value)}
+                          placeholder="e.g. 1:45:30" 
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="experience">Experience Level</Label>
+                        <Select 
+                          value={experience}
+                          onValueChange={setExperience}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select experience level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="beginner">Beginner</SelectItem>
+                            <SelectItem value="intermediate">Intermediate</SelectItem>
+                            <SelectItem value="advanced">Advanced</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+                  
+                  {newGoalType === "weight" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="starting-weight">Current Weight (lbs)</Label>
+                        <Input 
+                          id="starting-weight" 
+                          value={startingWeight}
+                          onChange={(e) => setStartingWeight(e.target.value)}
+                          placeholder="e.g. 180" 
+                          type="number"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="weight-loss">Weight Loss Goal (lbs)</Label>
+                        <Input 
+                          id="weight-loss" 
+                          value={weightLossAmount}
+                          onChange={(e) => setWeightLossAmount(e.target.value)}
+                          placeholder="e.g. 15" 
+                          type="number"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Target Weight: {startingWeight && weightLossAmount 
+                          ? (parseFloat(startingWeight) - parseFloat(weightLossAmount)).toFixed(1) 
+                          : '---'} lbs
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="target-date">Target Date</Label>
+                    <Input 
+                      id="target-date" 
+                      value={targetDate?.toISOString().split('T')[0] || ''}
+                      onChange={(e) => setTargetDate(new Date(e.target.value))}
+                      type="date" 
+                    />
+                  </div>
                 </div>
               </div>
             )}
