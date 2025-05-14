@@ -4,7 +4,8 @@ import {
   Dialog, 
   DialogContent,
   DialogHeader,
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { 
   Command, 
@@ -275,15 +276,19 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, {} as Record<string, SearchResult[]>);
 
   return (
-    <CommandDialog 
+    <Dialog 
       open={open} 
       onOpenChange={onOpenChange}
     >
-      {/* Hidden title/description for accessibility */}
-      <div className="sr-only" id="search-dialog-title">Search MomentumRun</div>
-      <div className="sr-only" id="search-dialog-description">
-        Type to search for pages, features, or training resources
-      </div>
+      <DialogContent className="overflow-hidden p-0 max-w-[90vw] md:max-w-[60vw] md:w-[550px]">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Search MomentumRun</DialogTitle>
+          <DialogDescription>
+            Type to search for pages, features, or training resources
+          </DialogDescription>
+        </DialogHeader>
+        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
+        >
       <CommandInput 
         placeholder="Search for pages, features, or settings..." 
         value={query}
@@ -309,7 +314,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           </CommandGroup>
         ))}
       </CommandList>
-    </CommandDialog>
+        </Command>
+      </DialogContent>
+    </Dialog>
   );
 }
 
