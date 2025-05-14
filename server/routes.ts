@@ -3491,7 +3491,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(nutrition_preferences.user_id, parseInt(userId)));
       
       if (!preferences) {
-        return res.status(404).json({ error: "Nutrition preferences not found" });
+        // Create default preferences for the user
+        const defaultPreferences = {
+          user_id: parseInt(userId),
+          dietary_restrictions: [],
+          excluded_foods: [],
+          preferred_foods: ["chicken", "rice", "vegetables", "fruit", "nuts", "eggs"],
+          calorie_target: 2500, // Better default for runners
+          protein_target: 140, // In grams
+          carbs_target: 350, // In grams
+          fat_target: 70, // In grams
+          meal_count: 4,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        
+        try {
+          const [newPreferences] = await db.insert(nutrition_preferences)
+            .values(defaultPreferences)
+            .returning();
+            
+          console.log("Created default nutrition preferences for user:", userId);
+          return res.json(newPreferences);
+        } catch (insertError) {
+          console.error("Error creating default nutrition preferences:", insertError);
+          return res.status(500).json({ error: "Failed to create default nutrition preferences" });
+        }
       }
       
       res.json(preferences);
@@ -3787,6 +3812,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         const mealPlan = JSON.parse(jsonMatch[0]);
+        
+        // Create a record of this meal plan in the database
+        try {
+          // Create a base meal plan record
+          const [savedMealPlan] = await db.insert(meal_plans)
+            .values({
+              user_id: req.user.id,
+              plan_date: date,
+              plan_type: 'AI_generated',
+              is_active: true,
+              total_calories: mealPlan.dailyPlan.calories || 0,
+              total_protein: mealPlan.dailyPlan.protein || 0,
+              total_carbs: mealPlan.dailyPlan.carbs || 0,
+              total_fat: mealPlan.dailyPlan.fat || 0,
+              created_at: new Date(),
+              updated_at: new Date(),
+              plan_data: mealPlan
+            })
+            .returning();
+            
+          console.log("Saved meal plan to database with ID:", savedMealPlan.id);
+          
+          // Include the ID in the response
+          mealPlan.id = savedMealPlan.id;
+          mealPlan.date = date;
+        } catch (dbError) {
+          console.error("Error saving meal plan to database:", dbError);
+          // We'll still return the generated plan even if saving failed
+        }
+        
         res.json(mealPlan);
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError);
