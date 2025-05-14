@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, PlusCircle, BarChart3 } from "lucide-react";
+import { CalendarIcon, PlusCircle, BarChart3, Loader2 } from "lucide-react";
 import { format } from "date-fns";
-import { AIGeneratedMealPlan, NutritionPreference } from "@/lib/nutrition-ai-service";
+import { AIGeneratedMealPlan, NutritionPreference, generateMealPlan } from "@/lib/nutrition-ai-service";
 import MealPlanDisplay from "./meal-plan-display";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NutritionDashboardProps {
   mealPlan: AIGeneratedMealPlan | null;
@@ -19,7 +21,55 @@ export default function NutritionDashboard({
   hasSubscription 
 }: NutritionDashboardProps) {
   const [currentView, setCurrentView] = useState("today");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const currentDate = format(new Date(), "MMMM d, yyyy");
+  
+  const handleGenerateMealPlan = async () => {
+    if (!preferences) {
+      toast({
+        title: "No preferences found",
+        description: "Please set your nutrition preferences first",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsGenerating(true);
+    
+    try {
+      const result = await generateMealPlan(
+        preferences.user_id,
+        preferences
+      );
+      
+      if (result) {
+        // Invalidate the meal plan query to refetch
+        queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plan`, preferences.user_id] });
+        
+        toast({
+          title: "Meal plan generated",
+          description: "Your personalized weekly meal plan is ready!"
+        });
+      } else {
+        toast({
+          title: "Failed to generate meal plan",
+          description: "Please try again later",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate meal plan. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -30,11 +80,23 @@ export default function NutritionDashboard({
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" className="gap-1" disabled={!hasSubscription}>
+          <Button variant="outline" className="gap-1" disabled={!hasSubscription || isGenerating}>
             <CalendarIcon className="h-4 w-4 mr-1" /> Weekly Plan
           </Button>
-          <Button className="gap-1" disabled={!hasSubscription}>
-            <PlusCircle className="h-4 w-4 mr-1" /> Generate New Plan
+          <Button 
+            className="gap-1" 
+            disabled={!hasSubscription || isGenerating}
+            onClick={handleGenerateMealPlan}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Generating...
+              </>
+            ) : (
+              <>
+                <PlusCircle className="h-4 w-4 mr-1" /> Generate New Plan
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -67,8 +129,16 @@ export default function NutritionDashboard({
                   <p className="mb-4">
                     Generate a personalized meal plan based on your training load, nutrition preferences, and dietary restrictions.
                   </p>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Generate Meal Plan
+                  <Button onClick={handleGenerateMealPlan} disabled={isGenerating}>
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircle className="h-4 w-4 mr-2" /> Generate Meal Plan
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
