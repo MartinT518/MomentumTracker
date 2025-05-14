@@ -363,7 +363,9 @@ export default function HealthMetricsPage() {
 
   const getLatestMetric = () => {
     if (!healthMetrics || healthMetrics.length === 0) return null;
-    return healthMetrics.sort((a, b) => new Date(b.metric_date).getTime() - new Date(a.metric_date).getTime())[0];
+    return healthMetrics.sort((a: HealthMetric, b: HealthMetric) => 
+      new Date(b.metric_date).getTime() - new Date(a.metric_date).getTime()
+    )[0];
   };
 
   const latestMetric = getLatestMetric();
@@ -489,6 +491,24 @@ export default function HealthMetricsPage() {
                         <p className="text-sm text-amber-700 mt-1">
                           By importing data from Garmin Connect, you consent to MomentumRun accessing your health metrics. 
                           We will only import data from the last 2 months and only store what's needed for training recommendations.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <div className="flex items-start">
+                      <Info className="h-5 w-5 text-blue-500 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-blue-800">Garmin Connect Data</h4>
+                        <p className="text-sm text-blue-700 mt-1">
+                          We'll import the following data to calculate your energy levels:
+                          <ul className="list-disc ml-4 mt-1">
+                            <li>Heart Rate Variability (HRV)</li>
+                            <li>Resting Heart Rate</li>
+                            <li>Sleep Quality and Duration</li>
+                          </ul>
+                          Data will only be imported for the last 2 months.
                         </p>
                       </div>
                     </div>
