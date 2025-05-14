@@ -41,26 +41,38 @@ export interface PlanAdjustment {
 
 // Initialize the OpenAI client with the API key
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 // Create a client
 let openaiClient: OpenAI | null = null;
 
-export function initializeOpenAI(apiKey: string = API_KEY) {
-  if (!apiKey) {
-    console.warn("OpenAI API key is not set!");
+export function initializeOpenAI(apiKey?: string) {
+  try {
+    // Try to get the API key from the environment variable first, then from the parameter
+    const finalApiKey = apiKey || import.meta.env.VITE_OPENAI_API_KEY;
+    
+    if (!finalApiKey) {
+      console.warn("OpenAI API key is not set! Client-side AI features will not work.");
+      return null;
+    }
+    
+    openaiClient = new OpenAI({
+      apiKey: finalApiKey,
+      dangerouslyAllowBrowser: true // Allow usage in browser environment
+    });
+    
+    console.log("OpenAI client initialized successfully in browser environment");
+    return openaiClient;
+  } catch (error) {
+    console.error("Failed to initialize OpenAI client:", error);
     return null;
   }
-  
-  openaiClient = new OpenAI({
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true // Allow usage in browser environment
-  });
-  return openaiClient;
 }
 
-if (API_KEY) {
+// Initialize on load
+try {
   initializeOpenAI();
+} catch (error) {
+  console.error("Error during OpenAI initialization:", error);
 }
 
 /**
