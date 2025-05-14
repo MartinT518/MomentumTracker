@@ -55,15 +55,22 @@ export function NutritionPreferences() {
     enabled: !!user?.id,
   });
 
+  // Helper to parse string arrays from database
+  const parseStringArray = (value: string | string[] | null | undefined): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    return value.split(',').map(item => item.trim()).filter(Boolean);
+  };
+
   // Set up form with default values
   const form = useForm<NutritionPreferencesFormValues>({
     resolver: zodResolver(nutritionPreferencesSchema),
     defaultValues: {
-      dietary_restrictions: Array.isArray(preferences?.dietary_restrictions) ? preferences.dietary_restrictions : [],
-      calorie_goal: preferences?.calorie_target || 2500,
-      protein_goal: preferences?.protein_target || 150,
-      carbs_goal: preferences?.carbs_target || 300,
-      fat_goal: preferences?.fat_target || 70,
+      dietary_restrictions: parseStringArray(preferences?.dietary_restrictions),
+      calorie_goal: preferences?.calorie_goal || 2500,
+      protein_goal: preferences?.protein_goal || 150,
+      carbs_goal: preferences?.carbs_goal || 300,
+      fat_goal: preferences?.fat_goal || 70, 
       meal_count: preferences?.meal_count || 4,
     },
   });
@@ -72,11 +79,11 @@ export function NutritionPreferences() {
   useState(() => {
     if (preferences) {
       form.reset({
-        dietary_restrictions: Array.isArray(preferences.dietary_restrictions) ? preferences.dietary_restrictions : [],
-        calorie_goal: preferences.calorie_target || 2500,
-        protein_goal: preferences.protein_target || 150,
-        carbs_goal: preferences.carbs_target || 300,
-        fat_goal: preferences.fat_target || 70,
+        dietary_restrictions: parseStringArray(preferences.dietary_restrictions),
+        calorie_goal: preferences.calorie_goal || 2500,
+        protein_goal: preferences.protein_goal || 150,
+        carbs_goal: preferences.carbs_goal || 300,
+        fat_goal: preferences.fat_goal || 70,
         meal_count: preferences.meal_count || 4,
       });
     }
