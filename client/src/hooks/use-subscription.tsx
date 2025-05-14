@@ -37,6 +37,7 @@ export function useSubscription() {
 
   return {
     hasSubscription,
+    hasActiveSubscription: hasSubscription, // Alias for backwards compatibility
     subscriptionType,
     isMonthly: subscriptionType === 'monthly',
     isAnnual: subscriptionType === 'annual',
