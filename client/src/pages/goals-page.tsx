@@ -146,7 +146,7 @@ export default function GoalsPage() {
           processedGoal.actualTime = processedGoal.status === 'achieved' ? 
             processedGoal.targetTime : 
             // Make it a bit better than target
-            processedGoal.targetTime.replace(/^(\d+):(\d+):(\d+)$/, (_, h, m, s) => {
+            processedGoal.targetTime.replace(/^(\d+):(\d+):(\d+)$/, (_: string, h: string, m: string, s: string) => {
               return `${h}:${parseInt(m) - 2}:${s}`;
             });
         }
@@ -655,7 +655,7 @@ export default function GoalsPage() {
         </Tabs>
         {/* Goal Detail Dialog */}
         <Dialog open={showGoalDetail} onOpenChange={setShowGoalDetail}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-5xl">
             <DialogHeader>
               <DialogTitle className="flex items-center">
                 {selectedGoal && (
@@ -743,6 +743,12 @@ export default function GoalsPage() {
                   )}
                 </div>
                 
+                {/* Goal Visualization Component */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3">Interactive Goal Visualization</h3>
+                  <GoalVisualization goal={selectedGoal} />
+                </div>
+                
                 {/* Training plan section for active race goals */}
                 {selectedGoal.type === "race" && selectedGoal.trainingPlan && (
                   <div className="mt-6">
@@ -765,7 +771,7 @@ export default function GoalsPage() {
                   </div>
                 )}
                 
-                {/* Progress charts or related activities would go here */}
+                {/* Related activities section */}
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold mb-3">Related Activities</h3>
                   {selectedGoal.type === "race" ? (
