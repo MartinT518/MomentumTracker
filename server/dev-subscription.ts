@@ -52,4 +52,40 @@ export function setupDevSubscription(app: any) {
       res.status(500).json({ error: "Failed to set premium subscription" });
     }
   });
+  
+  // Set permanent annual subscription
+  app.post("/api/dev/set-annual-permanent/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Set subscription to active with a very distant end date (10 years)
+      const endDate = new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000);
+      
+      // Update user directly in the database
+      await db.update(users)
+        .set({ 
+          subscription_status: 'active',
+          subscription_plan_id: 2, // Annual plan
+          subscription_end_date: endDate,
+          stripe_subscription_id: 'permanent_annual_dev'
+        })
+        .where(eq(users.id, userId));
+      
+      // Get updated user
+      const [updatedUser] = await db.select().from(users).where(eq(users.id, userId));
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      console.log("Set PERMANENT ANNUAL subscription for user ID:", userId);
+      res.json({ 
+        message: "Permanent annual subscription activated",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error setting permanent annual subscription:", error);
+      res.status(500).json({ error: "Failed to set permanent annual subscription" });
+    }
+  });
 }
