@@ -80,6 +80,26 @@ export default function GoalsPage() {
   const [selectedGoal, setSelectedGoal] = useState<any | null>(null);
   const [showGoalDetail, setShowGoalDetail] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Function to handle goal type changes and reset form fields appropriately
+  const handleGoalTypeChange = (newType: string) => {
+    setNewGoalType(newType);
+    
+    // Reset form fields based on the new goal type
+    if (newType === "race") {
+      setRaceDistance("5k");
+      setTargetTime("00:25:00");
+      setExperience("intermediate");
+      // Keep the target date
+    } else if (newType === "weight") {
+      setStartingWeight("160");
+      setWeightLossAmount("10");
+      // Keep the target date
+    } else if (newType === "fitness" || newType === "custom") {
+      // Reset fields for fitness goals
+      // Keep the target date
+    }
+  };
 
   // Fetch goals from API using React Query
   const { 
@@ -416,7 +436,7 @@ export default function GoalsPage() {
                   <DialogDescription>Set a new goal to help drive your training</DialogDescription>
                 </DialogHeader>
                 
-                <Tabs defaultValue="race" value={newGoalType} onValueChange={setNewGoalType} className="mt-4">
+                <Tabs defaultValue="race" value={newGoalType} onValueChange={handleGoalTypeChange} className="mt-4">
                   <TabsList className="grid grid-cols-2 mb-4">
                     <TabsTrigger value="race" className="flex items-center">
                       <Flag className="mr-2 h-4 w-4" />
@@ -1028,8 +1048,7 @@ export default function GoalsPage() {
                     <Label htmlFor="goal-type">Goal Type</Label>
                     <Select 
                       value={newGoalType}
-                      onValueChange={setNewGoalType}
-                      disabled
+                      onValueChange={handleGoalTypeChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a goal type" />
@@ -1040,7 +1059,7 @@ export default function GoalsPage() {
                         <SelectItem value="fitness">General Fitness</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Goal type cannot be changed</p>
+                    <p className="text-xs text-muted-foreground">Changing goal type will reset specific goal settings</p>
                   </div>
                   
                   {newGoalType === "race" && (
