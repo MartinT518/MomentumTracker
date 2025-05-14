@@ -352,14 +352,20 @@ export default function SubscriptionPage() {
   };
 
   // Feature display component
-  const FeatureItem = ({ included, text }: { included: boolean; text: string }) => (
-    <div className="flex items-center gap-2 mt-2">
+  const FeatureItem = ({ included, text, isHighlighted = false }: { included: boolean; text: string; isHighlighted?: boolean }) => (
+    <div className={`flex items-center gap-2 mt-2 ${isHighlighted ? 'bg-purple-50 dark:bg-purple-900/20 p-1.5 rounded-md' : ''}`}>
       {included ? (
-        <CheckCircle2 className="h-5 w-5 text-green-500" />
+        <CheckCircle2 className={`h-5 w-5 ${isHighlighted ? 'text-purple-600' : 'text-green-500'}`} />
       ) : (
         <XCircle className="h-5 w-5 text-gray-400" />
       )}
-      <span className={included ? 'text-foreground' : 'text-muted-foreground'}>{text}</span>
+      <span className={included 
+        ? `${isHighlighted ? 'text-purple-900 dark:text-purple-200 font-medium' : 'text-foreground'}`
+        : 'text-muted-foreground'
+      }>
+        {text}
+        {isHighlighted && <span className="ml-1 text-xs text-purple-600 dark:text-purple-300">(Annual only)</span>}
+      </span>
     </div>
   );
 
@@ -388,12 +394,30 @@ export default function SubscriptionPage() {
                   ? new Date(user.subscription_end_date).toLocaleDateString() 
                   : 'your next billing cycle'}</p>
                 <div className="mt-4">
-                  <h4 className="font-semibold mb-2">Premium Features Include:</h4>
-                  <FeatureItem included={true} text="Advanced training analytics" />
-                  <FeatureItem included={true} text="Custom training plans" />
-                  <FeatureItem included={true} text="Unlimited training history" />
-                  <FeatureItem included={true} text="Priority support" />
-                  <FeatureItem included={true} text="Early access to new features" />
+                  <h4 className="font-semibold mb-2">Your Premium Features:</h4>
+                  
+                  {/* Display different features based on plan type */}
+                  {user.subscription_status === 'active' && (
+                    <div>
+                      {/* Common features for all plans */}
+                      <FeatureItem included={true} text="Advanced training analytics" />
+                      <FeatureItem included={true} text="AI training plans" />
+                      <FeatureItem included={true} text="Training history" />
+                      
+                      {/* Check if user has annual plan by looking at subscription_end_date */}
+                      {user.subscription_end_date && 
+                        new Date(user.subscription_end_date).getTime() - new Date().getTime() > 31536000000 / 2 && (
+                        <>
+                          {/* Annual-only features */}
+                          <FeatureItem included={true} isHighlighted={true} text="Human coach access" />
+                          <FeatureItem included={true} isHighlighted={true} text="Video form analysis" />
+                          <FeatureItem included={true} isHighlighted={true} text="Advanced recovery analytics" />
+                          <FeatureItem included={true} isHighlighted={true} text="Personalized race nutrition strategies" />
+                          <FeatureItem included={true} isHighlighted={true} text="Priority support" />
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-2">
@@ -597,51 +621,82 @@ export default function SubscriptionPage() {
           </Card>
 
           {/* Display fetched plans */}
-          {plans?.map((plan) => (
-            <Card key={plan.id} className={plan.name.includes('Premium') ? 'border-2 border-primary shadow-lg' : ''}>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>{plan.name}</CardTitle>
-                  {plan.name.includes('Premium') && (
-                    <Badge>Recommended</Badge>
-                  )}
-                </div>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <span className="text-3xl font-bold">${formatPrice(plan.price)}</span>
-                  <span className="text-muted-foreground">/{plan.billing_interval}</span>
-                </div>
-                <div className="space-y-2">
-                  {plan.features?.map((feature, index) => (
-                    <FeatureItem key={index} included={true} text={feature} />
-                  ))}
-                  {!plan.features && (
-                    <>
-                      <FeatureItem included={true} text="All free features" />
-                      <FeatureItem included={true} text="Advanced training analytics" />
-                      <FeatureItem included={true} text="Custom training plans" />
-                      <FeatureItem included={true} text="Unlimited training history" />
-                      <FeatureItem included={true} text="AI-powered recommendations" />
-                      <FeatureItem included={true} text="Priority support" />
-                    </>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  onClick={() => handleSelectPlan(plan)} 
-                  className="w-full"
-                  disabled={loadingPlanId === plan.id || createSubscriptionMutation.isPending}
-                  variant={plan.name.includes('Premium') ? 'default' : 'outline'}
-                >
-                  {loadingPlanId === plan.id ? 'Processing...' : 'Subscribe'} 
-                  {loadingPlanId !== plan.id && !createSubscriptionMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+          {plans?.map((plan) => {
+            const isAnnual = plan.billing_interval === 'year';
+            
+            return (
+              <Card 
+                key={plan.id} 
+                className={`${isAnnual ? 'border-2 border-purple-500 shadow-lg' : 'border-2 border-primary shadow-md'} transition-all duration-300 hover:shadow-xl`}
+              >
+                <CardHeader className={`${isAnnual ? 'bg-purple-50 dark:bg-purple-950/20' : ''}`}>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>{plan.name}</CardTitle>
+                    {isAnnual ? (
+                      <Badge className="bg-purple-600 hover:bg-purple-700">Best Value</Badge>
+                    ) : (
+                      <Badge>Basic Plan</Badge>
+                    )}
+                  </div>
+                  <CardDescription className="mt-2">{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <span className="text-3xl font-bold">${formatPrice(plan.price)}</span>
+                    <span className="text-muted-foreground">/{plan.billing_interval}</span>
+                    {isAnnual && (
+                      <span className="ml-2 inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-300">
+                        Save 20%
+                      </span>
+                    )}
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    {plan.features?.map((feature, index) => {
+                      // Highlight special features for annual plan
+                      const isSpecialFeature = isAnnual && (
+                        feature.includes("Human coach") || 
+                        feature.includes("Video form") || 
+                        feature.includes("Unlimited") ||
+                        feature.includes("Advanced")
+                      );
+                      
+                      return (
+                        <FeatureItem 
+                          key={index} 
+                          included={true} 
+                          text={feature}
+                          isHighlighted={isSpecialFeature}
+                        />
+                      );
+                    })}
+                    {!plan.features && (
+                      <>
+                        <FeatureItem included={true} text="All free features" />
+                        <FeatureItem included={true} text="Advanced training analytics" />
+                        <FeatureItem included={true} text="Custom training plans" />
+                        <FeatureItem included={true} text="Training history" />
+                        <FeatureItem included={true} text="AI-powered recommendations" />
+                        <FeatureItem included={true} text="Standard support" />
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    onClick={() => handleSelectPlan(plan)} 
+                    className="w-full"
+                    disabled={loadingPlanId === plan.id || createSubscriptionMutation.isPending}
+                    variant="default"
+                    style={isAnnual ? {backgroundColor: 'rgb(147, 51, 234)', borderColor: 'rgb(147, 51, 234)'} : {}}
+                  >
+                    {loadingPlanId === plan.id ? 'Processing...' : 'Subscribe'} 
+                    {loadingPlanId !== plan.id && !createSubscriptionMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>
