@@ -1122,11 +1122,17 @@ function hasAnnualSubscription(req: Request, res: Response, next: NextFunction) 
 import { setupDevSubscription } from "./dev-subscription";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup auth middleware first
+  setupAuth(app);
+
   // Setup developer endpoints for testing
   setupDevSubscription(app);
   
   // Endpoint for user subscription status
-  app.get("/api/user/subscription", checkAuth, async (req, res) => {
+  app.get("/api/user/subscription", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
     
     try {
       // Get the current user
@@ -3725,7 +3731,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Generate AI meal plan recommendations
-  app.post("/api/nutrition/generate", checkAuth, isSubscribed, async (req, res) => {
+  app.post("/api/nutrition/generate", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    // Check subscription status
+    if (req.user.subscription_status !== 'active') {
+      return res.status(403).json({ 
+        error: "Subscription required", 
+        message: "AI meal plan generation requires an active subscription" 
+      });
+    }
     try {
       const deepSeekEnabled = process.env.DEEPSEEK_API_KEY ? true : false;
       
