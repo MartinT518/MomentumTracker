@@ -1121,8 +1121,8 @@ function hasAnnualSubscription(req: Request, res: Response, next: NextFunction) 
 // Import the developer subscription endpoint
 import { setupDevSubscription } from "./dev-subscription";
 
-// Import the simplified meal plan generator
-import { generateSimpleMealPlan } from './simple-meal-plan';
+// Import the predefined meal plans selector
+import { selectMealPlan } from './predefined-meal-plans';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup auth middleware first
@@ -1146,19 +1146,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const mealPlan = await generateSimpleMealPlan(req.user.id);
+      // Get nutrition preferences from database
+      const [userPreferences] = await db
+        .select()
+        .from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, req.user.id));
+      
+      // Get recent activities to determine primary activity type
+      const recentActivities = await db
+        .select()
+        .from(activities)
+        .where(eq(activities.user_id, req.user.id))
+        .orderBy(desc(activities.activity_date))
+        .limit(10);
+      
+      // Determine predominant activity type
+      let primaryActivityType = "running";
+      if (recentActivities && recentActivities.length > 0) {
+        const activityTypeCounts: Record<string, number> = {};
+        
+        recentActivities.forEach(activity => {
+          const type = activity.activity_type || "running";
+          activityTypeCounts[type] = (activityTypeCounts[type] || 0) + 1;
+        });
+        
+        let maxCount = 0;
+        for (const [type, count] of Object.entries(activityTypeCounts)) {
+          if (count > maxCount) {
+            maxCount = count;
+            primaryActivityType = type;
+          }
+        }
+      }
+      
+      // Get default calorie target based on user profile or preferences
+      let calorieTarget = 2500; // Default
+      if (userPreferences?.calorie_goal) {
+        calorieTarget = userPreferences.calorie_goal;
+      } else if (req.user.weight && req.user.height) {
+        // Simple BMR calculation (Harris-Benedict equation) + activity factor
+        const weight = req.user.weight; // kg
+        const height = req.user.height; // cm
+        const age = req.user.age || 30; // Default age if not provided
+        const isMale = req.user.gender === 'male';
+        
+        // Calculate BMR
+        let bmr;
+        if (isMale) {
+          bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+        } else {
+          bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+        }
+        
+        // Apply activity factor for runners/athletes (moderate to high activity)
+        calorieTarget = Math.round(bmr * 1.6);
+      }
+      
+      // Generate meal plan using predefined templates
+      const dietaryRestrictions = userPreferences?.dietary_restrictions || [];
+      const mealPlan = selectMealPlan(primaryActivityType, dietaryRestrictions, calorieTarget);
+      
       res.json(mealPlan);
     } catch (error: any) {
       console.error("Error in simple meal plan generation:", error);
-      
-      // Handle quota limit errors specifically
-      if (error.message?.includes("quota") || error.message?.includes("rate limit")) {
-        return res.status(429).json({ 
-          error: "AI service quota exceeded",
-          message: "Our AI service is currently at capacity. Please try again later."
-        });
-      }
-      
       res.status(500).json({ 
         error: "Failed to generate meal plan",
         message: "Please try again later"
