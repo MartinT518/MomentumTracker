@@ -22,7 +22,7 @@ export default function NutritionPage() {
   const [currentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   
   // Check subscription status - will be used to gate premium features
-  const { data: subscriptionStatus } = useQuery({
+  const { data: subscriptionStatus } = useQuery<{status?: string, isActive?: boolean}>({
     queryKey: ["/api/user/subscription"],
     enabled: !!user,
   });

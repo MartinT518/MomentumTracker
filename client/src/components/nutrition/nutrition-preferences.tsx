@@ -173,7 +173,7 @@ export function NutritionPreferences() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-muted-foreground text-sm">Calories:</span>
-                  <span className="font-medium ml-2">{preferences?.calorie_goal || 2500} kcal</span>
+                  <span className="font-medium ml-2">{preferences?.calorie_target || 2500} kcal</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground text-sm">Meals per day:</span>
@@ -187,15 +187,15 @@ export function NutritionPreferences() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <span className="text-muted-foreground text-sm">Protein:</span>
-                  <span className="font-medium ml-2">{preferences?.protein_goal || 150}g ({proteinPercent}%)</span>
+                  <span className="font-medium ml-2">{preferences?.protein_target || 150}g ({proteinPercent}%)</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground text-sm">Carbs:</span>
-                  <span className="font-medium ml-2">{preferences?.carbs_goal || 300}g ({carbsPercent}%)</span>
+                  <span className="font-medium ml-2">{preferences?.carbs_target || 300}g ({carbsPercent}%)</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground text-sm">Fat:</span>
-                  <span className="font-medium ml-2">{preferences?.fat_goal || 70}g ({fatPercent}%)</span>
+                  <span className="font-medium ml-2">{preferences?.fat_target || 70}g ({fatPercent}%)</span>
                 </div>
               </div>
               
