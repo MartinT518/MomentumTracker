@@ -78,6 +78,7 @@ export default function GoalsPage() {
   // State for goal detail view
   const [selectedGoal, setSelectedGoal] = useState<any | null>(null);
   const [showGoalDetail, setShowGoalDetail] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Fetch goals from API using React Query
   const { 
@@ -216,12 +217,95 @@ export default function GoalsPage() {
   const handleViewGoalDetails = (goal: any) => {
     setSelectedGoal(goal);
     setShowGoalDetail(true);
+    setIsEditMode(false);
   };
   
   // Handler for closing goal details view
   const handleCloseGoalDetails = () => {
     setShowGoalDetail(false);
     setSelectedGoal(null);
+    setIsEditMode(false);
+  };
+  
+  // Handler for editing a goal
+  const handleEditGoal = () => {
+    setIsEditMode(true);
+    
+    // Pre-populate form fields based on the selected goal
+    if (selectedGoal) {
+      setNewGoalType(selectedGoal.type || "");
+      
+      if (selectedGoal.type === "race") {
+        setRaceDistance(selectedGoal.distance || "");
+        setTargetTime(selectedGoal.targetTime || "");
+        setExperience(selectedGoal.experience || "intermediate");
+        
+        // Convert target date string to Date object if it exists
+        if (selectedGoal.targetDate) {
+          setTargetDate(new Date(selectedGoal.targetDate));
+        }
+      } else if (selectedGoal.type === "weight") {
+        setStartingWeight(selectedGoal.startingWeight || "");
+        setWeightLossAmount((parseFloat(selectedGoal.startingWeight) - parseFloat(selectedGoal.targetWeight)).toString() || "");
+        
+        // Convert target date string to Date object if it exists
+        if (selectedGoal.targetDate) {
+          setTargetDate(new Date(selectedGoal.targetDate));
+        }
+      }
+    }
+  };
+  
+  // Handler for updating a goal
+  const handleUpdateGoal = async () => {
+    if (!selectedGoal) return;
+    
+    try {
+      // Prepare the data based on the goal type
+      let goalData: any = {
+        primary_goal: newGoalType,
+        goal_date: targetDate?.toISOString(),
+      };
+      
+      if (newGoalType === "race") {
+        goalData = {
+          ...goalData,
+          goal_event_type: raceDistance,
+          goal_time: targetTime,
+          has_target_race: true,
+          experience_level: experience,
+        };
+      } else if (newGoalType === "weight") {
+        goalData = {
+          ...goalData,
+          weight_goal: "weight_loss",
+          current_weight: startingWeight,
+          target_weight: (parseFloat(startingWeight) - parseFloat(weightLossAmount)).toString(),
+        };
+      }
+      
+      // Send the data to the API
+      const response = await apiRequest('PATCH', `/api/goals/${selectedGoal.id}`, goalData);
+      
+      if (!response.ok) {
+        throw new Error('Failed to update goal');
+      }
+      
+      toast({
+        title: "Goal updated",
+        description: "Your goal has been successfully updated."
+      });
+      
+      // Refresh goals data and reset form
+      refetchGoals();
+      setIsEditMode(false);
+    } catch (error: any) {
+      toast({
+        title: "Error updating goal",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -851,8 +935,15 @@ export default function GoalsPage() {
             
             <DialogFooter>
               <Button variant="outline" onClick={handleCloseGoalDetails}>Close</Button>
-              {selectedGoal && !selectedGoal.completedDate && (
-                <Button>Edit Goal</Button>
+              {isEditMode ? (
+                <>
+                  <Button variant="outline" onClick={() => setIsEditMode(false)}>Cancel</Button>
+                  <Button onClick={handleUpdateGoal}>Save Changes</Button>
+                </>
+              ) : (
+                selectedGoal && !selectedGoal.completedDate && (
+                  <Button onClick={handleEditGoal}>Edit Goal</Button>
+                )
               )}
             </DialogFooter>
           </DialogContent>
