@@ -37,7 +37,9 @@ const supportTopics = [
   { title: 'Training plan help', url: '/training-plan' },
   { title: 'Subscription info', url: '/subscription' },
   { title: 'Health metrics', url: '/health-metrics' },
-  { title: 'Account settings', url: '/profile' }
+  { title: 'Account settings', url: '/profile' },
+  { title: 'Human Coaches', url: '/coaches' },
+  { title: 'Video Analysis', url: '/video-analysis' }
 ];
 
 export function SupportChatBot() {
@@ -96,9 +98,17 @@ export function SupportChatBot() {
       const lcMessage = inputValue.toLowerCase();
       
       if (lcMessage.includes('subscription') || lcMessage.includes('payment') || lcMessage.includes('premium')) {
-        botResponse = 'Our premium subscription gives you access to advanced training features, AI-powered plan adjustments, and personalized coaching. You can subscribe from the subscription page.';
+        botResponse = 'Our premium subscription gives you access to advanced training features, AI-powered plan adjustments, and personalized coaching. Annual subscribers get exclusive features like Human Coaches and Video Analysis. You can subscribe from the subscription page.';
         links = [{ title: 'Subscription Plans', url: '/subscription' }];
       } 
+      else if (lcMessage.includes('annual') || lcMessage.includes('yearly')) {
+        botResponse = 'Our annual subscription includes exclusive features not available in the monthly plan, such as access to human coaches, video analysis of your running form, advanced analytics, and priority support.';
+        links = [
+          { title: 'Subscription Plans', url: '/subscription' },
+          { title: 'Human Coaches', url: '/coaches' },
+          { title: 'Video Analysis', url: '/video-analysis' }
+        ];
+      }
       else if (lcMessage.includes('connect') || lcMessage.includes('strava') || lcMessage.includes('garmin') || lcMessage.includes('polar')) {
         botResponse = 'You can connect your fitness devices like Strava, Garmin, or Polar in the Settings > Integrations section. This allows automatic activity syncing.';
         links = [{ title: 'Integration Settings', url: '/settings' }];
@@ -111,6 +121,20 @@ export function SupportChatBot() {
         botResponse = 'Health metrics like sleep quality, HRV, and resting heart rate help optimize your training. View and track them in the Health Metrics section.';
         links = [{ title: 'Health Metrics', url: '/health-metrics' }];
       }
+      else if (lcMessage.includes('coach') || lcMessage.includes('human coach') || lcMessage.includes('trainer')) {
+        botResponse = 'Human coaches are available exclusively for annual subscribers. They provide personalized guidance, training plan adjustments, and expert feedback on your running.';
+        links = [
+          { title: 'Human Coaches', url: '/coaches' },
+          { title: 'Subscription Plans', url: '/subscription' }
+        ];
+      }
+      else if (lcMessage.includes('video') || lcMessage.includes('analysis') || lcMessage.includes('form')) {
+        botResponse = 'Video analysis of your running form is an exclusive feature for annual subscribers. Upload videos of your running and get expert feedback on your technique.';
+        links = [
+          { title: 'Video Analysis', url: '/video-analysis' },
+          { title: 'Subscription Plans', url: '/subscription' }
+        ];
+      }
       else if (lcMessage.includes('account') || lcMessage.includes('profile') || lcMessage.includes('settings')) {
         botResponse = 'You can manage your account settings, profile information, and privacy preferences in the Profile section.';
         links = [{ title: 'Profile Settings', url: '/profile' }];
@@ -120,6 +144,10 @@ export function SupportChatBot() {
       }
       else if (lcMessage.includes('hello') || lcMessage.includes('hi') || lcMessage.includes('hey')) {
         botResponse = `Hello${user ? ' ' + user.username : ''}! How can I help you with MomentumRun today?`;
+        links = supportTopics;
+      }
+      else if (lcMessage.includes('features') || lcMessage.includes('what can')) {
+        botResponse = 'MomentumRun offers training plans, activity tracking, health metrics, nutrition guidance, and goal setting. Premium features include AI-generated plans, while annual subscribers get exclusive access to human coaches and video analysis.';
         links = supportTopics;
       }
       else {
