@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Utensils } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NutritionDashboard from "@/components/nutrition/nutrition-dashboard";
+import { SimpleMealPlan } from "@/components/nutrition/simple-meal-plan"; 
 import { getMealPlan, getNutritionPreferences, NutritionPreference, generateMealPlan } from "@/lib/nutrition-ai-service";
 import { format } from "date-fns";
 
@@ -185,37 +186,33 @@ export default function NutritionPage() {
           description="Get personalized meal plans based on your training needs"
         />
         
-        <div className="flex flex-col items-center justify-center space-y-6 max-w-3xl mx-auto mt-12 py-12 px-6 bg-neutral-50 rounded-lg text-center">
-          <Utensils className="h-16 w-16 text-primary" />
-          <h2 className="text-2xl font-bold">Welcome to Personalized Nutrition</h2>
-          <p className="text-neutral-dark max-w-lg">
-            Set up your nutrition preferences to get personalized meal recommendations based on your training load, 
-            dietary restrictions, and fitness goals.
-          </p>
-          
-          <Button 
-            size="lg" 
-            onClick={handleGenerateMealPlan}
-            className="mt-4"
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating Meal Plan...
-              </>
-            ) : (
-              "Get Started"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          <div className="flex flex-col items-center justify-center space-y-6 py-12 px-6 bg-neutral-50 rounded-lg text-center">
+            <Utensils className="h-16 w-16 text-primary" />
+            <h2 className="text-2xl font-bold">Welcome to Personalized Nutrition</h2>
+            <p className="text-neutral-dark max-w-lg">
+              Get personalized meal recommendations based on your training load, 
+              dietary restrictions, and fitness goals.
+            </p>
+            
+            {!hasSubscription && (
+              <div className="mt-2 p-4 border border-amber-200 bg-amber-50 rounded-md max-w-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>Note:</strong> Personalized nutrition plans require a premium subscription. 
+                  Please upgrade to generate AI-powered meal plans.
+                </p>
+              </div>
             )}
-          </Button>
+          </div>
           
-          {!hasSubscription && (
-            <div className="mt-6 p-4 border border-amber-200 bg-amber-50 rounded-md max-w-lg">
-              <p className="text-sm text-amber-800">
-                <strong>Note:</strong> Personalized nutrition plans require a premium subscription. 
-                You can set up your preferences now, but you'll need to upgrade to generate AI-powered meal plans.
-              </p>
-            </div>
-          )}
+          <div>
+            <SimpleMealPlan 
+              onUpdateMealPlan={() => {
+                // Refresh the meal plan data when a new one is generated
+                queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user?.id, currentDate] });
+              }} 
+            />
+          </div>
         </div>
       </PageLayout>
     );
@@ -248,32 +245,12 @@ export default function NutritionPage() {
         </TabsContent>
         
         <TabsContent value="meal-planner" className="mt-6">
-          <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle>Meal Planner</CardTitle>
-              <CardDescription>
-                Generate personalized meal plans based on your training and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-neutral-dark mb-4">
-                Coming soon: AI-powered meal planning based on your training schedule and nutrition goals
-              </p>
-              <Button 
-                variant="outline" 
-                onClick={handleGenerateMealPlan}
-                disabled={isGenerating || !hasSubscription}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...
-                  </>
-                ) : (
-                  "Create Meal Plan"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          <SimpleMealPlan 
+            onUpdateMealPlan={() => {
+              // Refresh the meal plan data when a new one is generated
+              queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user?.id, currentDate] });
+            }} 
+          />
         </TabsContent>
         
         <TabsContent value="preferences" className="mt-6">
