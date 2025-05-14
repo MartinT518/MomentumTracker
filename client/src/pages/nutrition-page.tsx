@@ -4,13 +4,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { checkSubscriptionStatus } from "@/lib/queryClient";
 import { PageTitle } from "@/components/common/page-title";
 import { PageLayout } from "@/components/common/page-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Utensils } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import NutritionDashboard from "@/components/nutrition/nutrition-dashboard";
 import { SimpleMealPlan } from "@/components/nutrition/simple-meal-plan"; 
+import { NutritionOverview } from "@/components/nutrition/nutrition-overview";
+import { NutritionPreferences } from "@/components/nutrition/nutrition-preferences";
 import { getMealPlan, getNutritionPreferences, NutritionPreference, generateMealPlan } from "@/lib/nutrition-ai-service";
 import { format } from "date-fns";
 
@@ -237,11 +236,7 @@ export default function NutritionPage() {
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
-          <NutritionDashboard 
-            mealPlan={mealPlan} 
-            preferences={preferences} 
-            hasSubscription={hasSubscription}
-          />
+          <NutritionOverview />
         </TabsContent>
         
         <TabsContent value="meal-planner" className="mt-6">
@@ -254,22 +249,7 @@ export default function NutritionPage() {
         </TabsContent>
         
         <TabsContent value="preferences" className="mt-6">
-          <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle>Nutrition Preferences</CardTitle>
-              <CardDescription>
-                Set your dietary preferences to customize meal recommendations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-neutral-dark mb-4">
-                Coming soon: Customize your nutrition preferences including dietary restrictions, calorie goals, and favorite foods
-              </p>
-              <Button variant="outline" onClick={() => toast({ title: "Feature coming soon", description: "This feature is currently under development" })}>
-                Update Preferences
-              </Button>
-            </CardContent>
-          </Card>
+          <NutritionPreferences />
         </TabsContent>
       </Tabs>
     </PageLayout>

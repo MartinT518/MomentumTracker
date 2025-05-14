@@ -39,7 +39,7 @@ interface DailyPlan {
   meals: Meal[];
 }
 
-interface MealPlanResponse {
+export interface MealPlanResponse {
   dailyPlan: DailyPlan;
 }
 
