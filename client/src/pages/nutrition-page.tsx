@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { PageTitle } from "@/components/common/page-title";
 import { PageLayout } from "@/components/common/page-layout";
@@ -9,13 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Utensils } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NutritionDashboard from "@/components/nutrition/nutrition-dashboard";
-import { getMealPlan, getNutritionPreferences, NutritionPreference } from "@/lib/nutrition-ai-service";
+import { getMealPlan, getNutritionPreferences, NutritionPreference, generateMealPlan } from "@/lib/nutrition-ai-service";
 import { format } from "date-fns";
 
 export default function NutritionPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [currentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   
   // Check subscription status - will be used to gate premium features
@@ -51,6 +53,80 @@ export default function NutritionPage() {
   // Check if this is the first visit (no preferences set up)
   const isFirstVisit = !preferencesLoading && !preferences;
 
+  // Handle generating meal plan
+  const handleGenerateMealPlan = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Not logged in",
+        description: "Please log in to generate a meal plan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!hasSubscription) {
+      toast({
+        title: "Premium feature",
+        description: "Please upgrade to a premium subscription to use this feature",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // Create a default nutrition preference if none exists
+      const defaultPreference = {
+        id: 0,
+        user_id: user.id,
+        dietary_restrictions: [], 
+        excluded_foods: [],
+        preferred_foods: ["chicken", "rice", "vegetables", "fruit"],
+        calorie_target: 2200,
+        protein_target: 30,
+        carbs_target: 50,
+        fat_target: 20,
+        meal_count: 4,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      const result = await generateMealPlan(
+        user.id,
+        preferences || defaultPreference
+      );
+
+      if (result) {
+        // Invalidate the meal plan query to refetch
+        queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plan", user.id] });
+        
+        // Switch to overview tab to show the new plan
+        setActiveTab("overview");
+        
+        toast({
+          title: "Meal plan generated",
+          description: "Your personalized weekly meal plan is ready!"
+        });
+      } else {
+        toast({
+          title: "Failed to generate meal plan",
+          description: "Please try again later",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate meal plan. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <PageLayout>
@@ -80,10 +156,17 @@ export default function NutritionPage() {
           
           <Button 
             size="lg" 
-            onClick={() => setActiveTab("preferences")}
+            onClick={handleGenerateMealPlan}
             className="mt-4"
+            disabled={isGenerating}
           >
-            Get Started
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating Meal Plan...
+              </>
+            ) : (
+              "Get Started"
+            )}
           </Button>
           
           {!hasSubscription && (
@@ -137,8 +220,18 @@ export default function NutritionPage() {
               <p className="text-neutral-dark mb-4">
                 Coming soon: AI-powered meal planning based on your training schedule and nutrition goals
               </p>
-              <Button variant="outline" onClick={() => toast({ title: "Feature coming soon", description: "This feature is currently under development" })}>
-                Create Meal Plan
+              <Button 
+                variant="outline" 
+                onClick={handleGenerateMealPlan}
+                disabled={isGenerating || !hasSubscription}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...
+                  </>
+                ) : (
+                  "Create Meal Plan"
+                )}
               </Button>
             </CardContent>
           </Card>
