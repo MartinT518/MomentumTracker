@@ -335,7 +335,42 @@ export default function SubscriptionPage() {
   });
 
   // Handle selecting a plan and initiating checkout
+  // Mutation to cancel a subscription
+  const cancelSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/cancel-subscription');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to cancel subscription');
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Subscription Canceled",
+        description: `Your subscription will remain active until ${new Date(data.cancelAt).toLocaleDateString()}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Cancellation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSelectPlan = (plan: Plan) => {
+    // Handle the free plan (cancel subscription) case
+    if (plan.stripe_price_id === 'cancel') {
+      if (confirm('Are you sure you want to cancel your subscription? You will still have access to premium features until the end of your billing period.')) {
+        cancelSubscriptionMutation.mutate();
+      }
+      return;
+    }
+    
+    // Handle subscription to a paid plan
     setSelectedPlan(plan);
     if (plan.stripe_price_id) {
       createSubscriptionMutation.mutate({ 
