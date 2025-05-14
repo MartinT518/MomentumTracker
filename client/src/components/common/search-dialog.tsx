@@ -77,7 +77,7 @@ const searchData: SearchResult[] = [
     description: 'View your running activities and upload new ones',
     url: '/activities',
     icon: <Clock className="h-4 w-4" />,
-    keywords: ['runs', 'workouts', 'history', 'log', 'record'],
+    keywords: ['runs', 'workouts', 'history', 'log', 'record', 'strava', 'garmin', 'polar', 'sync'],
   },
   {
     id: 'goals',
@@ -86,7 +86,7 @@ const searchData: SearchResult[] = [
     description: 'Set and track your running goals',
     url: '/goals',
     icon: <Sparkles className="h-4 w-4" />,
-    keywords: ['targets', 'objectives', 'aims', 'race', 'event'],
+    keywords: ['targets', 'objectives', 'aims', 'race', 'event', 'progress', 'achievement'],
   },
   {
     id: 'profile',
@@ -95,7 +95,7 @@ const searchData: SearchResult[] = [
     description: 'Manage your user profile and preferences',
     url: '/profile',
     icon: <UserCircle className="h-4 w-4" />,
-    keywords: ['account', 'user', 'personal', 'details', 'information'],
+    keywords: ['account', 'user', 'personal', 'details', 'information', 'edit profile'],
   },
   {
     id: 'settings',
@@ -104,7 +104,7 @@ const searchData: SearchResult[] = [
     description: 'Configure app settings and integrations',
     url: '/settings',
     icon: <Settings className="h-4 w-4" />,
-    keywords: ['configuration', 'preferences', 'options', 'setup', 'connection'],
+    keywords: ['configuration', 'preferences', 'options', 'setup', 'connection', 'strava', 'garmin', 'polar', 'training preferences'],
   },
   {
     id: 'subscription',
@@ -113,7 +113,7 @@ const searchData: SearchResult[] = [
     description: 'Manage your premium subscription',
     url: '/subscription',
     icon: <CreditCard className="h-4 w-4" />,
-    keywords: ['premium', 'payment', 'plan', 'upgrade', 'billing'],
+    keywords: ['premium', 'payment', 'plan', 'upgrade', 'billing', 'monthly', 'annual', 'cancel', 'change plan'],
   },
   {
     id: 'strength-exercises',
@@ -122,7 +122,7 @@ const searchData: SearchResult[] = [
     description: 'View and track strength exercises',
     url: '/strength-exercises',
     icon: <Dumbbell className="h-4 w-4" />,
-    keywords: ['strength', 'workout', 'exercises', 'gym', 'weights', 'cross-training'],
+    keywords: ['strength', 'workout', 'exercises', 'gym', 'weights', 'cross-training', 'resistance'],
   },
   {
     id: 'health-metrics',
@@ -131,7 +131,7 @@ const searchData: SearchResult[] = [
     description: 'Track your health data and biometrics',
     url: '/health-metrics',
     icon: <Heart className="h-4 w-4" />,
-    keywords: ['hrv', 'sleep', 'recovery', 'resting heart rate', 'weight', 'health'],
+    keywords: ['hrv', 'sleep', 'recovery', 'resting heart rate', 'weight', 'health', 'biometrics', 'energy', 'readiness'],
   },
   {
     id: 'nutrition',
@@ -140,7 +140,25 @@ const searchData: SearchResult[] = [
     description: 'Track meals and manage your nutrition plan',
     url: '/nutrition',
     icon: <Apple className="h-4 w-4" />,
-    keywords: ['food', 'diet', 'meals', 'calories', 'nutrients', 'eating'],
+    keywords: ['food', 'diet', 'meals', 'calories', 'nutrients', 'eating', 'hydration', 'recipes', 'meal plan'],
+  },
+  {
+    id: 'coaches',
+    title: 'Human Coaches',
+    category: 'Pages',
+    description: 'Connect with human coaches (Annual Subscription)',
+    url: '/coaches',
+    icon: <UserCircle className="h-4 w-4" />,
+    keywords: ['coach', 'human', 'trainer', 'annual', 'premium', 'expert', 'guidance', 'help'],
+  },
+  {
+    id: 'video-analysis',
+    title: 'Video Analysis',
+    category: 'Pages',
+    description: 'Get running form analysis (Annual Subscription)',
+    url: '/video-analysis',
+    icon: <Sparkles className="h-4 w-4" />,
+    keywords: ['video', 'form', 'analysis', 'technique', 'annual', 'premium', 'running form', 'improvement'],
   },
   // Features
   {
@@ -150,7 +168,7 @@ const searchData: SearchResult[] = [
     description: 'Connect Strava, Garmin, or Polar devices',
     url: '/settings',
     icon: <Settings className="h-4 w-4" />,
-    keywords: ['strava', 'garmin', 'polar', 'connect', 'sync', 'integration'],
+    keywords: ['strava', 'garmin', 'polar', 'connect', 'sync', 'integration', 'fitness tracker'],
   },
   {
     id: 'generate-plan',
@@ -159,7 +177,7 @@ const searchData: SearchResult[] = [
     description: 'Create a new AI-powered training plan',
     url: '/training-plan?tab=ai-plan',
     icon: <Sparkles className="h-4 w-4" />,
-    keywords: ['ai', 'create', 'plan', 'training', 'generate', 'personalized'],
+    keywords: ['ai', 'create', 'plan', 'training', 'generate', 'personalized', 'workout schedule'],
   },
   {
     id: 'upgrade',
@@ -168,7 +186,34 @@ const searchData: SearchResult[] = [
     description: 'Get access to premium features',
     url: '/subscription',
     icon: <CreditCard className="h-4 w-4" />,
-    keywords: ['premium', 'upgrade', 'subscription', 'payment', 'features'],
+    keywords: ['premium', 'upgrade', 'subscription', 'payment', 'features', 'monthly', 'annual'],
+  },
+  {
+    id: 'training-preferences',
+    title: 'Training Preferences',
+    category: 'Settings',
+    description: 'Update your training preferences and schedule',
+    url: '/settings?tab=training',
+    icon: <Settings className="h-4 w-4" />,
+    keywords: ['training', 'preferences', 'schedule', 'rest days', 'zones', 'long run', 'workout time'],
+  },
+  {
+    id: 'import-activity',
+    title: 'Import Activities',
+    category: 'Features',
+    description: 'Manually import or sync activities',
+    url: '/activities?action=import',
+    icon: <Clock className="h-4 w-4" />,
+    keywords: ['import', 'sync', 'upload', 'activities', 'strava', 'garmin', 'polar', 'manual'],
+  },
+  {
+    id: 'energy-calculator',
+    title: 'Energy Level Calculator',
+    category: 'Features',
+    description: 'Check your daily energy and readiness',
+    url: '/health-metrics?tab=energy',
+    icon: <Heart className="h-4 w-4" />,
+    keywords: ['energy', 'readiness', 'recovery', 'hrv', 'sleep', 'calculator', 'daily'],
   },
 ];
 
