@@ -43,7 +43,7 @@ export function AchievementsProvider({ children }: { children: ReactNode }) {
   // Mutation to mark achievement as viewed
   const markAsViewedMutation = useMutation({
     mutationFn: async (achievementId: number) => {
-      await apiRequest('POST', `/api/achievements/${achievementId}/viewed`);
+      await apiRequest('PATCH', `/api/achievements/${achievementId}/view`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/achievements'] });

@@ -1341,6 +1341,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get user achievements
+  app.get("/api/achievements", checkAuth, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const userAchievements = await db.select()
+        .from(user_achievements)
+        .where(eq(user_achievements.user_id, req.user.id))
+        .orderBy(desc(user_achievements.earned_at));
+        
+      res.status(200).json(userAchievements);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ error: "Failed to fetch achievements" });
+    }
+  });
+  
+  // Mark achievement as viewed
+  app.patch("/api/achievements/:id/view", checkAuth, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const achievementId = parseInt(req.params.id);
+      
+      await db.update(user_achievements)
+        .set({ viewed: true })
+        .where(
+          and(
+            eq(user_achievements.id, achievementId),
+            eq(user_achievements.user_id, req.user.id)
+          )
+        );
+        
+      res.status(200).json({ message: "Achievement marked as viewed" });
+    } catch (error) {
+      console.error("Error marking achievement as viewed:", error);
+      res.status(500).json({ error: "Failed to update achievement" });
+    }
+  });
+  
   // Generate AI-based achievements based on user training progress
   app.post("/api/achievements/generate", checkAuth, async (req, res) => {
     try {

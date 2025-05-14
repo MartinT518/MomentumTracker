@@ -22,6 +22,7 @@ import HealthMetricsPage from "@/pages/health-metrics-page";
 import NutritionPage from "@/pages/nutrition-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import IntegrationCallbackPage from "@/pages/integration-callback-page";
+import AchievementsPage from "@/pages/achievements-page";
 // Annual subscription feature pages
 import CoachesPage from "@/pages/coaches-page";
 import VideoAnalysisPage from "@/pages/video-analysis-page";
@@ -44,6 +45,7 @@ function Router() {
       <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
       <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
       <ProtectedRoute path="/nutrition" component={NutritionPage} />
+      <Route path="/achievements" component={AchievementsPage} />
       {/* Annual subscription feature routes */}
       <ProtectedRoute path="/coaches" component={CoachesPage} />
       <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
