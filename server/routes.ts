@@ -18,11 +18,11 @@ import {
   meal_plans,
   meals,
   meal_food_items,
+  coaches,
+  coaching_sessions,
   nutrition_preferences,
   integration_connections,
   sync_logs,
-  coaches,
-  coaching_sessions,
   subscription_plans,
   onboarding_status,
   fitness_goals,
@@ -1245,8 +1245,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up coaching routes (annual subscribers only)
   app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
     try {
-      const coaches = await db.select().from(coaches);
-      res.json(coaches);
+      const coachesList = await db.select().from(coaches);
+      res.json(coachesList);
     } catch (error) {
       console.error("Error fetching coaches:", error);
       res.status(500).json({ error: "Failed to fetch coaches" });
@@ -2343,34 +2343,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Coaching
-  app.get("/api/coaches", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+  // Coaching routes handled above with annual subscription check
+  
+  // Coaching sessions endpoint - only available for annual subscribers
+  app.get("/api/coaching-sessions", checkAuth, hasAnnualSubscription, async (req, res) => {
     try {
-      const coaches = await storage.getCoaches();
-      res.json(coaches);
-    } catch (error) {
-      console.error("Error fetching coaches:", error);
-      res.status(500).json({ error: "Failed to fetch coaches" });
-    }
-  });
-
-  app.get("/api/coaches/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const coachId = parseInt(req.params.id);
-      const coach = await storage.getCoachById(coachId);
+      const userId = req.user?.id;
+      const role = req.query.coach_id ? 'athlete' : 'coach';
       
-      if (!coach) {
-        return res.status(404).json({ error: "Coach not found" });
-      }
+      const sessions = await db.select()
+        .from(coaching_sessions)
+        .where(
+          role === 'athlete' 
+            ? eq(coaching_sessions.athlete_id, userId) 
+            : eq(coaching_sessions.coach_id, userId)
+        )
+        .orderBy(desc(coaching_sessions.session_date));
       
-      res.json(coach);
+      res.json(sessions);
     } catch (error) {
-      console.error("Error fetching coach:", error);
-      res.status(500).json({ error: "Failed to fetch coach" });
+      console.error("Error fetching coaching sessions:", error);
+      res.status(500).json({ error: "Failed to fetch coaching sessions" });
     }
   });
 
