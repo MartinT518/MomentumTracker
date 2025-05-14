@@ -104,12 +104,12 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Form Column */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="mb-6 text-center">
-              <h1 className="text-2xl font-bold mb-2">
+      {/* Form Column - Left side */}
+      <div className="w-full lg:w-2/5 flex items-center justify-center p-6 lg:p-12 lg:bg-white">
+        <Card className="w-full max-w-md shadow-none border-0 bg-transparent">
+          <CardContent className="pt-6 px-0 lg:px-6">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold mb-2">
                 <span className="text-primary">Momentum</span>Run
               </h1>
               <p className="text-muted-foreground">Your AI-powered running companion</p>
@@ -152,7 +152,7 @@ export default function AuthPage() {
                     />
                     <Button 
                       type="submit" 
-                      className="w-full" 
+                      className="w-full bg-red-500 hover:bg-red-600 text-white" 
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? (
@@ -232,7 +232,7 @@ export default function AuthPage() {
                     />
                     <Button 
                       type="submit" 
-                      className="w-full" 
+                      className="w-full bg-red-500 hover:bg-red-600 text-white" 
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? (
@@ -259,12 +259,12 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      {/* Hero Column */}
-      <div className="flex-1 bg-gradient-to-br from-blue-900 to-indigo-900 p-8 flex flex-col justify-center lg:min-h-screen hidden lg:flex overflow-y-auto">
+      {/* Hero Column - Right side */}
+      <div className="w-full lg:w-3/5 bg-gradient-to-br from-blue-900 to-indigo-900 p-8 flex flex-col justify-center lg:min-h-screen hidden lg:flex overflow-y-auto">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
-            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+            <p className="text-lg text-blue-100 mb-8 leading-relaxed">
               MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
             </p>
           </div>
