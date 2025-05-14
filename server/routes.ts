@@ -1070,7 +1070,88 @@ function isSubscribed(req: Request, res: Response, next: NextFunction) {
   });
 }
 
+// Check if user has an annual subscription
+function hasAnnualSubscription(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  
+  // First check if user has an active subscription
+  if (req.user.subscription_status !== 'active') {
+    return res.status(403).json({ 
+      error: "Premium subscription required", 
+      subscriptionRequired: true 
+    });
+  }
+  
+  // Check if user has an annual subscription by examining the subscription_end_date
+  // If end date is more than 6 months away, assume it's an annual subscription
+  if (req.user.subscription_end_date) {
+    const sixMonthsInMs = 15768000000; // approximately 6 months in milliseconds
+    const endDate = new Date(req.user.subscription_end_date);
+    const now = new Date();
+    
+    if (endDate.getTime() - now.getTime() > sixMonthsInMs) {
+      return next();
+    }
+  }
+  
+  // If we get here, user has a subscription but it's not annual
+  res.status(403).json({ 
+    error: "Annual subscription required for this feature", 
+    requiresAnnual: true 
+  });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up coaching routes (annual subscribers only)
+  app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
+    try {
+      const coaches = await db.select().from(coaches);
+      res.json(coaches);
+    } catch (error) {
+      console.error("Error fetching coaches:", error);
+      res.status(500).json({ error: "Failed to fetch coaches" });
+    }
+  });
+
+  app.get("/api/coaches/:id", checkAuth, hasAnnualSubscription, async (req, res) => {
+    try {
+      const coachId = parseInt(req.params.id);
+      const [coach] = await db.select().from(coaches).where(eq(coaches.id, coachId));
+      
+      if (!coach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+      
+      res.json(coach);
+    } catch (error) {
+      console.error("Error fetching coach:", error);
+      res.status(500).json({ error: "Failed to fetch coach details" });
+    }
+  });
+
+  app.post("/api/coaching-sessions", checkAuth, hasAnnualSubscription, async (req, res) => {
+    try {
+      const sessionData = req.body;
+      
+      // Validate that the user is the same as the authenticated user
+      if (sessionData.athlete_id !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const [session] = await db.insert(coaching_sessions).values({
+        ...sessionData,
+        status: "scheduled"
+      }).returning();
+      
+      res.status(201).json(session);
+    } catch (error) {
+      console.error("Error creating coaching session:", error);
+      res.status(500).json({ error: "Failed to create coaching session" });
+    }
+  });
+
   // Set up authentication routes
   setupAuth(app);
   
