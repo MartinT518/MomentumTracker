@@ -754,7 +754,7 @@ export default function GoalsPage() {
                 )}
               </DialogTitle>
               <DialogDescription>
-                {selectedGoal && (
+                {selectedGoal && !isEditMode && (
                   <>
                     {selectedGoal.status && getStatusBadge(selectedGoal.status)}
                     <span className="ml-2">
@@ -766,10 +766,13 @@ export default function GoalsPage() {
                     </span>
                   </>
                 )}
+                {isEditMode && selectedGoal && (
+                  <span className="text-amber-500">Editing goal details</span>
+                )}
               </DialogDescription>
             </DialogHeader>
 
-            {selectedGoal && (
+            {selectedGoal && !isEditMode && (
               <div className="py-4">
                 {/* Goal stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
