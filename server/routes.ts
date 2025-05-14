@@ -3735,9 +3735,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
       
       // Generate the AI meal plan
-      const result = await geminiModel.generateContent(context);
-      const response = await result.response;
-      const text = response.text();
+      let text;
+      
+      if (googleAI && geminiModel) {
+        // Use Google AI if available
+        console.log("Generating meal plan with Google AI");
+        const result = await geminiModel.generateContent(context);
+        const response = await result.response;
+        text = response.text();
+      } else if (process.env.DEEPSEEK_API_KEY) {
+        // Fallback to DeepSeek API
+        console.log("Generating meal plan with DeepSeek API");
+        
+        const deepseekResponse = await axios.post(
+          'https://api.deepseek.com/v1/chat/completions',
+          {
+            model: "deepseek-chat",
+            messages: [
+              {
+                role: "system",
+                content: "You are a professional sports nutritionist specializing in endurance athletes."
+              },
+              {
+                role: "user",
+                content: context
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 4000,
+            response_format: { type: "json_object" }
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+            }
+          }
+        );
+        
+        text = deepseekResponse.data.choices[0].message.content;
+      } else {
+        throw new Error("No AI service available");
+      }
       
       // Parse the JSON response
       try {
@@ -3757,16 +3796,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rawResponse: text
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating AI meal plan:", error);
       
-      // Check if it's a quota error from Google AI API
-      if (error?.status === 429 || (error?.message && error?.message.includes('quota'))) {
-        // Extract retry delay from the error if available
+      // Check if it's a quota error from Google AI API or DeepSeek API
+      if (error?.status === 429 || 
+          (error?.message && error?.message.includes('quota')) ||
+          (error?.response?.status === 429)) {
+        
         let retryAfter = 60; // Default retry time in seconds
         
+        // Handle Google AI specific retry info
         if (error.errorDetails && Array.isArray(error.errorDetails)) {
-          const retryInfo = error.errorDetails.find(detail => 
+          const retryInfo = error.errorDetails.find((detail: any) => 
             detail['@type'] && detail['@type'].includes('RetryInfo')
           );
           
@@ -3777,6 +3819,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               retryAfter = parseInt(match[1], 10);
             }
           }
+        }
+        
+        // Check for DeepSeek specific retry header
+        if (error.response?.headers?.['retry-after']) {
+          retryAfter = parseInt(error.response.headers['retry-after'], 10);
         }
         
         return res.status(429).json({ 
