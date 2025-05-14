@@ -227,7 +227,7 @@ export default function NutritionPage() {
       <Tabs 
         value={activeTab} 
         onValueChange={setActiveTab}
-        className="w-full mt-6"
+        className="w-full mt-6 -ml-4"
       >
         <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>

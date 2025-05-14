@@ -5,7 +5,7 @@ interface PageTitleProps {
 
 export function PageTitle({ title, description }: PageTitleProps) {
   return (
-    <div className="mb-6">
+    <div className="mb-6 -ml-4">
       <h1 className="text-2xl font-bold text-neutral-darker">{title}</h1>
       {description && <p className="text-sm text-neutral-dark mt-1">{description}</p>}
     </div>
