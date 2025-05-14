@@ -4430,7 +4430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(fitness_goals.goal_type, goal.goal_type),
-            ne(fitness_goals.user_id, req.user!.id),
+            !eq(fitness_goals.user_id, req.user!.id),
             // For race goals, match by target distance
             goal.goal_type === 'race' && goal.target_distance 
               ? eq(fitness_goals.target_distance, goal.target_distance) 
