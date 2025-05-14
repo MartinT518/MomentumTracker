@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { GoalAchievementDemo } from "@/components/goals/goal-achievement-demo";
 import { TestAchievement } from "@/components/goals/test-achievement";
+import { GoalVisualization } from "@/components/goals/goal-visualization";
 import { Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
@@ -211,7 +212,7 @@ export default function GoalsPage() {
     }
   };
   
-  // Handler for viewing goal details
+  // Handler for viewing goal details and visualization
   const handleViewGoalDetails = (goal: any) => {
     setSelectedGoal(goal);
     setShowGoalDetail(true);
