@@ -17,10 +17,10 @@ export async function seedCoaches() {
         name: "Sarah Johnson",
         bio: "Elite marathon runner with 10+ years of coaching experience. Specializing in marathon training and endurance building for all levels. Completed 20+ marathons with a PR of 2:45.",
         specialty: "Marathon Training",
-        experience_years: 10,
+        experience_years: "10",
         certifications: "USATF Level 2, RRCA Certified Coach, Exercise Science Degree",
         profile_image: "https://i.imgur.com/JFHjdNh.jpg",
-        hourly_rate: 75,
+        hourly_rate: "75",
         available: true
       },
       {
@@ -28,10 +28,10 @@ export async function seedCoaches() {
         name: "Michael Chen",
         bio: "Former Olympic Trials qualifier specializing in 5K-10K training. I focus on building speed and efficiency for runners of all levels. My coaching philosophy emphasizes quality over quantity.",
         specialty: "Speed Development",
-        experience_years: 8,
+        experience_years: "8",
         certifications: "USATF Level 3, NASM-CPT, MS in Exercise Physiology",
         profile_image: "https://i.imgur.com/7wCgsaz.jpg",
-        hourly_rate: 90,
+        hourly_rate: "90",
         available: true
       },
       {
@@ -42,7 +42,7 @@ export async function seedCoaches() {
         experience_years: 15,
         certifications: "RRCA Certified Coach, Wilderness First Responder, NASM-CPT",
         profile_image: "https://i.imgur.com/nPzwWMm.jpg",
-        hourly_rate: 85,
+        hourly_rate: "85",
         available: true
       },
       {
@@ -53,7 +53,7 @@ export async function seedCoaches() {
         experience_years: 12,
         certifications: "DPT, CSCS, USATF Level 2",
         profile_image: "https://i.imgur.com/KGgxDCt.jpg",
-        hourly_rate: 95,
+        hourly_rate: "95",
         available: true
       }
     ];
