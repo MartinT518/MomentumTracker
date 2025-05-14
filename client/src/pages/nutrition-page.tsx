@@ -97,29 +97,47 @@ export default function NutritionPage() {
       
       console.log("Using preferences:", preferences || defaultPreference);
 
-      // For demonstration purposes, display a mock meal plan
-      // instead of hitting the quota-limited AI service
-      toast({
-        title: "AI Service Temporarily Limited",
-        description: "We're demonstrating a mock meal plan because the Google AI quota is currently limited."
-      });
+      // Use our AI service to generate a real meal plan
+      const result = await generateMealPlan(
+        user.id,
+        preferences || defaultPreference,
+        { 
+          calories_burned: 600, // Default calories burned
+          workout_type: "Running", // Default workout type
+          duration_minutes: 60 // Default duration
+        }
+      );
       
-      // Wait a moment to simulate processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log("AI meal plan generated:", result);
       
-      // Switch to overview tab to show any existing plan or the default UI
-      setActiveTab("overview");
+      if (result) {
+        // Refresh the meal plan data in the cache
+        queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user.id, currentDate] });
+        
+        // Switch to overview tab to show the new plan
+        setActiveTab("overview");
+        
+        toast({
+          title: "Meal Plan Generated",
+          description: "Your personalized meal plan is ready."
+        });
+      }
       
-      toast({
-        title: "Meal Plan Example Ready",
-        description: "You can see a sample meal plan layout. Real AI generation would create personalized plans."
-      });
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating meal plan:", error);
+      
+      let errorMessage = "Failed to generate meal plan. Please try again.";
+      
+      // Handle quota exceeded errors with better user feedback
+      if (error?.message && error.message.includes("quota exceeded")) {
+        errorMessage = error.message;
+      } else if (error?.message && error.message.includes("AI service")) {
+        errorMessage = "Our AI service is experiencing high demand. We're working on it.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to generate meal plan. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
