@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import axios from "axios";
 import { and, eq, desc, asc, gte, lte, or, sql } from "drizzle-orm";
 import { db } from "./db";

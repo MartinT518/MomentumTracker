@@ -1,29 +1,22 @@
 import axios from 'axios';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { and, eq } from 'drizzle-orm';
 import { db } from './db';
 import { users, nutrition_preferences } from '@shared/schema';
 
-// Initialize the Google AI client
-let googleAI: GoogleGenerativeAI | null = null;
-let geminiModel: any = null;
+// Initialize the OpenAI client
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+let openai: OpenAI | null = null;
 
-if (process.env.GOOGLE_AI_API_KEY) {
+if (process.env.OPENAI_API_KEY) {
   try {
-    googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    geminiModel = googleAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro",
-      generationConfig: {
-        temperature: 0.7,
-        topK: 1,
-        topP: 0.95,
-      }
+    openai = new OpenAI({ 
+      apiKey: process.env.OPENAI_API_KEY 
     });
-    console.log("Google AI model initialized successfully");
+    console.log("OpenAI model initialized successfully");
   } catch (error) {
-    console.error("Failed to initialize Google AI:", error);
-    googleAI = null;
-    geminiModel = null;
+    console.error("Failed to initialize OpenAI:", error);
+    openai = null;
   }
 }
 
@@ -107,19 +100,33 @@ export async function generateSimpleMealPlan(userId: number) {
     let mealPlanText;
     
     try {
-      // Try Google AI first
-      if (googleAI && geminiModel) {
-        console.log("Generating meal plan with Google AI");
-        const result = await geminiModel.sendMessage(prompt, {
-          responseFormat: { type: "json_object" }
+      // Try OpenAI first
+      if (openai) {
+        console.log("Generating meal plan with OpenAI");
+        const completion = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo", // Using GPT-3.5 Turbo for cost efficiency
+          messages: [
+            { 
+              role: "system", 
+              content: "You are a professional sports nutritionist specializing in endurance athletes. Respond with valid JSON." 
+            },
+            { 
+              role: "user", 
+              content: prompt 
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+          response_format: { type: "json_object" }
         });
-        mealPlanText = result.response.text();
-        console.log("Successfully generated meal plan with Google AI");
+        
+        mealPlanText = completion.choices[0].message.content;
+        console.log("Successfully generated meal plan with OpenAI");
       } else {
-        throw new Error("Google AI not available");
+        throw new Error("OpenAI not available");
       }
-    } catch (googleError) {
-      console.error("Google AI error:", googleError.message);
+    } catch (openaiError) {
+      console.error("OpenAI error:", openaiError.message);
       
       // Fall back to DeepSeek if available
       if (process.env.DEEPSEEK_API_KEY) {
