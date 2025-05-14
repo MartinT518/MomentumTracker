@@ -117,13 +117,43 @@ export async function getGoalProgressData(goalId: number): Promise<GoalProgress>
     let currentProgress = 0;
     
     if (goal.goal_type === 'race') {
-      // For race goals, calculate progress based on training completion
-      const totalWorkouts = data.length > 0 ? data.filter((a: any) => a.is_completed).length : 0;
-      const plannedWorkouts = data.length;
-      
-      currentProgress = plannedWorkouts > 0 
-        ? Math.round((totalWorkouts / plannedWorkouts) * 100) 
-        : Math.min(expectedProgress, 10); // Fallback
+      // For race goals, calculate progress based on pace calculations
+      // Check if we have a best race time for a distance
+      const bestActivity = data.length > 0 
+        ? data
+            .filter((a: any) => a.activity_type === 'run' && a.is_completed && a.distance > 0 && a.duration > 0)
+            .sort((a: any, b: any) => (a.pace_seconds || Infinity) - (b.pace_seconds || Infinity))[0]
+        : null;
+        
+      if (bestActivity) {
+        // We have a best race time, use that to calculate progress based on pace prediction
+        const bestDistance = (bestActivity.distance / 1000).toFixed(1) + 'k'; // Convert to km
+        const hours = Math.floor(bestActivity.duration / 3600);
+        const minutes = Math.floor((bestActivity.duration % 3600) / 60);
+        const seconds = Math.floor(bestActivity.duration % 60);
+        const bestTime = 
+          `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Get target distance and time
+        const targetDistance = goal.race_distance || '5k';
+        const targetTime = goal.target_time || '25:00';
+        
+        // Calculate progress using our pace calculator
+        currentProgress = calculateRaceProgress(
+          bestDistance,
+          bestTime,
+          targetDistance,
+          targetTime
+        );
+      } else {
+        // No best race time, fall back to training completion
+        const totalWorkouts = data.length > 0 ? data.filter((a: any) => a.is_completed).length : 0;
+        const plannedWorkouts = data.length;
+        
+        currentProgress = plannedWorkouts > 0 
+          ? Math.round((totalWorkouts / plannedWorkouts) * 100) 
+          : Math.min(expectedProgress, 10); // Fallback
+      }
     } else if (goal.goal_type === 'weight_loss') {
       // For weight loss goals, calculate based on weight loss progress
       const startingWeight = goal.weekly_mileage || 0; // Using this field for current_weight

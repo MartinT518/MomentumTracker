@@ -22,6 +22,11 @@ import {
   Radar,
 } from "recharts";
 import {
+  calculatePace,
+  predictTime,
+  formatTimeImprovement
+} from "@/lib/pace-calculator";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -161,18 +166,60 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
     
     if (goal.type !== "race") return [];
     
-    // Fallback pace data
-    const paceImprovementData = [
-      { date: "Jan", pace: 10.2, target: 9.5 },
-      { date: "Feb", pace: 9.8, target: 9.3 },
-      { date: "Mar", pace: 9.6, target: 9.1 },
-      { date: "Apr", pace: 9.4, target: 8.9 },
-      { date: "May", pace: 9.2, target: 8.7 },
-      { date: "Now", pace: 9.0, target: 8.5 },
-      { date: "Target", pace: null, target: 8.0 },
-    ];
+    // Get activities from props
+    const runActivities = activities
+      .filter((a: any) => a.activity_type === 'run' && a.distance > 0 && a.duration > 0)
+      .sort((a: any, b: any) => new Date(a.activity_date).getTime() - new Date(b.activity_date).getTime());
     
-    return paceImprovementData;
+    if (runActivities.length === 0) {
+      // No activities, use sample data but with realistic target pace
+      const targetPace = goal.targetTime ? 
+        calculatePace(goal.targetTime, goal.distance || '5k').replace('/km', '') : 
+        '5:00';
+      
+      // Target pace in minutes
+      const [targetMinutes, targetSeconds] = targetPace.split(':').map(Number);
+      const targetPaceMinutes = targetMinutes + (targetSeconds / 60);
+      
+      return [
+        { date: "Start", pace: targetPaceMinutes * 1.3, target: targetPaceMinutes * 1.2 },
+        { date: "Now", pace: targetPaceMinutes * 1.2, target: targetPaceMinutes * 1.1 },
+        { date: "Target", pace: null, target: targetPaceMinutes },
+      ];
+    }
+    
+    // Generate actual pace data from activities
+    const paceData = [];
+    
+    // Target pace calculation
+    const targetPace = goal.targetTime ? 
+      calculatePace(goal.targetTime, goal.distance || '5k').replace('/km', '') : 
+      '5:00';
+    
+    // Convert to minutes
+    const [targetMinutes, targetSeconds] = targetPace.split(':').map(Number);
+    const targetPaceMinutes = targetMinutes + (targetSeconds / 60);
+    
+    // Add data points from activities
+    for (const activity of runActivities) {
+      // Calculate pace in minutes per km
+      const paceMinutes = activity.duration / 60 / (activity.distance / 1000);
+      
+      paceData.push({
+        date: new Date(activity.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        pace: paceMinutes,
+        target: targetPaceMinutes
+      });
+    }
+    
+    // Add future target point
+    paceData.push({
+      date: "Target",
+      pace: null,
+      target: targetPaceMinutes
+    });
+    
+    return paceData;
   };
   
   // Generate comparison data (compare with similar goals by other users)

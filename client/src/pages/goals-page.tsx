@@ -9,6 +9,7 @@ import { GoalVisualization } from "@/components/goals/goal-visualization";
 import { Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
+import { calculatePace, predictTime, formatTimeImprovement } from "@/lib/pace-calculator";
 import {
   Card,
   CardContent,
@@ -868,6 +869,57 @@ export default function GoalsPage() {
                   <h3 className="text-lg font-semibold mb-3">Interactive Goal Visualization</h3>
                   <GoalVisualization goal={selectedGoal} />
                 </div>
+                
+                {/* Race pace prediction section */}
+                {selectedGoal.type === "race" && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-3">Race Predictions</h3>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-md">Target Pace: {calculatePace(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k")}</CardTitle>
+                        <CardDescription>
+                          Equivalent performances at other distances
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {selectedGoal.distance !== "5k" && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">5K:</span>
+                              <span className="font-medium">
+                                {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "10k", "5k")}
+                              </span>
+                            </div>
+                          )}
+                          {selectedGoal.distance !== "10k" && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">10K:</span>
+                              <span className="font-medium">
+                                {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k", "10k")}
+                              </span>
+                            </div>
+                          )}
+                          {selectedGoal.distance !== "half-marathon" && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Half Marathon:</span>
+                              <span className="font-medium">
+                                {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k", "half-marathon")}
+                              </span>
+                            </div>
+                          )}
+                          {selectedGoal.distance !== "marathon" && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Marathon:</span>
+                              <span className="font-medium">
+                                {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k", "marathon")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
                 
                 {/* Training plan section for active race goals */}
                 {selectedGoal.type === "race" && selectedGoal.trainingPlan && (
