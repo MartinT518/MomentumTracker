@@ -103,265 +103,200 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Form Column - Left side */}
-      <div className="w-full lg:w-2/5 flex items-center justify-center p-6 lg:p-12 lg:bg-white">
-        <Card className="w-full max-w-md shadow-none border-0 bg-transparent">
-          <CardContent className="pt-6 px-0 lg:px-6">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">
-                <span className="text-primary">Momentum</span>Run
-              </h1>
-              <p className="text-muted-foreground">Your AI-powered running companion</p>
-            </div>
-
-            <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Enter your password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-red-500 hover:bg-red-600 text-white" 
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Login
-                    </Button>
-                  </form>
-                </Form>
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Don't have an account?{" "}
-                    <button 
-                      className="text-primary hover:underline" 
-                      onClick={() => setActiveTab("register")}
-                    >
-                      Register
-                    </button>
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Choose a username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="Enter your email address" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Create a password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Confirm your password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-red-500 hover:bg-red-600 text-white" 
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Register
-                    </Button>
-                  </form>
-                </Form>
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Already have an account?{" "}
-                    <button 
-                      className="text-primary hover:underline" 
-                      onClick={() => setActiveTab("login")}
-                    >
-                      Login
-                    </button>
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Hero Column - Right side */}
-      <div className="w-full lg:w-3/5 bg-gradient-to-br from-blue-900 to-indigo-900 p-8 flex flex-col justify-center lg:min-h-screen hidden lg:flex overflow-y-auto">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
-            <p className="text-lg text-blue-100 mb-8 leading-relaxed">
-              MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
-            </p>
-          </div>
-          
-          {/* Runner Animation */}
-          <div className="mb-8">
-            <RunnerAnimation />
-          </div>
-          
-          {/* Feature Grid */}
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
-              <div className="flex items-center mb-2">
-                <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                  <Brain size={20} />
-                </div>
-                <h3 className="font-bold">AI-Powered Training</h3>
-              </div>
-              <p className="text-sm opacity-90">
-                Personalized plans built by Google's Gemini AI that adapt to your performance, goals, and recovery patterns in real-time.
+    <div className="min-h-screen flex">
+      {/* Single column with form integrated into hero area */}
+      <div className="w-full bg-gradient-to-br from-blue-900 to-indigo-900 p-8 flex flex-col justify-center min-h-screen overflow-y-auto">
+        <div className="flex flex-col lg:flex-row max-w-7xl mx-auto gap-8 items-center">
+          {/* Left side hero content */}
+          <div className="lg:w-3/5">
+            <div className="mb-8">
+              <h1 className="text-5xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
+              <p className="text-lg text-blue-100 mb-8 leading-relaxed">
+                MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
-              <div className="flex items-center mb-2">
-                <div className="bg-purple-600 p-2 rounded-lg mr-3">
-                  <LineChart size={20} />
+            {/* Feature Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
+                <div className="flex items-center mb-2">
+                  <div className="bg-blue-600 p-2 rounded-lg mr-3">
+                    <Brain size={20} />
+                  </div>
+                  <h3 className="font-bold">AI-Powered Training</h3>
                 </div>
-                <h3 className="font-bold">Advanced Analytics</h3>
+                <p className="text-sm opacity-90">
+                  Personalized plans built by Google's Gemini AI.
+                </p>
               </div>
-              <p className="text-sm opacity-90">
-                Gain deep insights into your pace, heart rate, and energy levels with visualization tools that help identify patterns and improvements.
-              </p>
-            </div>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
-              <div className="flex items-center mb-2">
-                <div className="bg-indigo-600 p-2 rounded-lg mr-3">
-                  <Activity size={20} />
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
+                <div className="flex items-center mb-2">
+                  <div className="bg-purple-600 p-2 rounded-lg mr-3">
+                    <LineChart size={20} />
+                  </div>
+                  <h3 className="font-bold">Advanced Analytics</h3>
                 </div>
-                <h3 className="font-bold">Platform Integration</h3>
+                <p className="text-sm opacity-90">
+                  Deep insights into pace, heart rate, and energy levels.
+                </p>
               </div>
-              <p className="text-sm opacity-90">
-                Sync your activities automatically from Strava, Garmin Connect, and Polar to keep all your training data in one place.
-              </p>
-            </div>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
-              <div className="flex items-center mb-2">
-                <div className="bg-green-600 p-2 rounded-lg mr-3">
-                  <Heart size={20} />
-                </div>
-                <h3 className="font-bold">Health Intelligence</h3>
-              </div>
-              <p className="text-sm opacity-90">
-                Monitor energy levels calculated from HRV, resting heart rate, and sleep quality to optimize training and prevent overtraining.
-              </p>
             </div>
           </div>
-          
-          {/* Integration Visualization */}
-          <div className="mb-8">
-            <FitnessIntegration />
-          </div>
-          
-          {/* AI Training Generator */}
-          <div className="mb-8">
-            <AITrainingGenerator />
-          </div>
-          
-          {/* Premium Features */}
-          <div className="bg-gradient-to-r from-indigo-700/40 to-purple-700/40 rounded-xl p-6 mb-8 border border-indigo-500/30">
-            <div className="flex items-center mb-4">
-              <Zap size={24} className="text-yellow-400 mr-3" />
-              <h3 className="text-xl font-bold text-white">Premium Benefits</h3>
-            </div>
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-start text-white">
-                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Access to human coaches for personalized guidance and plan adjustments</span>
-              </li>
-              <li className="flex items-start text-white">
-                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Advanced nutrition recommendations tailored to your training schedule</span>
-              </li>
-              <li className="flex items-start text-white">
-                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Detailed recovery analytics and recommendations based on your biometric data</span>
-              </li>
-              <li className="flex items-start text-white">
-                <ChevronRight className="h-5 w-5 mr-2 text-blue-300 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Unlimited training plan generations and race-specific preparation</span>
-              </li>
-            </ul>
-            <Button onClick={() => setActiveTab("register")} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 border-0">
-              Start Your Running Journey
-            </Button>
+
+          {/* Right side form content */}
+          <div className="lg:w-2/5">
+            <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border-white/20 shadow-xl">
+              <CardContent className="pt-6">
+                <div className="mb-6 text-center">
+                  <h1 className="text-3xl font-bold mb-2 text-white">
+                    <span className="text-blue-300">Momentum</span>Run
+                  </h1>
+                  <p className="text-blue-200">Your AI-powered running companion</p>
+                </div>
+
+                <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="text-white">
+                  <TabsList className="grid grid-cols-2 mb-6 bg-white/20">
+                    <TabsTrigger value="login" className="data-[state=active]:bg-white/30">Login</TabsTrigger>
+                    <TabsTrigger value="register" className="data-[state=active]:bg-white/30">Register</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="login">
+                    <Form {...loginForm}>
+                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                        <FormField
+                          control={loginForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem className="text-white">
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter your username" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={loginForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem className="text-white">
+                              <FormLabel>Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="Enter your password" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-red-500 hover:bg-red-600 text-white border-0" 
+                          disabled={loginMutation.isPending}
+                        >
+                          {loginMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Login
+                        </Button>
+                      </form>
+                    </Form>
+                    <div className="mt-4 text-center">
+                      <p className="text-sm text-blue-200">
+                        Don't have an account?{" "}
+                        <button 
+                          className="text-blue-300 hover:underline" 
+                          onClick={() => setActiveTab("register")}
+                        >
+                          Register
+                        </button>
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="register">
+                    <Form {...registerForm}>
+                      <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem className="text-white">
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Choose a username" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem className="text-white">
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="Enter your email address" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem className="text-white">
+                              <FormLabel>Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="Create a password" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="confirmPassword"
+                          render={({ field }) => (
+                            <FormItem className="text-white">
+                              <FormLabel>Confirm Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="Confirm your password" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-red-500 hover:bg-red-600 text-white border-0" 
+                          disabled={registerMutation.isPending}
+                        >
+                          {registerMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Register
+                        </Button>
+                      </form>
+                    </Form>
+                    <div className="mt-4 text-center">
+                      <p className="text-sm text-blue-200">
+                        Already have an account?{" "}
+                        <button 
+                          className="text-blue-300 hover:underline" 
+                          onClick={() => setActiveTab("login")}
+                        >
+                          Login
+                        </button>
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
