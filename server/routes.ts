@@ -3743,6 +3743,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error generating AI meal plan:", error);
+      
+      // Check if it's a quota error from Google AI API
+      if (error?.status === 429 || (error?.message && error?.message.includes('quota'))) {
+        return res.status(429).json({ 
+          error: "AI service quota exceeded. Please try again later.",
+          quotaExceeded: true,
+          retryAfter: 60 // Suggest trying again after 60 seconds
+        });
+      }
+      
       res.status(500).json({ error: "Failed to generate AI meal plan" });
     }
   });

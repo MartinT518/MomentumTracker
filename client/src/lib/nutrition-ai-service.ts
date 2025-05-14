@@ -125,13 +125,19 @@ export async function generateMealPlan(
     });
     
     if (!response.ok) {
-      return null;
+      // Handle specific error cases
+      if (response.status === 429) {
+        const errorData = await response.json();
+        throw new Error(`AI quota exceeded. Please try again later. ${errorData.retryAfter ? `Try again in ${errorData.retryAfter} seconds.` : ''}`);
+      }
+      
+      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
     }
     
     return await response.json();
   } catch (error) {
     console.error("Error generating meal plan:", error);
-    return null;
+    throw error; // Re-throw to allow the component to handle it
   }
 }
 
