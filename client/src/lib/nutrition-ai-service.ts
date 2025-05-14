@@ -70,7 +70,7 @@ export interface NutritionPreference {
  */
 export async function getMealPlan(userId: number, date: string): Promise<AIGeneratedMealPlan | null> {
   try {
-    const response = await apiRequest("GET", `/api/nutrition/meal-plan/${userId}?date=${date}`);
+    const response = await apiRequest("GET", `/api/nutrition/meal-plans/${userId}/${date}`);
     if (!response.ok) {
       return null;
     }

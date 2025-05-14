@@ -40,7 +40,7 @@ export default function NutritionPage() {
 
   // Fetch current meal plan
   const { data: mealPlan, isLoading: mealPlanLoading } = useQuery({
-    queryKey: ["/api/nutrition/meal-plan", user?.id, currentDate],
+    queryKey: ["/api/nutrition/meal-plans", user?.id, currentDate],
     queryFn: async () => {
       if (!user?.id) return null;
       return getMealPlan(user.id, currentDate);
@@ -99,7 +99,7 @@ export default function NutritionPage() {
 
       if (result) {
         // Invalidate the meal plan query to refetch
-        queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plan", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user.id] });
         
         // Switch to overview tab to show the new plan
         setActiveTab("overview");
