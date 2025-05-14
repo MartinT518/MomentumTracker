@@ -173,7 +173,7 @@ export async function generateStructuredData<T>(
 }
 
 /**
- * Generates a training plan using the Gemini model
+ * Generates a training plan using the OpenAI model
  * @param userData Information about the user and their training goals
  * @returns A promise that resolves to the generated training plan
  */
@@ -190,8 +190,8 @@ export async function generateTrainingPlan(userData: {
   preferredTerrains?: string[];
 }): Promise<TrainingPlan> {
   try {
-    if (!genAI) {
-      throw new Error("Google AI not initialized");
+    if (!openaiClient) {
+      throw new Error("OpenAI not initialized");
     }
     
     const systemPrompt = `You are an expert running coach with decades of experience training all levels of runners. 
@@ -250,11 +250,9 @@ export async function generateTrainingPlan(userData: {
               "distance": "Distance if applicable",
               "duration": "Duration if applicable",
               "intensity": "Zone 1-5 or Easy/Moderate/Hard"
-            },
-            // Additional days...
+            }
           ]
-        },
-        // Additional weeks...
+        }
       ]
     }`;
     
@@ -361,8 +359,8 @@ export async function generateTrainingRecommendations(
   priority: "high" | "medium" | "low";
 }>> {
   try {
-    if (!genAI) {
-      throw new Error("Google AI not initialized");
+    if (!openaiClient) {
+      throw new Error("OpenAI not initialized");
     }
     
     const systemPrompt = `You are an expert running coach who analyzes training data and provides personalized recommendations.
@@ -421,8 +419,8 @@ export async function generateTrainingPlanAdjustments(
   additionalDetails?: string
 ): Promise<PlanAdjustment> {
   try {
-    if (!genAI) {
-      throw new Error("Google AI not initialized");
+    if (!openaiClient) {
+      throw new Error("OpenAI not initialized");
     }
     
     const systemPrompt = `You are an expert running coach with decades of experience training all levels of runners. 

@@ -1,5 +1,5 @@
 // Nutrition AI Service
-// This service interacts with the Google Gemini AI model to generate personalized meal plans
+// This service interacts with the OpenAI API to generate personalized meal plans
 
 import { apiRequest } from "./queryClient";
 
