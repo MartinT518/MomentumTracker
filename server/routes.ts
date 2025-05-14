@@ -3768,12 +3768,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Unauthorized to generate meal plans for this user" });
       }
       
+      // Get user height and weight from database if available
+      const [userDetails] = await db.select().from(users).where(eq(users.id, parseInt(userId)));
+      
       // Prepare the context for the AI
       const context = `
       You are a professional sports nutritionist specializing in endurance athletes, particularly runners.
       Create a detailed meal plan optimized for an athlete with the following profile:
       
       Date: ${date}
+      ${userDetails.weight ? `Weight: ${userDetails.weight} kg` : ''}
+      ${userDetails.height ? `Height: ${userDetails.height} cm` : ''}
       Training Load: ${trainingLoad}
       Activity Level: ${activityLevel}
       Fitness Goals: ${fitnessGoals.join(", ")}
@@ -3781,7 +3786,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ${recoverySituation ? `Recovery Situation: ${recoverySituation}` : ""}
       
       Dietary Preferences:
-      ${userPreferences.dietaryRestrictions ? `Restrictions: ${Array.isArray(userPreferences.dietaryRestrictions) ? userPreferences.dietaryRestrictions.join(", ") : userPreferences.dietaryRestrictions}` : "No specific dietary restrictions"}
+      ${userPreferences.dietaryRestrictions ? `Dietary Restrictions: ${Array.isArray(userPreferences.dietaryRestrictions) ? userPreferences.dietaryRestrictions.join(", ") : userPreferences.dietaryRestrictions}` : "No specific dietary restrictions"}
+      
+      Special Diet Needs (if any):
+      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('keto'))) || 
+        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('keto')) ? 
+        'Follow ketogenic diet principles: high fat (70-80%), moderate protein (15-20%), very low carb (5-10%)' : ''}
+      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('vegan'))) || 
+        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('vegan')) ? 
+        'Follow vegan diet principles: exclude all animal products including meat, dairy, eggs, and honey' : ''}
+      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('lactose'))) || 
+        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('lactose')) ? 
+        'Avoid all lactose-containing foods: milk, most cheeses, ice cream, and many processed foods with milk ingredients' : ''}
+      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('gluten'))) || 
+        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('gluten')) ? 
+        'Avoid all gluten-containing foods: wheat, barley, rye, and products made with these grains' : ''}
+      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('paleo'))) || 
+        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('paleo')) ? 
+        'Follow paleolithic diet principles: include lean meats, fish, fruits, vegetables, nuts and seeds; exclude dairy, grains, processed foods, legumes' : ''}
+      
       ${userPreferences.allergies ? `Allergies: ${Array.isArray(userPreferences.allergies) ? userPreferences.allergies.join(", ") : userPreferences.allergies}` : "No allergies"}
       ${userPreferences.dislikedFoods ? `Dislikes: ${Array.isArray(userPreferences.dislikedFoods) ? userPreferences.dislikedFoods.join(", ") : userPreferences.dislikedFoods}` : ""}
       ${userPreferences.favoriteFoods ? `Favorites: ${Array.isArray(userPreferences.favoriteFoods) ? userPreferences.favoriteFoods.join(", ") : userPreferences.favoriteFoods}` : ""}
