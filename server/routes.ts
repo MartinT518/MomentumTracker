@@ -566,7 +566,7 @@ function mapPolarActivityType(polarType: string): string {
   return typeMap[polarType] || 'other';
 }
 
-// Set up Google AI model for nutrition recommendations
+// Set up OpenAI model for nutrition recommendations
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
 let openai: OpenAI | null = null;
 
@@ -3833,7 +3833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deepSeekEnabled = process.env.DEEPSEEK_API_KEY ? true : false;
       
       // Check if we have any AI service available
-      if (!googleAI && !deepSeekEnabled) {
+      if (!openai && !deepSeekEnabled) {
         return res.status(503).json({ error: "AI service is not available" });
       }
       
@@ -3973,14 +3973,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Check if we hit a quota limit
             if (openaiError.status === 429 || 
                 (openaiError.message && openaiError.message.includes('quota'))) {
-              console.log("Google AI quota exceeded, falling back to DeepSeek API");
+              console.log("OpenAI quota exceeded, falling back to DeepSeek API");
               throw new Error("QUOTA_EXCEEDED");
             } else {
-              throw googleError; // Re-throw if it's not a quota issue
+              throw openaiError; // Re-throw if it's not a quota issue
             }
           }
         } else if (process.env.DEEPSEEK_API_KEY) {
-          // Google AI not available, use DeepSeek directly
+          // OpenAI not available, use DeepSeek directly
           throw new Error("USE_DEEPSEEK");
         } else {
           return res.status(503).json({ 
@@ -4097,14 +4097,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error generating AI meal plan:", error);
       
-      // Check if it's a quota error from Google AI API or DeepSeek API
+      // Check if it's a quota error from OpenAI API or DeepSeek API
       if (error?.status === 429 || 
           (error?.message && error?.message.includes('quota')) ||
           (error?.response?.status === 429)) {
         
         let retryAfter = 60; // Default retry time in seconds
         
-        // Handle Google AI specific retry info
+        // Handle OpenAI specific retry info
         if (error.errorDetails && Array.isArray(error.errorDetails)) {
           const retryInfo = error.errorDetails.find((detail: any) => 
             detail['@type'] && detail['@type'].includes('RetryInfo')
