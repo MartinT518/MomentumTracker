@@ -567,19 +567,18 @@ function mapPolarActivityType(polarType: string): string {
 }
 
 // Set up Google AI model for nutrition recommendations
-let googleAI: GoogleGenerativeAI | null = null;
-let geminiModel: any = null;
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+let openai: OpenAI | null = null;
 
 try {
   // Initialize primary and fallback AI providers
   let deepSeekEnabled = false;
   
-  if (process.env.GOOGLE_AI_API_KEY) {
-    googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    geminiModel = googleAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    console.log("Google AI model initialized successfully");
+  if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    console.log("OpenAI model initialized successfully");
   } else {
-    console.warn("GOOGLE_AI_API_KEY not set. Checking for alternative AI providers.");
+    console.warn("OPENAI_API_KEY not set. Checking for alternative AI providers.");
   }
   
   // Check if DeepSeek API key is available as an alternative
@@ -633,12 +632,12 @@ interface ExpandedSubscription extends Omit<Stripe.Subscription, 'latest_invoice
 }
 
 // Update geminiModel configuration for better results when used
-if (geminiModel) {
+if (openai) {
   try {
-    // Enhanced configurations for better nutrition plans
-    console.log("Configuring geminiModel with nutrition-optimized settings");
+    // No additional configuration needed for OpenAI
+    console.log("OpenAI ready for nutrition and training plan generation");
   } catch (error) {
-    console.error("Error configuring geminiModel:", error);
+    console.error("Error with OpenAI configuration:", error);
   }
 }
 
@@ -1558,10 +1557,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }))
       };
       
-      // Use Google Gemini to analyze user data and generate achievement suggestions
-      const geminiModel = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY).getGenerativeModel({
-        model: "gemini-1.0-pro-latest"
-      });
+      // Use OpenAI to analyze user data and generate achievement suggestions
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+      const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
       const prompt = `
       Analyze this runner's data and generate 1-3 achievements they've earned based on their training history. 
@@ -1585,13 +1583,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       `;
       
-      const result = await geminiModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-          responseMimeType: "application/json",
-        },
+      const result = await openaiClient.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+        max_tokens: 1000
       });
       
       const responseJson = JSON.parse(result.response.text());
