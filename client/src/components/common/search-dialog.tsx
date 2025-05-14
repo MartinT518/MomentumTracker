@@ -233,22 +233,27 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       return;
     }
 
+    const queryLower = query.toLowerCase();
+    
     const filtered = searchData.filter(item => {
+      // Convert all searchable fields to lowercase for case-insensitive search
       const searchTerms = [
-        item.title,
-        item.description,
-        item.category,
-        ...(item.keywords || [])
-      ].map(term => term.toLowerCase());
+        item.title.toLowerCase(),
+        item.description.toLowerCase(),
+        item.category.toLowerCase(),
+        ...(item.keywords?.map(keyword => keyword.toLowerCase()) || [])
+      ];
       
-      return searchTerms.some(term => term.includes(query.toLowerCase()));
+      // Check if any search term includes the query
+      return searchTerms.some(term => term.includes(queryLower));
     });
 
     setResults(filtered);
   }, [query]);
 
   const handleSelect = (item: SearchResult) => {
-    navigate(item.url);
+    // Use window.location.href for more reliable navigation
+    window.location.href = item.url;
     onOpenChange(false);
   };
 
@@ -264,14 +269,11 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     <CommandDialog 
       open={open} 
       onOpenChange={onOpenChange}
-      // Add an accessible title and description
-      aria-labelledby="search-dialog-title" 
-      aria-describedby="search-dialog-description"
     >
-      <div id="search-dialog-title" className="sr-only">Search MomentumRun</div>
-      <div id="search-dialog-description" className="sr-only">
+      <Command.DialogTitle className="sr-only">Search MomentumRun</Command.DialogTitle>
+      <Command.DialogDescription className="sr-only">
         Type to search for pages, features, or training resources
-      </div>
+      </Command.DialogDescription>
       <CommandInput 
         placeholder="Search for pages, features, or settings..." 
         value={query}
