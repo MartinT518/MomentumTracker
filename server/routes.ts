@@ -28,6 +28,8 @@ import {
   fitness_goals,
   experience_levels,
   training_preferences,
+  achievements,
+  user_achievements,
 } from "@shared/schema";
 
 // Functions for synchronizing data from third-party platforms
@@ -1336,6 +1338,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating test achievement:", error);
       res.status(500).json({ error: "Failed to create test achievement" });
+    }
+  });
+  
+  // Generate AI-based achievements based on user training progress
+  app.post("/api/achievements/generate", checkAuth, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      // Get user's recent activities
+      const recentActivities = await db.select()
+        .from(activities)
+        .where(eq(activities.user_id, req.user.id))
+        .orderBy(desc(activities.activity_date))
+        .limit(30);
+        
+      // Get user's goals
+      const userGoals = await db.select()
+        .from(goals)
+        .where(eq(goals.user_id, req.user.id));
+        
+      // Prepare data for AI analysis
+      const userData = {
+        activities: recentActivities.map(a => ({
+          type: a.activity_type,
+          date: a.activity_date,
+          distance: a.distance,
+          duration: a.duration,
+          pace: a.pace,
+          heart_rate: a.heart_rate,
+          effort_level: a.effort_level
+        })),
+        goals: userGoals.map(g => ({
+          type: g.goal_type,
+          target_date: g.target_date,
+          status: g.status
+        }))
+      };
+      
+      // Use Google Gemini to analyze user data and generate achievement suggestions
+      const geminiModel = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY).getGenerativeModel({
+        model: "gemini-1.0-pro-latest"
+      });
+      
+      const prompt = `
+      Analyze this runner's data and generate 1-3 achievements they've earned based on their training history. 
+      Be creative, motivational, and specific to their accomplishments. Each achievement should include:
+      
+      1. A title (catchy, short, motivational)
+      2. A description (specific to their training, with details)
+      3. An achievement_type (from these options: milestone, consistency, improvement, personal_best)
+      
+      Training data to analyze: ${JSON.stringify(userData)}
+      
+      Respond in this JSON format:
+      {
+        "achievements": [
+          {
+            "title": "Achievement title",
+            "description": "Detailed description of what they accomplished",
+            "achievement_type": "milestone"
+          }
+        ]
+      }
+      `;
+      
+      const result = await geminiModel.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+          responseMimeType: "application/json",
+        },
+      });
+      
+      const responseJson = JSON.parse(result.response.text());
+      const generatedAchievements = responseJson.achievements || [];
+      
+      // Save the generated achievements to the database
+      const savedAchievements = [];
+      
+      for (const achievement of generatedAchievements) {
+        const achievementData = {
+          user_id: req.user.id,
+          title: achievement.title,
+          description: achievement.description,
+          achievement_type: achievement.achievement_type,
+          badge_image: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(achievement.title)}`,
+          earned_at: new Date(),
+          times_earned: 1,
+          viewed: false,
+          achievement_data: { ai_generated: true }
+        };
+        
+        const [savedAchievement] = await db.insert(user_achievements)
+          .values(achievementData)
+          .returning();
+          
+        savedAchievements.push(savedAchievement);
+      }
+      
+      res.status(201).json({ 
+        message: "AI-generated achievements created successfully", 
+        achievements: savedAchievements 
+      });
+    } catch (error) {
+      console.error("Error generating AI achievements:", error);
+      res.status(500).json({ error: "Failed to generate achievements" });
     }
   });
   
