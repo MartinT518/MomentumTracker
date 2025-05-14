@@ -143,7 +143,7 @@ export function NutritionPreferences() {
   }
 
   return (
-    <Card>
+    <Card className="-ml-4">
       <CardHeader>
         <CardTitle>Nutrition Preferences</CardTitle>
         <CardDescription>
