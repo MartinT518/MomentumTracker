@@ -20,7 +20,8 @@ import {
   Zap, 
   RefreshCw, 
   Wifi, 
-  HelpCircle 
+  HelpCircle,
+  Info 
 } from "lucide-react";
 import {
   Tooltip,
