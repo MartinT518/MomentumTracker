@@ -25,6 +25,7 @@ import IntegrationCallbackPage from "@/pages/integration-callback-page";
 import AchievementsPage from "@/pages/achievements-page";
 // Annual subscription feature pages
 import CoachesPage from "@/pages/coaches-page";
+import CoachDetailPage from "@/pages/coach-detail-page";
 import VideoAnalysisPage from "@/pages/video-analysis-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/achievements" component={AchievementsPage} />
       {/* Annual subscription feature routes */}
       <ProtectedRoute path="/coaches" component={CoachesPage} />
+      <ProtectedRoute path="/coaches/:id" component={CoachDetailPage} />
       <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
       <Route path="/auth/:platform/callback" component={IntegrationCallbackPage} />
       <Route component={NotFound} />
