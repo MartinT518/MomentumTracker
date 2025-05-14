@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -61,8 +62,11 @@ export default function ActivitiesPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [addActivityOpen, setAddActivityOpen] = useState(false);
   const [importActivitiesOpen, setImportActivitiesOpen] = useState(false);
+  const [viewActivityId, setViewActivityId] = useState<number | null>(null);
+  const [viewActivityOpen, setViewActivityOpen] = useState(false);
   
   // For manual activity entry
   const [activityDate, setActivityDate] = useState<Date | undefined>(new Date());
@@ -169,6 +173,16 @@ export default function ActivitiesPage() {
       });
       setImportActivitiesOpen(false);
     }, 2000);
+  };
+  
+  const handleViewActivity = (activityId: number) => {
+    setViewActivityId(activityId);
+    setViewActivityOpen(true);
+  };
+  
+  const handlePageSizeChange = (size: string) => {
+    setPageSize(parseInt(size));
+    setPage(1); // Reset to first page when changing page size
   };
 
   const getSourceBadge = (source: string) => {
@@ -438,6 +452,30 @@ export default function ActivitiesPage() {
             </div>
             
             <TabsContent value="all" className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-muted-foreground">Show:</span>
+                  <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                    <SelectTrigger className="w-[80px]">
+                      <SelectValue placeholder="10" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
               <Table>
                 <TableCaption>A list of your recent activities.</TableCaption>
                 <TableHeader>
@@ -485,7 +523,13 @@ export default function ActivitiesPage() {
                       </TableCell>
                       <TableCell>{getSourceBadge(activity.source)}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">View</Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleViewActivity(activity.id)}
+                        >
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -514,6 +558,101 @@ export default function ActivitiesPage() {
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
+              
+              {/* Activity Detail View Dialog */}
+              <Dialog open={viewActivityOpen} onOpenChange={setViewActivityOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Activity Details</DialogTitle>
+                    <DialogDescription>
+                      View detailed information about this activity
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  {viewActivityId && activities.find(a => a.id === viewActivityId) && (
+                    <div className="py-4">
+                      {(() => {
+                        const activity = activities.find(a => a.id === viewActivityId)!;
+                        return (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                {activity.type.icon === "chart" && <BarChart3 className="h-5 w-5 mr-2 text-secondary" />}
+                                {activity.type.icon === "speed" && <Clock className="h-5 w-5 mr-2 text-primary" />}
+                                {activity.type.icon === "activity" && <Navigation className="h-5 w-5 mr-2 text-accent" />}
+                                <h3 className="text-lg font-semibold">{activity.type.name}</h3>
+                              </div>
+                              <span className="text-muted-foreground">{activity.date}</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-4">
+                                  <div className="text-sm text-muted-foreground">Distance</div>
+                                  <div className="text-xl font-semibold">{activity.distance}</div>
+                                </CardContent>
+                              </Card>
+                              
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-4">
+                                  <div className="text-sm text-muted-foreground">Time</div>
+                                  <div className="text-xl font-semibold">{activity.time}</div>
+                                </CardContent>
+                              </Card>
+                              
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-4">
+                                  <div className="text-sm text-muted-foreground">Pace</div>
+                                  <div className="text-xl font-semibold">{activity.pace}</div>
+                                </CardContent>
+                              </Card>
+                              
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-4">
+                                  <div className="text-sm text-muted-foreground">Heart Rate</div>
+                                  <div className="text-xl font-semibold">{activity.heartRate}</div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                              <div>
+                                <div className="text-sm text-muted-foreground">Effort Level</div>
+                                <Badge className={
+                                  activity.effort.level === "easy" ? "bg-green-100 text-green-800 hover:bg-green-100" : 
+                                  activity.effort.level === "moderate" ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" :
+                                  "bg-red-100 text-red-800 hover:bg-red-100"
+                                }>
+                                  {activity.effort.label}
+                                </Badge>
+                              </div>
+                              <div>
+                                <div className="text-sm text-muted-foreground">Source</div>
+                                {getSourceBadge(activity.source)}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h4 className="text-sm font-medium mb-2">Training Notes</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {activity.type.name === "Long Run" ? 
+                                  "This long run was designed to build endurance and practice pacing strategy. The goal was maintaining a consistent effort throughout the entire duration." :
+                                  activity.type.name === "Tempo Run" ?
+                                  "This tempo run was designed to improve lactate threshold and mental fortitude. The primary goal was sustaining a challenging but manageable pace." :
+                                  "This easy run was designed for recovery and active rest. The goal was to keep heart rate low while maintaining good form."}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                  
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setViewActivityOpen(false)}>Close</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
             
             <TabsContent value="runs" className="space-y-4">
