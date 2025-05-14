@@ -4355,6 +4355,317 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get activities related to a goal for visualization
+  app.get('/api/goals/:id/activities', requireAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      
+      // First verify goal exists and belongs to user
+      const [goal] = await db
+        .select()
+        .from(fitness_goals)
+        .where(and(
+          eq(fitness_goals.id, goalId), 
+          eq(fitness_goals.user_id, req.user!.id)
+        ));
+        
+      if (!goal) {
+        return res.status(404).json({ message: 'Goal not found' });
+      }
+      
+      // Get all running activities after the goal creation date
+      const goalActivities = await db
+        .select()
+        .from(user_activities)
+        .where(
+          and(
+            eq(user_activities.user_id, req.user!.id),
+            gte(user_activities.date, goal.created_at || new Date())
+          )
+        )
+        .orderBy(user_activities.date);
+      
+      // Determine which activities contribute to the goal
+      const enhancedActivities = goalActivities.map(activity => {
+        // For race goals, any running activity contributes
+        const isCompleted = goal.goal_type === 'race' 
+          ? activity.type.toLowerCase().includes('run')
+          : true; // For other goals, all activities count
+        
+        return {
+          ...activity,
+          is_completed: isCompleted
+        };
+      });
+      
+      res.json(enhancedActivities);
+    } catch (error) {
+      console.error('Error getting goal activities:', error);
+      res.status(500).json({ message: 'Failed to get goal activities' });
+    }
+  });
+  
+  // Get goal comparison data (compared with other users with similar goals)
+  app.get('/api/goals/:id/comparison', requireAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      
+      // First verify goal exists and belongs to user
+      const [goal] = await db
+        .select()
+        .from(fitness_goals)
+        .where(and(
+          eq(fitness_goals.id, goalId), 
+          eq(fitness_goals.user_id, req.user!.id)
+        ));
+        
+      if (!goal) {
+        return res.status(404).json({ message: 'Goal not found' });
+      }
+      
+      // Get similar goals from other users
+      const similarGoals = await db
+        .select()
+        .from(fitness_goals)
+        .where(
+          and(
+            eq(fitness_goals.goal_type, goal.goal_type),
+            ne(fitness_goals.user_id, req.user!.id),
+            // For race goals, match by target distance
+            goal.goal_type === 'race' && goal.target_distance 
+              ? eq(fitness_goals.target_distance, goal.target_distance) 
+              : undefined
+          )
+        );
+      
+      // Calculate percentile ranking
+      const totalUsers = similarGoals.length + 1; // Include current user
+      const usersAhead = similarGoals.filter(g => (g.progress || 0) > (goal.progress || 0)).length;
+      
+      const percentile = totalUsers > 1 
+        ? Math.round(100 - (usersAhead / totalUsers) * 100)
+        : 50; // Default to 50th percentile if no comparison data
+      
+      // Generate comparison data points
+      const weeklyProgressPoints = 7; // Number of data points to generate
+      
+      // Calculate average progress for similar users
+      const comparisonData = [];
+      
+      for (let i = 1; i <= weeklyProgressPoints; i++) {
+        const weekProgress = Math.round((goal.progress || 50) * (i / weeklyProgressPoints));
+        
+        // Calculate average progress for similar users at this point
+        const avgProgress = similarGoals.length > 0
+          ? Math.round(similarGoals.reduce((sum, g) => sum + ((g.progress || 0) * (i / weeklyProgressPoints)), 0) / similarGoals.length)
+          : Math.round(weekProgress * 0.8); // Default to 80% of user's progress
+        
+        // Calculate top performers (90th percentile)
+        const topProgress = similarGoals.length > 3
+          ? Math.round(
+              similarGoals
+                .map(g => (g.progress || 0) * (i / weeklyProgressPoints))
+                .sort((a, b) => b - a)
+                .slice(0, Math.max(1, Math.floor(similarGoals.length * 0.1)))
+                .reduce((sum, p) => sum + p, 0) / Math.max(1, Math.floor(similarGoals.length * 0.1))
+            )
+          : Math.round(weekProgress * 1.2); // Default to 120% of user's progress
+        
+        comparisonData.push({
+          name: `Week ${i}`,
+          you: weekProgress,
+          average: avgProgress,
+          top: topProgress
+        });
+      }
+      
+      // Add current point
+      comparisonData.push({
+        name: 'Now',
+        you: goal.progress || 0,
+        average: similarGoals.length > 0
+          ? Math.round(similarGoals.reduce((sum, g) => sum + (g.progress || 0), 0) / similarGoals.length)
+          : Math.round((goal.progress || 0) * 0.8),
+        top: similarGoals.length > 3
+          ? Math.round(
+              similarGoals
+                .map(g => g.progress || 0)
+                .sort((a, b) => b - a)
+                .slice(0, Math.max(1, Math.floor(similarGoals.length * 0.1)))
+                .reduce((sum, p) => sum + p, 0) / Math.max(1, Math.floor(similarGoals.length * 0.1))
+            )
+          : Math.round((goal.progress || 0) * 1.2)
+      });
+      
+      // Determine position based on percentile
+      let position = "Average";
+      if (percentile >= 90) position = "Top 10%";
+      else if (percentile >= 75) position = "Top 25%";
+      else if (percentile >= 50) position = "Above Average";
+      else if (percentile >= 25) position = "Below Average";
+      else position = "Bottom 25%";
+      
+      res.json({
+        comparisonData,
+        percentile,
+        position,
+        similarGoals: similarGoals.length,
+        totalUsers
+      });
+    } catch (error) {
+      console.error('Error getting goal comparison data:', error);
+      res.status(500).json({ message: 'Failed to get goal comparison data' });
+    }
+  });
+  
+  // Get weight tracking data for weight loss goals
+  app.get('/api/goals/:id/weight-data', requireAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      
+      // First verify goal exists and belongs to user
+      const [goal] = await db
+        .select()
+        .from(fitness_goals)
+        .where(and(
+          eq(fitness_goals.id, goalId), 
+          eq(fitness_goals.user_id, req.user!.id)
+        ));
+        
+      if (!goal) {
+        return res.status(404).json({ message: 'Goal not found' });
+      }
+      
+      if (goal.goal_type !== 'weight_loss') {
+        return res.status(400).json({ message: 'This endpoint is only for weight loss goals' });
+      }
+      
+      // Extract weight information from goal
+      const startingWeight = parseFloat(goal.weekly_mileage?.toString() || '0'); // Using weekly_mileage for current_weight
+      const targetValue = parseFloat(goal.target_value?.toString() || '0');
+      const targetWeight = startingWeight - targetValue;
+      
+      // Calculate current weight based on progress
+      const progress = goal.progress || 0;
+      const weightLost = (targetValue * progress) / 100;
+      const currentWeight = startingWeight - weightLost;
+      
+      // Get all weight check-ins from activities (could be from a separate table in a real app)
+      const now = new Date();
+      const createdDate = goal.created_at || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days ago
+      const targetDate = goal.target_date || new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000); // Default to 60 days in future
+      
+      // Generate weight data
+      const weightData = [];
+      const daysBetween = Math.round((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000));
+      const totalDays = Math.round((targetDate.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000));
+      const daysLeft = Math.round((targetDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+      
+      // Calculate needed weight loss per day to hit target
+      const lossPerDay = targetValue / totalDays;
+      
+      // Calculate current daily loss rate
+      const currentRate = weightLost / Math.max(1, daysBetween);
+      
+      // Determine if on track
+      const isOnTrack = currentRate >= lossPerDay;
+      
+      // Calculate estimated completion
+      let estimatedCompletionDate = new Date(targetDate);
+      if (!isOnTrack && currentRate > 0) {
+        // Calculate days needed to reach target weight
+        const daysNeeded = (targetValue - weightLost) / currentRate;
+        estimatedCompletionDate = new Date(now);
+        estimatedCompletionDate.setDate(now.getDate() + daysNeeded);
+      }
+      
+      // Calculate projected final weight
+      const projectedLoss = currentRate * daysLeft;
+      const expectedFinalWeight = parseFloat((currentWeight - projectedLoss).toFixed(1));
+      
+      // Add historical data points (weekly intervals)
+      const weeksPassed = Math.ceil(daysBetween / 7);
+      
+      // Function to format date for chart
+      const formatChartDate = (date: Date): string => {
+        const isToday = date.toDateString() === now.toDateString();
+        if (isToday) return 'Today';
+        
+        return new Intl.DateTimeFormat('en-US', {
+          month: 'short',
+          day: 'numeric'
+        }).format(date);
+      };
+      
+      for (let i = 0; i < weeksPassed; i++) {
+        const pastDate = new Date(createdDate);
+        pastDate.setDate(createdDate.getDate() + (i * 7));
+        
+        // Calculate expected weight at this point
+        const daysFromStart = Math.round((pastDate.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000));
+        const expectedLoss = lossPerDay * daysFromStart;
+        const expectedWeight = parseFloat((startingWeight - expectedLoss).toFixed(1));
+        
+        // Calculate actual weight (simulated)
+        const progressAtPoint = i / weeksPassed;
+        const actualLoss = weightLost * progressAtPoint;
+        const actualWeight = parseFloat((startingWeight - actualLoss).toFixed(1));
+        
+        weightData.push({
+          name: formatChartDate(pastDate),
+          weight: actualWeight,
+          target: expectedWeight
+        });
+      }
+      
+      // Add current weight
+      weightData.push({
+        name: 'Now',
+        weight: parseFloat(currentWeight.toFixed(1)),
+        target: parseFloat((startingWeight - (lossPerDay * daysBetween)).toFixed(1))
+      });
+      
+      // Add future projections
+      const weeksLeft = Math.ceil(daysLeft / 7);
+      
+      for (let i = 1; i <= weeksLeft; i++) {
+        const futureDate = new Date(now);
+        futureDate.setDate(now.getDate() + (i * 7));
+        
+        // Calculate target weight at this point
+        const daysFromStart = daysBetween + (i * 7);
+        const targetLoss = lossPerDay * daysFromStart;
+        const targetWeightAtPoint = parseFloat((startingWeight - targetLoss).toFixed(1));
+        
+        // Calculate projected weight
+        const projectedLossAtPoint = currentRate * (i * 7);
+        const projectedWeightAtPoint = parseFloat((currentWeight - projectedLossAtPoint).toFixed(1));
+        
+        weightData.push({
+          name: formatChartDate(futureDate),
+          weight: null, // No actual weight for future dates
+          projected: projectedWeightAtPoint,
+          target: targetWeightAtPoint
+        });
+      }
+      
+      res.json({
+        startingWeight,
+        currentWeight: parseFloat(currentWeight.toFixed(1)),
+        targetWeight,
+        weightData,
+        projection: {
+          estimatedCompletionDate,
+          isOnTrack,
+          expectedFinalWeight
+        }
+      });
+    } catch (error) {
+      console.error('Error getting weight data:', error);
+      res.status(500).json({ message: 'Failed to get weight data' });
+    }
+  });
+  
   app.put('/api/goals/:id', requireAuth, async (req, res) => {
     try {
       const goalId = parseInt(req.params.id);
