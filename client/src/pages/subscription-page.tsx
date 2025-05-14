@@ -658,6 +658,7 @@ export default function SubscriptionPage() {
                     {plan.features?.map((feature, index) => {
                       // Highlight special features for annual plan
                       const isSpecialFeature = isAnnual && (
+                        feature.includes("Early access") || 
                         feature.includes("Extended") || 
                         feature.includes("Priority") || 
                         feature.includes("Unlimited") ||
