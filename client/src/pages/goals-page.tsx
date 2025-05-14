@@ -290,10 +290,44 @@ export default function GoalsPage() {
         throw new Error('Failed to update goal');
       }
       
+      // Get the updated goal data
+      const updatedGoalFromApi = await response.json();
+      
+      // Transform API format to UI format
+      const transformedGoal = {
+        ...selectedGoal,
+        type: updatedGoalFromApi.goal_type,
+        targetDate: updatedGoalFromApi.target_date
+      };
+      
+      // Add type-specific properties
+      if (updatedGoalFromApi.goal_type === 'race') {
+        transformedGoal.distance = updatedGoalFromApi.race_distance;
+        transformedGoal.targetTime = updatedGoalFromApi.target_time;
+        transformedGoal.experience = updatedGoalFromApi.experience_level;
+      } else if (updatedGoalFromApi.goal_type === 'weight') {
+        transformedGoal.targetWeight = updatedGoalFromApi.target_value;
+        
+        // If we have the weight loss amount and starting weight, update them too
+        if (startingWeight) {
+          transformedGoal.startingWeight = startingWeight;
+          
+          // Calculate weight difference
+          if (transformedGoal.targetWeight) {
+            transformedGoal.weightLossAmount = (
+              parseFloat(startingWeight) - parseFloat(transformedGoal.targetWeight)
+            ).toString();
+          }
+        }
+      }
+      
       toast({
         title: "Goal updated",
         description: "Your goal has been successfully updated."
       });
+      
+      // Update selected goal with new data
+      setSelectedGoal(transformedGoal);
       
       // Refresh goals data and reset form
       refetchGoals();
