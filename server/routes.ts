@@ -1121,12 +1121,50 @@ function hasAnnualSubscription(req: Request, res: Response, next: NextFunction) 
 // Import the developer subscription endpoint
 import { setupDevSubscription } from "./dev-subscription";
 
+// Import the simplified meal plan generator
+import { generateSimpleMealPlan } from './simple-meal-plan';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup auth middleware first
   setupAuth(app);
 
   // Setup developer endpoints for testing
   setupDevSubscription(app);
+  
+  // Simple meal plan generation endpoint - needs authentication and subscription
+  app.get('/api/nutrition/simple-meal-plan', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    // Check subscription status
+    if (req.user.subscription_status !== 'active') {
+      return res.status(403).json({ 
+        error: "Subscription required", 
+        message: "Meal plan generation requires an active subscription" 
+      });
+    }
+    
+    try {
+      const mealPlan = await generateSimpleMealPlan(req.user.id);
+      res.json(mealPlan);
+    } catch (error: any) {
+      console.error("Error in simple meal plan generation:", error);
+      
+      // Handle quota limit errors specifically
+      if (error.message?.includes("quota") || error.message?.includes("rate limit")) {
+        return res.status(429).json({ 
+          error: "AI service quota exceeded",
+          message: "Our AI service is currently at capacity. Please try again later."
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to generate meal plan",
+        message: "Please try again later"
+      });
+    }
+  });
   
   // Endpoint for user subscription status
   app.get("/api/user/subscription", async (req, res) => {
@@ -3866,45 +3904,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate the AI meal plan
       let text;
       
-      if (googleAI && geminiModel) {
-        // Use Google AI if available
-        console.log("Generating meal plan with Google AI");
-        const result = await geminiModel.generateContent(context);
-        const response = await result.response;
-        text = response.text();
-      } else if (process.env.DEEPSEEK_API_KEY) {
-        // Fallback to DeepSeek API
-        console.log("Generating meal plan with DeepSeek API");
-        
-        const deepseekResponse = await axios.post(
-          'https://api.deepseek.com/v1/chat/completions',
-          {
-            model: "deepseek-chat",
-            messages: [
-              {
-                role: "system",
-                content: "You are a professional sports nutritionist specializing in endurance athletes."
-              },
-              {
-                role: "user",
-                content: context
-              }
-            ],
-            temperature: 0.7,
-            max_tokens: 4000,
-            response_format: { type: "json_object" }
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      try {
+        // First try Google AI if available
+        if (googleAI && geminiModel) {
+          try {
+            console.log("Generating meal plan with Google AI");
+            const result = await geminiModel.generateContent(context);
+            const response = await result.response;
+            text = response.text();
+            console.log("Successfully generated meal plan with Google AI");
+          } catch (googleError) {
+            console.error("Google AI error:", googleError.message || googleError);
+            
+            // Check if we hit a quota limit
+            if (googleError.status === 429 || 
+                (googleError.errorDetails && googleError.errorDetails.some(d => d['@type']?.includes('QuotaFailure')))) {
+              console.log("Google AI quota exceeded, falling back to DeepSeek API");
+              throw new Error("QUOTA_EXCEEDED");
+            } else {
+              throw googleError; // Re-throw if it's not a quota issue
             }
           }
-        );
-        
-        text = deepseekResponse.data.choices[0].message.content;
-      } else {
-        throw new Error("No AI service available");
+        } else if (process.env.DEEPSEEK_API_KEY) {
+          // Google AI not available, use DeepSeek directly
+          throw new Error("USE_DEEPSEEK");
+        } else {
+          return res.status(503).json({ 
+            error: "AI service unavailable",
+            message: "No AI service is currently available. Please try again later."
+          });
+        }
+      } catch (error) {
+        // If we need to use DeepSeek as fallback
+        if ((error.message === "QUOTA_EXCEEDED" || error.message === "USE_DEEPSEEK") && process.env.DEEPSEEK_API_KEY) {
+          try {
+            console.log("Generating meal plan with DeepSeek API");
+            
+            const deepseekResponse = await axios.post(
+              'https://api.deepseek.com/v1/chat/completions',
+              {
+                model: "deepseek-chat",
+                messages: [
+                  {
+                    role: "system",
+                    content: "You are a professional sports nutritionist specializing in endurance athletes. Respond with valid JSON."
+                  },
+                  {
+                    role: "user",
+                    content: context
+                  }
+                ],
+                temperature: 0.7,
+                max_tokens: 4000,
+                response_format: { type: "json_object" }
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                }
+              }
+            );
+            
+            text = deepseekResponse.data.choices[0].message.content;
+            console.log("Successfully generated meal plan with DeepSeek API");
+          } catch (deepseekError) {
+            console.error("DeepSeek API error:", deepseekError.message || deepseekError);
+            return res.status(429).json({ 
+              error: "AI service quota exceeded",
+              message: "All AI services are currently at capacity. Please try again later."
+            });
+          }
+        } else {
+          // Handle rate limiting specifically
+          if (error.status === 429 || (error.response && error.response.status === 429)) {
+            return res.status(429).json({ 
+              error: "AI service quota exceeded",
+              message: "AI quota limit reached. Please try again later."
+            });
+          } else {
+            console.error("Error generating AI meal plan:", error);
+            return res.status(500).json({ 
+              error: "Failed to generate AI meal plan",
+              message: "An unexpected error occurred with the AI service. Please try again."
+            });
+          }
+        }
       }
       
       // Parse the JSON response
