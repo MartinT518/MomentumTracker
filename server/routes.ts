@@ -3746,10 +3746,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if it's a quota error from Google AI API
       if (error?.status === 429 || (error?.message && error?.message.includes('quota'))) {
+        // Extract retry delay from the error if available
+        let retryAfter = 60; // Default retry time in seconds
+        
+        if (error.errorDetails && Array.isArray(error.errorDetails)) {
+          const retryInfo = error.errorDetails.find(detail => 
+            detail['@type'] && detail['@type'].includes('RetryInfo')
+          );
+          
+          if (retryInfo && retryInfo.retryDelay) {
+            // Extract seconds from format like "50s"
+            const match = retryInfo.retryDelay.match(/(\d+)s/);
+            if (match && match[1]) {
+              retryAfter = parseInt(match[1], 10);
+            }
+          }
+        }
+        
         return res.status(429).json({ 
           error: "AI service quota exceeded. Please try again later.",
           quotaExceeded: true,
-          retryAfter: 60 // Suggest trying again after 60 seconds
+          retryAfter: retryAfter
         });
       }
       
