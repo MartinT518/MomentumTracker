@@ -631,7 +631,7 @@ interface ExpandedSubscription extends Omit<Stripe.Subscription, 'latest_invoice
   latest_invoice?: ExpandedInvoice | string | null;
 }
 
-// Update geminiModel configuration for better results when used
+// Initialize OpenAI configuration for nutrition and training plans
 if (openai) {
   try {
     // No additional configuration needed for OpenAI
