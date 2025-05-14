@@ -98,11 +98,12 @@ export async function generateMealPlan(
   }
 ): Promise<AIGeneratedMealPlan | null> {
   try {
-    const response = await apiRequest("POST", "/api/nutrition/generate-meal-plan", {
+    const response = await apiRequest("POST", "/api/nutrition/generate", {
       userId,
-      preferences,
+      date: new Date().toISOString().split('T')[0],
+      userPreferences: preferences,
       trainingLoad,
-      date: new Date().toISOString().split('T')[0]
+      useWeeklyMealPlanning: true // Generate weekly meal plan instead of daily
     });
     
     if (!response.ok) {
