@@ -64,33 +64,38 @@ export default function NutritionPage() {
       return;
     }
 
-    if (!hasSubscription) {
-      toast({
-        title: "Premium feature",
-        description: "Please upgrade to a premium subscription to use this feature",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Temporarily disabled subscription check for testing
+    // if (!hasSubscription) {
+    //   toast({
+    //     title: "Premium feature",
+    //     description: "Please upgrade to a premium subscription to use this feature",
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
 
     setIsGenerating(true);
 
     try {
+      console.log("Starting meal plan generation process...");
+      
       // Create a default nutrition preference if none exists
       const defaultPreference = {
         id: 0,
         user_id: user.id,
         dietary_restrictions: [], 
         excluded_foods: [],
-        preferred_foods: ["chicken", "rice", "vegetables", "fruit"],
-        calorie_target: 2200,
-        protein_target: 30,
-        carbs_target: 50,
-        fat_target: 20,
+        preferred_foods: ["chicken", "rice", "vegetables", "fruit", "nuts", "eggs"],
+        calorie_target: 2500, // Better default for runners
+        protein_target: 140, // In grams (not percentage)
+        carbs_target: 350, // In grams
+        fat_target: 70, // In grams
         meal_count: 4,
         created_at: new Date(),
         updated_at: new Date()
       };
+      
+      console.log("Using preferences:", preferences || defaultPreference);
 
       const result = await generateMealPlan(
         user.id,

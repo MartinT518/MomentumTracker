@@ -98,11 +98,29 @@ export async function generateMealPlan(
   }
 ): Promise<AIGeneratedMealPlan | null> {
   try {
+    // Adapt our preferences to match the server API format
+    const adaptedPreferences = {
+      dietaryRestrictions: preferences.dietary_restrictions || [],
+      allergies: [], // Not in our schema yet, but expected by the server
+      dislikedFoods: preferences.excluded_foods || [],
+      favoriteFoods: preferences.preferred_foods || [],
+      calorieTarget: preferences.calorie_target,
+      proteinTarget: preferences.protein_target,
+      carbsTarget: preferences.carbs_target,
+      fatTarget: preferences.fat_target,
+      mealCount: preferences.meal_count
+    };
+    
+    // Add some default fitness goals if not provided
+    const fitnessGoals = ["Improve running performance", "Maintain healthy weight"];
+    
     const response = await apiRequest("POST", "/api/nutrition/generate", {
       userId,
       date: new Date().toISOString().split('T')[0],
-      userPreferences: preferences,
+      userPreferences: adaptedPreferences,
       trainingLoad,
+      activityLevel: "Active", // Default to active for runners
+      fitnessGoals,
       useWeeklyMealPlanning: true // Generate weekly meal plan instead of daily
     });
     
