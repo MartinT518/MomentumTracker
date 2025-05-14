@@ -1591,7 +1591,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         max_tokens: 1000
       });
       
-      const responseJson = JSON.parse(result.response.text());
+      // Parse the OpenAI response
+      const responseContent = result.choices[0].message.content;
+      const responseJson = responseContent ? JSON.parse(responseContent) : {};
       const generatedAchievements = responseJson.achievements || [];
       
       // Save the generated achievements to the database
@@ -3437,7 +3439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    if (!geminiModel) {
+    if (!openai) {
       return res.status(503).json({ error: "AI service is not available. Missing API key." });
     }
 
@@ -3512,13 +3514,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Make sure the response is in valid JSON format that can be parsed directly.
       `;
 
-      const result = await geminiModel.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+        max_tokens: 1500
+      });
       
       // Try to parse the response as JSON
       try {
-        const trainingPlan = JSON.parse(text);
+        const text = result.choices[0].message.content;
+        const trainingPlan = text ? JSON.parse(text) : {};
         res.json(trainingPlan);
       } catch (error) {
         console.error("Error parsing AI response as JSON:", error);
@@ -3945,20 +3953,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let text;
       
       try {
-        // First try Google AI if available
-        if (googleAI && geminiModel) {
+        // First try OpenAI if available
+        if (openai) {
           try {
-            console.log("Generating meal plan with Google AI");
-            const result = await geminiModel.generateContent(context);
-            const response = await result.response;
-            text = response.text();
-            console.log("Successfully generated meal plan with Google AI");
-          } catch (googleError) {
-            console.error("Google AI error:", googleError.message || googleError);
+            console.log("Generating meal plan with OpenAI");
+            // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+            const result = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: [{ role: "user", content: context }],
+              temperature: 0.7,
+              response_format: { type: "json_object" },
+              max_tokens: 2000
+            });
+            text = result.choices[0].message.content;
+            console.log("Successfully generated meal plan with OpenAI");
+          } catch (openaiError) {
+            console.error("OpenAI error:", openaiError.message || openaiError);
             
             // Check if we hit a quota limit
-            if (googleError.status === 429 || 
-                (googleError.errorDetails && googleError.errorDetails.some(d => d['@type']?.includes('QuotaFailure')))) {
+            if (openaiError.status === 429 || 
+                (openaiError.message && openaiError.message.includes('quota'))) {
               console.log("Google AI quota exceeded, falling back to DeepSeek API");
               throw new Error("QUOTA_EXCEEDED");
             } else {
