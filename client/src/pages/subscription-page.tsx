@@ -563,9 +563,9 @@ export default function SubscriptionPage() {
               </div>
               <div className="space-y-2">
                 <FeatureItem included={true} text="All premium features" />
-                <FeatureItem included={true} text="Advanced training analytics" />
-                <FeatureItem included={true} text="AI-powered recommendations" />
-                <FeatureItem included={true} text="Unlimited training history" />
+                <FeatureItem included={true} text="Activity tracking" />
+                <FeatureItem included={true} text="Goal visualization" />
+                <FeatureItem included={true} text="Performance metrics" />
                 <FeatureItem included={true} text="No payment required" />
               </div>
             </CardContent>
@@ -598,10 +598,10 @@ export default function SubscriptionPage() {
               <div className="space-y-2">
                 <FeatureItem included={true} text="Basic activity tracking" />
                 <FeatureItem included={true} text="Personal dashboard" />
-                <FeatureItem included={true} text="Limited training history (30 days)" />
-                <FeatureItem included={false} text="Advanced training analytics" />
-                <FeatureItem included={false} text="Custom training plans" />
-                <FeatureItem included={false} text="AI-powered recommendations" />
+                <FeatureItem included={true} text="Basic goal setting" />
+                <FeatureItem included={false} text="Detailed performance metrics" />
+                <FeatureItem included={false} text="Advanced goal visualization" />
+                <FeatureItem included={false} text="Data from fitness platforms" />
               </div>
             </CardContent>
             <CardFooter>
@@ -658,8 +658,8 @@ export default function SubscriptionPage() {
                     {plan.features?.map((feature, index) => {
                       // Highlight special features for annual plan
                       const isSpecialFeature = isAnnual && (
-                        feature.includes("Human coach") || 
-                        feature.includes("Video form") || 
+                        feature.includes("Extended") || 
+                        feature.includes("Priority") || 
                         feature.includes("Unlimited") ||
                         feature.includes("Advanced")
                       );
@@ -676,10 +676,10 @@ export default function SubscriptionPage() {
                     {!plan.features && (
                       <>
                         <FeatureItem included={true} text="All free features" />
-                        <FeatureItem included={true} text="Advanced training analytics" />
-                        <FeatureItem included={true} text="Custom training plans" />
-                        <FeatureItem included={true} text="Training history" />
-                        <FeatureItem included={true} text="AI-powered recommendations" />
+                        <FeatureItem included={true} text="Full activity tracking" />
+                        <FeatureItem included={true} text="Enhanced goal visualization" />
+                        <FeatureItem included={true} text="Detailed performance metrics" />
+                        <FeatureItem included={true} text="Integration with fitness platforms" />
                         <FeatureItem included={true} text="Standard support" />
                       </>
                     )}
