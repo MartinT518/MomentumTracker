@@ -2695,6 +2695,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to activate premium features" });
     }
   });
+  
+  // Development only endpoint to set subscription status for any user by ID without auth
+  // WARNING: This should be removed in production
+  app.post("/api/dev/set-premium/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Set subscription to active for 30 days
+      const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      
+      // Update user subscription directly through storage interface
+      await storage.updateUserSubscription(userId, {
+        status: 'active',
+        endDate: endDate,
+        stripeSubscriptionId: 'dev_test_subscription',
+        planId: 2 // Annual plan
+      });
+      
+      // Get updated user
+      const updatedUser = await storage.getUser(userId);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      console.log("Set premium subscription for user ID:", userId);
+      res.json({ 
+        message: "Premium subscription activated for development",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error setting premium subscription:", error);
+      res.status(500).json({ error: "Failed to set premium subscription" });
+    }
+  });
 
   app.get("/api/subscription-plans/:id", async (req, res) => {
     try {
