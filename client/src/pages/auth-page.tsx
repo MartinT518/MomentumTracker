@@ -132,7 +132,7 @@ export default function AuthPage() {
                   <h3 className="font-bold">AI-Powered Training</h3>
                 </div>
                 <p className="text-sm opacity-90">
-                  Personalized plans built by Google's Gemini AI that adapt to your performance.
+                  Personalized plans built by OpenAI that adapt to your performance.
                 </p>
               </div>
               
@@ -376,7 +376,7 @@ export default function AuthPage() {
                 <h2 className="text-3xl font-bold text-white">AI-Powered Training</h2>
               </div>
               <p className="text-lg text-blue-100 mb-6">
-                Get personalized training plans built by Google's Gemini AI that adapt to your performance, goals, and recovery patterns in real-time.
+                Get personalized training plans built by OpenAI that adapt to your performance, goals, and recovery patterns in real-time.
               </p>
               
               {/* Premium Features */}
