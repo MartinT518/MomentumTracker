@@ -1,168 +1,351 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, UserPlus, Users } from 'lucide-react';
-import Sidebar from '@/components/common/sidebar';
-import MobileMenu from '@/components/common/mobile-menu';
+import { Sidebar } from '@/components/common/sidebar';
+import { MobileMenu } from '@/components/common/mobile-menu';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
-// Form validation schema
+// Zod schema for coach form validation
 const coachFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  bio: z.string().min(10, { message: "Bio must be at least 10 characters" }),
-  specialty: z.string().min(2, { message: "Specialty must be at least 2 characters" }),
-  experience_years: z.string().min(1, { message: "Experience is required" }),
-  certifications: z.string().optional(),
-  profile_image: z.string().url({ message: "Please enter a valid URL" }).optional(),
-  hourly_rate: z.string().min(1, { message: "Hourly rate is required" }),
-  available: z.boolean().default(true)
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  title: z.string().min(2, { message: "Title must be at least 2 characters." }),
+  bio: z.string().min(10, { message: "Bio must be at least 10 characters." }),
+  specialties: z.string().min(5, { message: "Specialties must be at least 5 characters." }),
+  certifications: z.string().min(5, { message: "Certifications must be at least 5 characters." }),
+  experience_years: z.string().regex(/^\d+$/, { message: "Must be a number." }),
+  photoUrl: z.string().url({ message: "Please enter a valid URL." }).optional(),
+  isActive: z.boolean().default(true),
+  hourlyRate: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Please enter a valid price." }),
 });
 
 type CoachFormValues = z.infer<typeof coachFormSchema>;
 
 export default function CoachManagementPage() {
-  const { user } = useAuth();
+  const [editingCoachId, setEditingCoachId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isAdding, setIsAdding] = useState(false);
+  const { user } = useAuth();
 
-  // Query to fetch existing coaches
-  const { data: coaches, isLoading: isLoadingCoaches } = useQuery({
-    queryKey: ['/api/coaches/all'],
-    enabled: !!user,
-  });
-
-  // Form definition
+  // Initialize form with default values
   const form = useForm<CoachFormValues>({
     resolver: zodResolver(coachFormSchema),
     defaultValues: {
-      name: '',
-      bio: '',
-      specialty: '',
-      experience_years: '',
-      certifications: '',
-      profile_image: '',
-      hourly_rate: '',
-      available: true
-    }
+      name: "",
+      email: "",
+      title: "",
+      bio: "",
+      specialties: "",
+      certifications: "",
+      experience_years: "",
+      photoUrl: "",
+      isActive: true,
+      hourlyRate: "",
+    },
   });
 
-  // Mutation to add a new coach
-  const addCoachMutation = useMutation({
+  // Coach type definition
+  type Coach = {
+    id: number;
+    name: string;
+    email?: string;
+    title: string;
+    bio: string;
+    specialties: string;
+    certifications: string;
+    experience_years: number;
+    photo_url?: string;
+    status: string;
+    hourly_rate: number;
+  };
+
+  // Fetch all coaches
+  const { data: coaches = [], isLoading } = useQuery<Coach[]>({
+    queryKey: ['/api/coaches/all'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/coaches/all');
+      return res.json();
+    },
+  });
+
+  // Create coach mutation
+  const createCoachMutation = useMutation({
     mutationFn: async (data: CoachFormValues) => {
-      const response = await apiRequest('POST', '/api/coaches', data);
-      return await response.json();
+      const res = await apiRequest('POST', '/api/coaches', {
+        ...data,
+        experience_years: parseInt(data.experience_years),
+        hourlyRate: parseFloat(data.hourlyRate),
+        status: data.isActive ? 'active' : 'inactive',
+      });
+      return res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Coach added successfully",
-        description: "The new coach has been added to the platform.",
+        title: "Success",
+        description: "Coach created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
       form.reset();
-      setIsAdding(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches'] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to add coach",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to create coach",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  // Update coach mutation
+  const updateCoachMutation = useMutation({
+    mutationFn: async (data: CoachFormValues & { id: number }) => {
+      const { id, ...rest } = data;
+      const res = await apiRequest('PUT', `/api/coaches/${id}`, {
+        ...rest,
+        experience_years: parseInt(rest.experience_years),
+        hourlyRate: parseFloat(rest.hourlyRate),
+        status: rest.isActive ? 'active' : 'inactive',
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Coach updated successfully!",
+      });
+      form.reset();
+      setEditingCoachId(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update coach",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete coach mutation
+  const deleteCoachMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('DELETE', `/api/coaches/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Coach deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete coach",
+        variant: "destructive",
+      });
+    },
   });
 
   // Handle form submission
   const onSubmit = (data: CoachFormValues) => {
-    addCoachMutation.mutate(data);
+    if (editingCoachId) {
+      updateCoachMutation.mutate({ ...data, id: editingCoachId });
+    } else {
+      createCoachMutation.mutate(data);
+    }
   };
 
-  // If user is not authenticated, show unauthorized message
-  if (!user) {
+  // Load coach data for editing
+  const handleEditCoach = (coach: any) => {
+    form.reset({
+      name: coach.name,
+      email: coach.email || '',
+      title: coach.title,
+      bio: coach.bio,
+      specialties: coach.specialties,
+      certifications: coach.certifications,
+      experience_years: coach.experience_years.toString(),
+      photoUrl: coach.photo_url || '',
+      isActive: coach.status === 'active',
+      hourlyRate: coach.hourly_rate.toString(),
+    });
+    setEditingCoachId(coach.id);
+    window.scrollTo(0, 0);
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    form.reset();
+    setEditingCoachId(null);
+  };
+
+  // Check if user is an admin - currently just simulating this check
+  // In a real application, this would be a proper role check
+  const isAdmin = user?.id === 1; // This is just a placeholder check
+
+  if (!isAdmin) {
     return (
-      <div className="flex h-screen max-w-full overflow-hidden">
-        <Sidebar />
+      <div className="flex flex-col min-h-screen">
         <MobileMenu />
-        <div className="flex-1 p-8">
-          <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <h2 className="text-2xl font-bold mb-4">Unauthorized</h2>
-            <p className="text-neutral-dark">Please log in to access coach management.</p>
-          </div>
+        <div className="flex flex-1">
+          <Sidebar />
+          <main className="flex-1 p-6 md:p-10">
+            <div className="text-center py-20">
+              <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
+              <p className="text-muted-foreground">
+                You don't have permission to access this page.
+              </p>
+            </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen max-w-full overflow-hidden">
-      <Sidebar />
+    <div className="flex flex-col min-h-screen">
       <MobileMenu />
-      <div className="flex-1 p-8 overflow-auto">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Coach Management</h1>
-            <Button 
-              onClick={() => setIsAdding(!isAdding)} 
-              className="flex items-center gap-2"
-            >
-              {isAdding ? 'Cancel' : (
-                <>
-                  <UserPlus size={16} />
-                  Add New Coach
-                </>
-              )}
-            </Button>
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1 p-6 md:p-10">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">Coach Management</h1>
+              <p className="text-muted-foreground">Add, edit or remove coaches from the platform</p>
+            </div>
           </div>
 
-          {isAdding && (
-            <Card className="mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Coach Form */}
+            <Card className="lg:col-span-1">
               <CardHeader>
-                <CardTitle>Add New Coach</CardTitle>
+                <CardTitle>{editingCoachId ? "Edit Coach" : "Add New Coach"}</CardTitle>
                 <CardDescription>
-                  Fill out the form below to add a new coach to the platform.
+                  {editingCoachId 
+                    ? "Update coach information" 
+                    : "Fill in the details to add a new coach"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Coach's full name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="coach@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Senior Running Coach" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="name"
+                        name="experience_years"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel>Years of Experience</FormLabel>
                             <FormControl>
-                              <Input placeholder="Coach's full name" {...field} />
+                              <Input placeholder="5" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      
                       <FormField
                         control={form.control}
-                        name="specialty"
+                        name="hourlyRate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Specialty</FormLabel>
+                            <FormLabel>Hourly Rate ($)</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g. Marathon Training, Speed Development" {...field} />
+                              <Input placeholder="75.00" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-
+                    
+                    <FormField
+                      control={form.control}
+                      name="specialties"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Specialties</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Marathon, Trail Running, etc." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="certifications"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Certifications</FormLabel>
+                          <FormControl>
+                            <Input placeholder="USATF Level 2, RRCA, etc." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormField
                       control={form.control}
                       name="bio"
@@ -171,8 +354,8 @@ export default function CoachManagementPage() {
                           <FormLabel>Bio</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Coach's background, achievements, and coaching philosophy" 
-                              className="min-h-32" 
+                              placeholder="Coach's biography and background"
+                              rows={4}
                               {...field} 
                             />
                           </FormControl>
@@ -180,74 +363,31 @@ export default function CoachManagementPage() {
                         </FormItem>
                       )}
                     />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="experience_years"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Years of Experience</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="0" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="hourly_rate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Hourly Rate ($)</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="0" placeholder="75" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
+                    
                     <FormField
                       control={form.control}
-                      name="certifications"
+                      name="photoUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Certifications</FormLabel>
+                          <FormLabel>Photo URL</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. USATF Level 2, RRCA Certified Coach" {...field} />
+                            <Input placeholder="https://example.com/photo.jpg" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
+                    
                     <FormField
                       control={form.control}
-                      name="profile_image"
+                      name="isActive"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Profile Image URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/image.jpg" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="available"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>Available for Coaching</FormLabel>
-                            <div className="text-sm text-muted-foreground">
-                              Coach will be shown as available for booking sessions
-                            </div>
+                            <FormLabel>Active Status</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Make this coach visible to users
+                            </p>
                           </div>
                           <FormControl>
                             <Switch
@@ -258,101 +398,115 @@ export default function CoachManagementPage() {
                         </FormItem>
                       )}
                     />
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={addCoachMutation.isPending}
-                    >
-                      {addCoachMutation.isPending ? (
-                        <>
+                    
+                    <div className="flex items-center gap-2 pt-2">
+                      <Button type="submit" disabled={createCoachMutation.isPending || updateCoachMutation.isPending}>
+                        {(createCoachMutation.isPending || updateCoachMutation.isPending) && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Adding Coach...
-                        </>
-                      ) : 'Add Coach'}
-                    </Button>
+                        )}
+                        {editingCoachId ? "Update Coach" : "Add Coach"}
+                      </Button>
+                      
+                      {editingCoachId && (
+                        <Button variant="outline" onClick={handleCancelEdit}>
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
                   </form>
                 </Form>
               </CardContent>
             </Card>
-          )}
 
-          <div className="mt-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users size={20} />
-                    Current Coaches
-                  </CardTitle>
-                  <CardDescription>
-                    Manage the coaches currently on the platform
-                  </CardDescription>
-                </div>
+            {/* Coach List */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  Coaches List
+                </CardTitle>
+                <CardDescription>
+                  Manage existing coaches
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoadingCoaches ? (
-                  <div className="flex justify-center items-center h-64">
+                {isLoading ? (
+                  <div className="flex justify-center p-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : coaches && coaches.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {coaches.map((coach: any) => (
-                      <Card key={coach.id} className="overflow-hidden">
-                        <div className="flex flex-col md:flex-row">
-                          {coach.profile_image && (
-                            <div className="w-full md:w-1/4">
-                              <img 
-                                src={coach.profile_image} 
-                                alt={coach.name} 
-                                className="h-48 md:h-full w-full object-cover" 
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 p-4">
-                            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                              <div>
-                                <h3 className="text-xl font-bold">{coach.name}</h3>
-                                <p className="text-sm text-muted-foreground">{coach.specialty}</p>
-                                <p className="mt-2 line-clamp-3">{coach.bio}</p>
-                                <div className="mt-4 flex flex-wrap gap-2">
-                                  <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs">
-                                    {coach.experience_years} Years Exp.
-                                  </div>
-                                  <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs">
-                                    ${coach.hourly_rate}/hour
-                                  </div>
-                                  <div className={`px-3 py-1 rounded-full text-xs ${coach.available 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'}`}>
-                                    {coach.available ? 'Available' : 'Unavailable'}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 mt-4 md:mt-0">
-                                <Button variant="outline" size="sm">
-                                  Edit
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                  Toggle Availability
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                ) : coaches.length === 0 ? (
+                  <div className="text-center py-8">
+                    <UserPlus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium">No coaches yet</h3>
+                    <p className="text-muted-foreground mt-1">
+                      Add your first coach using the form
+                    </p>
                   </div>
                 ) : (
-                  <div className="text-center py-12 border rounded-lg">
-                    <h3 className="text-xl font-semibold mb-2">No Coaches Found</h3>
-                    <p className="text-muted-foreground">Add your first coach using the form above.</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Name</th>
+                          <th className="text-left py-3 px-4 hidden md:table-cell">Specialties</th>
+                          <th className="text-left py-3 px-4 hidden lg:table-cell">Experience</th>
+                          <th className="text-left py-3 px-4">Status</th>
+                          <th className="text-right py-3 px-4">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {coaches.map((coach: any) => (
+                          <tr key={coach.id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-4">
+                              <div className="font-medium">{coach.name}</div>
+                              <div className="text-sm text-muted-foreground">{coach.title}</div>
+                            </td>
+                            <td className="py-3 px-4 hidden md:table-cell">
+                              {coach.specialties}
+                            </td>
+                            <td className="py-3 px-4 hidden lg:table-cell">
+                              {coach.experience_years} years
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                coach.status === 'active' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {coach.status === 'active' ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end space-x-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditCoach(coach)}
+                                >
+                                  Edit
+                                </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={() => deleteCoachMutation.mutate(coach.id)}
+                                  disabled={deleteCoachMutation.isPending}
+                                >
+                                  {deleteCoachMutation.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : 'Delete'}
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

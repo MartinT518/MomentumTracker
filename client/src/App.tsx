@@ -27,6 +27,8 @@ import AchievementsPage from "@/pages/achievements-page";
 import CoachesPage from "@/pages/coaches-page";
 import CoachDetailPage from "@/pages/coach-detail-page";
 import VideoAnalysisPage from "@/pages/video-analysis-page";
+// Admin pages
+import CoachManagementPage from "@/pages/coach-management-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -51,6 +53,7 @@ function Router() {
       <ProtectedRoute path="/coaches" component={CoachesPage} />
       <ProtectedRoute path="/coaches/:id" component={CoachDetailPage} />
       <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
+      <ProtectedRoute path="/admin/coaches" component={CoachManagementPage} />
       <Route path="/auth/:platform/callback" component={IntegrationCallbackPage} />
       <Route component={NotFound} />
     </Switch>
