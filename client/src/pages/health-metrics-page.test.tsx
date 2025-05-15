@@ -27,7 +27,7 @@ vi.mock('@/hooks/use-toast', () => ({
 
 describe('HealthMetricsPage', () => {
   beforeEach(() => {
-    queryClient.clear();
+    queryClient.removeQueries();
     vi.clearAllMocks();
   });
 
