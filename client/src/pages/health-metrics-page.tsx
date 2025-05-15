@@ -480,28 +480,49 @@ export default function HealthMetricsPage() {
             <p className="text-muted-foreground">Track your biometric data and energy levels</p>
           </div>
           <div className="flex items-center gap-2 mt-4 md:mt-0">
-            <Dialog open={importGarminOpen} onOpenChange={setImportGarminOpen}>
+            <Dialog open={importPlatformDialogOpen} onOpenChange={setImportPlatformDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Wifi className="mr-2 h-4 w-4" />
-                  Import from Garmin
+                  Import Health Data
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Import Health Data from Garmin</DialogTitle>
+                  <DialogTitle>Import Health Data</DialogTitle>
                   <DialogDescription>
-                    Import your health metrics from Garmin Connect including HRV, resting heart rate, and sleep data.
+                    Import your health metrics from your connected fitness platform including HRV, resting heart rate, and sleep data.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
+                  <div className="space-y-4">
+                    <FormLabel>Select Platform</FormLabel>
+                    <Select 
+                      value={selectedPlatform} 
+                      onValueChange={setSelectedPlatform}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="garmin">Garmin Connect</SelectItem>
+                        <SelectItem value="strava">Strava</SelectItem>
+                        <SelectItem value="polar">Polar Flow</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
                     <div className="flex items-start">
                       <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
                       <div>
                         <h4 className="font-medium text-amber-800">Consent Required</h4>
                         <p className="text-sm text-amber-700 mt-1">
-                          By importing data from Garmin Connect, you consent to MomentumRun accessing your health metrics. 
+                          By importing data from {selectedPlatform === "garmin" ? "Garmin Connect" : 
+                                                 selectedPlatform === "strava" ? "Strava" : 
+                                                 selectedPlatform === "polar" ? "Polar Flow" : 
+                                                 "your fitness platform"}, 
+                          you consent to MomentumRun accessing your health metrics. 
                           We will only import data from the last 2 months and only store what's needed for training recommendations.
                         </p>
                       </div>
@@ -512,7 +533,7 @@ export default function HealthMetricsPage() {
                     <div className="flex items-start">
                       <Info className="h-5 w-5 text-blue-500 mr-3 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-blue-800">Garmin Connect Data</h4>
+                        <h4 className="font-medium text-blue-800">Health Data to Import</h4>
                         <p className="text-sm text-blue-700 mt-1">
                           We'll import the following data to calculate your energy levels:
                           <ul className="list-disc ml-4 mt-1">
@@ -528,25 +549,25 @@ export default function HealthMetricsPage() {
                   
                   <div className="flex items-center space-x-2">
                     <Checkbox 
-                      id="consent" 
-                      checked={garminConsentGiven}
-                      onCheckedChange={(checked) => setGarminConsentGiven(checked === true)}
+                      id="platform-consent" 
+                      checked={dataConsentGiven}
+                      onCheckedChange={(checked) => setDataConsentGiven(checked === true)}
                     />
                     <label 
-                      htmlFor="consent" 
+                      htmlFor="platform-consent" 
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      I consent to MomentumRun accessing my Garmin health data
+                      I consent to MomentumRun accessing my health data
                     </label>
                   </div>
                 </div>
                 
                 <DialogFooter>
                   <Button
-                    onClick={() => importGarminDataMutation.mutate()}
-                    disabled={!garminConsentGiven || isImportingGarmin}
+                    onClick={() => importHealthDataMutation.mutate()}
+                    disabled={!dataConsentGiven || isImportingData}
                   >
-                    {isImportingGarmin && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isImportingData && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Import Health Data
                   </Button>
                 </DialogFooter>
