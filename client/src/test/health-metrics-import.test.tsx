@@ -6,13 +6,17 @@ import { http, HttpResponse } from 'msw';
 import { queryClient } from '@/lib/queryClient';
 
 // Mock the useAuth hook
-vi.mock('@/hooks/use-auth', () => ({
-  useAuth: vi.fn(() => ({
-    user: { id: 1, username: 'testuser' },
-    isLoading: false,
-    error: null,
-  })),
-}));
+vi.mock('@/hooks/use-auth', async () => {
+  const actual = await vi.importActual('@/hooks/use-auth');
+  return {
+    ...actual,
+    useAuth: vi.fn(() => ({
+      user: { id: 1, username: 'testuser' },
+      isLoading: false,
+      error: null,
+    })),
+  };
+});
 
 // Mock toast hook to track notifications
 const mockToast = vi.fn();
