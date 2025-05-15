@@ -1193,6 +1193,17 @@ export class MemStorage implements IStorage {
     return newCoach;
   }
   
+  async updateCoach(id: number, data: Partial<Coach>): Promise<Coach> {
+    const coach = this.coaches.get(id);
+    if (!coach) {
+      throw new Error(`Coach with ID ${id} not found`);
+    }
+    
+    const updatedCoach = { ...coach, ...data, updated_at: new Date() };
+    this.coaches.set(id, updatedCoach);
+    return updatedCoach;
+  }
+  
   async getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]> {
     return Array.from(this.coachingSessions.values())
       .filter(session => role === 'coach' ? session.coach_id === userId : session.athlete_id === userId);
