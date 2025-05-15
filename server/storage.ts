@@ -79,6 +79,7 @@ export interface IStorage {
   getCoachById(id: number): Promise<Coach | undefined>;
   createCoach(coach: InsertCoach): Promise<Coach>;
   updateCoach(id: number, data: Partial<Coach>): Promise<Coach>;
+  deleteCoach(id: number): Promise<void>;
   getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]>;
   createCoachingSession(session: InsertCoachingSession): Promise<CoachingSession>;
   updateCoachingSession(id: number, data: Partial<CoachingSession>): Promise<CoachingSession>;
