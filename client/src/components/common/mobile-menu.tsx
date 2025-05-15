@@ -17,13 +17,18 @@ import {
   Apple,
   Search,
   CreditCard,
+  ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
 
 export function MobileMenu() {
   const [location] = useLocation();
-  const { logoutMutation } = useAuth();
+  const { logoutMutation, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Check if user is an admin (in a real app, this would check a proper admin role)
+  const isAdmin = user?.id === 1;
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -38,6 +43,15 @@ export function MobileMenu() {
   const closeMenu = () => {
     setIsOpen(false);
   };
+  
+  const adminItems = [
+    {
+      title: "Coach Management",
+      href: "/admin/coaches",
+      icon: UserCog,
+      active: location === "/admin/coaches",
+    },
+  ];
 
   const navItems = [
     {
@@ -177,6 +191,35 @@ export function MobileMenu() {
                 </li>
               ))}
             </ul>
+            
+            {/* Admin Section */}
+            {isAdmin && (
+              <>
+                <div className="px-4 pt-6 pb-2">
+                  <p className="text-xs font-medium text-neutral-medium tracking-wider uppercase">Admin</p>
+                </div>
+                <ul>
+                  {adminItems.map((item) => (
+                    <li key={item.title}>
+                      <Link
+                        href={item.href}
+                        onClick={closeMenu}
+                        className={cn(
+                          "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
+                          item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "h-5 w-5 mr-3 text-neutral-medium",
+                          item.active && "text-primary"
+                        )} />
+                        {item.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </nav>
         </div>
 
