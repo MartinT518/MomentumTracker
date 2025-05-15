@@ -1,21 +1,11 @@
+import '../test/health-metrics-test-setup';  // Import mocks first!
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderWithProviders, screen, waitFor, fireEvent } from '../test/utils';
 import HealthMetricsPage from './health-metrics-page';
 import { queryClient } from '@/lib/queryClient';
 import * as authHook from '@/hooks/use-auth';
-
-// Mock the useAuth hook
-vi.mock('@/hooks/use-auth', async () => {
-  const actual = await vi.importActual('@/hooks/use-auth');
-  return {
-    ...actual,
-    useAuth: vi.fn(() => ({
-      user: { id: 1, username: 'testuser' },
-      isLoading: false,
-      error: null,
-    })),
-  };
-});
+import { server } from '../test/mocks/server';
+import { http, HttpResponse } from 'msw';
 
 // Mock toast hook to track notifications
 const mockToast = vi.fn();
@@ -90,17 +80,12 @@ describe('HealthMetricsPage', () => {
   });
 
   it('shows no health metrics message when there are no metrics', async () => {
-    // Mock empty health metrics response
-    vi.mock('../lib/queryClient', () => ({
-      queryClient: {
-        setQueryData: vi.fn(),
-        getQueryData: vi.fn(),
-        invalidateQueries: vi.fn(),
-      },
-      apiRequest: vi.fn().mockResolvedValue({
-        json: () => Promise.resolve([]),
-      }),
-    }));
+    // Instead of mocking the entire queryClient, let's use MSW to mock the API response
+    server.use(
+      http.get('/api/health-metrics', () => {
+        return HttpResponse.json([], { status: 200 });
+      })
+    );
     
     renderWithProviders(<HealthMetricsPage />);
     
