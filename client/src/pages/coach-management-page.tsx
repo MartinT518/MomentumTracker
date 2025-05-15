@@ -115,9 +115,11 @@ export default function CoachManagementPage() {
       const { id, ...rest } = data;
       const res = await apiRequest('PUT', `/api/coaches/${id}`, {
         ...rest,
-        experience_years: parseInt(rest.experience_years),
-        hourlyRate: parseFloat(rest.hourlyRate),
+        experience_years: rest.experience_years, // Keep as string as per DB schema
+        hourlyRate: rest.hourlyRate,
         status: rest.isActive ? 'active' : 'inactive',
+        specialties: rest.specialty, // Match field name with server expectations
+        photoUrl: rest.profileImage, // Match field name with server expectations
       });
       return res.json();
     },
