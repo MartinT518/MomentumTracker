@@ -2493,8 +2493,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Coach not found" });
       }
       
-      // Delete the coach
-      await db.delete(coaches).where(eq(coaches.id, coachId));
+      // Delete the coach using storage layer
+      await storage.deleteCoach(coachId);
       
       res.json({ success: true, message: "Coach deleted successfully" });
     } catch (error) {
