@@ -517,6 +517,21 @@ export class DatabaseStorage implements IStorage {
   }
   
   async deleteCoach(id: number): Promise<void> {
+    // First, find any coaching sessions associated with this coach
+    const coachingSessions = await db
+      .select()
+      .from(coaching_sessions)
+      .where(eq(coaching_sessions.coach_id, id));
+    
+    // If there are coaching sessions, delete them first
+    if (coachingSessions.length > 0) {
+      // Delete all associated coaching sessions
+      await db
+        .delete(coaching_sessions)
+        .where(eq(coaching_sessions.coach_id, id));
+    }
+
+    // Now we can safely delete the coach
     await db
       .delete(coaches)
       .where(eq(coaches.id, id));
@@ -1215,6 +1230,21 @@ export class MemStorage implements IStorage {
     if (!this.coaches.has(id)) {
       throw new Error(`Coach with ID ${id} not found`);
     }
+    
+    // First, find and delete any coaching sessions with this coach
+    const sessionsToDelete: number[] = [];
+    this.coachingSessions.forEach((session, sessionId) => {
+      if (session.coach_id === id) {
+        sessionsToDelete.push(sessionId);
+      }
+    });
+    
+    // Delete all related coaching sessions
+    sessionsToDelete.forEach(sessionId => {
+      this.coachingSessions.delete(sessionId);
+    });
+    
+    // Now delete the coach
     this.coaches.delete(id);
   }
   
