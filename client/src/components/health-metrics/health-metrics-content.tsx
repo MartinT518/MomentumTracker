@@ -3,12 +3,26 @@ import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 
+// Type definition for health metrics
+interface HealthMetric {
+  id: number;
+  date: string;
+  userId: number;
+  hrvScore?: number;
+  restingHeartRate?: number;
+  sleepQuality?: string;
+  sleepDuration?: number;
+  stressLevel?: string;
+  platform: string;
+  syncDate: string;
+}
+
 // This is a simplified version of the health metrics page content
 // that can be more easily tested without UI dependencies
 export function HealthMetricsContent() {
   const { user } = useAuth();
   
-  const { data: healthMetrics, isLoading } = useQuery({
+  const { data: healthMetrics, isLoading } = useQuery<HealthMetric[]>({
     queryKey: ['/api/health-metrics'],
     enabled: !!user,
   });
@@ -28,7 +42,7 @@ export function HealthMetricsContent() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64" role="status">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -53,7 +67,7 @@ export function HealthMetricsContent() {
       <h1 className="text-3xl font-bold mb-2">Health Metrics</h1>
       <p className="text-lg text-neutral-dark mb-6">Track your biometric data and energy levels</p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {healthMetrics.map((metric: any) => (
+        {healthMetrics.map((metric) => (
           <div key={metric.id} className="bg-white rounded-lg shadow p-4">
             <div className="font-medium">{new Date(metric.date).toLocaleDateString()}</div>
             <div className="mt-2">
