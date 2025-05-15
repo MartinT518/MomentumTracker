@@ -2459,14 +2459,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updatedCoach = await storage.updateCoach(coachId, {
         name,
-        email,
-        title,
         bio,
-        specialties,
+        specialty: specialties,
         certifications,
         experience_years,
-        photo_url: photoUrl,
-        status,
+        profile_image: photoUrl,
+        available: status === 'active',
         hourly_rate: hourlyRate,
       });
       
