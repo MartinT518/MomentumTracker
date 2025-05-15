@@ -15,6 +15,8 @@ import {
   Heart,
   Apple,
   Search,
+  ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
 
@@ -25,11 +27,14 @@ interface SidebarProps {
 
 export function Sidebar({ className, style }: SidebarProps) {
   const [location] = useLocation();
-  const { logoutMutation } = useAuth();
+  const { logoutMutation, user } = useAuth();
   
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  // Check if user is an admin (in a real app, this would check a proper admin role)
+  const isAdmin = user?.id === 1;
 
   const navItems = [
     {
@@ -118,6 +123,15 @@ export function Sidebar({ className, style }: SidebarProps) {
       isPremium: true,
     },
   ];
+  
+  const adminItems = [
+    {
+      title: "Coach Management",
+      href: "/admin/coaches",
+      icon: UserCog,
+      active: location === "/admin/coaches",
+    },
+  ];
 
   return (
     <aside className={cn("hidden md:flex md:visible flex-col w-64 bg-white border-r border-gray-200", className)}>
@@ -180,6 +194,33 @@ export function Sidebar({ className, style }: SidebarProps) {
             </li>
           ))}
         </ul>
+        
+        {/* Only show admin section to admin users */}
+        {isAdmin && (
+          <>
+            <div className="px-4 pt-6 pb-2">
+              <p className="text-xs font-medium text-neutral-medium tracking-wider uppercase">Admin</p>
+            </div>
+            <ul>
+              {adminItems.map((item) => (
+                <li key={item.title}>
+                  <Link href={item.href}>
+                    <div className={cn(
+                      "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter cursor-pointer",
+                      item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                    )}>
+                      <item.icon className={cn(
+                        "h-5 w-5 mr-3 text-neutral-medium",
+                        item.active && "text-primary"
+                      )} />
+                      {item.title}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </nav>
       
       <div className="p-4 border-t border-gray-200">
