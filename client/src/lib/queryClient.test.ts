@@ -3,6 +3,16 @@ import { queryClient, apiRequest, getQueryFn } from './queryClient';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 
+// Mock console.error to suppress expected test errors
+const originalConsoleError = console.error;
+beforeEach(() => {
+  console.error = vi.fn();
+});
+
+afterEach(() => {
+  console.error = originalConsoleError;
+});
+
 describe('queryClient utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,10 +44,15 @@ describe('queryClient utilities', () => {
       // Mock the fetch response
       server.use(
         http.post('/api/test', async ({ request }) => {
-          const body = await request.json();
-          // Check if the request body contains the data we sent
-          if (body.name === postData.name) {
-            return HttpResponse.json(mockResponse, { status: 201 });
+          // Type-safe way to handle the request body
+          try {
+            const body = await request.json() as { name?: string };
+            // Check if the request body contains the data we sent
+            if (body && typeof body === 'object' && body.name === postData.name) {
+              return HttpResponse.json(mockResponse, { status: 201 });
+            }
+          } catch (error) {
+            // Handle JSON parsing error
           }
           return HttpResponse.json({ error: 'Invalid data' }, { status: 400 });
         })
@@ -58,14 +73,15 @@ describe('queryClient utilities', () => {
         })
       );
 
+      let errorCaught = false;
       try {
         await apiRequest('GET', '/api/error');
-        // If we get here, the test should fail
-        expect(true).toBe(false);
-      } catch (error) {
+      } catch (error: any) {
+        errorCaught = true;
         expect(error).toBeDefined();
         expect(error.message).toContain('HTTP error');
       }
+      expect(errorCaught).toBe(true);
     });
 
     it('should handle 401 unauthorized errors', async () => {
@@ -76,14 +92,15 @@ describe('queryClient utilities', () => {
         })
       );
 
+      let errorCaught = false;
       try {
         await apiRequest('GET', '/api/unauthorized');
-        // If we get here, the test should fail
-        expect(true).toBe(false);
-      } catch (error) {
+      } catch (error: any) {
+        errorCaught = true;
         expect(error).toBeDefined();
         expect(error.message).toContain('Unauthorized');
       }
+      expect(errorCaught).toBe(true);
     });
   });
 
@@ -96,8 +113,16 @@ describe('queryClient utilities', () => {
         })
       );
 
+      // Create a mock context for the query function
+      const mockContext = {
+        queryKey: ['/api/test-query'] as const,
+        signal: new AbortController().signal,
+        meta: undefined,
+        client: queryClient
+      };
+
       const queryFn = getQueryFn();
-      const result = await queryFn({ queryKey: ['/api/test-query'] });
+      const result = await queryFn(mockContext);
 
       expect(result).toEqual(mockData);
     });
@@ -110,20 +135,29 @@ describe('queryClient utilities', () => {
         })
       );
 
+      // Create a mock context for the query function
+      const mockContext = {
+        queryKey: ['/api/test-401'] as const,
+        signal: new AbortController().signal,
+        meta: undefined,
+        client: queryClient
+      };
+
       // With 'throw' option (default)
       const queryFnThrow = getQueryFn();
+      let errorCaught = false;
       try {
-        await queryFnThrow({ queryKey: ['/api/test-401'] });
-        // If we get here, the test should fail
-        expect(true).toBe(false);
-      } catch (error) {
+        await queryFnThrow(mockContext);
+      } catch (error: any) {
+        errorCaught = true;
         expect(error).toBeDefined();
         expect(error.message).toContain('Unauthorized');
       }
+      expect(errorCaught).toBe(true);
 
       // With 'returnNull' option
       const queryFnReturnNull = getQueryFn({ on401: 'returnNull' });
-      const result = await queryFnReturnNull({ queryKey: ['/api/test-401'] });
+      const result = await queryFnReturnNull(mockContext);
       expect(result).toBeUndefined();
     });
   });

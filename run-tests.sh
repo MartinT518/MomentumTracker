@@ -1,4 +1,5 @@
 #!/bin/bash
 
-# Run tests
-npx vitest "./client/src/**/*.test.{ts,tsx}" "$@"
+# Run tests with explicit path to test files
+cd "$(dirname "$0")"
+npx vitest "client/src/**/*.test.{ts,tsx}" "$@"

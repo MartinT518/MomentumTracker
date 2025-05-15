@@ -14,6 +14,10 @@ export default mergeConfig(
       },
       include: ['./client/src/**/*.{test,spec}.{ts,tsx}'],
       exclude: ['**/node_modules/**', '**/dist/**'],
+      // Add support for Jest DOM matchers
+      deps: {
+        inline: [/^(?!.*vitest).*$/],
+      },
     },
   })
 );
