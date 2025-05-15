@@ -1450,23 +1450,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to create test achievements in production" });
       }
       
+      // First, get an achievement from the database
+      const [achievement] = await db.select().from(achievements).limit(1);
+      
+      if (!achievement) {
+        return res.status(404).json({ error: "No achievement templates found in the database" });
+      }
+      
       const achievementData = {
         user_id: req.user.id,
-        title: req.body.title || "Test Achievement",
-        description: req.body.description || "This is a test achievement",
-        achievement_type: req.body.type || "milestone",
-        badge_image: req.body.badge_image,
+        achievement_id: achievement.id,
         earned_at: new Date(),
-        times_earned: 1,
-        viewed: false,
-        achievement_data: req.body.achievement_data || {}
+        times_earned: 1
       };
+      
+      // Check if user already has this achievement
+      const existingAchievement = await db.select()
+        .from(user_achievements)
+        .where(and(
+          eq(user_achievements.user_id, req.user.id),
+          eq(user_achievements.achievement_id, achievement.id)
+        ))
+        .limit(1);
+        
+      // If already exists, just return the existing one
+      if (existingAchievement.length > 0) {
+        return res.status(200).json(existingAchievement[0]);
+      }
       
       const [savedAchievement] = await db.insert(user_achievements)
         .values(achievementData)
         .returning();
         
-      res.status(201).json(savedAchievement);
+      // Return achievement with complete data
+      const completeAchievement = {
+        ...savedAchievement,
+        title: achievement.name,
+        description: achievement.description,
+        achievement_type: achievement.type
+      };
+        
+      res.status(201).json(completeAchievement);
     } catch (error) {
       console.error("Error creating test achievement:", error);
       res.status(500).json({ error: "Failed to create test achievement" });
