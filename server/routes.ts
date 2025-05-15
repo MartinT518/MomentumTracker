@@ -1244,11 +1244,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up coaching routes (annual subscribers only)
   app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
     try {
-      const coachesList = await db.select().from(coaches);
+      const coachesList = await db.select().from(coaches).where(eq(coaches.status, "active"));
       res.json(coachesList);
     } catch (error) {
       console.error("Error fetching coaches:", error);
       res.status(500).json({ error: "Failed to fetch coaches" });
+    }
+  });
+  
+  // Admin-only endpoint to get all coaches (including inactive ones)
+  app.get("/api/coaches/all", checkAuth, async (req, res) => {
+    try {
+      // Check if user is admin (in a real app, this would check a proper admin role)
+      if (req.user.id !== 1) {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
+      const allCoaches = await db.select().from(coaches);
+      res.json(allCoaches);
+    } catch (error) {
+      console.error("Error fetching all coaches:", error);
+      res.status(500).json({ error: "Failed to fetch all coaches" });
     }
   });
 
@@ -2387,13 +2403,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/coaches", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+  app.post("/api/coaches", checkAuth, async (req, res) => {
     try {
+      // Check if user is admin (in a real app, this would check a proper admin role)
+      if (req.user.id !== 1) {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
       const validation = insertCoachSchema.safeParse({
         ...req.body,
-        user_id: req.user.id
+        user_id: 0 // This is a placeholder. In a real app, we'd create or link to a real user
       });
       
       if (!validation.success) {
@@ -2405,6 +2424,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating coach profile:", error);
       res.status(500).json({ error: "Failed to create coach profile" });
+    }
+  });
+  
+  // Update an existing coach (admin only)
+  app.put("/api/coaches/:id", checkAuth, async (req, res) => {
+    try {
+      // Check if user is admin (in a real app, this would check a proper admin role)
+      if (req.user.id !== 1) {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
+      const coachId = parseInt(req.params.id);
+      
+      // Validate coach exists
+      const [existingCoach] = await db.select().from(coaches).where(eq(coaches.id, coachId));
+      if (!existingCoach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+      
+      // Update coach data
+      const {
+        name,
+        email,
+        title,
+        bio,
+        specialties,
+        certifications,
+        experience_years,
+        photoUrl,
+        status,
+        hourlyRate,
+      } = req.body;
+      
+      const updatedCoach = await storage.updateCoach(coachId, {
+        name,
+        email,
+        title,
+        bio,
+        specialties,
+        certifications,
+        experience_years,
+        photo_url: photoUrl,
+        status,
+        hourly_rate: hourlyRate,
+      });
+      
+      res.json(updatedCoach);
+    } catch (error) {
+      console.error("Error updating coach:", error);
+      res.status(500).json({ error: "Failed to update coach" });
+    }
+  });
+  
+  // Delete a coach (admin only)
+  app.delete("/api/coaches/:id", checkAuth, async (req, res) => {
+    try {
+      // Check if user is admin (in a real app, this would check a proper admin role)
+      if (req.user.id !== 1) {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
+      const coachId = parseInt(req.params.id);
+      
+      // Validate coach exists
+      const [existingCoach] = await db.select().from(coaches).where(eq(coaches.id, coachId));
+      if (!existingCoach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+      
+      // Delete the coach
+      await db.delete(coaches).where(eq(coaches.id, coachId));
+      
+      res.json({ success: true, message: "Coach deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting coach:", error);
+      res.status(500).json({ error: "Failed to delete coach" });
     }
   });
 
