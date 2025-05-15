@@ -1211,6 +1211,13 @@ export class MemStorage implements IStorage {
     return updatedCoach;
   }
   
+  async deleteCoach(id: number): Promise<void> {
+    if (!this.coaches.has(id)) {
+      throw new Error(`Coach with ID ${id} not found`);
+    }
+    this.coaches.delete(id);
+  }
+  
   async getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]> {
     return Array.from(this.coachingSessions.values())
       .filter(session => role === 'coach' ? session.coach_id === userId : session.athlete_id === userId);
