@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { queryClient, apiRequest, getQueryFn } from './queryClient';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -121,7 +121,7 @@ describe('queryClient utilities', () => {
         client: queryClient
       };
 
-      const queryFn = getQueryFn();
+      const queryFn = getQueryFn({ on401: "throw" });
       const result = await queryFn(mockContext);
 
       expect(result).toEqual(mockData);
@@ -144,7 +144,7 @@ describe('queryClient utilities', () => {
       };
 
       // With 'throw' option (default)
-      const queryFnThrow = getQueryFn();
+      const queryFnThrow = getQueryFn({ on401: "throw" });
       let errorCaught = false;
       try {
         await queryFnThrow(mockContext);
