@@ -79,7 +79,9 @@ describe('queryClient utilities', () => {
       } catch (error: any) {
         errorCaught = true;
         expect(error).toBeDefined();
-        expect(error.message).toContain('HTTP error');
+        // The error message format is '400: {"message":"Bad Request"}'
+        expect(error.message).toContain('400:');
+        expect(error.message).toContain('Bad Request');
       }
       expect(errorCaught).toBe(true);
     });
@@ -158,7 +160,8 @@ describe('queryClient utilities', () => {
       // With 'returnNull' option
       const queryFnReturnNull = getQueryFn({ on401: 'returnNull' });
       const result = await queryFnReturnNull(mockContext);
-      expect(result).toBeUndefined();
+      // The function should return null for 401 responses when on401 is set to 'returnNull'
+      expect(result).toBeNull();
     });
   });
 });
