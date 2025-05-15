@@ -12,7 +12,7 @@ export default mergeConfig(
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
       },
-      include: ['client/src/**/*.{test,spec}.{ts,tsx}'],
+      include: ['./client/src/**/*.{test,spec}.{ts,tsx}'],
       exclude: ['**/node_modules/**', '**/dist/**'],
     },
   })
