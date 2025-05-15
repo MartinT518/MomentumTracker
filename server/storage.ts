@@ -78,6 +78,7 @@ export interface IStorage {
   getCoaches(): Promise<Coach[]>;
   getCoachById(id: number): Promise<Coach | undefined>;
   createCoach(coach: InsertCoach): Promise<Coach>;
+  updateCoach(id: number, data: Partial<Coach>): Promise<Coach>;
   getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]>;
   createCoachingSession(session: InsertCoachingSession): Promise<CoachingSession>;
   updateCoachingSession(id: number, data: Partial<CoachingSession>): Promise<CoachingSession>;
@@ -500,6 +501,18 @@ export class DatabaseStorage implements IStorage {
       .values(coach)
       .returning();
     return newCoach;
+  }
+  
+  async updateCoach(id: number, data: Partial<Coach>): Promise<Coach> {
+    const [updatedCoach] = await db
+      .update(coaches)
+      .set({
+        ...data,
+        updated_at: new Date()
+      })
+      .where(eq(coaches.id, id))
+      .returning();
+    return updatedCoach;
   }
 
   async getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]> {
