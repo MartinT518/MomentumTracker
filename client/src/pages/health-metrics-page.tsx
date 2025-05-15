@@ -109,9 +109,10 @@ export default function HealthMetricsPage() {
   const { toast } = useToast();
   const [timeRange, setTimeRange] = useState("7days");
   const [addMetricOpen, setAddMetricOpen] = useState(false);
-  const [importGarminOpen, setImportGarminOpen] = useState(false);
-  const [garminConsentGiven, setGarminConsentGiven] = useState(false);
-  const [isImportingGarmin, setIsImportingGarmin] = useState(false);
+  const [importPlatformDialogOpen, setImportPlatformDialogOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState("garmin");
+  const [dataConsentGiven, setDataConsentGiven] = useState(false);
+  const [isImportingData, setIsImportingData] = useState(false);
 
   const getDateRange = () => {
     const end = endOfDay(new Date());
@@ -171,31 +172,41 @@ export default function HealthMetricsPage() {
     },
   });
   
-  // Mutation for importing Garmin health data
-  const importGarminDataMutation = useMutation({
+  // Mutation for importing health data from any platform
+  const importHealthDataMutation = useMutation({
     mutationFn: async () => {
-      setIsImportingGarmin(true);
-      const res = await apiRequest("POST", "/api/garmin/health-metrics/import", {
-        consent: garminConsentGiven
+      setIsImportingData(true);
+      const res = await apiRequest("POST", `/api/${selectedPlatform}/health-metrics/import`, {
+        consent: dataConsentGiven
       });
       return res.json();
     },
     onSuccess: (data) => {
+      const platformName = 
+        selectedPlatform === "garmin" ? "Garmin" :
+        selectedPlatform === "strava" ? "Strava" :
+        selectedPlatform === "polar" ? "Polar" : "platform";
+      
       toast({
-        title: "Garmin data imported",
-        description: `Successfully imported ${data.count || 0} health metrics from Garmin.`,
+        title: `${platformName} data imported`,
+        description: `Successfully imported ${data.count || 0} health metrics from ${platformName}.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/health-metrics"] });
-      setImportGarminOpen(false);
-      setIsImportingGarmin(false);
+      setImportPlatformDialogOpen(false);
+      setIsImportingData(false);
     },
     onError: (error) => {
+      const platformName = 
+        selectedPlatform === "garmin" ? "Garmin" :
+        selectedPlatform === "strava" ? "Strava" :
+        selectedPlatform === "polar" ? "Polar" : "platform";
+      
       toast({
         title: "Import failed",
-        description: error.message || "Failed to import data from Garmin. Please try again.",
+        description: error.message || `Failed to import data from ${platformName}. Please try again.`,
         variant: "destructive",
       });
-      setIsImportingGarmin(false);
+      setIsImportingData(false);
     },
   });
 
