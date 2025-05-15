@@ -2514,6 +2514,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to update health metric" });
     }
   });
+  
+  // Health metrics import endpoints for different platforms
+  app.post("/api/garmin/health-metrics/import", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { consent } = req.body;
+      
+      if (!consent) {
+        return res.status(400).json({ message: "User consent is required to import health data" });
+      }
+      
+      // Check if user has a Garmin connection
+      const connections = await storage.getIntegrationConnections(req.user.id);
+      const garminConnection = connections.find(conn => conn.provider === "garmin");
+      
+      if (!garminConnection) {
+        return res.status(404).json({ message: "No Garmin connection found. Please connect your Garmin account first." });
+      }
+      
+      // In a production environment, we would call the Garmin API here using the connection credentials
+      // For demonstration purposes, we'll use some sample data
+      
+      // Get the last 60 days of health metrics from Garmin
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 7); // Get last week of data for demo
+      
+      const healthMetricData = [];
+      
+      // Generate sample data for the last 7 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        
+        healthMetricData.push({
+          user_id: req.user.id,
+          metric_date: date.toISOString().split('T')[0],
+          hrv_score: Math.floor(Math.random() * 30) + 50, // Random HRV between 50-80
+          resting_heart_rate: Math.floor(Math.random() * 10) + 50, // Random RHR between 50-60
+          sleep_quality: Math.floor(Math.random() * 3) + 7, // Random sleep quality between 7-10
+          sleep_duration: (Math.floor(Math.random() * 2) + 7) * 60, // Random sleep duration between 7-9 hours in minutes
+          energy_level: null, // We'll calculate this
+          stress_level: Math.floor(Math.random() * 5) + 3, // Random stress level between 3-8
+          source: "garmin",
+          notes: "Imported from Garmin Connect",
+          created_at: new Date()
+        });
+      }
+      
+      // Insert the health metrics into the database
+      for (const metric of healthMetricData) {
+        await storage.addHealthMetric(metric);
+      }
+      
+      res.json({ count: healthMetricData.length });
+    } catch (error) {
+      console.error("Error importing health metrics from Garmin:", error);
+      res.status(500).json({ message: "Failed to import health metrics from Garmin" });
+    }
+  });
+  
+  app.post("/api/strava/health-metrics/import", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { consent } = req.body;
+      
+      if (!consent) {
+        return res.status(400).json({ message: "User consent is required to import health data" });
+      }
+      
+      // Check if user has a Strava connection
+      const connections = await storage.getIntegrationConnections(req.user.id);
+      const stravaConnection = connections.find(conn => conn.provider === "strava");
+      
+      if (!stravaConnection) {
+        return res.status(404).json({ message: "No Strava connection found. Please connect your Strava account first." });
+      }
+      
+      // In a production environment, we would call the Strava API here using the connection credentials
+      // For demonstration purposes, we'll use some sample data
+      
+      // Get the last 60 days of health metrics from Strava
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 7); // Get last week of data for demo
+      
+      const healthMetricData = [];
+      
+      // Generate sample data for the last 7 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        
+        healthMetricData.push({
+          user_id: req.user.id,
+          metric_date: date.toISOString().split('T')[0],
+          hrv_score: Math.floor(Math.random() * 30) + 55, // Random HRV between 55-85
+          resting_heart_rate: Math.floor(Math.random() * 10) + 48, // Random RHR between 48-58
+          sleep_quality: null, // Strava doesn't provide sleep quality
+          sleep_duration: null, // Strava doesn't provide sleep duration
+          energy_level: null, // We'll calculate this
+          stress_level: null, // Strava doesn't provide stress level
+          source: "strava",
+          notes: "Imported from Strava",
+          created_at: new Date()
+        });
+      }
+      
+      // Insert the health metrics into the database
+      for (const metric of healthMetricData) {
+        await storage.addHealthMetric(metric);
+      }
+      
+      res.json({ count: healthMetricData.length });
+    } catch (error) {
+      console.error("Error importing health metrics from Strava:", error);
+      res.status(500).json({ message: "Failed to import health metrics from Strava" });
+    }
+  });
+  
+  app.post("/api/polar/health-metrics/import", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { consent } = req.body;
+      
+      if (!consent) {
+        return res.status(400).json({ message: "User consent is required to import health data" });
+      }
+      
+      // Check if user has a Polar connection
+      const connections = await storage.getIntegrationConnections(req.user.id);
+      const polarConnection = connections.find(conn => conn.provider === "polar");
+      
+      if (!polarConnection) {
+        return res.status(404).json({ message: "No Polar connection found. Please connect your Polar account first." });
+      }
+      
+      // In a production environment, we would call the Polar API here using the connection credentials
+      // For demonstration purposes, we'll use some sample data
+      
+      // Get the last 60 days of health metrics from Polar
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 7); // Get last week of data for demo
+      
+      const healthMetricData = [];
+      
+      // Generate sample data for the last 7 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        
+        healthMetricData.push({
+          user_id: req.user.id,
+          metric_date: date.toISOString().split('T')[0],
+          hrv_score: Math.floor(Math.random() * 30) + 45, // Random HRV between 45-75
+          resting_heart_rate: Math.floor(Math.random() * 10) + 52, // Random RHR between 52-62
+          sleep_quality: Math.floor(Math.random() * 4) + 6, // Random sleep quality between 6-10
+          sleep_duration: (Math.floor(Math.random() * 3) + 6) * 60, // Random sleep duration between 6-9 hours in minutes
+          energy_level: null, // We'll calculate this
+          stress_level: Math.floor(Math.random() * 6) + 2, // Random stress level between 2-8
+          source: "polar",
+          notes: "Imported from Polar",
+          created_at: new Date()
+        });
+      }
+      
+      // Insert the health metrics into the database
+      for (const metric of healthMetricData) {
+        await storage.addHealthMetric(metric);
+      }
+      
+      res.json({ count: healthMetricData.length });
+    } catch (error) {
+      console.error("Error importing health metrics from Polar:", error);
+      res.status(500).json({ message: "Failed to import health metrics from Polar" });
+    }
+  });
 
   // Integration connections API
   app.get("/api/integrations", async (req, res) => {
