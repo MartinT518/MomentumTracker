@@ -14,6 +14,9 @@ vi.mock('@/hooks/use-auth', async () => {
       user: { id: 1, username: 'testuser' },
       isLoading: false,
       error: null,
+      loginMutation: { isPending: false, mutate: vi.fn() },
+      logoutMutation: { isPending: false, mutate: vi.fn() },
+      registerMutation: { isPending: false, mutate: vi.fn() },
     })),
   };
 });
