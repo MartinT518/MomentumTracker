@@ -515,6 +515,12 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedCoach;
   }
+  
+  async deleteCoach(id: number): Promise<void> {
+    await db
+      .delete(coaches)
+      .where(eq(coaches.id, id));
+  }
 
   async getCoachingSessions(userId: number, role: 'coach' | 'athlete'): Promise<CoachingSession[]> {
     if (role === 'coach') {
