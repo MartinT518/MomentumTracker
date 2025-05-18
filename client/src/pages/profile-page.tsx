@@ -286,6 +286,7 @@ export default function ProfilePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Strava */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100">
@@ -329,6 +330,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 
+                {/* Garmin Connect */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100">
@@ -375,6 +377,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 
+                {/* Polar */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-100">
@@ -416,9 +419,9 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-              </CardContent>
-              {/* Google Fit */}
-                <div className="flex items-center justify-between mt-6 border-t pt-6">
+              
+                {/* Google Fit */}
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
@@ -463,7 +466,7 @@ export default function ProfilePage() {
                 </div>
                 
                 {/* WHOOP */}
-                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-green-100">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
@@ -506,7 +509,7 @@ export default function ProfilePage() {
                 </div>
                 
                 {/* Apple Health */}
-                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-100">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
@@ -550,7 +553,7 @@ export default function ProfilePage() {
                 </div>
                 
                 {/* Fitbit */}
-                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-purple-100">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500">
@@ -609,8 +612,9 @@ export default function ProfilePage() {
                     You can revoke access at any time. We never share your data with third parties.
                   </p>
                 </div>
-                
-              <CardFooter className="mt-6">
+              </CardContent>
+              
+              <CardFooter>
                 <p className="text-sm text-muted-foreground">
                   Connecting allows us to automatically import your activities from these platforms.
                   Your login credentials are never stored.
