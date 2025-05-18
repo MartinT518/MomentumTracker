@@ -1,6 +1,6 @@
 # Third-Party Fitness Platform Integrations
 
-This document provides detailed information about integrating with the third-party fitness platforms supported by MomentumRun: Strava, Garmin Connect, and Polar.
+This document provides detailed information about integrating with the third-party fitness platforms supported by MomentumRun: Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit.
 
 ## Supported Platforms
 
@@ -292,25 +292,317 @@ function normalizeActivities(activities: any[], platform: string): Activity[] {
 }
 ```
 
+### Google Fit
+
+Google Fit integration allows users to import activities, steps, heart rate, and other health metrics.
+
+#### Authentication Flow
+
+Google Fit uses OAuth 2.0 for authentication.
+
+1. **Authorization Request**: Redirect the user to Google's authorization page
+   ```
+   https://accounts.google.com/o/oauth2/v2/auth?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope=https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/fitness.heart_rate.read https://www.googleapis.com/auth/fitness.sleep.read
+   ```
+
+2. **Authorization Callback**: Google redirects back to your app with an authorization code
+   ```
+   {REDIRECT_URI}?code={AUTHORIZATION_CODE}
+   ```
+
+3. **Token Exchange**: Exchange the authorization code for access and refresh tokens
+   ```
+   POST https://oauth2.googleapis.com/token
+   Content-Type: application/x-www-form-urlencoded
+   
+   code={AUTHORIZATION_CODE}&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&redirect_uri={REDIRECT_URI}&grant_type=authorization_code
+   ```
+
+#### API Usage
+
+Google Fit API uses REST endpoints to retrieve fitness data.
+
+**Get User's Activity Data**:
+```
+GET https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate
+Authorization: Bearer {ACCESS_TOKEN}
+Content-Type: application/json
+
+{
+  "aggregateBy": [{
+    "dataTypeName": "com.google.step_count.delta",
+    "dataSourceId": "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps"
+  }],
+  "bucketByTime": { "durationMillis": 86400000 },
+  "startTimeMillis": {START_TIME_MILLIS},
+  "endTimeMillis": {END_TIME_MILLIS}
+}
+```
+
+**Get Heart Rate Data**:
+```
+GET https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate
+Authorization: Bearer {ACCESS_TOKEN}
+Content-Type: application/json
+
+{
+  "aggregateBy": [{
+    "dataTypeName": "com.google.heart_rate.bpm"
+  }],
+  "bucketByTime": { "durationMillis": 86400000 },
+  "startTimeMillis": {START_TIME_MILLIS},
+  "endTimeMillis": {END_TIME_MILLIS}
+}
+```
+
+**Get Sleep Data**:
+```
+GET https://www.googleapis.com/fitness/v1/users/me/sessions
+Authorization: Bearer {ACCESS_TOKEN}
+Content-Type: application/json
+```
+
+#### Token Refresh
+
+Google Fit access tokens expire after 1 hour. Refresh the token using:
+```
+POST https://oauth2.googleapis.com/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&refresh_token={REFRESH_TOKEN}&grant_type=refresh_token
+```
+
+### WHOOP
+
+WHOOP integration allows users to import recovery data, strain, and sleep metrics.
+
+#### Authentication Flow
+
+WHOOP uses OAuth 2.0 for authentication.
+
+1. **Authorization Request**: Redirect the user to WHOOP's authorization page
+   ```
+   https://api.prod.whoop.com/oauth/oauth2/auth?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope=read:recovery read:workout read:sleep read:profile
+   ```
+
+2. **Authorization Callback**: WHOOP redirects back to your app with an authorization code
+   ```
+   {REDIRECT_URI}?code={AUTHORIZATION_CODE}
+   ```
+
+3. **Token Exchange**: Exchange the authorization code for access and refresh tokens
+   ```
+   POST https://api.prod.whoop.com/oauth/oauth2/token
+   Content-Type: application/x-www-form-urlencoded
+   
+   grant_type=authorization_code&code={AUTHORIZATION_CODE}&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&redirect_uri={REDIRECT_URI}
+   ```
+
+#### API Usage
+
+**Get User Profile**:
+```
+GET https://api.prod.whoop.com/developer/v1/user/profile
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Get Recovery Data**:
+```
+GET https://api.prod.whoop.com/developer/v1/recovery
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Get Workout Data**:
+```
+GET https://api.prod.whoop.com/developer/v1/workout
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Get Sleep Data**:
+```
+GET https://api.prod.whoop.com/developer/v1/sleep
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+#### Token Refresh
+
+WHOOP access tokens expire after 24 hours. Refresh using:
+```
+POST https://api.prod.whoop.com/oauth/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token={REFRESH_TOKEN}&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}
+```
+
+### Apple Health
+
+Apple Health integration allows users to import health data from their iPhone and Apple Watch.
+
+#### Authentication Flow
+
+Apple Health data is accessed through HealthKit in iOS apps. For a web application, you'll need to build a companion iOS app that acts as a bridge.
+
+1. **iOS App Development**: Create an iOS app that requests HealthKit permissions
+2. **Data Collection**: Use the HealthKit API to collect relevant health data
+3. **Data Transfer**: Send the data to your server via your API
+
+#### API Implementation (iOS Swift Code)
+
+```swift
+import HealthKit
+
+class HealthKitManager {
+    let healthStore = HKHealthStore()
+    
+    func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
+        let types: Set = [
+            HKObjectType.quantityType(forIdentifier: .heartRate)!,
+            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
+            HKObjectType.quantityType(forIdentifier: .stepCount)!,
+            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
+            HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
+            HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!
+        ]
+        
+        healthStore.requestAuthorization(toShare: nil, read: types) { (success, error) in
+            completion(success, error)
+        }
+    }
+    
+    func fetchHeartRateData(completion: @escaping ([Double], [Date], Error?) -> Void) {
+        let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        
+        let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-86400), end: Date(), options: .strictStartDate)
+        
+        let query = HKSampleQuery(sampleType: heartRateType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { (query, samples, error) in
+            guard let samples = samples as? [HKQuantitySample], error == nil else {
+                completion([], [], error)
+                return
+            }
+            
+            let heartRates = samples.map { $0.quantity.doubleValue(for: HKUnit(from: "count/min")) }
+            let timestamps = samples.map { $0.startDate }
+            
+            completion(heartRates, timestamps, nil)
+        }
+        
+        healthStore.execute(query)
+    }
+    
+    // Similar methods for other metrics...
+}
+```
+
+#### Web API Endpoints
+
+Your iOS app would then send this data to your server:
+
+```
+POST https://api.momentumrun.com/api/apple-health/sync
+Authorization: Bearer {USER_ACCESS_TOKEN}
+Content-Type: application/json
+
+{
+  "heartRate": [...],
+  "steps": [...],
+  "sleep": [...],
+  "workouts": [...],
+  "hrv": [...]
+}
+```
+
+### Fitbit
+
+Fitbit integration allows users to import activities, sleep, heart rate, and other metrics.
+
+#### Authentication Flow
+
+Fitbit uses OAuth 2.0 for authentication.
+
+1. **Authorization Request**: Redirect the user to Fitbit's authorization page
+   ```
+   https://www.fitbit.com/oauth2/authorize?client_id={CLIENT_ID}&response_type=code&scope=activity heartrate sleep profile&redirect_uri={REDIRECT_URI}
+   ```
+
+2. **Authorization Callback**: Fitbit redirects back to your app with an authorization code
+   ```
+   {REDIRECT_URI}?code={AUTHORIZATION_CODE}
+   ```
+
+3. **Token Exchange**: Exchange the authorization code for access and refresh tokens
+   ```
+   POST https://api.fitbit.com/oauth2/token
+   Authorization: Basic {BASE64_ENCODED_CLIENT_ID_AND_SECRET}
+   Content-Type: application/x-www-form-urlencoded
+   
+   grant_type=authorization_code&code={AUTHORIZATION_CODE}&redirect_uri={REDIRECT_URI}
+   ```
+
+#### API Usage
+
+**Get User Profile**:
+```
+GET https://api.fitbit.com/1/user/-/profile.json
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Get Activity Data**:
+```
+GET https://api.fitbit.com/1/user/-/activities/date/{DATE}.json
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Get Heart Rate Data**:
+```
+GET https://api.fitbit.com/1/user/-/activities/heart/date/{DATE}/1d.json
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Get Sleep Data**:
+```
+GET https://api.fitbit.com/1.2/user/-/sleep/date/{DATE}.json
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+#### Token Refresh
+
+Fitbit access tokens expire after 8 hours. Refresh using:
+```
+POST https://api.fitbit.com/oauth2/token
+Authorization: Basic {BASE64_ENCODED_CLIENT_ID_AND_SECRET}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token={REFRESH_TOKEN}
+```
+
 ## Health Metrics
 
 ### Available Metrics by Platform
 
-| Metric            | Strava | Garmin | Polar |
-|-------------------|--------|--------|-------|
-| HRV               | ✓      | ✓      | ✓     |
-| Resting HR        | ✓      | ✓      | ✓     |
-| Sleep Duration    | ✗      | ✓      | ✓     |
-| Sleep Quality     | ✗      | ✓      | ✓     |
-| Steps             | ✗      | ✓      | ✓     |
-| Stress Level      | ✗      | ✓      | ✓     |
-| Active Calories   | ✓      | ✓      | ✓     |
+| Metric            | Strava | Garmin | Polar | Google Fit | WHOOP | Apple Health | Fitbit |
+|-------------------|--------|--------|-------|------------|-------|--------------|--------|
+| HRV               | ✓      | ✓      | ✓     | ✗          | ✓     | ✓            | ✗      |
+| Resting HR        | ✓      | ✓      | ✓     | ✓          | ✓     | ✓            | ✓      |
+| Sleep Duration    | ✗      | ✓      | ✓     | ✓          | ✓     | ✓            | ✓      |
+| Sleep Quality     | ✗      | ✓      | ✓     | ✗          | ✓     | ✓            | ✓      |
+| Steps             | ✗      | ✓      | ✓     | ✓          | ✗     | ✓            | ✓      |
+| Stress Level      | ✗      | ✓      | ✓     | ✗          | ✓     | ✗            | ✗      |
+| Active Calories   | ✓      | ✓      | ✓     | ✓          | ✓     | ✓            | ✓      |
+| Recovery Score    | ✗      | ✗      | ✗     | ✗          | ✓     | ✗            | ✗      |
+| Strain Score      | ✗      | ✗      | ✗     | ✗          | ✓     | ✗            | ✗      |
+| Blood Oxygen      | ✗      | ✓      | ✗     | ✗          | ✗     | ✓            | ✓      |
+| Respiratory Rate  | ✗      | ✓      | ✗     | ✗          | ✓     | ✓            | ✓      |
 
 ### Refresh Frequency
 
 - **Strava**: Every 6 hours (due to token expiration)
 - **Garmin**: Daily 
 - **Polar**: Every 24 hours
+- **Google Fit**: Every 1 hour (due to token expiration)
+- **WHOOP**: Every 24 hours
+- **Apple Health**: Manual sync through iOS app
+- **Fitbit**: Every 8 hours (due to token expiration)
 
 ## Error Handling
 
