@@ -666,3 +666,34 @@ export type InsertExperienceLevel = z.infer<typeof insertExperienceLevelSchema>;
 
 export type TrainingPreference = typeof training_preferences.$inferSelect;
 export type InsertTrainingPreference = z.infer<typeof insertTrainingPreferencesSchema>;
+
+// Platform integrations for fitness trackers and health data
+export const platform_integrations = pgTable("platform_integrations", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(), // strava, garmin, polar, google_fit, whoop, apple_health, fitbit
+  access_token: text("access_token"),
+  refresh_token: text("refresh_token"),
+  token_expiry: timestamp("token_expiry"),
+  platform_user_id: varchar("platform_user_id", { length: 100 }),
+  is_active: boolean("is_active").default(true),
+  auto_sync: boolean("auto_sync").default(true),
+  last_synced: timestamp("last_synced"),
+  connected_at: timestamp("connected_at").defaultNow(),
+  data_consent: boolean("data_consent").default(false), // User consents to data processing
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    user_platform: unique().on(table.user_id, table.platform),
+  }
+});
+
+// Create insert schema for platform integrations
+export const insertPlatformIntegrationSchema = createInsertSchema(platform_integrations, {
+  platform: z.enum(['strava', 'garmin', 'polar', 'google_fit', 'whoop', 'apple_health', 'fitbit'])
+}).omit({ id: true });
+
+// Export types for platform integrations
+export type PlatformIntegration = typeof platform_integrations.$inferSelect;
+export type InsertPlatformIntegration = z.infer<typeof insertPlatformIntegrationSchema>;
