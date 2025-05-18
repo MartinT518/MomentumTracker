@@ -33,6 +33,10 @@ export default function ProfilePage() {
   const [stravaConnected, setStravaConnected] = useState(false);
   const [garminConnected, setGarminConnected] = useState(false);
   const [polarConnected, setPolarConnected] = useState(false);
+  const [googleFitConnected, setGoogleFitConnected] = useState(false);
+  const [whoopConnected, setWhoopConnected] = useState(false);
+  const [appleHealthConnected, setAppleHealthConnected] = useState(false);
+  const [fitbitConnected, setFitbitConnected] = useState(false);
   
   // Notification settings  
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -74,6 +78,44 @@ export default function ProfilePage() {
     toast({
       title: "Polar Flow",
       description: "Polar Flow API integration would initiate here.",
+    });
+  };
+
+  const handleConnectGoogleFit = () => {
+    // In a real implementation, redirect to Google Fit OAuth flow
+    window.open("https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/fitness.heart_rate.read https://www.googleapis.com/auth/fitness.sleep.read", "_blank");
+    
+    toast({
+      title: "Connect to Google Fit",
+      description: "Please complete the authorization process in the opened window.",
+    });
+  };
+
+  const handleConnectWhoop = () => {
+    // In a real implementation, redirect to WHOOP OAuth flow
+    window.open("https://api.prod.whoop.com/oauth/oauth2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=read:recovery read:workout read:sleep read:profile", "_blank");
+    
+    toast({
+      title: "Connect to WHOOP",
+      description: "Please complete the authorization process in the opened window.",
+    });
+  };
+
+  const handleConnectAppleHealth = () => {
+    // In a real implementation, direct user to download the companion iOS app
+    toast({
+      title: "Apple Health",
+      description: "Download our iOS app to connect Apple Health data. Search 'MomentumRun' on the App Store.",
+    });
+  };
+
+  const handleConnectFitbit = () => {
+    // In a real implementation, redirect to Fitbit OAuth flow
+    window.open("https://www.fitbit.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&response_type=code&scope=activity heartrate sleep profile&redirect_uri=YOUR_REDIRECT_URI", "_blank");
+    
+    toast({
+      title: "Connect to Fitbit",
+      description: "Please complete the authorization process in the opened window.",
     });
   };
 
