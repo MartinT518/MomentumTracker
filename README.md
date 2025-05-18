@@ -12,6 +12,15 @@ MomentumRun is a comprehensive health and wellness platform that combines intell
 - **Nutritional Insights**: Get AI-powered nutrition recommendations and meal plans
 - **Achievement System**: Earn badges and rewards for reaching fitness milestones
 
+### Advanced Health Metrics
+- **Recovery Readiness Score**: Daily score combining HRV, sleep quality, and resting heart rate
+- **Training Load Balance**: Track acute vs chronic training load to prevent overtraining
+- **Physiological Age Assessment**: Compare your metrics to population averages
+- **Environmental Impact Analysis**: See how weather and elevation affect your performance
+- **Heat Map Training Distribution**: Visualize your training intensity distribution
+- **Race Prediction & Pacing Strategy**: Get AI-generated race predictions and pacing plans
+- **Mental Performance Tracking**: Monitor the connection between mental state and physical performance
+
 ### Premium Features (Monthly Subscription)
 - **Advanced Analytics**: Get deeper insights into your training patterns and progress
 - **Enhanced Training Plans**: More detailed and customizable AI-generated training plans
@@ -27,6 +36,10 @@ MomentumRun is a comprehensive health and wellness platform that combines intell
 - **Strava**: Import activities and metrics from your Strava account
 - **Garmin Connect**: Sync your Garmin wearable data for health metrics
 - **Polar**: Connect your Polar devices for comprehensive health and fitness tracking
+- **Google Fit**: Import activities, steps, heart rate, and other metrics
+- **WHOOP**: Import recovery, strain, and sleep metrics for a complete picture
+- **Apple Health**: Sync health data from your iPhone and Apple Watch
+- **Fitbit**: Import activities, sleep, heart rate, and other fitness metrics
 
 ## Getting Started
 
