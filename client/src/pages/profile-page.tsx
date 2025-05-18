@@ -417,7 +417,200 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
+              {/* Google Fit */}
+                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                        <path d="M18 20V10" />
+                        <path d="M12 20V4" />
+                        <path d="M6 20v-6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Google Fit</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Connect to import activities, steps, and heart rate data
+                      </p>
+                      {googleFitConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Auto-sync ON</Badge>
+                          <span className="text-xs text-muted-foreground">Data syncs every hour</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    {googleFitConnected ? (
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Revoke Access
+                        </Button>
+                      </div>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectGoogleFit}>Connect</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Connect to Google Fit to import activities and health metrics.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </div>
+                
+                {/* WHOOP */}
+                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-green-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-medium">WHOOP</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Connect to import recovery data, strain, and sleep metrics
+                      </p>
+                      {whoopConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Auto-sync ON</Badge>
+                          <span className="text-xs text-muted-foreground">Recovery score updates daily</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    {whoopConnected ? (
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Revoke Access
+                        </Button>
+                      </div>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectWhoop}>Connect</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Connect to WHOOP to import recovery scores and sleep data.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Apple Health */}
+                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                        <circle cx="12" cy="12" r="4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Apple Health</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Connect to import health data from your iPhone and Apple Watch
+                      </p>
+                      {appleHealthConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Companion App Connected</Badge>
+                          <span className="text-xs text-muted-foreground">Manual sync via iOS app</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    {appleHealthConnected ? (
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Disconnect
+                        </Button>
+                      </div>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectAppleHealth}>Get iOS App</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Download our iOS app to connect Apple Health data.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Fitbit */}
+                <div className="flex items-center justify-between mt-6 border-t pt-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-purple-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500">
+                        <path d="M21 12c0-4.418-3.582-8-8-8s-8 3.582-8 8 3.582 8 8 8 8-3.582 8-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Fitbit</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Connect to import activities, sleep, and heart rate data
+                      </p>
+                      {fitbitConnected && (
+                        <div className="mt-1 flex items-center">
+                          <Badge variant="outline" className="mr-2 bg-green-50 text-green-700 hover:bg-green-50">Auto-sync ON</Badge>
+                          <span className="text-xs text-muted-foreground">Data syncs every 8 hours</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    {fitbitConnected ? (
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                          Revoke Access
+                        </Button>
+                      </div>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={handleConnectFitbit}>Connect</Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs max-w-xs">Connect to Fitbit to import activities and health metrics.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Data Usage Notice */}
+                <div className="mt-6 p-4 bg-amber-50 rounded-md border border-amber-200">
+                  <h4 className="text-sm font-medium text-amber-800 mb-2">Data Privacy & Usage Consent</h4>
+                  <p className="text-xs text-amber-700 mb-2">
+                    By connecting fitness platforms, you consent to MomentumRun accessing your activity and health data to:
+                  </p>
+                  <ul className="text-xs text-amber-700 list-disc pl-5 space-y-1">
+                    <li>Generate personalized training plans tailored to your fitness level</li>
+                    <li>Calculate recovery metrics based on health data</li>
+                    <li>Provide advanced performance analytics and recommendations</li>
+                    <li>Track your progress toward fitness goals</li>
+                  </ul>
+                  <p className="text-xs text-amber-700 mt-2">
+                    You can revoke access at any time. We never share your data with third parties.
+                  </p>
+                </div>
+                
+              <CardFooter className="mt-6">
                 <p className="text-sm text-muted-foreground">
                   Connecting allows us to automatically import your activities from these platforms.
                   Your login credentials are never stored.
