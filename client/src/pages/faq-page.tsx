@@ -14,23 +14,23 @@ export default function FAQPage() {
         
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1">
-            <AccordionTrigger>What is MomentumRun?</AccordionTrigger>
+            <AccordionTrigger>What is AetherRun?</AccordionTrigger>
             <AccordionContent>
-              MomentumRun is an AI-powered fitness platform that provides personalized training plans, nutrition advice, and health analytics for runners and athletes. Our platform integrates with various fitness trackers and uses advanced AI to help you achieve your fitness goals.
+              AetherRun is an AI-powered fitness platform that provides personalized training plans, nutrition advice, and health analytics for runners and athletes. Our platform integrates with various fitness trackers and uses advanced AI to help you achieve your fitness goals.
             </AccordionContent>
           </AccordionItem>
           
           <AccordionItem value="item-2">
-            <AccordionTrigger>How does MomentumRun generate training plans?</AccordionTrigger>
+            <AccordionTrigger>How does AetherRun generate training plans?</AccordionTrigger>
             <AccordionContent>
-              MomentumRun uses advanced AI technology powered by OpenAI to create personalized training plans based on your fitness level, goals, available time, and health metrics. The system analyzes your recent activities, recovery status, and adapts plans as you progress.
+              AetherRun uses advanced AI technology powered by OpenAI to create personalized training plans based on your fitness level, goals, available time, and health metrics. The system analyzes your recent activities, recovery status, and adapts plans as you progress.
             </AccordionContent>
           </AccordionItem>
           
           <AccordionItem value="item-3">
-            <AccordionTrigger>What fitness trackers can I connect to MomentumRun?</AccordionTrigger>
+            <AccordionTrigger>What fitness trackers can I connect to AetherRun?</AccordionTrigger>
             <AccordionContent>
-              MomentumRun integrates with multiple fitness platforms including Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit. You can connect these platforms in your profile settings to automatically import your activities and health metrics.
+              AetherRun integrates with multiple fitness platforms including Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit. You can connect these platforms in your profile settings to automatically import your activities and health metrics.
             </AccordionContent>
           </AccordionItem>
           
