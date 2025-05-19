@@ -122,7 +122,7 @@ export function MobileMenu() {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-primary z-50">
         <div className="flex items-center justify-between p-4">
           <h1 className="text-xl font-bold font-heading text-white flex items-center">
-            <span className="text-white mr-1">Momentum</span>Run
+            <span className="text-white mr-1">Aether</span>Run
           </h1>
           <button 
             className="p-2 rounded-md bg-white/20 hover:bg-white/30"
