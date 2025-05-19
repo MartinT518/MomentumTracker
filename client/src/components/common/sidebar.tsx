@@ -138,14 +138,19 @@ export function Sidebar({ className, style }: SidebarProps) {
   return (
     <aside className={cn("hidden md:flex md:visible flex-col w-64 bg-white border-r border-gray-200", className)}>
       <div className="p-2 border-b border-gray-200">
-        <div className="flex items-center justify-center bg-white rounded-lg p-1">
-          <div className="relative h-16 w-full max-w-[200px]">
-            <div className="absolute inset-0 flex items-center justify-center text-center">
-              <h1 className="font-extrabold tracking-tight">
-                <span className="text-red-600 text-2xl">MOMENTUM</span>
-                <br />
-                <span className="text-red-500 text-lg">RUN</span>
-              </h1>
+        <div className="flex items-center justify-center p-3">
+          <div className="relative h-16 w-full max-w-[220px]">
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="relative">
+                <h1 className="font-extrabold tracking-tight text-red-600 text-2xl mb-0 leading-none">MOMENTUM</h1>
+                {/* Lightning bolt SVG positioned between the words */}
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-6 text-red-600">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13 3L4 14H12L11 21L20 10H12L13 3Z" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h1 className="font-extrabold tracking-tight text-red-500 text-xl leading-loose">RUN</h1>
+              </div>
             </div>
           </div>
         </div>
