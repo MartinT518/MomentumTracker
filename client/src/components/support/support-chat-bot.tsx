@@ -22,7 +22,7 @@ const initialMessages: Message[] = [
   {
     id: '1',
     sender: 'bot',
-    text: 'Hi there! 👋 I\'m your MomentumRun assistant. How can I help you today with your training or app questions?',
+    text: 'Hi there! 👋 I\'m your AetherRun assistant. How can I help you today with your training or app questions?',
     timestamp: new Date(),
     links: [
       { title: 'Training Plans', url: '/training-plan' },
@@ -143,11 +143,11 @@ export function SupportChatBot() {
         botResponse = 'You\'re welcome! Is there anything else I can help you with?';
       }
       else if (lcMessage.includes('hello') || lcMessage.includes('hi') || lcMessage.includes('hey')) {
-        botResponse = `Hello${user ? ' ' + user.username : ''}! How can I help you with MomentumRun today?`;
+        botResponse = `Hello${user ? ' ' + user.username : ''}! How can I help you with AetherRun today?`;
         links = supportTopics;
       }
       else if (lcMessage.includes('features') || lcMessage.includes('what can')) {
-        botResponse = 'MomentumRun offers training plans, activity tracking, health metrics, nutrition guidance, and goal setting. Premium features include AI-generated plans, while annual subscribers get exclusive access to human coaches and video analysis.';
+        botResponse = 'AetherRun offers training plans, activity tracking, health metrics, nutrition guidance, and goal setting. Premium features include AI-generated plans, while annual subscribers get exclusive access to human coaches and video analysis.';
         links = supportTopics;
       }
       else {
@@ -204,7 +204,7 @@ export function SupportChatBot() {
         )}>
           {isBot && (
             <Avatar className="mt-1 h-8 w-8">
-              <AvatarFallback className="bg-primary text-white">MR</AvatarFallback>
+              <AvatarFallback className="bg-primary text-white">AR</AvatarFallback>
             </Avatar>
           )}
           
@@ -257,7 +257,7 @@ export function SupportChatBot() {
               <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0 border-b">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-white">MR</AvatarFallback>
+                    <AvatarFallback className="bg-primary text-white">AR</AvatarFallback>
                   </Avatar>
                   <CardTitle className="text-lg font-medium">Support</CardTitle>
                 </div>
