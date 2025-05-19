@@ -56,9 +56,9 @@ export default function FAQPage() {
           </AccordionItem>
           
           <AccordionItem value="item-7">
-            <AccordionTrigger>How does MomentumRun handle my health and fitness data?</AccordionTrigger>
+            <AccordionTrigger>How does AetherRun handle my health and fitness data?</AccordionTrigger>
             <AccordionContent>
-              MomentumRun takes your privacy seriously. We only collect the data necessary to provide our services, and we never share your personal data with third parties without your explicit consent. You can revoke access to connected fitness platforms at any time in your profile settings.
+              AetherRun takes your privacy seriously. We only collect the data necessary to provide our services, and we never share your personal data with third parties without your explicit consent. You can revoke access to connected fitness platforms at any time in your profile settings.
             </AccordionContent>
           </AccordionItem>
           
