@@ -282,7 +282,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     >
       <DialogContent className="overflow-hidden p-0 max-w-[90vw] md:max-w-[60vw] md:w-[550px]">
         <DialogHeader className="sr-only">
-          <DialogTitle>Search MomentumRun</DialogTitle>
+          <DialogTitle>Search AetherRun</DialogTitle>
           <DialogDescription>
             Type to search for pages, features, or training resources
           </DialogDescription>
