@@ -70,7 +70,7 @@ export default function HomePage() {
       <header className="bg-white border-b border-gray-200 fixed w-full z-50">
         <div className="container mx-auto flex justify-between items-center p-4">
           <h1 className="text-2xl font-bold font-heading text-neutral-darker flex items-center">
-            <span className="text-primary mr-2">Momentum</span>Run
+            <span className="text-orange-500 mr-2">Aether</span><span className="text-black">Run</span>
           </h1>
           <div className="flex items-center space-x-4">
             <Link href="/auth" className="text-primary hover:text-primary-dark font-medium">
@@ -92,7 +92,7 @@ export default function HomePage() {
                 Transform Your Running Journey with AI Power
               </h1>
               <p className="text-lg text-blue-100 leading-relaxed">
-                MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
+                AetherRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
                 <Link href="/auth?tab=register">
