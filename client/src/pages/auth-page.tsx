@@ -113,7 +113,7 @@ export default function AuthPage() {
             <div className="mb-6">
               <h1 className="text-5xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
               <p className="text-lg text-blue-100 mb-8 leading-relaxed">
-                MomentumRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
+                AetherRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
               </p>
             </div>
             
