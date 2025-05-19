@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
 // Import the new logo
-import MomentumLogo from "@/assets/momentum-logo.png";
+import AetherRunLogo from "@/assets/aether-run-logo.png";
 
 interface SidebarProps {
   className?: string;
@@ -140,22 +140,11 @@ export function Sidebar({ className, style }: SidebarProps) {
       <div className="p-2 border-b border-gray-200">
         <div className="flex items-center justify-center p-3">
           <div className="relative h-16 w-full max-w-[220px]">
-            <div className="flex items-center justify-center">
-              {/* Custom SVG recreation of the logo with lightning bolt and text */}
-              <svg width="100%" height="100%" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Lightning bolt top part */}
-                <path d="M150 10L130 40H150L140 60L160 30H140L150 10Z" fill="#FF0000" />
-                
-                {/* MOMENTUM text */}
-                <text x="15" y="60" fontFamily="Arial" fontWeight="800" fontSize="32" fill="#FF0000">MOMENTUM</text>
-                
-                {/* Lightning bolt bottom part */}
-                <path d="M160 60L140 90L150 70L130 70L150 40L130 40L160 60Z" fill="#FF0000" />
-                
-                {/* RUN text */}
-                <text x="190" y="75" fontFamily="Arial" fontWeight="800" fontSize="20" fill="#FF0000">RUN</text>
-              </svg>
-            </div>
+            <img 
+              src={AetherRunLogo} 
+              alt="AetherRun" 
+              className="h-auto w-full object-contain" 
+            />
           </div>
         </div>
       </div>
