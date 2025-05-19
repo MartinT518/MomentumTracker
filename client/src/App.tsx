@@ -75,14 +75,11 @@ function App() {
       <AuthProvider>
         <AchievementsProvider>
           <TooltipProvider>
-            <div className="flex flex-col min-h-screen">
-              <div className="flex-1">
-                <Toaster />
-                <Router />
-                <SupportChatBot />
-                <GoalAchievementPopup />
-              </div>
-              <Footer />
+            <div className="min-h-screen">
+              <Toaster />
+              <Router />
+              <SupportChatBot />
+              <GoalAchievementPopup />
             </div>
           </TooltipProvider>
         </AchievementsProvider>
