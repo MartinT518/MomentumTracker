@@ -1,6 +1,6 @@
-# MomentumRun Developer Guide
+# AetherRun Developer Guide
 
-This guide provides detailed technical information for developers working on the MomentumRun application.
+This guide provides detailed technical information for developers working on the AetherRun application.
 
 ## Technology Stack
 
@@ -146,7 +146,7 @@ This guide provides detailed technical information for developers working on the
 
 1. User initiates connection to a fitness platform (Strava, Garmin, Polar)
 2. System redirects to the platform's OAuth authorization page
-3. User authorizes MomentumRun
+3. User authorizes AetherRun
 4. Platform redirects back with authorization code
 5. Backend exchanges code for access token
 6. Access token is stored for future API calls
