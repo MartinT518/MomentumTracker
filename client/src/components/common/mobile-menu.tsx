@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import AetherRunLogo from "@/assets/aether-run-logo.png";
 import {
   BarChart3,
   ListTodo,
@@ -119,17 +120,21 @@ export function MobileMenu() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-primary z-50">
-        <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold font-heading text-white flex items-center">
-            <span className="text-white mr-1">Aether</span>Run
-          </h1>
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white z-50 border-b">
+        <div className="flex items-center justify-between p-2">
+          <div className="flex items-center">
+            <img 
+              src={AetherRunLogo} 
+              alt="AetherRun" 
+              className="h-10 w-auto object-contain" 
+            />
+          </div>
           <button 
-            className="p-2 rounded-md bg-white/20 hover:bg-white/30"
+            className="p-2 rounded-md bg-gray-100 hover:bg-gray-200"
             onClick={toggleMenu}
             aria-label="Toggle menu"
           >
-            <Menu className="h-6 w-6 text-white" />
+            <Menu className="h-6 w-6 text-gray-800" />
           </button>
         </div>
       </div>
