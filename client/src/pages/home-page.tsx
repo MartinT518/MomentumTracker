@@ -228,7 +228,7 @@ export default function HomePage() {
               <div className="hidden lg:block">
                 <h2 className="text-3xl font-bold">Seamless Device Integration</h2>
                 <p className="text-neutral-dark mt-2">
-                  Connect your favorite fitness devices and platforms to MomentumRun for a comprehensive view of your training and health metrics.
+                  Connect your favorite fitness devices and platforms to AetherRun for a comprehensive view of your training and health metrics.
                 </p>
               </div>
               <ul className="space-y-3">
