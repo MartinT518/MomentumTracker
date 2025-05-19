@@ -19,6 +19,8 @@ import {
   UserCog,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
+// Import the new logo
+import MomentumLogo from "@/assets/momentum-logo.png";
 
 interface SidebarProps {
   className?: string;
@@ -135,10 +137,14 @@ export function Sidebar({ className, style }: SidebarProps) {
 
   return (
     <aside className={cn("hidden md:flex md:visible flex-col w-64 bg-white border-r border-gray-200", className)}>
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-xl font-bold font-heading text-neutral-darker flex items-center">
-          <span className="text-primary mr-2">Momentum</span>Run
-        </h1>
+      <div className="p-3 border-b border-gray-200">
+        <div className="flex items-center justify-center">
+          <img 
+            src={MomentumLogo} 
+            alt="Momentum Run" 
+            className="h-12 w-auto object-contain" 
+          />
+        </div>
       </div>
       
       <div className="px-4 py-3 border-b border-gray-200">
