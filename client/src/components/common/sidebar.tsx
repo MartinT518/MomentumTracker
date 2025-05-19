@@ -137,13 +137,17 @@ export function Sidebar({ className, style }: SidebarProps) {
 
   return (
     <aside className={cn("hidden md:flex md:visible flex-col w-64 bg-white border-r border-gray-200", className)}>
-      <div className="p-3 border-b border-gray-200 bg-black">
-        <div className="flex items-center justify-center">
-          <img 
-            src={MomentumLogo} 
-            alt="Momentum Run" 
-            className="h-20 w-auto object-contain" 
-          />
+      <div className="p-2 border-b border-gray-200">
+        <div className="flex items-center justify-center bg-white rounded-lg p-1">
+          <div className="relative h-16 w-full max-w-[200px]">
+            <div className="absolute inset-0 flex items-center justify-center text-center">
+              <h1 className="font-extrabold tracking-tight">
+                <span className="text-red-600 text-2xl">MOMENTUM</span>
+                <br />
+                <span className="text-red-500 text-lg">RUN</span>
+              </h1>
+            </div>
+          </div>
         </div>
       </div>
       
