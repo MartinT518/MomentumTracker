@@ -1,6 +1,6 @@
-# MomentumRun - AI-Powered Running & Fitness Platform
+# AetherRun - AI-Powered Running & Fitness Platform
 
-MomentumRun is a comprehensive health and wellness platform that combines intelligent fitness tracking with advanced nutritional insights and professional coaching services. The application leverages cutting-edge AI technologies to provide personalized, adaptive health recommendations.
+AetherRun is a comprehensive health and wellness platform that combines intelligent fitness tracking with advanced nutritional insights and professional coaching services. The application leverages cutting-edge AI technologies to provide personalized, adaptive health recommendations.
 
 ## Features
 
