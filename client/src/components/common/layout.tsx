@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Footer } from "./footer";
+import { AppFooter } from "./app-footer";
 import { Sidebar } from "./sidebar";
 import { MobileMenu } from "./mobile-menu";
 
@@ -24,7 +24,7 @@ export function Layout({ children, showSidebar = true }: LayoutProps) {
           {children}
         </main>
       </div>
-      <Footer />
+      <AppFooter />
     </div>
   );
 }
