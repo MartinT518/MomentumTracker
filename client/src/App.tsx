@@ -7,7 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { SupportChatBot } from "@/components/support/support-chat-bot";
 import { GoalAchievementPopup } from "@/components/goals/goal-achievement-popup";
-import { Footer } from "@/components/common/footer";
+import { AppFooter } from "@/components/common/app-footer";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
@@ -75,11 +75,14 @@ function App() {
       <AuthProvider>
         <AchievementsProvider>
           <TooltipProvider>
-            <div className="min-h-screen">
-              <Toaster />
-              <Router />
-              <SupportChatBot />
-              <GoalAchievementPopup />
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-1">
+                <Toaster />
+                <Router />
+                <SupportChatBot />
+                <GoalAchievementPopup />
+              </div>
+              <AppFooter />
             </div>
           </TooltipProvider>
         </AchievementsProvider>
