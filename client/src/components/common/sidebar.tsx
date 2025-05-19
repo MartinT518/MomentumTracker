@@ -140,17 +140,21 @@ export function Sidebar({ className, style }: SidebarProps) {
       <div className="p-2 border-b border-gray-200">
         <div className="flex items-center justify-center p-3">
           <div className="relative h-16 w-full max-w-[220px]">
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="relative">
-                <h1 className="font-extrabold tracking-tight text-red-600 text-2xl mb-0 leading-none">MOMENTUM</h1>
-                {/* Lightning bolt SVG positioned between the words */}
-                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-6 text-red-600">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13 3L4 14H12L11 21L20 10H12L13 3Z" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h1 className="font-extrabold tracking-tight text-red-500 text-xl leading-loose">RUN</h1>
-              </div>
+            <div className="flex items-center justify-center">
+              {/* Custom SVG recreation of the logo with lightning bolt and text */}
+              <svg width="100%" height="100%" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Lightning bolt top part */}
+                <path d="M150 10L130 40H150L140 60L160 30H140L150 10Z" fill="#FF0000" />
+                
+                {/* MOMENTUM text */}
+                <text x="15" y="60" fontFamily="Arial" fontWeight="800" fontSize="32" fill="#FF0000">MOMENTUM</text>
+                
+                {/* Lightning bolt bottom part */}
+                <path d="M160 60L140 90L150 70L130 70L150 40L130 40L160 60Z" fill="#FF0000" />
+                
+                {/* RUN text */}
+                <text x="190" y="75" fontFamily="Arial" fontWeight="800" fontSize="20" fill="#FF0000">RUN</text>
+              </svg>
             </div>
           </div>
         </div>
