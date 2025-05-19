@@ -304,9 +304,9 @@ export default function HomePage() {
       </section>
 
       {/* Footer Section */}
-      <div className="border-t border-border bg-card">
-        <div className="container py-10 md:py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="border-t border-border bg-card">
+        <div className="container mx-auto py-10 md:py-12 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {/* Company Information */}
             <div>
               <h4 className="text-lg font-semibold mb-4">MomentumRun</h4>
@@ -392,7 +392,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto">
             <p className="text-sm text-muted-foreground mb-4 md:mb-0">
               © {new Date().getFullYear()} MomentumRun. All rights reserved.
             </p>
@@ -409,7 +409,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
