@@ -156,7 +156,7 @@ export default function AuthPage() {
               <CardContent className="pt-6">
                 <div className="mb-6 text-center">
                   <h1 className="text-3xl font-bold mb-2 text-white">
-                    <span className="text-blue-300">Momentum</span>Run
+                    <span className="text-blue-300">Aether</span>Run
                   </h1>
                   <p className="text-blue-200">Your AI-powered running companion</p>
                 </div>
