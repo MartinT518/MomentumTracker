@@ -1,19 +1,9 @@
-import { Sidebar } from "@/components/common/sidebar";
-import { MobileMenu } from "@/components/common/mobile-menu";
-import { Footer } from "@/components/common/footer";
+import { Layout } from "@/components/common/layout";
 
 export default function TermsPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
-        <MobileMenu />
-        
-        <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 px-4 md:px-6">
-          {/* For mobile view padding to account for fixed header */}
-          <div className="md:hidden pt-20"></div>
-          
-          <div className="max-w-4xl mx-auto py-8">
+    <Layout>
+      <div className="max-w-4xl mx-auto py-8">
             <h1 className="text-3xl font-bold mb-8">Terms of Service</h1>
             
             <div className="prose prose-neutral max-w-none">
@@ -65,9 +55,6 @@ export default function TermsPage() {
               <p>If you have any questions about these Terms, please contact us at support@momentumrun.com.</p>
             </div>
           </div>
-        </main>
-      </div>
-      <Footer />
-    </div>
+    </Layout>
   );
 }
