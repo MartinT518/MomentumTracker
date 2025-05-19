@@ -10,7 +10,7 @@ export default function PrivacyPage() {
           <p>Last Updated: May 19, 2025</p>
           
           <h2>1. Introduction</h2>
-          <p>At MomentumRun, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the platform.</p>
+          <p>At AetherRun, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the platform.</p>
           
           <h2>2. Information We Collect</h2>
           <p><strong>Personal Information:</strong> We may collect personally identifiable information, such as your name, email address, and demographic information. This information is collected when you register for an account, subscribe to our services, or participate in other platform activities.</p>
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
           <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.</p>
           
           <h2>10. Contact Us</h2>
-          <p>If you have any questions about this Privacy Policy, please contact us at privacy@momentumrun.com.</p>
+          <p>If you have any questions about this Privacy Policy, please contact us at privacy@aetherrun.com.</p>
         </div>
       </div>
     </Layout>
