@@ -522,7 +522,7 @@ export default function HealthMetricsPage() {
                                                  selectedPlatform === "strava" ? "Strava" : 
                                                  selectedPlatform === "polar" ? "Polar Flow" : 
                                                  "your fitness platform"}, 
-                          you consent to MomentumRun accessing your health metrics. 
+                          you consent to AetherRun accessing your health metrics. 
                           We will only import data from the last 2 months and only store what's needed for training recommendations.
                         </p>
                       </div>
@@ -557,7 +557,7 @@ export default function HealthMetricsPage() {
                       htmlFor="platform-consent" 
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      I consent to MomentumRun accessing my health data
+                      I consent to AetherRun accessing my health data
                     </label>
                   </div>
                 </div>
