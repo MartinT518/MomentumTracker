@@ -350,6 +350,242 @@ async function syncGarminData(options: SyncOptions): Promise<void> {
   }
 }
 
+// Google Fit sync function
+async function syncGoogleFitData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, forceSync = false, syncLogId } = options;
+  let syncLogEntry = syncLogId;
+
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'google_fit',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Get the results from process function
+    const results = await processGoogleFitSync({ access_token }, userId);
+    
+    // Update sync log
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: results.activities,
+        metrics_synced: results.metrics
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'google_fit')
+      ));
+  } catch (error: any) {
+    console.error('Error syncing Google Fit data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
+// WHOOP sync function
+async function syncWhoopData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, forceSync = false, syncLogId } = options;
+  let syncLogEntry = syncLogId;
+
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'whoop',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Get the results from process function
+    const results = await processWhoopSync({ access_token }, userId);
+    
+    // Update sync log
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: results.activities,
+        metrics_synced: results.metrics
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'whoop')
+      ));
+  } catch (error: any) {
+    console.error('Error syncing WHOOP data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
+// Apple Health sync function
+async function syncAppleHealthData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, forceSync = false, syncLogId } = options;
+  let syncLogEntry = syncLogId;
+
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'apple_health',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Get the results from process function
+    const results = await processAppleHealthSync({ access_token }, userId);
+    
+    // Update sync log
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: results.activities,
+        metrics_synced: results.metrics
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'apple_health')
+      ));
+  } catch (error: any) {
+    console.error('Error syncing Apple Health data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
+// Fitbit sync function
+async function syncFitbitData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, forceSync = false, syncLogId } = options;
+  let syncLogEntry = syncLogId;
+
+  try {
+    // If no sync log ID was provided, create one
+    if (!syncLogEntry) {
+      const [syncLog] = await db.insert(sync_logs)
+        .values({
+          user_id: userId,
+          platform: 'fitbit',
+          sync_start_time: new Date(),
+          status: 'in_progress'
+        })
+        .returning();
+      
+      syncLogEntry = syncLog.id;
+    }
+    
+    // Get the results from process function
+    const results = await processFitbitSync({ access_token }, userId);
+    
+    // Update sync log
+    await db.update(sync_logs)
+      .set({
+        sync_end_time: new Date(),
+        status: 'completed',
+        activities_synced: results.activities,
+        metrics_synced: results.metrics
+      })
+      .where(eq(sync_logs.id, syncLogEntry));
+    
+    // Update last sync time
+    await db.update(integration_connections)
+      .set({
+        last_sync_at: new Date(),
+        updated_at: new Date()
+      })
+      .where(and(
+        eq(integration_connections.user_id, userId),
+        eq(integration_connections.platform, 'fitbit')
+      ));
+  } catch (error: any) {
+    console.error('Error syncing Fitbit data:', error);
+    
+    // Update sync log with error
+    if (syncLogEntry) {
+      await db.update(sync_logs)
+        .set({
+          sync_end_time: new Date(),
+          status: 'failed',
+          error: error.message || 'Unknown error',
+        })
+        .where(eq(sync_logs.id, syncLogEntry));
+    }
+  }
+}
+
 // Sync activities from Polar
 async function syncPolarData(options: SyncOptions): Promise<void> {
   const { userId, access_token, forceSync = false, syncLogId } = options;
@@ -713,6 +949,22 @@ function setupIntegrationRoutes(app: Express) {
         syncPolarData(syncOptions).catch(error => {
           console.error(`Error during Polar sync for user ${userId}:`, error);
         });
+      } else if (platform === 'google_fit') {
+        syncGoogleFitData(syncOptions).catch(error => {
+          console.error(`Error during Google Fit sync for user ${userId}:`, error);
+        });
+      } else if (platform === 'whoop') {
+        syncWhoopData(syncOptions).catch(error => {
+          console.error(`Error during WHOOP sync for user ${userId}:`, error);
+        });
+      } else if (platform === 'apple_health') {
+        syncAppleHealthData(syncOptions).catch(error => {
+          console.error(`Error during Apple Health sync for user ${userId}:`, error);
+        });
+      } else if (platform === 'fitbit') {
+        syncFitbitData(syncOptions).catch(error => {
+          console.error(`Error during Fitbit sync for user ${userId}:`, error);
+        });
       } else {
         await db.update(sync_logs)
           .set({
@@ -1057,6 +1309,245 @@ async function processPolarSync(connection: any, userId: number) {
   } catch (error) {
     console.error("Error syncing Polar data:", error);
     throw new Error(`Failed to sync Polar data: ${error.message}`);
+  }
+}
+
+// Google Fit data sync function
+async function processGoogleFitSync(connection: any, userId: number) {
+  console.log(`Syncing Google Fit data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Use the Google Fit API to fetch recent activities
+  // 2. Use the Google Fit API to fetch health metrics
+  // 3. Store this data in your database
+  
+  try {
+    // Simulate fetching recent activities (last 30 days)
+    const activities = [
+      {
+        id: "googlefit_123456",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
+        activity_type: "run",
+        distance: 5.2, // km
+        duration: 1800, // seconds (30 minutes)
+        pace: "8:20", // min/mile
+        heart_rate: 162,
+        effort_level: "moderate",
+        notes: "Morning run in the neighborhood",
+        source: "google_fit"
+      },
+      {
+        id: "googlefit_123457",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 4 * 86400000), // 4 days ago
+        activity_type: "walk",
+        distance: 3.7, // km
+        duration: 2700, // seconds (45 minutes)
+        pace: "12:10", // min/mile
+        heart_rate: 125,
+        effort_level: "light",
+        notes: "Evening walk with dog",
+        source: "google_fit"
+      }
+    ];
+    
+    // Simulate fetching health metrics from Google Fit
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        steps: 8754,
+        resting_heart_rate: 58,
+        sleep_duration: 425, // 7.08 hours in minutes
+        source: "google_fit",
+        notes: "Auto-imported from Google Fit"
+      }
+    ];
+    
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Google Fit`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing Google Fit data:", error);
+    throw new Error(`Failed to sync Google Fit data: ${error.message}`);
+  }
+}
+
+// WHOOP data sync function
+async function processWhoopSync(connection: any, userId: number) {
+  console.log(`Syncing WHOOP data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Use the WHOOP API to fetch recent activities
+  // 2. Use the WHOOP API to fetch health metrics (recovery, strain, sleep)
+  // 3. Store this data in your database
+  
+  try {
+    // Simulate fetching recent activities (last 30 days)
+    const activities = [
+      {
+        id: "whoop_987654",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        activity_type: "run",
+        distance: 8.3, // km
+        duration: 2400, // seconds (40 minutes)
+        pace: "7:35", // min/mile
+        heart_rate: 165,
+        effort_level: "high",
+        notes: "Tempo run",
+        source: "whoop"
+      }
+    ];
+    
+    // Simulate fetching health metrics from WHOOP
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        hrv_score: 72,
+        resting_heart_rate: 48,
+        sleep_quality: 85,
+        sleep_duration: 465, // 7.75 hours in minutes
+        recovery_score: 78,
+        strain_score: 14.2,
+        source: "whoop",
+        notes: "Auto-imported from WHOOP"
+      }
+    ];
+    
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from WHOOP`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing WHOOP data:", error);
+    throw new Error(`Failed to sync WHOOP data: ${error.message}`);
+  }
+}
+
+// Apple Health data sync function
+async function processAppleHealthSync(connection: any, userId: number) {
+  console.log(`Syncing Apple Health data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Receive Apple Health data from the mobile app
+  // 2. Process and store this data in your database
+  
+  try {
+    // Simulate fetching recent activities from Apple Health
+    const activities = [
+      {
+        id: "applehealth_234567",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
+        activity_type: "run",
+        distance: 6.4, // km
+        duration: 1920, // seconds (32 minutes)
+        pace: "7:50", // min/mile
+        heart_rate: 159,
+        effort_level: "moderate",
+        notes: "Outdoor run",
+        source: "apple_health"
+      },
+      {
+        id: "applehealth_234568",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 5 * 86400000), // 5 days ago
+        activity_type: "hike",
+        distance: 8.2, // km
+        duration: 7200, // seconds (2 hours)
+        pace: "14:40", // min/mile
+        heart_rate: 138,
+        effort_level: "moderate",
+        notes: "Hiking trail",
+        source: "apple_health"
+      }
+    ];
+    
+    // Simulate fetching health metrics from Apple Health
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        steps: 9235,
+        resting_heart_rate: 55,
+        hrv_score: 62,
+        sleep_duration: 430, // 7.17 hours in minutes
+        active_energy: 725, // active calories burned
+        source: "apple_health",
+        notes: "Auto-imported from Apple Health"
+      }
+    ];
+    
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Apple Health`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing Apple Health data:", error);
+    throw new Error(`Failed to sync Apple Health data: ${error.message}`);
+  }
+}
+
+// Fitbit data sync function
+async function processFitbitSync(connection: any, userId: number) {
+  console.log(`Syncing Fitbit data for user ${userId}`);
+  
+  // In a real implementation, you would:
+  // 1. Use the Fitbit API to fetch recent activities
+  // 2. Use the Fitbit API to fetch health metrics
+  // 3. Store this data in your database
+  
+  try {
+    // Simulate fetching recent activities (last 30 days)
+    const activities = [
+      {
+        id: "fitbit_345678",
+        user_id: userId,
+        activity_date: new Date(Date.now() - 3 * 86400000), // 3 days ago
+        activity_type: "run",
+        distance: 4.8, // km
+        duration: 1620, // seconds (27 minutes)
+        pace: "8:40", // min/mile
+        heart_rate: 155,
+        effort_level: "moderate",
+        notes: "Neighborhood run",
+        source: "fitbit"
+      }
+    ];
+    
+    // Simulate fetching health metrics from Fitbit
+    const healthMetrics = [
+      {
+        user_id: userId,
+        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
+        steps: 10245,
+        resting_heart_rate: 62,
+        sleep_quality: 83,
+        sleep_duration: 405, // 6.75 hours in minutes
+        source: "fitbit",
+        notes: "Auto-imported from Fitbit"
+      }
+    ];
+    
+    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Fitbit`);
+    
+    return {
+      activities: activities.length,
+      metrics: healthMetrics.length
+    };
+  } catch (error) {
+    console.error("Error syncing Fitbit data:", error);
+    throw new Error(`Failed to sync Fitbit data: ${error.message}`);
   }
 }
 
