@@ -64,9 +64,18 @@ export function AchievementsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
+    // Get previously dispatched achievements from localStorage
+    const storedDispatchedEvents = localStorage.getItem('dispatchedAchievements');
+    const persistedDispatchedEvents = storedDispatchedEvents 
+      ? JSON.parse(storedDispatchedEvents) 
+      : {};
+      
+    // Merge stored events with current state
+    const allDispatchedEvents = { ...persistedDispatchedEvents, ...dispatchedEvents };
+
     unviewedAchievements.forEach((achievement) => {
       // Don't dispatch events for achievements we've already dispatched
-      if (dispatchedEvents[achievement.id]) return;
+      if (allDispatchedEvents[achievement.id]) return;
 
       // Create and dispatch the custom event
       const event = new CustomEvent('achievement-earned', {
@@ -75,10 +84,14 @@ export function AchievementsProvider({ children }: { children: ReactNode }) {
       window.dispatchEvent(event);
 
       // Mark this achievement as having had an event dispatched
-      setDispatchedEvents((prev) => ({
-        ...prev,
+      const updatedEvents = {
+        ...allDispatchedEvents,
         [achievement.id]: true,
-      }));
+      };
+      
+      // Update both state and localStorage
+      setDispatchedEvents(updatedEvents);
+      localStorage.setItem('dispatchedAchievements', JSON.stringify(updatedEvents));
     });
   }, [unviewedAchievements, dispatchedEvents, user]);
 
