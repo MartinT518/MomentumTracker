@@ -241,6 +241,10 @@ export default function ActivitiesPage() {
                         <SelectItem value="strava">Strava</SelectItem>
                         <SelectItem value="garmin">Garmin Connect</SelectItem>
                         <SelectItem value="polar">Polar Flow</SelectItem>
+                        <SelectItem value="google_fit">Google Fit</SelectItem>
+                        <SelectItem value="whoop">WHOOP</SelectItem>
+                        <SelectItem value="apple_health">Apple Health</SelectItem>
+                        <SelectItem value="fitbit">Fitbit</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -297,6 +301,10 @@ export default function ActivitiesPage() {
                       {importSource === "strava" && "Importing from Strava requires an active connection in your profile settings."}
                       {importSource === "garmin" && "Importing from Garmin Connect requires an active connection in your profile settings."}
                       {importSource === "polar" && "Importing from Polar Flow requires an active connection in your profile settings."}
+                      {importSource === "google_fit" && "Importing from Google Fit requires an active connection in your profile settings."}
+                      {importSource === "whoop" && "Importing from WHOOP requires an active connection in your profile settings."}
+                      {importSource === "apple_health" && "Importing your Apple Health data requires using the AetherRun mobile app."}
+                      {importSource === "fitbit" && "Importing from Fitbit requires an active connection in your profile settings."}
                     </p>
                   </div>
                 </div>
