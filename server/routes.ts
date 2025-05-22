@@ -3064,6 +3064,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fetch data from Polar Flow
           syncResults = await syncPolarData(connection, req.user.id);
           break;
+        case "google_fit":
+          // Fetch data from Google Fit
+          syncResults = await syncGoogleFitData(connection, req.user.id);
+          break;
+        case "whoop":
+          // Fetch data from WHOOP
+          syncResults = await syncWhoopData(connection, req.user.id);
+          break;
+        case "apple_health":
+          // Fetch data from Apple Health
+          syncResults = await syncAppleHealthData(connection, req.user.id);
+          break;
+        case "fitbit":
+          // Fetch data from Fitbit
+          syncResults = await syncFitbitData(connection, req.user.id);
+          break;
       }
       
       // Update last_sync_at
