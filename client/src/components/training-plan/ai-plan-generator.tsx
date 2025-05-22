@@ -7,6 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { BrainCircuit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -38,6 +48,8 @@ interface AIPlanGeneratorProps {
 export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [formData, setFormData] = useState<FormValues | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -79,8 +91,15 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
     setStep(prev => prev - 1);
   };
   
+  const handleFormSubmit = (data: FormValues) => {
+    // Store form data and show confirmation dialog
+    setFormData(data);
+    setShowConfirmDialog(true);
+  };
+  
   const onSubmit = async (data: FormValues) => {
     setIsGenerating(true);
+    setShowConfirmDialog(false);
     
     try {
       // Call the AI service to generate plan
@@ -423,7 +442,7 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
           </Button>
         ) : (
           <Button 
-            onClick={form.handleSubmit(onSubmit)} 
+            onClick={form.handleSubmit(handleFormSubmit)} 
             disabled={isGenerating}
           >
             {isGenerating ? (
@@ -435,6 +454,25 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
               "Generate Training Plan"
             )}
           </Button>
+          
+          <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Replace Current Training Plan?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to generate a new training plan? Your current plan will be replaced with the new one.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => formData && onSubmit(formData)}
+                >
+                  Generate New Plan
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </CardFooter>
     </Card>
