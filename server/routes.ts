@@ -1735,7 +1735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up coaching routes (annual subscribers only)
   app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
     try {
-      const coachesList = await db.select().from(coaches).where(eq(coaches.status, "active"));
+      const coachesList = await db.select().from(coaches).where(eq(coaches.available, true));
       res.json(coachesList);
     } catch (error) {
       console.error("Error fetching coaches:", error);
