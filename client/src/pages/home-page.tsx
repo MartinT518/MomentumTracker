@@ -54,10 +54,10 @@ export default function HomePage() {
     <div className="min-h-screen relative overflow-hidden">
       <style>{`
         :root {
-          --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-          --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-          --dark-gradient: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+          --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+          --secondary-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+          --accent-gradient: linear-gradient(135deg, #00d4aa 0%, #00bcd4 100%);
+          --energy-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
           --glass-bg: rgba(255, 255, 255, 0.08);
           --glass-border: rgba(255, 255, 255, 0.15);
           --text-primary: #ffffff;
@@ -68,7 +68,7 @@ export default function HomePage() {
 
         body {
           font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+          background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 30%, #06b6d4 70%, #00d4aa 100%);
           background-size: 400% 400%;
           animation: gradientShift 15s ease infinite;
         }
@@ -143,7 +143,7 @@ export default function HomePage() {
         }
 
         .neumorphism-btn {
-          background: linear-gradient(145deg, #667eea, #764ba2);
+          background: linear-gradient(145deg, #0ea5e9, #0284c7);
           border: none;
           border-radius: 16px;
           padding: 16px 32px;
@@ -155,24 +155,24 @@ export default function HomePage() {
           overflow: hidden;
           transition: all 0.3s ease;
           box-shadow: 
-            5px 5px 15px rgba(102, 126, 234, 0.4),
-            -5px -5px 15px rgba(118, 75, 162, 0.4),
+            5px 5px 15px rgba(14, 165, 233, 0.4),
+            -5px -5px 15px rgba(2, 132, 199, 0.4),
             inset 0 0 0 rgba(255, 255, 255, 0.1);
         }
 
         .neumorphism-btn:hover {
           transform: translateY(-2px);
           box-shadow: 
-            8px 8px 25px rgba(102, 126, 234, 0.5),
-            -8px -8px 25px rgba(118, 75, 162, 0.5),
+            8px 8px 25px rgba(14, 165, 233, 0.5),
+            -8px -8px 25px rgba(2, 132, 199, 0.5),
             inset 2px 2px 5px rgba(255, 255, 255, 0.1);
         }
 
         .neumorphism-btn:active {
           transform: translateY(0px);
           box-shadow: 
-            inset 3px 3px 10px rgba(102, 126, 234, 0.4),
-            inset -3px -3px 10px rgba(118, 75, 162, 0.4);
+            inset 3px 3px 10px rgba(14, 165, 233, 0.4),
+            inset -3px -3px 10px rgba(2, 132, 199, 0.4);
         }
 
         .neumorphism-btn::before {
@@ -218,7 +218,7 @@ export default function HomePage() {
         }
 
         .gradient-text {
-          background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+          background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 50%, #00d4aa 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -228,10 +228,10 @@ export default function HomePage() {
         .pulse-dot {
           width: 12px;
           height: 12px;
-          background: #00f2fe;
+          background: #00d4aa;
           border-radius: 50%;
           animation: pulse 2s infinite;
-          box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+          box-shadow: 0 0 20px rgba(0, 212, 170, 0.5);
         }
 
         @keyframes pulse {
@@ -264,7 +264,7 @@ export default function HomePage() {
         }
 
         .ai-badge {
-          background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+          background: linear-gradient(135deg, #00d4aa 0%, #06b6d4 100%);
           color: white;
           padding: 6px 16px;
           border-radius: 20px;
@@ -272,7 +272,7 @@ export default function HomePage() {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+          box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
         }
 
         .interactive-grid {
