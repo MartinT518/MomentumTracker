@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherRun - Your AI-powered Running Companion</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2a398f;
+            --secondary-blue: #3a4db9;
+            --accent-purple: #8a4df0;
+            --accent-red: #f04d6a;
+            --text-light: #ffffff;
+            --text-dark: #1a1a2e;
+            --card-bg: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: var(--text-light);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-red));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(138, 77, 240, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(138, 77, 240, 0.4);
+        }
+        
+        .input-field {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(138, 77, 240, 0.3);
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4df0b0, #4d9df0);
+            border-radius: 3px;
+            transition: width 1.5s ease;
+            width: 0;
+        }
+        
+        .progress-bar.animate .progress-bar-fill {
+            width: 85%;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(138, 77, 240, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(138, 77, 240, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(138, 77, 240, 0);
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        .device-icon {
+            width: 24px;
+            height: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .device-icon:hover {
+            transform: scale(1.2);
+        }
+        
+        .login-register-card, .premium-benefits-card {
+            height: calc(50% - 1rem);
+        }
+        
+        #ai-insights {
+            position: relative;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 12px;
+            padding: 12px;
+            display: inline-block;
+            right: -40px;
+            top: 40px;
+        }
+        
+        .week-schedule {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            font-size: 0.7rem;
+        }
+        
+        .day-label {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .workout-cell {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.65rem;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .workout-cell:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .running-path {
+            position: absolute;
+            bottom: 10%;
+            left: 5%;
+            width: 90%;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0) 0%, 
+                rgba(255, 255, 255, 0.7) 30%, 
+                rgba(255, 255, 255, 0.7) 70%, 
+                rgba(255, 255, 255, 0) 100%);
+        }
+        
+        .runner-figure {
+            position: absolute;
+            bottom: 15%;
+            left: 20%;
+            color: #4df0b0;
+            font-size: 36px;
+            animation: run 10s infinite linear;
+        }
+        
+        @keyframes run {
+            0% { left: 5%; }
+            100% { left: 90%; }
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--accent-purple);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .feature-highlight {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-highlight:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+        }
+        
+        .highlight-icon {
+            background: rgba(138, 77, 240, 0.2);
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        /* Garmin data insights display */
+        .garmin-data {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .garmin-data-header {
+            color: #4df0b0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .data-metric {
+            margin-bottom: 8px;
+        }
+        
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-right: 4px;
+        }
+        
+        .metric-unit {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .fitness-devices {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body class="p-0 m-0">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="logo text-2xl font-bold">Aether<span class="text-purple-400">Run</span></div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-purple-300 transition">Features</a>
+                <a href="#" class="hover:text-purple-300 transition">Pricing</a>
+                <a href="#" class="hover:text-purple-300 transition">Support</a>
+                <a href="#" class="hover:text-purple-300 transition">Blog</a>
+            </nav>
+            <button class="md:hidden">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex flex-col md:flex-row gap-8">
+            <!-- Left Column - Feature Showcase -->
+            <div class="w-full md:w-2/3 space-y-8">
+                <!-- Hero Section -->
+                <section class="glass-card p-8 relative overflow-hidden">
+                    <h1 class="text-4xl font-bold mb-4">Transform Your Running Journey</h1>
+                    <p class="text-lg mb-8 opacity-80">
+                        AetherRun combines AI-powered training plans, advanced data integration, and 
+                        intelligent health tracking to push your limits and achieve your running goals.
+                    </p>
+                    
+                    <div class="relative h-48 mb-6">
+                        <div class="running-path"></div>
+                        <div class="runner-figure">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        
+                        <div id="ai-insights" class="text-sm">
+                            <div class="font-bold mb-1">AI INSIGHTS:</div>
+                            <div class="flex items-center mb-1">
+                                <span class="w-24">Pace:</span>
+                                <span class="font-semibold">1.7 min/km</span>
+                            </div>
+                            <div class="flex items-center mb-1">
+                                <span class="w-24">Stride Length:</span>
+                                <span class="font-semibold">106.3 ft</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24">Form Efficiency:</span>
+                                <span class="font-semibold">83%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-bar animate">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <div class="text-xs text-right opacity-70">AI ENERGY ANALYSIS</div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-8">
+                        <div class="feature-highlight">
+                            <div class="highlight-icon">
+                                <i class="fas fa-brain text-purple-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">AI-Powered Training</h3>
+                            <p class="text-sm opacity-80">Personalized plans built by OpenAI that adapt to your performance.</p>
+                        </div>
+                        <div class="feature-highlight">
+                            <div class="highlight-icon">
+                                <i class="fas fa-chart-line text-purple-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">Advanced Analytics</h3>
+                            <p class="text-sm opacity-80">Deep insights into pace, heart rate, and energy patterns.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Platform Integration -->
+                <section class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-4">Platform Integration</h2>
+                    <p class="mb-6 opacity-80">
+                        Sync with Strava, Garmin Connect, and Polar seamlessly to keep all your training data in one place.
+                    </p>
+                    
+                    <div class="fitness-devices mb-6">
+                        <div class="device-icon pulse">
+                            <i class="fas fa-heart text-red-400"></i>
+                        </div>
+                        <div class="device-icon">
+                            <i class="fas fa-stopwatch text-blue-400"></i>
+                        </div>
+                        <div class="device-icon">
+                            <i class="fas fa-shoe-prints text-green-400"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="feature-highlight">
+                            <h3 class="text-lg font-semibold mb-2">Platform Integration</h3>
+                            <p class="text-sm opacity-80">Sync with Strava, Garmin Connect, and Polar seamlessly.</p>
+                        </div>
+                        <div class="feature-highlight">
+                            <h3 class="text-lg font-semibold mb-2">Health Intelligence</h3>
+                            <p class="text-sm opacity-80">Monitor energy levels calculated from HRV and sleep quality.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="garmin-data mt-8">
+                        <div class="garmin-data-header">
+                            <span>GARMIN DATA INSIGHTS</span>
+                            <span class="text-xs">• SYNCING...</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="data-metric">
+                                <div class="text-xs opacity-70">Heart Rate</div>
+                                <div>
+                                    <span class="metric-value">62</span>
+                                    <span class="metric-unit">bpm</span>
+                                </div>
+                            </div>
+                            <div class="data-metric">
+                                <div class="text-xs opacity-70">Sleep</div>
+                                <div>
+                                    <span class="metric-value">7.2</span>
+                                    <span class="metric-unit">hrs</span>
+                                </div>
+                            </div>
+                            <div class="data-metric">
+                                <div class="text-xs opacity-70">VO2 Max</div>
+                                <div>
+                                    <span class="metric-value">48</span>
+                                    <span class="metric-unit"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- AI Training Plan Generator -->
+                <section class="glass-card p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">AI TRAINING PLAN GENERATOR</h2>
+                        <span class="text-xs bg-green-400 text-green-900 rounded-full px-3 py-1">• COMPLETE</span>
+                    </div>
+                    
+                    <div class="week-schedule mb-4">
+                        <div class="day-label">M</div>
+                        <div class="day-label">T</div>
+                        <div class="day-label">W</div>
+                        <div class="day-label">T</div>
+                        <div class="day-label">F</div>
+                        <div class="day-label">S</div>
+                        <div class="day-label">S</div>
+                        
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Long Run</div>
+                            <div class="text-xs font-semibold mt-1">8.5 miles</div>
+                        </div>
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Recovery Run</div>
+                            <div class="text-xs font-semibold mt-1">3 miles</div>
+                        </div>
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Interval Training</div>
+                            <div class="text-xs font-semibold mt-1">5x400m</div>
+                        </div>
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Hill Repeats</div>
+                            <div class="text-xs font-semibold mt-1">6x200m</div>
+                        </div>
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Tempo Run</div>
+                            <div class="text-xs font-semibold mt-1">5 miles</div>
+                        </div>
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Easy Run</div>
+                            <div class="text-xs font-semibold mt-1">4 miles</div>
+                        </div>
+                        <div class="workout-cell">
+                            <div class="text-xs opacity-70">Rest</div>
+                            <div class="text-xs font-semibold mt-1">Recovery</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Right Column - Authentication + Premium Benefits -->
+            <div class="w-full md:w-1/3 space-y-6">
+                <!-- Authentication Card -->
+                <div class="glass-card p-8 login-register-card">
+                    <h2 class="text-2xl font-bold text-center mb-4">AetherRun</h2>
+                    <p class="text-center text-sm opacity-80 mb-6">Your AI-powered running companion</p>
+                    
+                    <div class="flex justify-between mb-6">
+                        <button class="w-1/2 py-2 text-center border-b-2 border-purple-400 font-medium">Login</button>
+                        <button class="w-1/2 py-2 text-center opacity-70 hover:opacity-100 transition">Register</button>
+                    </div>
+                    
+                    <form>
+                        <div class="mb-4">
+                            <label class="block text-sm mb-2">Username</label>
+                            <input type="text" placeholder="Enter your username" class="input-field w-full">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm mb-2">Password</label>
+                            <input type="password" placeholder="Enter your password" class="input-field w-full">
+                        </div>
+                        
+                        <div class="flex items-center justify-between mb-6">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Remember me</span>
+                            </label>
+                            <a href="#" class="text-sm text-purple-300 hover:text-purple-200">Forgot password?</a>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary w-full">Login</button>
+                        
+                        <div class="text-center mt-4">
+                            <span class="text-sm opacity-80">Don't have an account? </span>
+                            <a href="#" class="text-sm text-purple-300 hover:text-purple-200">Register</a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Premium Benefits Card -->
+                <div class="glass-card p-8 premium-benefits-card">
+                    <div class="flex items-center mb-8">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-500 mr-3">
+                            <i class="fas fa-brain text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">AI-Powered Training</h2>
+                    </div>
+                    
+                    <p class="mb-6 opacity-80">
+                        Get personalized training plans built by OpenAI that adapt to your performance, goals, and recovery patterns in real-time.
+                    </p>
+                    
+                    <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg p-6 mb-8">
+                        <h3 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-bolt text-yellow-400 mr-2"></i> Premium Benefits
+                        </h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                                <span class="text-sm">Access to human coaches for personalized guidance</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                                <span class="text-sm">Advanced nutrition recommendations for your training</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                                <span class="text-sm">Detailed recovery analytics and recommendations</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <button class="btn-primary w-full">Start Your Journey Now</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Animate progress bar on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const progressBars = document.querySelectorAll('.progress-bar');
+                progressBars.forEach(bar => {
+                    bar.classList.add('animate');
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDsAb%2FxJWjajvUBf9MqZ6RQvx1JtUcTqd%2B1APDvJx%2BJXi8FROWd33yr8Ih3pQ2aDj%2FOa3ksOedk3BrbpEVVYfWL683q76n08Dp2xFSCeQDzx0t%2BeFN34IDUl7mEbKSILKwDLwd1BOmWWGR0Mv55hn%2Fsxe%2BXcReVWX0rNMlqtQE66N1Ss2TOEUhUPwQl9MHIs16y3GTM3FaiHCqnW7aN3hLfB7ByI3uac0n028jOLE0nFmQGbFw%2Fwq2VbBwI6h1bZdtSo6ZWeYlJTOtVlrSCSQ6gRU1cQjWdhmHLyM6exnMhCQ%2BDeImrgPbJV%2Bp3ZDn51rbQz7%2BQUjuAr6%2FzuLeYiYMeFjSVV%2B0NvE3GDX7JhpEm7cgBTijhrL5Ta6WuFjSjeHbcd%2FLxAdtFWToXnS077jxsYxEd161ngalcP5mLOhnUlDDM2wVrpZlTi6F%2Fox6TLr2w%2BcZf%2F4D9yXSqHUKTroMmfoSELAFYX9F6MTwUEN%2BbuHsvaOcnSpcOPq1PhU%2FSBiXatGYWezYcAl%2B9e9C%2BGYN5w%3D";
+        window.__genspark_locale = "en-US";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDsAb/xJWjajvUBf9MqZ6RQvx1JtUcTqd+1APDvJx+JXi8FROWd33yr8Ih3pQ2aDj/Oa3ksOedk3BrbpEVVYfWL683q76n08Dp2xFSCeQDzx0t+eFN34IDUl7mEbKSILKwDLwd1BOmWWGR0Mv55hn/sxe+XcReVWX0rNMlqtQE66N1Ss2TOEUhUPwQl9MHIs16y3GTM3FaiHCqnW7aN3hLfB7ByI3uac0n028jOLE0nFmQGbFw/wq2VbBwI6h1bZdtSo6ZWeYlJTOtVlrSCSQ6gRU1cQjWdhmHLyM6exnMhCQ+DeImrgPbJV+p3ZDn51rbQz7+QUjuAr6/zuLeYiYMeFjSVV+0NvE3GDX7JhpEm7cgBTijhrL5Ta6WuFjSjeHbcd/LxAdtFWToXnS077jxsYxEd161ngalcP5mLOhnUlDDM2wVrpZlTi6F/ox6TLr2w+cZf/4D9yXSqHUKTroMmfoSELAFYX9F6MTwUEN+buHsvaOcnSpcOPq1PhU/SBiXatGYWezYcAl+9e9C+GYN5w=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
