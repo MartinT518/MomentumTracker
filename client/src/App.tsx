@@ -40,7 +40,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/" component={HomePage} />
+      <Route path="/" component={HomePage} />
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
       <ProtectedRoute path="/onboarding" component={OnboardingPage} />
       <ProtectedRoute path="/training-plan" component={TrainingPlanPage} />
