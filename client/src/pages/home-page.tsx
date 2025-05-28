@@ -1,14 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
+import AuthModal from "@/components/auth/auth-modal";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
 
   // Check onboarding status
   const { data: onboardingStatus, isLoading: isCheckingOnboarding } = useQuery({
@@ -425,12 +428,24 @@ export default function HomePage() {
               <a href="#" className="nav-link">Blog</a>
             </nav>
             <div className="flex items-center space-x-4">
-              <Link href="/auth">
-                <button className="nav-link">Sign In</button>
-              </Link>
-              <Link href="/auth?tab=register">
-                <button className="neumorphism-btn">Get Started</button>
-              </Link>
+              <button 
+                className="nav-link"
+                onClick={() => {
+                  setAuthModalTab("login");
+                  setIsAuthModalOpen(true);
+                }}
+              >
+                Sign In
+              </button>
+              <button 
+                className="neumorphism-btn"
+                onClick={() => {
+                  setAuthModalTab("register");
+                  setIsAuthModalOpen(true);
+                }}
+              >
+                Get Started
+              </button>
             </div>
           </div>
         </div>
@@ -455,16 +470,24 @@ export default function HomePage() {
                 and intelligent health insights to push your limits and achieve peak performance.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-                <Link href="/auth?tab=register">
-                  <button className="neumorphism-btn text-lg px-8 py-4">
-                    Start Free Trial
-                  </button>
-                </Link>
-                <Link href="/auth">
-                  <button className="text-white/90 hover:text-white font-semibold text-lg px-8 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1">
-                    Sign In
-                  </button>
-                </Link>
+                <button 
+                  className="neumorphism-btn text-lg px-8 py-4"
+                  onClick={() => {
+                    setAuthModalTab("register");
+                    setIsAuthModalOpen(true);
+                  }}
+                >
+                  Start Free Trial
+                </button>
+                <button 
+                  className="text-white/90 hover:text-white font-semibold text-lg px-8 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1"
+                  onClick={() => {
+                    setAuthModalTab("login");
+                    setIsAuthModalOpen(true);
+                  }}
+                >
+                  Sign In
+                </button>
               </div>
             </div>
           </section>
@@ -660,11 +683,15 @@ export default function HomePage() {
                 Join thousands of runners who have already elevated their performance with AetherRun's AI-powered platform.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth?tab=register">
-                  <button className="neumorphism-btn text-lg px-10 py-4">
-                    Start Your 14-Day Free Trial
-                  </button>
-                </Link>
+                <button 
+                  className="neumorphism-btn text-lg px-10 py-4"
+                  onClick={() => {
+                    setAuthModalTab("register");
+                    setIsAuthModalOpen(true);
+                  }}
+                >
+                  Start Your 14-Day Free Trial
+                </button>
                 <Link href="/subscription">
                   <button className="text-white/90 hover:text-white font-semibold text-lg px-10 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1">
                     View Pricing
@@ -675,6 +702,13 @@ export default function HomePage() {
           </section>
         </div>
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultTab={authModalTab}
+      />
     </div>
   );
 }
