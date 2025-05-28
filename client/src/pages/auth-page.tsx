@@ -111,42 +111,10 @@ export default function AuthPage() {
           {/* Left side hero content */}
           <div className="lg:w-3/5">
             <div className="mb-6">
-              <h1 className="text-5xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
+              <h1 className="text-5xl font-bold mb-4 text-white">Welcome Back</h1>
               <p className="text-lg text-blue-100 mb-8 leading-relaxed">
-                AetherRun combines AI-powered training plans, advanced data integration, and intelligent health tracking to push your limits and achieve your running goals.
+                Sign in to your AetherRun account and continue your training journey.
               </p>
-            </div>
-            
-            {/* Runner Animation */}
-            <div className="mb-6">
-              <RunnerAnimation />
-            </div>
-            
-            {/* Feature Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
-                <div className="flex items-center mb-2">
-                  <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                    <Brain size={20} />
-                  </div>
-                  <h3 className="font-bold">AI-Powered Training</h3>
-                </div>
-                <p className="text-sm opacity-90">
-                  Personalized plans built by OpenAI that adapt to your performance.
-                </p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white">
-                <div className="flex items-center mb-2">
-                  <div className="bg-purple-600 p-2 rounded-lg mr-3">
-                    <LineChart size={20} />
-                  </div>
-                  <h3 className="font-bold">Advanced Analytics</h3>
-                </div>
-                <p className="text-sm opacity-90">
-                  Deep insights into pace, heart rate, and energy patterns.
-                </p>
-              </div>
             </div>
           </div>
 
