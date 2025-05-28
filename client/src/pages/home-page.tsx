@@ -187,10 +187,8 @@ export default function HomePage() {
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="mx-auto w-full max-w-md lg:max-w-none">
-              <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
-                <AITrainingGenerator />
-              </div>
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
+              <AITrainingGenerator />
             </div>
             <div className="space-y-6">
               <div className="hidden lg:block">
@@ -250,10 +248,8 @@ export default function HomePage() {
                 </li>
               </ul>
             </div>
-            <div className="mx-auto w-full max-w-md lg:max-w-none">
-              <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
-                <FitnessIntegration />
-              </div>
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
+              <FitnessIntegration />
             </div>
           </div>
         </div>
