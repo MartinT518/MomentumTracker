@@ -383,6 +383,23 @@ export default function HomePage() {
           color: white;
           transform: translateY(-1px);
         }
+
+        .logo-transparent {
+          filter: brightness(1.2) contrast(1.1);
+          background: transparent;
+          mix-blend-mode: multiply;
+        }
+
+        .logo-transparent::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
+          mix-blend-mode: overlay;
+        }
       `}</style>
 
       {/* Floating Background Shapes */}
@@ -395,12 +412,15 @@ export default function HomePage() {
       <header className="modern-header">
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center">
+            <div className="flex items-center relative">
               <img 
                 src={aetherRunLogo} 
                 alt="AetherRun Logo" 
-                className="h-20 w-auto object-contain mix-blend-screen"
-                style={{ filter: 'brightness(1.2) contrast(1.1)' }}
+                className="h-20 w-auto object-contain logo-transparent"
+                style={{ 
+                  filter: 'brightness(0) invert(1)',
+                  mixBlendMode: 'normal'
+                }}
               />
             </div>
             <nav className="hidden md:flex space-x-2">
