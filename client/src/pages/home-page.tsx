@@ -5,13 +5,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
-import AuthModal from "@/components/auth/auth-modal";
+import { LoginModal, RegisterModal } from "@/components/auth/auth-modal";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   // Check onboarding status
   const { data: onboardingStatus, isLoading: isCheckingOnboarding } = useQuery({
@@ -430,19 +430,13 @@ export default function HomePage() {
             <div className="flex items-center space-x-4">
               <button 
                 className="nav-link"
-                onClick={() => {
-                  setAuthModalTab("login");
-                  setIsAuthModalOpen(true);
-                }}
+                onClick={() => setIsLoginModalOpen(true)}
               >
                 Sign In
               </button>
               <button 
                 className="neumorphism-btn"
-                onClick={() => {
-                  setAuthModalTab("register");
-                  setIsAuthModalOpen(true);
-                }}
+                onClick={() => setIsRegisterModalOpen(true)}
               >
                 Get Started
               </button>
@@ -472,19 +466,13 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
                 <button 
                   className="neumorphism-btn text-lg px-8 py-4"
-                  onClick={() => {
-                    setAuthModalTab("register");
-                    setIsAuthModalOpen(true);
-                  }}
+                  onClick={() => setIsRegisterModalOpen(true)}
                 >
                   Start Free Trial
                 </button>
                 <button 
                   className="text-white/90 hover:text-white font-semibold text-lg px-8 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1"
-                  onClick={() => {
-                    setAuthModalTab("login");
-                    setIsAuthModalOpen(true);
-                  }}
+                  onClick={() => setIsLoginModalOpen(true)}
                 >
                   Sign In
                 </button>
@@ -685,10 +673,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
                   className="neumorphism-btn text-lg px-10 py-4"
-                  onClick={() => {
-                    setAuthModalTab("register");
-                    setIsAuthModalOpen(true);
-                  }}
+                  onClick={() => setIsRegisterModalOpen(true)}
                 >
                   Start Your 14-Day Free Trial
                 </button>
@@ -703,11 +688,22 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)}
-        defaultTab={authModalTab}
+      {/* Auth Modals */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
+        }}
+      />
+      <RegisterModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={() => {
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
+        }}
       />
     </div>
   );
