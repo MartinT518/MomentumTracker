@@ -413,15 +413,9 @@ export default function HomePage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center relative">
-              <img 
-                src={aetherRunLogo} 
-                alt="AetherRun Logo" 
-                className="h-20 w-auto object-contain logo-transparent"
-                style={{ 
-                  filter: 'brightness(0) invert(1)',
-                  mixBlendMode: 'normal'
-                }}
-              />
+              <div className="text-3xl font-bold text-white">
+                AetherRun
+              </div>
             </div>
             <nav className="hidden md:flex space-x-2">
               <Link href="/faq" className="nav-link">Features</Link>
