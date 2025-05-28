@@ -90,9 +90,10 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-col md:flex-row gap-8 px-8">
-        {/* Left Column - Feature Showcase */}
-        <div className="w-full md:w-2/3 space-y-8">
+      <main className="container mx-auto px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column - Feature Showcase */}
+          <div className="w-full lg:w-2/3 space-y-8">
           
           {/* Hero Section */}
           <section className="backdrop-blur-md bg-white/10 rounded-2xl p-8 border border-white/20 relative overflow-hidden">
@@ -256,8 +257,8 @@ export default function HomePage() {
           </section>
         </div>
 
-        {/* Right Column - Login/Register Cards */}
-        <div className="w-full md:w-1/3 space-y-6">
+          {/* Right Column - Login/Register Cards */}
+          <div className="w-full lg:w-1/3 space-y-6">
           {/* Login/Register Card */}
           <div className="backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 h-[calc(50%-0.75rem)]">
             <h3 className="text-xl font-bold mb-4 text-white">Join AetherRun</h3>
@@ -317,10 +318,8 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+        </div>
       </main>
-
-      {/* Footer Section */}
-      <AppFooter />
     </div>
   );
 }
