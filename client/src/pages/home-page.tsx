@@ -399,7 +399,8 @@ export default function HomePage() {
               <img 
                 src={aetherRunLogo} 
                 alt="AetherRun Logo" 
-                className="h-10 w-auto object-contain"
+                className="h-20 w-auto object-contain mix-blend-screen"
+                style={{ filter: 'brightness(1.2) contrast(1.1)' }}
               />
             </div>
             <nav className="hidden md:flex space-x-2">
