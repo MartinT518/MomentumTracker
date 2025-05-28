@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
@@ -394,8 +395,12 @@ export default function HomePage() {
       <header className="modern-header">
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold gradient-text">
-              AetherRun
+            <div className="flex items-center">
+              <img 
+                src={aetherRunLogo} 
+                alt="AetherRun Logo" 
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <nav className="hidden md:flex space-x-2">
               <Link href="/faq" className="nav-link">Features</Link>
