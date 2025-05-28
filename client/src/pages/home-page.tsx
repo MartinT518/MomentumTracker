@@ -260,38 +260,44 @@ export default function HomePage() {
       </section>
 
       {/* Premium Benefits */}
-      <section className="py-16 bg-gradient-to-r from-indigo-900 to-purple-900 text-white">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-3xl font-bold">Premium Benefits</h2>
-            <p className="text-blue-100 mt-2">Unlock advanced features with MomentumRun Premium</p>
+            <h2 className="text-3xl font-bold text-white">Premium Benefits</h2>
+            <p className="text-white/80 mt-2">Unlock advanced features with AetherRun Premium</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/10">
               <div className="flex items-center mb-4">
-                <Zap className="text-yellow-400 mr-3 flex-shrink-0" size={24} />
-                <h3 className="font-bold text-lg">Human Coach Access</h3>
+                <div className="bg-gradient-to-r from-[#f04d6a] to-[#8a4df0] p-2 rounded-lg mr-3 text-white flex-shrink-0">
+                  <Zap size={24} />
+                </div>
+                <h3 className="font-bold text-lg text-white">Human Coach Access</h3>
               </div>
               <p className="text-white/80">
                 Get personalized guidance from experienced running coaches who can fine-tune your training plan and provide expert advice.
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/10">
               <div className="flex items-center mb-4">
-                <Heart className="text-red-400 mr-3 flex-shrink-0" size={24} />
-                <h3 className="font-bold text-lg">Advanced Nutrition</h3>
+                <div className="bg-gradient-to-r from-[#4df0b0] to-[#4d9df0] p-2 rounded-lg mr-3 text-white flex-shrink-0">
+                  <Heart size={24} />
+                </div>
+                <h3 className="font-bold text-lg text-white">Advanced Nutrition</h3>
               </div>
               <p className="text-white/80">
                 Receive AI-generated nutrition recommendations tailored to your training schedule, goals, and dietary preferences.
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/10">
               <div className="flex items-center mb-4">
-                <Activity className="text-blue-400 mr-3 flex-shrink-0" size={24} />
-                <h3 className="font-bold text-lg">Recovery Analysis</h3>
+                <div className="bg-gradient-to-r from-[#8a4df0] to-[#3a4db9] p-2 rounded-lg mr-3 text-white flex-shrink-0">
+                  <Activity size={24} />
+                </div>
+                <h3 className="font-bold text-lg text-white">Recovery Analysis</h3>
               </div>
               <p className="text-white/80">
                 Get detailed recovery analytics and recommendations based on your biometric data to optimize your training cycle.
@@ -301,7 +307,7 @@ export default function HomePage() {
 
           <div className="text-center mt-8 md:mt-12">
             <Link href="/auth?tab=register">
-              <Button size="lg" className="w-full sm:w-auto bg-white text-indigo-900 hover:bg-white/90">
+              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-[#8a4df0] to-[#f04d6a] border-none hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 hover:-translate-y-0.5">
                 Start 14-Day Free Trial
               </Button>
             </Link>
