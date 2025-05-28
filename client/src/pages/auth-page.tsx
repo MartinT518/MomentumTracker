@@ -11,10 +11,7 @@ import { useForm } from "react-hook-form";
 import { insertUserSchema } from "@shared/schema";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, ChevronRight, Zap, Brain, LineChart, Dumbbell, Activity, Heart } from "lucide-react";
-import RunnerAnimation from "@/components/ui/runner-animation";
-import AITrainingGenerator from "@/components/ui/ai-training-generator";
-import FitnessIntegration from "@/components/ui/fitness-integration";
+import { Loader2 } from "lucide-react";
 
 // Login form schema
 const loginSchema = z.object({
