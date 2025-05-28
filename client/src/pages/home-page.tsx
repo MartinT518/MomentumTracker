@@ -51,434 +51,562 @@ export default function HomePage() {
   // If user is already logged in but not checking onboarding, they'll be redirected by the effect above
   // Otherwise, show landing page for non-authenticated users
   return (
-    <div style={{
-      fontFamily: 'Poppins, sans-serif',
-      background: 'linear-gradient(135deg, #2a398f, #3a4db9)',
-      color: '#ffffff',
-      minHeight: '100vh'
-    }}>
+    <div className="min-h-screen relative overflow-hidden">
       <style>{`
-        .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+        :root {
+          --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          --dark-gradient: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+          --glass-bg: rgba(255, 255, 255, 0.08);
+          --glass-border: rgba(255, 255, 255, 0.15);
+          --text-primary: #ffffff;
+          --text-secondary: rgba(255, 255, 255, 0.85);
+          --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          --shadow-xl: 0 32px 64px -12px rgba(0, 0, 0, 0.35);
         }
-        
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+
+        body {
+          font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+          background-size: 400% 400%;
+          animation: gradientShift 15s ease infinite;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #8a4df0, #f04d6a);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(138, 77, 240, 0.3);
+
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(138, 77, 240, 0.4);
+
+        .floating-shapes {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: -1;
         }
-        
-        .feature-highlight {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px;
-            transition: all 0.3s ease;
+
+        .floating-shape {
+          position: absolute;
+          border-radius: 50%;
+          background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+          animation: float 20s infinite ease-in-out;
         }
-        
-        .feature-highlight:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-3px);
+
+        .floating-shape:nth-child(1) {
+          width: 300px;
+          height: 300px;
+          top: 10%;
+          left: 10%;
+          animation-delay: 0s;
         }
-        
-        .highlight-icon {
-            background: rgba(138, 77, 240, 0.2);
-            border-radius: 12px;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
+
+        .floating-shape:nth-child(2) {
+          width: 200px;
+          height: 200px;
+          top: 60%;
+          right: 10%;
+          animation-delay: 7s;
         }
-        
-        .progress-bar {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 8px 0;
+
+        .floating-shape:nth-child(3) {
+          width: 150px;
+          height: 150px;
+          bottom: 20%;
+          left: 60%;
+          animation-delay: 14s;
         }
-        
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4df0b0, #4d9df0);
-            border-radius: 3px;
-            transition: width 1.5s ease;
-            width: 85%;
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          25% { transform: translateY(-20px) rotate(90deg); }
+          50% { transform: translateY(0px) rotate(180deg); }
+          75% { transform: translateY(20px) rotate(270deg); }
         }
-        
-        .running-path {
-            position: absolute;
-            bottom: 10%;
-            left: 5%;
-            width: 90%;
-            height: 3px;
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0) 0%, 
-                rgba(255, 255, 255, 0.7) 30%, 
-                rgba(255, 255, 255, 0.7) 70%, 
-                rgba(255, 255, 255, 0) 100%);
+
+        .glass-morphism {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(20px);
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: var(--shadow-lg);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .runner-figure {
-            position: absolute;
-            bottom: 15%;
-            left: 20%;
-            color: #4df0b0;
-            font-size: 36px;
-            animation: run 10s infinite linear;
+
+        .glass-morphism:hover {
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: var(--shadow-xl);
+          background: rgba(255, 255, 255, 0.12);
         }
-        
-        @keyframes run {
-            0% { left: 5%; }
-            100% { left: 90%; }
+
+        .neumorphism-btn {
+          background: linear-gradient(145deg, #667eea, #764ba2);
+          border: none;
+          border-radius: 16px;
+          padding: 16px 32px;
+          color: white;
+          font-weight: 600;
+          font-size: 16px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          box-shadow: 
+            5px 5px 15px rgba(102, 126, 234, 0.4),
+            -5px -5px 15px rgba(118, 75, 162, 0.4),
+            inset 0 0 0 rgba(255, 255, 255, 0.1);
         }
-        
-        .week-schedule {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            font-size: 0.7rem;
+
+        .neumorphism-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 
+            8px 8px 25px rgba(102, 126, 234, 0.5),
+            -8px -8px 25px rgba(118, 75, 162, 0.5),
+            inset 2px 2px 5px rgba(255, 255, 255, 0.1);
         }
-        
-        .day-label {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 4px;
+
+        .neumorphism-btn:active {
+          transform: translateY(0px);
+          box-shadow: 
+            inset 3px 3px 10px rgba(102, 126, 234, 0.4),
+            inset -3px -3px 10px rgba(118, 75, 162, 0.4);
         }
-        
-        .workout-cell {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            padding: 6px;
-            text-align: center;
-            font-size: 0.65rem;
-            min-height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s ease;
+
+        .neumorphism-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          transition: left 0.5s ease;
         }
-        
-        .workout-cell:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+
+        .neumorphism-btn:hover::before {
+          left: 100%;
         }
-        
-        .garmin-data {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 16px;
-            position: relative;
-            overflow: hidden;
+
+        .modern-card {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(25px);
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 32px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
         }
-        
-        .garmin-data-header {
-            color: #4df0b0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+
+        .modern-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
         }
-        
-        .data-metric {
-            margin-bottom: 8px;
+
+        .modern-card:hover {
+          transform: translateY(-12px);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
         }
-        
-        .metric-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-right: 4px;
+
+        .gradient-text {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-weight: 800;
         }
-        
-        .metric-unit {
-            font-size: 0.8rem;
-            opacity: 0.7;
+
+        .pulse-dot {
+          width: 12px;
+          height: 12px;
+          background: #00f2fe;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+          box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
         }
-        
-        .login-register-card, .premium-benefits-card {
-            height: calc(50% - 1rem);
+
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
         }
-        
-        #ai-insights {
-            position: relative;
-            background: rgba(26, 26, 46, 0.8);
-            border-radius: 12px;
-            padding: 12px;
-            display: inline-block;
-            right: -40px;
-            top: 40px;
+
+        .floating-icon {
+          animation: floatIcon 6s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .metric-card {
+          background: rgba(0, 0, 0, 0.2);
+          backdrop-filter: blur(15px);
+          border-radius: 16px;
+          padding: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+          background: rgba(0, 0, 0, 0.3);
+          transform: scale(1.05);
+        }
+
+        .ai-badge {
+          background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+          color: white;
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .interactive-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 8px;
+          margin: 24px 0;
+        }
+
+        .grid-cell {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          padding: 12px 8px;
+          text-align: center;
+          transition: all 0.3s ease;
+          cursor: pointer;
+          min-height: 80px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .grid-cell:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-4px) scale(1.05);
+          box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-animation {
+          position: relative;
+          height: 200px;
+          overflow: hidden;
+          border-radius: 16px;
+          background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%);
+        }
+
+        .running-track {
+          position: absolute;
+          bottom: 30%;
+          left: 0;
+          width: 100%;
+          height: 4px;
+          background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(79, 172, 254, 0.8) 30%, 
+            rgba(79, 172, 254, 0.8) 70%, 
+            transparent 100%);
+          border-radius: 2px;
+        }
+
+        .runner-animated {
+          position: absolute;
+          bottom: 35%;
+          font-size: 32px;
+          animation: runAnimation 8s linear infinite;
+          filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        @keyframes runAnimation {
+          0% { left: -5%; }
+          100% { left: 100%; }
+        }
+
+        .insights-popup {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(20px);
+          border-radius: 16px;
+          padding: 16px;
+          border: 1px solid rgba(0, 242, 254, 0.3);
+          min-width: 200px;
+          animation: fadeInUp 1s ease;
+        }
+
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modern-header {
+          backdrop-filter: blur(20px);
+          background: rgba(255, 255, 255, 0.05);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 100;
+        }
+
+        .nav-link {
+          color: rgba(255, 255, 255, 0.9);
+          text-decoration: none;
+          font-weight: 500;
+          padding: 8px 16px;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          transform: translateY(-1px);
         }
       `}</style>
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="flex justify-between items-center mb-8">
-          <div className="text-2xl font-bold">
-            Aether<span style={{ color: '#8a4df0' }}>Run</span>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <Link href="/faq" className="hover:text-purple-300 transition">Features</Link>
-            <Link href="/subscription" className="hover:text-purple-300 transition">Pricing</Link>
-            <Link href="/faq" className="hover:text-purple-300 transition">Support</Link>
-            <a href="#" className="hover:text-purple-300 transition">Blog</a>
-          </nav>
-          <button className="md:hidden">
-            <i className="fas fa-bars"></i>
-          </button>
-        </header>
 
-        {/* Main Content */}
-        <main className="flex flex-col md:flex-row gap-8">
-          {/* Left Column - Feature Showcase */}
-          <div className="w-full md:w-2/3 space-y-8">
-            {/* Hero Section */}
-            <section className="glass-card p-8 relative overflow-hidden">
-              <h1 className="text-4xl font-bold mb-4">Transform Your Running Journey</h1>
-              <p className="text-lg mb-8 opacity-80">
-                AetherRun combines AI-powered training plans, advanced data integration, and 
-                intelligent health tracking to push your limits and achieve your running goals.
-              </p>
-              
-              <div className="relative h-48 mb-6">
-                <div className="running-path"></div>
-                <div className="runner-figure">
-                  <i className="fas fa-running"></i>
-                </div>
-                
-                <div id="ai-insights" className="text-sm">
-                  <div className="font-bold mb-1">AI INSIGHTS:</div>
-                  <div className="flex items-center mb-1">
-                    <span className="w-24">Pace:</span>
-                    <span className="font-semibold">1.7 min/km</span>
-                  </div>
-                  <div className="flex items-center mb-1">
-                    <span className="w-24">Stride Length:</span>
-                    <span className="font-semibold">106.3 ft</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="w-24">Form Efficiency:</span>
-                    <span className="font-semibold">83%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="progress-bar">
-                <div className="progress-bar-fill"></div>
-              </div>
-              <div className="text-xs text-right opacity-70">AI ENERGY ANALYSIS</div>
-              
-              <div className="grid grid-cols-2 gap-4 mt-8">
-                <div className="feature-highlight">
-                  <div className="highlight-icon">
-                    <i className="fas fa-brain" style={{ color: '#8a4df0' }}></i>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">AI-Powered Training</h3>
-                  <p className="text-sm opacity-80">Personalized plans built by OpenAI that adapt to your performance.</p>
-                </div>
-                <div className="feature-highlight">
-                  <div className="highlight-icon">
-                    <i className="fas fa-chart-line" style={{ color: '#8a4df0' }}></i>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
-                  <p className="text-sm opacity-80">Deep insights into pace, heart rate, and energy patterns.</p>
-                </div>
-              </div>
-            </section>
-            
-            {/* Platform Integration */}
-            <section className="glass-card p-8">
-              <h2 className="text-2xl font-bold mb-4">Platform Integration</h2>
-              <p className="mb-6 opacity-80">
-                Sync with Strava, Garmin Connect, and Polar seamlessly to keep all your training data in one place.
-              </p>
-              
-              <div className="flex justify-around mb-6">
-                <div style={{ width: '24px', height: '24px', color: '#f87171', animation: 'pulse 2s infinite' }}>
-                  <i className="fas fa-heart"></i>
-                </div>
-                <div style={{ width: '24px', height: '24px', color: '#60a5fa' }}>
-                  <i className="fas fa-stopwatch"></i>
-                </div>
-                <div style={{ width: '24px', height: '24px', color: '#34d399' }}>
-                  <i className="fas fa-shoe-prints"></i>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="feature-highlight">
-                  <h3 className="text-lg font-semibold mb-2">Platform Integration</h3>
-                  <p className="text-sm opacity-80">Sync with Strava, Garmin Connect, and Polar seamlessly.</p>
-                </div>
-                <div className="feature-highlight">
-                  <h3 className="text-lg font-semibold mb-2">Health Intelligence</h3>
-                  <p className="text-sm opacity-80">Monitor energy levels calculated from HRV and sleep quality.</p>
-                </div>
-              </div>
-              
-              <div className="garmin-data mt-8">
-                <div className="garmin-data-header">
-                  <span>GARMIN DATA INSIGHTS</span>
-                  <span className="text-xs">• SYNCING...</span>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="data-metric">
-                    <div className="text-xs opacity-70">Heart Rate</div>
-                    <div>
-                      <span className="metric-value">62</span>
-                      <span className="metric-unit">bpm</span>
-                    </div>
-                  </div>
-                  <div className="data-metric">
-                    <div className="text-xs opacity-70">Sleep</div>
-                    <div>
-                      <span className="metric-value">7.2</span>
-                      <span className="metric-unit">hrs</span>
-                    </div>
-                  </div>
-                  <div className="data-metric">
-                    <div className="text-xs opacity-70">VO2 Max</div>
-                    <div>
-                      <span className="metric-value">48</span>
-                      <span className="metric-unit"></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            
-            {/* AI Training Plan Generator */}
-            <section className="glass-card p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">AI TRAINING PLAN GENERATOR</h2>
-                <span className="text-xs bg-green-400 text-green-900 rounded-full px-3 py-1">• COMPLETE</span>
-              </div>
-              
-              <div className="week-schedule mb-4">
-                <div className="day-label">M</div>
-                <div className="day-label">T</div>
-                <div className="day-label">W</div>
-                <div className="day-label">T</div>
-                <div className="day-label">F</div>
-                <div className="day-label">S</div>
-                <div className="day-label">S</div>
-                
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Long Run</div>
-                  <div className="text-xs font-semibold mt-1">8.5 miles</div>
-                </div>
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Recovery Run</div>
-                  <div className="text-xs font-semibold mt-1">3 miles</div>
-                </div>
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Interval Training</div>
-                  <div className="text-xs font-semibold mt-1">5x400m</div>
-                </div>
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Hill Repeats</div>
-                  <div className="text-xs font-semibold mt-1">6x200m</div>
-                </div>
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Tempo Run</div>
-                  <div className="text-xs font-semibold mt-1">5 miles</div>
-                </div>
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Easy Run</div>
-                  <div className="text-xs font-semibold mt-1">4 miles</div>
-                </div>
-                <div className="workout-cell">
-                  <div className="text-xs opacity-70">Rest</div>
-                  <div className="text-xs font-semibold mt-1">-</div>
-                </div>
-              </div>
-            </section>
+      {/* Floating Background Shapes */}
+      <div className="floating-shapes">
+        <div className="floating-shape"></div>
+        <div className="floating-shape"></div>
+        <div className="floating-shape"></div>
+      </div>
+      {/* Modern Fixed Header */}
+      <header className="modern-header">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="text-2xl font-bold gradient-text">
+              AetherRun
+            </div>
+            <nav className="hidden md:flex space-x-2">
+              <Link href="/faq" className="nav-link">Features</Link>
+              <Link href="/subscription" className="nav-link">Pricing</Link>
+              <Link href="/faq" className="nav-link">Support</Link>
+              <a href="#" className="nav-link">Blog</a>
+            </nav>
+            <div className="flex items-center space-x-4">
+              <Link href="/auth">
+                <button className="nav-link">Sign In</button>
+              </Link>
+              <Link href="/auth?tab=register">
+                <button className="neumorphism-btn">Get Started</button>
+              </Link>
+            </div>
           </div>
+        </div>
+      </header>
 
-          {/* Right Column - Authentication */}
-          <div className="w-full md:w-1/3 space-y-8">
-            {/* Login/Register Card */}
-            <div className="glass-card p-6 login-register-card">
-              <h3 className="text-xl font-bold mb-4">Join AetherRun</h3>
-              <p className="text-sm opacity-80 mb-6">
-                Start your AI-powered running journey today and unlock your full potential.
+      {/* Main Content */}
+      <main className="pt-24 pb-12">
+        <div className="container mx-auto px-6">
+          
+          {/* Hero Section */}
+          <section className="text-center mb-20">
+            <div className="max-w-4xl mx-auto">
+              <div className="ai-badge mb-8 inline-block">
+                ✨ Powered by Advanced AI
+              </div>
+              <h1 className="text-6xl md:text-7xl font-black mb-8 leading-tight">
+                Transform Your
+                <span className="gradient-text block">Running Journey</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
+                AetherRun combines cutting-edge AI training plans, seamless platform integration, 
+                and intelligent health insights to push your limits and achieve peak performance.
               </p>
-              
-              <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
                 <Link href="/auth?tab=register">
-                  <button className="btn-primary w-full">Create Account</button>
+                  <button className="neumorphism-btn text-lg px-8 py-4">
+                    Start Free Trial
+                  </button>
                 </Link>
                 <Link href="/auth">
-                  <button className="w-full bg-white bg-opacity-10 border border-white border-opacity-30 py-3 px-4 rounded-lg font-semibold transition-all duration-300 hover:bg-opacity-20">
+                  <button className="text-white/90 hover:text-white font-semibold text-lg px-8 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1">
                     Sign In
                   </button>
                 </Link>
               </div>
             </div>
+          </section>
 
-            {/* Premium Benefits Card */}
-            <div className="glass-card p-6 premium-benefits-card">
-              <h3 className="text-xl font-bold mb-4">Premium Benefits</h3>
-              <div className="space-y-4 text-sm">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded" style={{ background: 'linear-gradient(135deg, #f04d6a, #8a4df0)' }}>
-                    <i className="fas fa-bolt text-white text-xs p-1"></i>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Human Coach Access</div>
-                    <div className="opacity-70">Get guidance from experienced running coaches</div>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded" style={{ background: 'linear-gradient(135deg, #4df0b0, #4d9df0)' }}>
-                    <i className="fas fa-heart text-white text-xs p-1"></i>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Advanced Nutrition</div>
-                    <div className="opacity-70">AI-generated nutrition recommendations</div>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded" style={{ background: 'linear-gradient(135deg, #8a4df0, #3a4db9)' }}>
-                    <i className="fas fa-chart-line text-white text-xs p-1"></i>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Recovery Analysis</div>
-                    <div className="opacity-70">Detailed recovery analytics and insights</div>
+          {/* Feature Grid */}
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+            
+            {/* AI Training Card */}
+            <div className="glass-morphism p-8">
+              <div className="floating-icon text-4xl mb-6">🧠</div>
+              <h3 className="text-2xl font-bold mb-4">AI-Powered Training</h3>
+              <p className="text-white/80 mb-6">
+                Personalized training plans generated by advanced AI that adapt to your performance and goals.
+              </p>
+              <div className="hero-animation mb-6">
+                <div className="running-track"></div>
+                <div className="runner-animated">🏃‍♂️</div>
+                <div className="insights-popup">
+                  <div className="text-xs font-bold text-cyan-400 mb-2">AI INSIGHTS</div>
+                  <div className="text-xs space-y-1">
+                    <div>Pace: 4:30 min/km</div>
+                    <div>Efficiency: 92%</div>
+                    <div className="flex items-center gap-1">
+                      <div className="pulse-dot"></div>
+                      <span>Analyzing...</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <Link href="/auth?tab=register">
-                <button className="btn-primary w-full mt-6 text-sm">Start 14-Day Free Trial</button>
-              </Link>
             </div>
-          </div>
-        </main>
-      </div>
+
+            {/* Platform Integration Card */}
+            <div className="glass-morphism p-8">
+              <div className="floating-icon text-4xl mb-6">🔗</div>
+              <h3 className="text-2xl font-bold mb-4">Seamless Integration</h3>
+              <p className="text-white/80 mb-6">
+                Connect with Strava, Garmin, Polar, and more. All your data in one intelligent platform.
+              </p>
+              <div className="metric-card">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-cyan-400 font-semibold text-sm">LIVE DATA SYNC</span>
+                  <div className="pulse-dot"></div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold">162</div>
+                    <div className="text-xs text-white/60">HR</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">8.2</div>
+                    <div className="text-xs text-white/60">Sleep</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">52</div>
+                    <div className="text-xs text-white/60">VO2</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Features Card */}
+            <div className="glass-morphism p-8">
+              <div className="floating-icon text-4xl mb-6">⭐</div>
+              <h3 className="text-2xl font-bold mb-4">Premium Experience</h3>
+              <p className="text-white/80 mb-6">
+                Unlock advanced features including human coach access and detailed analytics.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center text-sm">👨‍🏫</div>
+                  <span className="text-sm">Expert Coach Access</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-sm">🍎</div>
+                  <span className="text-sm">AI Nutrition Plans</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center text-sm">📊</div>
+                  <span className="text-sm">Advanced Analytics</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Training Plan Showcase */}
+          <section className="glass-morphism p-8 mb-20">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">AI Training Plan Generator</h2>
+                <p className="text-white/80">Personalized weekly schedules that evolve with your progress</p>
+              </div>
+              <div className="ai-badge">🎯 Active Plan</div>
+            </div>
+            
+            <div className="interactive-grid">
+              <div className="text-center font-bold text-white/90 text-sm">MON</div>
+              <div className="text-center font-bold text-white/90 text-sm">TUE</div>
+              <div className="text-center font-bold text-white/90 text-sm">WED</div>
+              <div className="text-center font-bold text-white/90 text-sm">THU</div>
+              <div className="text-center font-bold text-white/90 text-sm">FRI</div>
+              <div className="text-center font-bold text-white/90 text-sm">SAT</div>
+              <div className="text-center font-bold text-white/90 text-sm">SUN</div>
+              
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Long Run</div>
+                <div className="text-sm font-bold">12K</div>
+                <div className="text-xs text-cyan-400">Easy pace</div>
+              </div>
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Recovery</div>
+                <div className="text-sm font-bold">5K</div>
+                <div className="text-xs text-green-400">Recovery</div>
+              </div>
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Intervals</div>
+                <div className="text-sm font-bold">8x400m</div>
+                <div className="text-xs text-orange-400">Hard</div>
+              </div>
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Hills</div>
+                <div className="text-sm font-bold">6x200m</div>
+                <div className="text-xs text-red-400">Intense</div>
+              </div>
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Tempo</div>
+                <div className="text-sm font-bold">8K</div>
+                <div className="text-xs text-yellow-400">Moderate</div>
+              </div>
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Easy Run</div>
+                <div className="text-sm font-bold">6K</div>
+                <div className="text-xs text-blue-400">Easy</div>
+              </div>
+              <div className="grid-cell">
+                <div className="text-xs text-white/70 mb-1">Rest</div>
+                <div className="text-sm font-bold">🧘‍♂️</div>
+                <div className="text-xs text-gray-400">Recovery</div>
+              </div>
+            </div>
+          </section>
+
+          {/* CTA Section */}
+          <section className="text-center">
+            <div className="modern-card max-w-2xl mx-auto">
+              <h2 className="text-4xl font-bold mb-6">Ready to Transform Your Running?</h2>
+              <p className="text-xl text-white/80 mb-8">
+                Join thousands of runners who have already elevated their performance with AetherRun's AI-powered platform.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/auth?tab=register">
+                  <button className="neumorphism-btn text-lg px-10 py-4">
+                    Start Your 14-Day Free Trial
+                  </button>
+                </Link>
+                <Link href="/subscription">
+                  <button className="text-white/90 hover:text-white font-semibold text-lg px-10 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1">
+                    View Pricing
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
