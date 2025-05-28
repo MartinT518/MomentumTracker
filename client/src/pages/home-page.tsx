@@ -98,7 +98,7 @@ export default function HomePage() {
           {/* Hero Section */}
           <section className="backdrop-blur-md bg-white/10 rounded-2xl p-8 border border-white/20 relative overflow-hidden">
             <h1 className="text-4xl font-bold mb-4 text-white">Transform Your Running Journey</h1>
-            <p className="text-lg mb-8 text-white/80">
+            <p className="text-lg mb-8 opacity-80 text-white">
               AetherRun combines AI-powered training plans, advanced data integration, and 
               intelligent health tracking to push your limits and achieve your running goals.
             </p>
