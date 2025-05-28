@@ -413,10 +413,10 @@ export default function HomePage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center relative">
-              <div className="text-3xl font-bold relative">
-                <div className="absolute -top-2 left-0 right-0 h-0.5 bg-black"></div>
+              <div className="text-3xl font-bold relative bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+                <div className="absolute -top-1 left-2 right-2 h-0.5 bg-orange-400"></div>
                 <span className="text-orange-400">Aether</span>
-                <span className="text-white">Run</span>
+                <span className="text-white drop-shadow-lg">Run</span>
               </div>
             </div>
             <nav className="hidden md:flex space-x-2">
