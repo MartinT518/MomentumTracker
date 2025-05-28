@@ -128,10 +128,10 @@ export default function HomePage() {
         }
 
         .glass-morphism {
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.12);
           backdrop-filter: blur(20px);
           border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           box-shadow: var(--shadow-lg);
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -139,7 +139,7 @@ export default function HomePage() {
         .glass-morphism:hover {
           transform: translateY(-8px) scale(1.02);
           box-shadow: var(--shadow-xl);
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.18);
         }
 
         .neumorphism-btn {
@@ -191,10 +191,10 @@ export default function HomePage() {
         }
 
         .modern-card {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.15);
           backdrop-filter: blur(25px);
           border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.25);
           padding: 32px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
@@ -208,30 +208,31 @@ export default function HomePage() {
           left: 0;
           right: 0;
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
         }
 
         .modern-card:hover {
           transform: translateY(-12px);
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.22);
           box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
         }
 
         .gradient-text {
-          background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 50%, #00d4aa 100%);
+          background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 50%, #ecfeff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
           font-weight: 800;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .pulse-dot {
           width: 12px;
           height: 12px;
-          background: #00d4aa;
+          background: #10b981;
           border-radius: 50%;
           animation: pulse 2s infinite;
-          box-shadow: 0 0 20px rgba(0, 212, 170, 0.5);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
         }
 
         @keyframes pulse {
@@ -264,7 +265,7 @@ export default function HomePage() {
         }
 
         .ai-badge {
-          background: linear-gradient(135deg, #00d4aa 0%, #06b6d4 100%);
+          background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
           color: white;
           padding: 6px 16px;
           border-radius: 20px;
@@ -272,7 +273,7 @@ export default function HomePage() {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
         }
 
         .interactive-grid {
