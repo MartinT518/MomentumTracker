@@ -677,7 +677,7 @@ export default function HomePage() {
                 >
                   Start Your 14-Day Free Trial
                 </button>
-                <Link href="/subscription">
+                <Link href="/pricing">
                   <button className="text-white/90 hover:text-white font-semibold text-lg px-10 py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1">
                     View Pricing
                   </button>

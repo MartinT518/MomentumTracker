@@ -24,6 +24,7 @@ import NutritionPage from "@/pages/nutrition-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import IntegrationCallbackPage from "@/pages/integration-callback-page";
 import AchievementsPage from "@/pages/achievements-page";
+import PricingPage from "@/pages/pricing-page";
 // Information pages
 import FAQPage from "@/pages/faq-page";
 import TermsPage from "@/pages/terms-page";
@@ -41,6 +42,7 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <Route path="/" component={HomePage} />
+      <Route path="/pricing" component={PricingPage} />
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
       <ProtectedRoute path="/onboarding" component={OnboardingPage} />
       <ProtectedRoute path="/training-plan" component={TrainingPlanPage} />
