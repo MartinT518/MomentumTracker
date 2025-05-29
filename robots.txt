@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /faq
+Allow: /terms
+Allow: /privacy
+Allow: /achievements
+
+# Disallow private/protected pages
+Disallow: /dashboard
+Disallow: /subscription
+Disallow: /profile
+Disallow: /settings
+Disallow: /admin/
+Disallow: /api/
+
+# Allow access to static assets
+Allow: /assets/
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.ico
+
+# Sitemap location
+Sitemap: https://your-domain.replit.app/sitemap.xml
+
+# Crawl delay (optional - helps prevent server overload)
+Crawl-delay: 1
