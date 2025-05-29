@@ -15,7 +15,7 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && !user) {
-      setLocation("/auth");
+      setLocation("/");
     }
   }, [user, isLoading, setLocation]);
 
@@ -26,7 +26,7 @@ export function ProtectedRoute({
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : !user ? (
-        <Redirect to="/auth" />
+        <Redirect to="/" />
       ) : (
         <Component />
       )}
