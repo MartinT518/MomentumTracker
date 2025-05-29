@@ -64,7 +64,7 @@ function Router() {
       <ProtectedRoute path="/coaches/:id" component={CoachDetailPage} />
       <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
       <ProtectedRoute path="/admin/coaches" component={CoachManagementPage} />
-      <Route path="/auth/:platform/callback" component={IntegrationCallbackPage} />
+      <Route path="/integrations/:platform/callback" component={IntegrationCallbackPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -10,7 +10,7 @@ import { handleStravaCallback, handleGarminCallback, handlePolarCallback } from 
 export default function IntegrationCallbackPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [_, params] = useRoute<{ platform: string }>("/auth/:platform/callback");
+  const [_, params] = useRoute<{ platform: string }>("/integrations/:platform/callback");
   const platform = params?.platform || "";
   
   const [isProcessing, setIsProcessing] = useState(true);
