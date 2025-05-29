@@ -152,7 +152,12 @@ export default function HealthMetricsPage() {
 
   const addHealthMetricMutation = useMutation({
     mutationFn: async (formData: AddHealthMetricFormValues) => {
-      const res = await apiRequest("POST", "/api/health-metrics", formData);
+      // Convert date to ISO string for proper server handling
+      const dataToSend = {
+        ...formData,
+        metric_date: formData.metric_date.toISOString().split('T')[0] // Send as YYYY-MM-DD string
+      };
+      const res = await apiRequest("POST", "/api/health-metrics", dataToSend);
       return res.json();
     },
     onSuccess: () => {
