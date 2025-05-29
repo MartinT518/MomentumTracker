@@ -53,7 +53,7 @@ export function NutritionOverview() {
   }
 
   return (
-    <div className="space-y-8 -ml-4">
+    <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
