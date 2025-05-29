@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Star, Zap, Users, Target, ArrowRight } from 'lucide-react';
 import { LoginModal, RegisterModal } from '@/components/auth/auth-modal';
 import { Link } from 'wouter';
+import { AppFooter } from '@/components/common/app-footer';
 
 const pricingPlans = [
   {
@@ -362,6 +363,8 @@ export default function PricingPage() {
           setIsLoginModalOpen(true);
         }}
       />
+      
+      <AppFooter />
     </div>
   );
 }

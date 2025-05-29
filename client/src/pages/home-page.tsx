@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
 import { LoginModal, RegisterModal } from "@/components/auth/auth-modal";
+import { AppFooter } from "@/components/common/app-footer";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
@@ -704,6 +705,8 @@ export default function HomePage() {
           setIsLoginModalOpen(true);
         }}
       />
+      
+      <AppFooter />
     </div>
   );
 }
