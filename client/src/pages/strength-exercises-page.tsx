@@ -415,7 +415,7 @@ export default function StrengthExercisesPage() {
   };
   
   return (
-    <div className="flex h-screen max-w-full overflow-hidden">
+    <div className="flex min-h-screen max-w-full">
       <Sidebar />
       <MobileMenu />
 
