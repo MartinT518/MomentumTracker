@@ -83,7 +83,6 @@ function App() {
                 <SupportChatBot />
                 <GoalAchievementPopup />
               </div>
-              <AppFooter />
             </div>
           </TooltipProvider>
         </AchievementsProvider>
