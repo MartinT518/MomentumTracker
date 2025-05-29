@@ -8,9 +8,10 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, ArrowRight, Star, Zap, Users, Target } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Sidebar } from '@/components/common/sidebar';
+import { LoginModal, RegisterModal } from '@/components/auth/auth-modal';
 
 // Initialize Stripe
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
