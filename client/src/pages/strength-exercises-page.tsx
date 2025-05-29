@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dumbbell, Filter, Search, Play, Bookmark, Clock, BarChart3, Heart, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 // Define exercise categories
 type ExerciseCategory = "upper-body" | "lower-body" | "core" | "full-body" | "recovery" | "mobility";
@@ -279,6 +280,7 @@ const exercisesData: Exercise[] = [
 ];
 
 export default function StrengthExercisesPage() {
+  const { toast } = useToast();
   const [exercises, setExercises] = useState<Exercise[]>(exercisesData);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>(exercisesData);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -287,6 +289,7 @@ export default function StrengthExercisesPage() {
   const [equipmentFilter, setEquipmentFilter] = useState<ExerciseEquipment | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [savedWorkout, setSavedWorkout] = useState<Exercise[]>([]);
   
   // Apply filters when they change
   useEffect(() => {
@@ -330,6 +333,63 @@ export default function StrengthExercisesPage() {
           : exercise
       )
     );
+    
+    const exercise = exercises.find(ex => ex.id === id);
+    const isFavorited = !exercise?.favorite;
+    
+    toast({
+      title: isFavorited ? "Added to favorites" : "Removed from favorites",
+      description: `${exercise?.name} has been ${isFavorited ? 'added to' : 'removed from'} your favorites.`
+    });
+  };
+
+  // Add exercise to workout
+  const addToWorkout = (exercise: Exercise) => {
+    if (savedWorkout.find(ex => ex.id === exercise.id)) {
+      toast({
+        title: "Already in workout",
+        description: `${exercise.name} is already in your current workout.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSavedWorkout(prev => [...prev, exercise]);
+    toast({
+      title: "Added to workout",
+      description: `${exercise.name} has been added to your current workout.`
+    });
+  };
+
+  // Remove exercise from workout
+  const removeFromWorkout = (id: number) => {
+    const exercise = savedWorkout.find(ex => ex.id === id);
+    setSavedWorkout(prev => prev.filter(ex => ex.id !== id));
+    toast({
+      title: "Removed from workout",
+      description: `${exercise?.name} has been removed from your workout.`
+    });
+  };
+
+  // Save current workout
+  const saveWorkout = () => {
+    if (savedWorkout.length === 0) {
+      toast({
+        title: "No exercises selected",
+        description: "Please add exercises to your workout before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // In a real app, this would save to a database
+    toast({
+      title: "Workout saved",
+      description: `Successfully saved workout with ${savedWorkout.length} exercises.`
+    });
+    
+    // Clear the current workout after saving
+    setSavedWorkout([]);
   };
   
   // View exercise details
@@ -368,7 +428,66 @@ export default function StrengthExercisesPage() {
             <h1 className="text-2xl font-bold font-heading text-neutral-darker">Strength Exercises</h1>
             <p className="text-neutral-medium mt-1">Build strength to improve running performance and prevent injuries</p>
           </div>
+          {savedWorkout.length > 0 && (
+            <div className="mt-4 md:mt-0">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                {savedWorkout.length} exercise{savedWorkout.length !== 1 ? 's' : ''} in workout
+              </Badge>
+            </div>
+          )}
         </div>
+
+        {/* Current Workout Display */}
+        {savedWorkout.length > 0 && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Current Workout
+              </CardTitle>
+              <CardDescription>
+                Your selected exercises for today's strength training
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {savedWorkout.map(exercise => (
+                  <Badge 
+                    key={exercise.id} 
+                    variant="secondary" 
+                    className="flex items-center gap-1 pr-1"
+                  >
+                    {exercise.name}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => removeFromWorkout(exercise.id)}
+                    >
+                      ×
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={saveWorkout}
+                  className="flex items-center gap-2"
+                >
+                  <Bookmark className="h-4 w-4" />
+                  Save Workout
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setSavedWorkout([])}
+                  className="flex items-center gap-2"
+                >
+                  Clear All
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main content */}
         {selectedExercise ? (
@@ -491,13 +610,21 @@ export default function StrengthExercisesPage() {
             </CardContent>
             
             <CardFooter className="border-t border-neutral-100 pt-6 flex flex-wrap gap-3">
-              <Button variant="secondary" className="flex items-center gap-2">
+              <Button 
+                variant="secondary" 
+                className="flex items-center gap-2"
+                onClick={() => addToWorkout(selectedExercise)}
+              >
                 <Clock className="h-4 w-4" />
                 Add to Workout
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={saveWorkout}
+              >
                 <Bookmark className="h-4 w-4" />
-                Save
+                Save Workout ({savedWorkout.length})
               </Button>
             </CardFooter>
           </Card>
@@ -738,13 +865,28 @@ export default function StrengthExercisesPage() {
                       <span className="capitalize">{exercise.equipment === 'none' ? 'No equipment' : exercise.equipment}</span>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-0">
+                  <CardFooter className="pt-0 flex gap-2">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="ml-auto text-primary"
+                      className="text-primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        viewExerciseDetails(exercise);
+                      }}
                     >
                       View Details
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="ml-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToWorkout(exercise);
+                      }}
+                    >
+                      Add to Workout
                     </Button>
                   </CardFooter>
                 </Card>
