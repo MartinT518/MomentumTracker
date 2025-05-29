@@ -101,7 +101,7 @@ export default function PricingPage() {
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg"></div>
                 <span className="text-xl font-bold text-white">
-                  <span className="text-orange-400">Aether</span>Run
+                  <span className="text-cyan-300">Aether</span>Run
                 </span>
               </div>
             </Link>
