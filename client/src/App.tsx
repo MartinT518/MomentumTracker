@@ -10,7 +10,7 @@ import { GoalAchievementPopup } from "@/components/goals/goal-achievement-popup"
 import { AppFooter } from "@/components/common/app-footer";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
-import AuthPage from "@/pages/auth-page";
+
 import DashboardPage from "@/pages/dashboard-page";
 import TrainingPlanPage from "@/pages/training-plan-page";
 import ActivitiesPage from "@/pages/activities-page";
@@ -40,7 +40,6 @@ import { ProtectedRoute } from "./lib/protected-route";
 function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
       <Route path="/" component={HomePage} />
       <Route path="/pricing" component={PricingPage} />
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
