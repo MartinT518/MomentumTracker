@@ -30,39 +30,37 @@ const pricingPlans = [
   },
   {
     name: "Premium Monthly",
-    price: 14.99,
+    price: 9.99,
     interval: "month",
     description: "Unlock AI-powered training and advanced features",
     popular: true,
     features: [
       "Everything in Free",
-      "AI-powered training plans",
-      "Advanced analytics dashboard",
-      "Unlimited platform integrations",
-      "Smart nutrition recommendations",
-      "Priority email support",
-      "Custom goal tracking",
-      "Performance predictions"
+      "Advanced training analytics",
+      "Custom training plans",
+      "Unlimited training history",
+      "AI-powered recommendations",
+      "Priority support",
+      "Early access to new features"
     ],
     limitations: []
   },
   {
     name: "Premium Annual",
-    price: 119.99,
+    price: 95.88,
     interval: "year",
-    originalPrice: 179.88,
+    originalPrice: 119.88,
     description: "Best value with exclusive annual features",
     popular: false,
     badge: "Best Value",
     features: [
       "Everything in Premium Monthly",
+      "Exclusive annual subscriber benefits",
       "Access to human coaches",
       "Advanced biometric analysis",
-      "Early access to new features",
       "Priority chat support",
       "Personalized race strategies",
-      "Recovery optimization plans",
-      "Exclusive community forums"
+      "Recovery optimization plans"
     ],
     limitations: []
   }
