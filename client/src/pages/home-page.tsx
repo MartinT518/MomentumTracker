@@ -422,8 +422,7 @@ export default function HomePage() {
               </div>
             </div>
             <nav className="hidden md:flex space-x-2">
-              <Link href="/faq" className="nav-link">Features</Link>
-              <Link href="/subscription" className="nav-link">Pricing</Link>
+              <Link href="/pricing" className="nav-link">Pricing</Link>
               <Link href="/faq" className="nav-link">Support</Link>
               <a href="#" className="nav-link">Blog</a>
             </nav>

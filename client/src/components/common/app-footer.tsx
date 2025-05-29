@@ -69,7 +69,7 @@ export function AppFooter() {
                 <Link href="/nutrition" className="text-sm text-muted-foreground hover:text-primary">Nutrition</Link>
               </li>
               <li>
-                <Link href="/subscription" className="text-sm text-muted-foreground hover:text-primary">Pricing</Link>
+                <Link href="/pricing" className="text-sm text-muted-foreground hover:text-primary">Pricing</Link>
               </li>
             </ul>
           </div>
