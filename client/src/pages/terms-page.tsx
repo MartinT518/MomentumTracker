@@ -1,6 +1,11 @@
 import { Layout } from "@/components/common/layout";
+import { useEffect } from "react";
 
 export default function TermsPage() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto py-8">

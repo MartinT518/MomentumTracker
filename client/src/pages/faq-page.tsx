@@ -27,6 +27,10 @@ type ContactValues = z.infer<typeof contactSchema>;
 
 export default function FAQPage() {
   const { toast } = useToast();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const contactForm = useForm<ContactValues>({
     resolver: zodResolver(contactSchema),
