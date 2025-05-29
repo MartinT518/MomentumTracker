@@ -40,7 +40,7 @@ export const POLAR_AUTH_URL = "https://flow.polar.com/oauth2/authorization";
 // Functions for initiating auth flow
 export function initiateStravaAuth() {
   const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
-  const redirectUri = `${window.location.origin}/auth/strava/callback`;
+  const redirectUri = `${window.location.origin}/integrations/strava/callback`;
   const scope = "read,activity:read_all,profile:read_all";
   
   const authUrl = `${STRAVA_AUTH_URL}?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
@@ -50,7 +50,7 @@ export function initiateStravaAuth() {
 
 export function initiateGarminAuth() {
   const clientId = import.meta.env.VITE_GARMIN_CLIENT_ID;
-  const redirectUri = `${window.location.origin}/auth/garmin/callback`;
+  const redirectUri = `${window.location.origin}/integrations/garmin/callback`;
   
   const authUrl = `${GARMIN_AUTH_URL}?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`;
   
@@ -59,7 +59,7 @@ export function initiateGarminAuth() {
 
 export function initiatePolarAuth() {
   const clientId = import.meta.env.VITE_POLAR_CLIENT_ID;
-  const redirectUri = `${window.location.origin}/auth/polar/callback`;
+  const redirectUri = `${window.location.origin}/integrations/polar/callback`;
   const scope = "accesslink.read_all";
   
   const authUrl = `${POLAR_AUTH_URL}?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
