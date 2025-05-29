@@ -13,13 +13,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Plus } from "lucide-react";
-import { AppFooter } from "@/components/common/app-footer";
+
 
 export default function DashboardPage() {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen max-w-full overflow-hidden">
+    <div className="flex min-h-screen max-w-full">
       <Sidebar />
       <MobileMenu />
 

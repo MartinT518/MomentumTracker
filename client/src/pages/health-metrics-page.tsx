@@ -471,7 +471,7 @@ export default function HealthMetricsPage() {
   const timeSeriesData = prepareTimeSeriesData();
 
   return (
-    <div className="flex h-screen max-w-full overflow-hidden">
+    <div className="flex min-h-screen max-w-full">
       <Sidebar />
       <MobileMenu />
       
