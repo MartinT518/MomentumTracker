@@ -85,34 +85,41 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-indigo-800"
+         style={{
+           background: `
+             linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(79, 70, 229, 0.8) 100%),
+             radial-gradient(circle at 30% 50%, rgba(147, 51, 234, 0.3) 0%, transparent 50%),
+             radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%)
+           `
+         }}>
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/20 bg-white/10 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg"></div>
-                <span className="text-xl font-bold text-gray-900">
-                  <span className="text-orange-500">Aether</span>Run
+                <span className="text-xl font-bold text-white">
+                  <span className="text-orange-400">Aether</span>Run
                 </span>
               </div>
             </Link>
             <div className="flex items-center space-x-4">
               {user ? (
                 <Link href="/dashboard">
-                  <Button>Go to Dashboard</Button>
+                  <Button className="bg-white/20 hover:bg-white/30 text-white border-white/20">Go to Dashboard</Button>
                 </Link>
               ) : (
                 <>
                   <button 
-                    className="text-gray-600 hover:text-gray-900 font-medium"
+                    className="text-white/90 hover:text-white font-medium"
                     onClick={() => setIsLoginModalOpen(true)}
                   >
                     Sign In
                   </button>
                   <button 
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:-translate-y-0.5"
                     onClick={() => setIsRegisterModalOpen(true)}
                   >
                     Get Started
@@ -128,25 +135,25 @@ export default function PricingPage() {
       <main className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <Badge className="mb-4 bg-orange-100 text-orange-800 border-orange-200">
+          <Badge className="mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm">
             Simple, Transparent Pricing
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Choose Your Training
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400">
               Journey
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-white/80 max-w-3xl mx-auto mb-8">
             Start with our free plan and upgrade when you're ready for AI-powered training, 
             advanced analytics, and access to professional coaches.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-green-300">
               <CheckCircle2 className="w-5 h-5" />
               <span className="font-medium">14-day free trial on all paid plans</span>
             </div>
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-green-300">
               <CheckCircle2 className="w-5 h-5" />
               <span className="font-medium">Cancel anytime</span>
             </div>
@@ -158,8 +165,8 @@ export default function PricingPage() {
           {pricingPlans.map((plan, index) => (
             <Card 
               key={plan.name} 
-              className={`relative transition-all duration-300 hover:shadow-xl ${
-                plan.popular ? 'ring-2 ring-orange-500 shadow-lg scale-105' : 'hover:scale-105'
+              className={`relative transition-all duration-300 hover:shadow-2xl backdrop-blur-xl bg-white/10 border-white/20 text-white ${
+                plan.popular ? 'ring-2 ring-orange-400 shadow-lg scale-105 bg-white/15' : 'hover:scale-105 hover:bg-white/15'
               }`}
             >
               {plan.popular && (
@@ -179,24 +186,24 @@ export default function PricingPage() {
               )}
               
               <CardHeader className="text-center pb-8">
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                <CardDescription className="text-gray-600 mt-2">
+                <CardTitle className="text-2xl font-bold text-white">{plan.name}</CardTitle>
+                <CardDescription className="text-white/70 mt-2">
                   {plan.description}
                 </CardDescription>
                 <div className="mt-6">
                   {plan.originalPrice && (
-                    <div className="text-sm text-gray-500 line-through">
+                    <div className="text-sm text-white/50 line-through">
                       ${plan.originalPrice}/year
                     </div>
                   )}
                   <div className="flex items-baseline justify-center">
-                    <span className="text-4xl font-bold text-gray-900">
+                    <span className="text-4xl font-bold text-white">
                       ${plan.price}
                     </span>
-                    <span className="text-gray-600 ml-2">/{plan.interval}</span>
+                    <span className="text-white/70 ml-2">/{plan.interval}</span>
                   </div>
                   {plan.originalPrice && (
-                    <div className="text-green-600 text-sm font-medium mt-1">
+                    <div className="text-green-300 text-sm font-medium mt-1">
                       Save ${(plan.originalPrice - plan.price).toFixed(2)}/year
                     </div>
                   )}
@@ -207,8 +214,8 @@ export default function PricingPage() {
                 <div className="space-y-3">
                   {plan.features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-start space-x-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
+                      <CheckCircle2 className="w-5 h-5 text-green-300 mt-0.5 flex-shrink-0" />
+                      <span className="text-white/90">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -235,43 +242,43 @@ export default function PricingPage() {
 
         {/* Feature Comparison */}
         <div className="mt-20">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl font-bold text-center text-white mb-12">
             Why Choose AetherRun?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-orange-600" />
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-orange-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">AI-Powered Training</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-white mb-2">AI-Powered Training</h3>
+              <p className="text-white/70">
                 Personalized training plans that adapt to your progress and goals using advanced AI.
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <Target className="w-8 h-8 text-blue-300" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Analytics</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-white mb-2">Smart Analytics</h3>
+              <p className="text-white/70">
                 Deep insights into your performance with predictive analytics and trend analysis.
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-green-300" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Expert Coaches</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-white mb-2">Expert Coaches</h3>
+              <p className="text-white/70">
                 Access to certified running coaches for personalized guidance and support.
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="w-8 h-8 text-purple-600" />
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="w-8 h-8 text-purple-300" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Platform Integration</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-white mb-2">Platform Integration</h3>
+              <p className="text-white/70">
                 Seamlessly connect with Strava, Garmin, Polar, and other popular fitness platforms.
               </p>
             </div>
@@ -280,33 +287,33 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="mt-20 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl font-bold text-center text-white mb-12">
             Frequently Asked Questions
           </h2>
           <div className="space-y-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 What's included in the free trial?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-white/80">
                 You get full access to all Premium features for 14 days, including AI training plans, 
                 advanced analytics, and platform integrations. No credit card required.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 Can I change plans anytime?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-white/80">
                 Yes, you can upgrade or downgrade your plan at any time. Changes take effect 
                 immediately, and you'll be charged or credited accordingly.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 What's the difference between Monthly and Annual plans?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-white/80">
                 Annual subscribers save money and get exclusive features like access to human coaches, 
                 early access to new features, and priority support.
               </p>
