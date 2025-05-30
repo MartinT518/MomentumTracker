@@ -142,7 +142,7 @@ export function MobileMenu() {
       {/* Mobile Menu Overlay */}
       <div 
         className={cn(
-          "fixed inset-0 bg-gray-600 bg-opacity-75 z-20 transition-opacity",
+          "fixed inset-0 bg-black/50 backdrop-blur-sm z-20 transition-opacity",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={closeMenu}
@@ -151,25 +151,25 @@ export function MobileMenu() {
       {/* Mobile Menu Panel */}
       <div 
         className={cn(
-          "fixed inset-y-0 left-0 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-30 flex flex-col",
+          "fixed inset-y-0 left-0 w-64 bg-white/10 backdrop-blur-lg border-r border-white/20 shadow-2xl transform transition-transform duration-300 ease-in-out z-30 flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Fixed Header */}
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h1 className="text-xl font-bold font-heading text-neutral-darker">
-            <span className="text-primary mr-2">Aether</span>Run
+        <div className="p-4 border-b border-white/20 flex items-center justify-between">
+          <h1 className="text-xl font-bold font-heading text-white drop-shadow-md">
+            <span className="text-blue-300 mr-2">Aether</span>Run
           </h1>
           <button 
-            className="p-1 rounded-md hover:bg-neutral-lighter"
+            className="p-1 rounded-md hover:bg-white/10 transition-colors"
             onClick={closeMenu}
           >
-            <X className="h-6 w-6 text-neutral-darker" />
+            <X className="h-6 w-6 text-white drop-shadow-md" />
           </button>
         </div>
         
         {/* Search Bar */}
-        <div className="px-4 py-3 border-b border-gray-200">
+        <div className="px-4 py-3 border-b border-white/20">
           <SearchButton />
         </div>
 
@@ -183,13 +183,13 @@ export function MobileMenu() {
                     href={item.href}
                     onClick={closeMenu}
                     className={cn(
-                      "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
-                      item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                      "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors rounded-lg mx-2",
+                      item.active && "bg-white/20 border-r-4 border-blue-300 font-medium text-white"
                     )}
                   >
                     <item.icon className={cn(
-                      "h-5 w-5 mr-3 text-neutral-medium",
-                      item.active && "text-primary"
+                      "h-5 w-5 mr-3 text-white/60 drop-shadow-md",
+                      item.active && "text-blue-300"
                     )} />
                     {item.title}
                   </Link>
@@ -201,7 +201,7 @@ export function MobileMenu() {
             {isAdmin && (
               <>
                 <div className="px-4 pt-6 pb-2">
-                  <p className="text-xs font-medium text-neutral-medium tracking-wider uppercase">Admin</p>
+                  <p className="text-xs font-medium text-white/60 tracking-wider uppercase drop-shadow-md">Admin</p>
                 </div>
                 <ul>
                   {adminItems.map((item) => (
@@ -210,13 +210,13 @@ export function MobileMenu() {
                         href={item.href}
                         onClick={closeMenu}
                         className={cn(
-                          "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter",
-                          item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                          "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors rounded-lg mx-2",
+                          item.active && "bg-white/20 border-r-4 border-blue-300 font-medium text-white"
                         )}
                       >
                         <item.icon className={cn(
-                          "h-5 w-5 mr-3 text-neutral-medium",
-                          item.active && "text-primary"
+                          "h-5 w-5 mr-3 text-white/60 drop-shadow-md",
+                          item.active && "text-blue-300"
                         )} />
                         {item.title}
                       </Link>
@@ -229,14 +229,14 @@ export function MobileMenu() {
         </div>
 
         {/* Fixed Footer */}
-        <div className="p-4 border-t border-gray-200 bg-white">
+        <div className="p-4 border-t border-white/20 bg-white/5">
           <button 
             onClick={handleLogout}
             disabled={logoutMutation.isPending}
-            className="flex items-center text-neutral-dark hover:text-primary"
+            className="flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-lg px-2 py-2 transition-colors w-full"
           >
-            <LogOut className="h-5 w-5 mr-3" />
-            Log out
+            <LogOut className="h-5 w-5 mr-3 drop-shadow-md" />
+            <span className="drop-shadow-md">Log out</span>
           </button>
         </div>
       </div>
