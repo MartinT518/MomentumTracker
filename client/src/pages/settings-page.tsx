@@ -214,7 +214,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
       <Sidebar />
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex flex-col space-y-2">

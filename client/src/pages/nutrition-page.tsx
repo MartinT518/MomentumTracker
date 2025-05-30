@@ -254,7 +254,8 @@ export default function NutritionPage() {
           <NutritionPreferences />
         </TabsContent>
       </Tabs>
-      </PageLayout>
+        </main>
+      </div>
     </div>
   );
 }
