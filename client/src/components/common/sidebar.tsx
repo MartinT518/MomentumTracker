@@ -136,8 +136,8 @@ export function Sidebar({ className, style }: SidebarProps) {
   ];
 
   return (
-    <aside className={cn("hidden md:flex md:visible flex-col w-64 bg-white border-r border-gray-200", className)}>
-      <div className="p-2 border-b border-gray-200">
+    <aside className={cn("hidden md:flex md:visible flex-col w-64 glass-nav", className)}>
+      <div className="p-2 border-b border-white/20">
         <div className="flex items-center justify-center p-3">
           <div className="relative h-16 w-full max-w-[220px]">
             <img 

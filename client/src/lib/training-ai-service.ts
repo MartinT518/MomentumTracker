@@ -889,7 +889,7 @@ function calculateTaperReadiness(
     if (fitnessMetrics.fatigueRatio > idealFatigueRatio + 0.1) {
       recommendation = 'Reduce training volume significantly for the remaining days before your race to ensure proper recovery.';
     } else if (fitnessMetrics.trainingStressBalance < idealTSB - 10) {
-      recommendation = 'You're still carrying significant fatigue. Focus on rest, recovery, and very light workouts until race day.';
+      recommendation = 'You are still carrying significant fatigue. Focus on rest, recovery, and very light workouts until race day.';
     } else if (taperReadinessScore >= 80) {
       recommendation = 'Your taper is on track. Maintain current reduced volume with some race-pace efforts to stay sharp.';
     } else {
