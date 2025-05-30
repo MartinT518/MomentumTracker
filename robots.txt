@@ -26,7 +26,7 @@ Allow: /*.svg
 Allow: /*.ico
 
 # Sitemap location
-Sitemap: https://your-domain.replit.app/sitemap.xml
+Sitemap: https://www.aetherrun.com/sitemap.xml
 
 # Crawl delay (optional - helps prevent server overload)
 Crawl-delay: 1
