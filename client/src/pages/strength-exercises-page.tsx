@@ -415,18 +415,18 @@ export default function StrengthExercisesPage() {
   };
   
   return (
-    <div className="flex min-h-screen max-w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
       <Sidebar />
-      <MobileMenu />
-
-      <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
+      <div className="flex-1 lg:ml-64">
+        <MobileMenu />
+        <main className="p-6">
         {/* For mobile view padding to account for fixed header */}
         <div className="md:hidden pt-20"></div>
         
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold font-heading text-neutral-darker">Strength Exercises</h1>
-            <p className="text-neutral-medium mt-1">Build strength to improve running performance and prevent injuries</p>
+            <h1 className="text-2xl font-bold font-heading text-white">Strength Exercises</h1>
+            <p className="text-white/80 mt-1">Build strength to improve running performance and prevent injuries</p>
           </div>
           {savedWorkout.length > 0 && (
             <div className="mt-4 md:mt-0">
