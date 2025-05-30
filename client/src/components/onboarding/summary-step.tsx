@@ -313,15 +313,7 @@ export default function SummaryStep({
         </div>
       </div>
 
-      <div className="flex justify-start pt-2">
-        <Button 
-          variant="outline" 
-          onClick={onPrevious}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Go Back
-        </Button>
-      </div>
+
     </div>
   );
 }
