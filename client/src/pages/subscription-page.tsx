@@ -514,32 +514,32 @@ export default function SubscriptionPage() {
 
   // Plan selection view
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
       <Sidebar />
       <div className="flex-1 space-y-6 p-8 pt-6">
         <div className="space-y-0.5">
-          <h2 className="text-3xl font-bold tracking-tight">Subscription Plans</h2>
-          <p className="text-muted-foreground">Choose the perfect plan for your training needs</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Subscription Plans</h2>
+          <p className="text-white/80 drop-shadow-sm">Choose the perfect plan for your training needs</p>
         </div>
 
         {/* Current subscription info card */}
         {isSubscribed && (
-          <Card className="mb-8 border-2 border-green-200 bg-green-50/30 dark:bg-green-950/10">
+          <Card className="mb-8 bg-white/10 backdrop-blur-sm border-white/20 border-2 border-green-300/50">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CardTitle className="flex items-center gap-2 text-white drop-shadow-sm">
+                <CheckCircle2 className="h-5 w-5 text-green-400" />
                 Active Subscription
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-white/80 drop-shadow-sm">
                 Your premium features are active
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-lg">Your subscription is active until {user?.subscription_end_date 
+              <p className="text-lg text-white drop-shadow-sm">Your subscription is active until {user?.subscription_end_date 
                 ? new Date(user.subscription_end_date).toLocaleDateString() 
                 : 'your next billing cycle'}</p>
               <div className="mt-2">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-white/70 drop-shadow-sm">
                   {isAnnualPlan ? 'Annual Plan' : 'Monthly Plan'} - You have access to {isAnnualPlan ? 'all premium features' : 'standard premium features'}
                 </span>
               </div>
@@ -549,18 +549,18 @@ export default function SubscriptionPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Developer Test Card */}
-          <Card className="border-2 border-violet-500">
-            <CardHeader className="bg-violet-50 dark:bg-violet-950">
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 border-2 border-violet-400/50">
+            <CardHeader className="bg-white/5">
               <div className="flex justify-between items-center">
-                <CardTitle>Developer Testing</CardTitle>
-                <Badge variant="outline" className="bg-violet-100 text-violet-700 hover:bg-violet-100 border-violet-300">Test Mode</Badge>
+                <CardTitle className="text-white drop-shadow-sm">Developer Testing</CardTitle>
+                <Badge variant="outline" className="bg-violet-200/20 text-violet-300 hover:bg-violet-200/30 border-violet-400/50">Test Mode</Badge>
               </div>
-              <CardDescription>Activate premium features for testing</CardDescription>
+              <CardDescription className="text-white/80 drop-shadow-sm">Activate premium features for testing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <div>
-                <span className="text-3xl font-bold">$0</span>
-                <span className="text-muted-foreground">/30 days</span>
+                <span className="text-3xl font-bold text-white drop-shadow-sm">$0</span>
+                <span className="text-white/70 drop-shadow-sm">/30 days</span>
               </div>
               <div className="space-y-2">
                 <FeatureItem included={true} text="All premium features" />
