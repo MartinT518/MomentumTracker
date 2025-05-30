@@ -171,17 +171,17 @@ export function MotivationalQuoteCard() {
   };
 
   return (
-    <Card className="overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20 shadow-sm hover:shadow-md transition-all duration-300">
+    <Card className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20 shadow-sm hover:shadow-md transition-all duration-300">
       <CardContent className="p-5">
         <div className="flex items-start mb-1">
-          <div className="text-primary mr-4 mt-1 bg-primary/10 p-2 rounded-full">
+          <div className="text-cyan-300 mr-4 mt-1 bg-cyan-400/30 p-2 rounded-full">
             <Quote className="h-5 w-5" />
           </div>
           <div className={`flex-1 transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-            <p className="text-neutral-darker font-medium text-base italic mb-3 leading-relaxed">{currentQuote.text}</p>
+            <p className="text-white font-medium text-base italic mb-3 leading-relaxed">{currentQuote.text}</p>
             <div className="flex justify-between items-center">
-              <p className="text-neutral-medium text-sm font-semibold">— {currentQuote.author}</p>
-              <span className="text-xs px-2 py-0.5 bg-primary/5 text-primary/70 rounded-full capitalize">
+              <p className="text-white/80 text-sm font-semibold">— {currentQuote.author}</p>
+              <span className="text-xs px-2 py-0.5 bg-white/20 text-white/90 rounded-full capitalize">
                 {currentQuote.category}
               </span>
             </div>
@@ -196,8 +196,8 @@ export function MotivationalQuoteCard() {
                 onClick={() => changeCategory(category)}
                 className={`px-2.5 py-1 rounded-full transition-colors ${
                   activeCategory === category 
-                    ? 'bg-primary text-white font-medium' 
-                    : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-500'
+                    ? 'bg-cyan-400/30 text-white font-medium' 
+                    : 'bg-white/10 hover:bg-white/20 text-white/70'
                 }`}
               >
                 {category === 'all' ? 'All Topics' : category.charAt(0).toUpperCase() + category.slice(1)}
@@ -206,7 +206,7 @@ export function MotivationalQuoteCard() {
           </div>
           <button 
             onClick={() => cycleQuote()}
-            className="text-primary hover:text-primary/80 transition-colors flex items-center text-xs bg-primary/10 px-3 py-1.5 rounded-full"
+            className="text-cyan-300 hover:text-cyan-200 transition-colors flex items-center text-xs bg-cyan-400/20 px-3 py-1.5 rounded-full"
           >
             New Quote <ArrowRightCircle className="ml-1.5 h-3 w-3" />
           </button>

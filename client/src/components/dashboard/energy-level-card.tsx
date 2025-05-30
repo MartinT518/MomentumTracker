@@ -53,41 +53,41 @@ export function EnergyLevelCard() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl flex items-center">
-          <BarChart2 className="mr-2 h-5 w-5" />
+        <CardTitle className="text-xl flex items-center text-white">
+          <BarChart2 className="mr-2 h-5 w-5 text-cyan-300" />
           Energy Level
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-white/80">
           Based on your health metrics
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center h-32">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
           </div>
         ) : error ? (
-          <Alert variant="destructive" className="mt-2">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant="destructive" className="mt-2 bg-red-500/20 border-red-400/30">
+            <AlertTriangle className="h-4 w-4 text-red-300" />
+            <AlertDescription className="text-red-200">{error}</AlertDescription>
           </Alert>
         ) : energyLevel === null ? (
           <div className="space-y-4">
-            <div className="text-center p-4 bg-neutral-50 rounded-lg">
-              <p className="mb-2 font-medium">No recent health data available</p>
-              <p className="text-sm text-muted-foreground mb-4">
+            <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+              <p className="mb-2 font-medium text-white">No recent health data available</p>
+              <p className="text-sm text-white/70 mb-4">
                 Connect a fitness tracker or manually log your health metrics to see your energy level
               </p>
               <div className="space-x-2">
                 <Link href="/health-metrics">
-                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-cyan-500/80 text-white hover:bg-cyan-500 h-9 px-4 py-2">
                     Log Metrics
                   </button>
                 </Link>
                 <Link href="/settings">
-                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-white/30 bg-white/10 text-white hover:bg-white/20 h-9 px-4 py-2">
                     Connect Device
                   </button>
                 </Link>
@@ -98,7 +98,7 @@ export function EnergyLevelCard() {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-medium">Today's Energy</span>
+                <span className="text-sm font-medium text-white">Today's Energy</span>
                 <span className="text-sm font-medium" style={{ color: getColor() }}>
                   {energyLevel}%
                 </span>
@@ -115,13 +115,13 @@ export function EnergyLevelCard() {
               </div>
             </div>
 
-            <div className="p-3 rounded-md" style={{ backgroundColor: `${getColor()}15` }}>
-              <h4 className="font-medium mb-1">Training Recommendation</h4>
-              <p className="text-sm">{getRecommendationText()}</p>
+            <div className="p-3 rounded-md bg-white/10 border border-white/20">
+              <h4 className="font-medium mb-1 text-white">Training Recommendation</h4>
+              <p className="text-sm text-white/80">{getRecommendationText()}</p>
             </div>
 
-            <div className="text-xs text-muted-foreground flex justify-between items-center">
-              <Link href="/health-metrics" className="hover:underline">
+            <div className="text-xs text-white/70 flex justify-between items-center">
+              <Link href="/health-metrics" className="hover:underline hover:text-white">
                 View full health data
               </Link>
             </div>
