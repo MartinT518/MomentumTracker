@@ -1279,6 +1279,7 @@ export default function HealthMetricsPage() {
           </TabsContent>
         </Tabs>
       </main>
+      </div>
     </div>
   );
 }

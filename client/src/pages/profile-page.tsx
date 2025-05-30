@@ -738,6 +738,7 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </main>
+      </div>
     </div>
   );
 }
