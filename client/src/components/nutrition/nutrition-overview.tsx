@@ -55,58 +55,58 @@ export function NutritionOverview() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Calorie Target</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white drop-shadow-sm">Calorie Target</CardTitle>
+            <Activity className="h-4 w-4 text-white/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{nutritionSummary.totalCalories} kcal</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-white drop-shadow-sm">{nutritionSummary.totalCalories} kcal</div>
+            <p className="text-xs text-white/70 drop-shadow-sm">
               Daily target based on your profile and activity level
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Nutrition Type</CardTitle>
-            <Salad className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white drop-shadow-sm">Nutrition Type</CardTitle>
+            <Salad className="h-4 w-4 text-white/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{nutritionSummary.mainMealType}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-white drop-shadow-sm">{nutritionSummary.mainMealType}</div>
+            <p className="text-xs text-white/70 drop-shadow-sm">
               Personalized for your training needs
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Hydration</CardTitle>
-            <Droplets className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white drop-shadow-sm">Hydration</CardTitle>
+            <Droplets className="h-4 w-4 text-white/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-medium">Recommended</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg font-medium text-white drop-shadow-sm">Recommended</div>
+            <p className="text-xs text-white/70 drop-shadow-sm">
               {nutritionSummary.hydrationTip}
             </p>
           </CardContent>
         </Card>
       </div>
       
-      <Card>
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader>
-          <CardTitle>Macronutrient Distribution</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white drop-shadow-sm">Macronutrient Distribution</CardTitle>
+          <CardDescription className="text-white/80 drop-shadow-sm">
             {nutritionSummary.macroBalance} macro balance for optimal athletic performance
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col items-center space-y-1">
-              <span className="text-lg font-semibold">{nutritionSummary.totalProtein}g</span>
-              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <span className="text-lg font-semibold text-white drop-shadow-sm">{nutritionSummary.totalProtein}g</span>
+              <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-blue-500 rounded-full" 
                   style={{ 
@@ -115,15 +115,15 @@ export function NutritionOverview() {
                   }}
                 />
               </div>
-              <div className="flex items-center space-x-1 text-sm">
+              <div className="flex items-center space-x-1 text-sm text-white/80 drop-shadow-sm">
                 <Dumbbell className="h-4 w-4" />
                 <span>Protein</span>
               </div>
             </div>
             
             <div className="flex flex-col items-center space-y-1">
-              <span className="text-lg font-semibold">{nutritionSummary.totalCarbs}g</span>
-              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <span className="text-lg font-semibold text-white drop-shadow-sm">{nutritionSummary.totalCarbs}g</span>
+              <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-green-500 rounded-full" 
                   style={{ 
@@ -132,15 +132,15 @@ export function NutritionOverview() {
                   }}
                 />
               </div>
-              <div className="flex items-center space-x-1 text-sm">
+              <div className="flex items-center space-x-1 text-sm text-white/80 drop-shadow-sm">
                 <BarChart3 className="h-4 w-4" />
                 <span>Carbs</span>
               </div>
             </div>
             
             <div className="flex flex-col items-center space-y-1">
-              <span className="text-lg font-semibold">{nutritionSummary.totalFat}g</span>
-              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <span className="text-lg font-semibold text-white drop-shadow-sm">{nutritionSummary.totalFat}g</span>
+              <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-yellow-500 rounded-full" 
                   style={{ 
@@ -149,7 +149,7 @@ export function NutritionOverview() {
                   }}
                 />
               </div>
-              <div className="flex items-center space-x-1 text-sm">
+              <div className="flex items-center space-x-1 text-sm text-white/80 drop-shadow-sm">
                 <Utensils className="h-4 w-4" />
                 <span>Fat</span>
               </div>
@@ -159,7 +159,7 @@ export function NutritionOverview() {
       </Card>
       
       <div>
-        <h3 className="text-lg font-semibold mb-4">Current Meal Plan</h3>
+        <h3 className="text-lg font-semibold mb-4 text-white drop-shadow-sm">Current Meal Plan</h3>
         <SimpleMealPlan />
       </div>
     </div>

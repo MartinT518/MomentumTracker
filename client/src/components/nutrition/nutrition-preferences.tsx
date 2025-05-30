@@ -144,16 +144,16 @@ export function NutritionPreferences() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
 
   return (
-    <Card className="-ml-4">
+    <Card className="-ml-4 bg-white/10 backdrop-blur-sm border-white/20">
       <CardHeader>
-        <CardTitle>Nutrition Preferences</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white drop-shadow-sm">Nutrition Preferences</CardTitle>
+        <CardDescription className="text-white/80 drop-shadow-sm">
           Customize your dietary preferences and nutritional targets
         </CardDescription>
       </CardHeader>
