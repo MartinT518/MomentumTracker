@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -80,9 +80,24 @@ export default function ExperienceStep({
     }
   );
 
-  // Event handlers for form updates
+  // Auto-save timeout ref
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Event handlers for form updates with auto-save
   const handleChange = (field: keyof ExperienceData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const updatedData = { ...formData, [field]: value };
+    setFormData(updatedData);
+    onUpdateData(updatedData);
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout to auto-save after 1 second of no changes
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      saveDraftMutation.mutate(updatedData);
+    }, 1000);
   };
 
   // Special handler for the injuries array

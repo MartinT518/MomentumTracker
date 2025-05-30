@@ -109,7 +109,7 @@ export function TrainingPreferences() {
           const trainingPrefs: Record<string, any> = await response.json();
           
           // Then get experience data
-          const expResponse = await apiRequest('GET', '/api/onboarding/experience');
+          const expResponse = await apiRequest('GET', '/api/onboarding/user-experience');
           let expData: Record<string, any> = {};
           
           if (expResponse.ok) {
