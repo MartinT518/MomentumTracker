@@ -105,83 +105,85 @@ export function RecentActivities() {
   const activities = data || placeholderActivities;
 
   const getIconComponent = (icon: string, color: string) => {
-    const colorClass = `text-${color}`;
+    const colorClass = color === "primary" ? "text-blue-300" : 
+                      color === "secondary" ? "text-purple-300" : 
+                      color === "accent" ? "text-green-300" : "text-white/70";
     switch (icon) {
       case "chart":
-        return <BarChart3 className={`h-4 w-4 ${colorClass}`} />;
+        return <BarChart3 className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
       case "speed":
-        return <Zap className={`h-4 w-4 ${colorClass}`} />;
+        return <Zap className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
       case "activity":
-        return <Activity className={`h-4 w-4 ${colorClass}`} />;
+        return <Activity className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
       default:
-        return <Activity className={`h-4 w-4 ${colorClass}`} />;
+        return <Activity className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
     }
   };
 
   const getEffortBadgeClass = (level: string) => {
     switch (level) {
       case "easy":
-        return "bg-accent-light/30 text-accent-dark";
+        return "text-green-200 border border-green-300/30";
       case "moderate":
-        return "bg-primary-light/30 text-primary-dark";
+        return "text-blue-200 border border-blue-300/30";
       case "hard":
-        return "bg-status-error/20 text-status-error";
+        return "text-red-200 border border-red-300/30";
       default:
-        return "bg-neutral-light/30 text-neutral-dark";
+        return "text-white/80 border border-white/30";
     }
   };
 
   const getBackgroundClass = (color: string) => {
     switch (color) {
       case "primary":
-        return "bg-primary-light/30";
+        return "bg-blue-400/20";
       case "secondary":
-        return "bg-secondary-light/30";
+        return "bg-purple-400/20";
       case "accent":
-        return "bg-accent-light/30";
+        return "bg-green-400/20";
       default:
-        return "bg-neutral-light/30";
+        return "bg-white/20";
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-neutral-lighter">
+        <table className="min-w-full divide-y divide-white/20">
+          <thead className="bg-white/5">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Date</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Activity</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Distance</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Time</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Pace</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Heart Rate</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">Effort</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-neutral-medium uppercase tracking-wider"></th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Date</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Activity</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Distance</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Time</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Pace</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Heart Rate</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Effort</th>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-white/80 uppercase tracking-wider"></th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white/5 divide-y divide-white/10">
             {activities.map((activity) => (
-              <tr key={activity.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-darker">{activity.date}</td>
+              <tr key={activity.id} className="hover:bg-white/10 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md">{activity.date}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className={cn(
-                      "rounded-md p-1 mr-2",
+                      "rounded-md p-1 mr-2 bg-white/20",
                       getBackgroundClass(activity.type.color)
                     )}>
                       {getIconComponent(activity.type.icon, activity.type.color)}
                     </div>
-                    <span className="text-sm font-medium">{activity.type.name}</span>
+                    <span className="text-sm font-medium text-white drop-shadow-md">{activity.type.name}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-darker metric-value">{activity.distance}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-darker metric-value">{activity.time}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-darker metric-value">{activity.pace}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-darker metric-value">{activity.heartRate}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.distance}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.time}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.pace}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.heartRate}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={cn(
-                    "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full",
+                    "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-white/20 backdrop-blur-sm",
                     getEffortBadgeClass(activity.effort.level)
                   )}>
                     {activity.effort.label}
@@ -190,7 +192,7 @@ export function RecentActivities() {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
                     onClick={() => handleViewActivity(activity.id)}
-                    className="text-secondary hover:text-secondary-dark cursor-pointer bg-transparent border-none p-0"
+                    className="text-white/90 hover:text-white drop-shadow-md cursor-pointer bg-transparent border-none p-0 transition-colors"
                   >
                     View
                   </button>
