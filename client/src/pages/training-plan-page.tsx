@@ -4,7 +4,7 @@ import { MobileMenu } from "@/components/common/mobile-menu";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, BookUser, Sparkles, Loader2, Check, Zap } from "lucide-react";
+import { ArrowLeft, BookUser, Sparkles, Loader2, Check, Zap, Crown } from "lucide-react";
 import { TrainingGoalOverview } from "@/components/training-plan/training-goal-overview";
 import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-calendar-new";
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
@@ -13,6 +13,7 @@ import PlanAdjustmentTool from "@/components/training-plan/plan-adjustment-tool"
 import { StrengthTrainingSuggestion } from "@/components/training-plan/strength-training-suggestion";
 import { CoachSelection } from "@/components/coaching/coach-selection";
 import { CoachChat } from "@/components/coaching/coach-chat";
+import { useSubscription } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
@@ -36,6 +37,9 @@ interface Workout {
 }
 
 export default function TrainingPlanPage() {
+  const { hasSubscription, subscriptionType } = useSubscription();
+  const hasAnnualSubscription = subscriptionType === 'annual';
+  
   const [selectedTab, setSelectedTab] = useState<string>("overview");
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [coachView, setCoachView] = useState<'select' | 'chat'>('select');
@@ -157,8 +161,7 @@ export default function TrainingPlanPage() {
     // Would normally save the adjusted plan and insights to the database here
   };
   
-  // Check if user has active subscription
-  const hasSubscription = user?.subscription_status === 'active';
+  // Check if user has active subscription (already defined above)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
