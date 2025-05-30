@@ -232,7 +232,7 @@ export function DailyMotivation() {
       message: "Set the tone for your week with a focused effort today!"
     },
     { // Tuesday
-      title: "Build Momentum",
+      title: "Build Energy",
       message: "Your consistency is creating a foundation for success."
     },
     { // Wednesday

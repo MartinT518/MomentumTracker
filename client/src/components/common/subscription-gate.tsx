@@ -74,7 +74,7 @@ export function SubscriptionGate({
         {requiredSubscription === 'annual' && hasSubscription ? (
           <p className="text-sm text-muted-foreground">This feature is only available with an annual subscription.</p>
         ) : (
-          <p className="text-sm text-muted-foreground">Subscribe to MomentumRun to unlock this feature and many more.</p>
+          <p className="text-sm text-muted-foreground">Subscribe to AetherRun to unlock this feature and many more.</p>
         )}
       </CardContent>
       <CardFooter className="flex justify-center">

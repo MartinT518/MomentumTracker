@@ -158,7 +158,7 @@ export function MobileMenu() {
         {/* Fixed Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <h1 className="text-xl font-bold font-heading text-neutral-darker">
-            <span className="text-primary mr-2">Momentum</span>Run
+            <span className="text-primary mr-2">Aether</span>Run
           </h1>
           <button 
             className="p-1 rounded-md hover:bg-neutral-lighter"
