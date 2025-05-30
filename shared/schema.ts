@@ -374,11 +374,13 @@ export const health_metrics = pgTable("health_metrics", {
 export const onboarding_status = pgTable("onboarding_status", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").references(() => users.id).notNull(),
+  step: varchar("step", { length: 50 }).default("welcome").notNull(), // Required step field
   completed: boolean("completed").default(false),
   current_step: varchar("current_step", { length: 50 }).default("welcome"),
   steps_completed: text("steps_completed").array(), // Array of completed step IDs
   last_updated: timestamp("last_updated").defaultNow(),
   created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // User fitness goals for onboarding
