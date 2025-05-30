@@ -415,39 +415,40 @@ export default function StrengthExercisesPage() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
-      <Sidebar />
-      <div className="flex-1 lg:ml-64">
-        <MobileMenu />
-        <main className="p-6">
-        {/* For mobile view padding to account for fixed header */}
-        <div className="md:hidden pt-20"></div>
-        
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold font-heading text-white">Strength Exercises</h1>
-            <p className="text-white/80 mt-1">Build strength to improve running performance and prevent injuries</p>
-          </div>
-          {savedWorkout.length > 0 && (
-            <div className="mt-4 md:mt-0">
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                {savedWorkout.length} exercise{savedWorkout.length !== 1 ? 's' : ''} in workout
-              </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+      <div className="flex h-screen max-w-full overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 overflow-auto">
+          <MobileMenu />
+          <main className="p-6">
+            {/* For mobile view padding to account for fixed header */}
+            <div className="md:hidden pt-20"></div>
+            
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold font-heading text-white drop-shadow-md">Strength Exercises</h1>
+                <p className="text-white/80 mt-1 drop-shadow-md">Build strength to improve running performance and prevent injuries</p>
+              </div>
+              {savedWorkout.length > 0 && (
+                <div className="mt-4 md:mt-0">
+                  <Badge variant="outline" className="bg-blue-300/20 text-blue-100 border-blue-300/30 drop-shadow-md">
+                    {savedWorkout.length} exercise{savedWorkout.length !== 1 ? 's' : ''} in workout
+                  </Badge>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Current Workout Display */}
-        {savedWorkout.length > 0 && (
-          <Card className="mb-6 border-primary/20 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                Current Workout
-              </CardTitle>
-              <CardDescription>
-                Your selected exercises for today's strength training
-              </CardDescription>
+            {/* Current Workout Display */}
+            {savedWorkout.length > 0 && (
+              <Card className="mb-6 bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-white drop-shadow-md">
+                    <Zap className="h-5 w-5 text-blue-300" />
+                    Current Workout
+                  </CardTitle>
+                  <CardDescription className="text-white/70 drop-shadow-md">
+                    Your selected exercises for today's strength training
+                  </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-4">
