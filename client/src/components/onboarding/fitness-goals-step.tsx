@@ -92,6 +92,29 @@ export default function FitnessGoalsStep({
     },
   });
 
+  // Separate mutation for saving draft without navigating
+  const saveDraftMutation = useMutation({
+    mutationFn: async (data: FitnessGoalsData) => {
+      const res = await apiRequest("POST", "/api/onboarding/fitness-goals", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Draft saved",
+        description: "Your progress has been saved.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/onboarding/fitness-goals"] });
+      onUpdateData(data);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error saving draft",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle form submission
   const handleSubmit = () => {
     if (isFormValid()) {
