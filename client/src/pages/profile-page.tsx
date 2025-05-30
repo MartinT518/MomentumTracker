@@ -139,8 +139,8 @@ export default function ProfilePage() {
                   </Button>
                 </Link>
               </div>
-            <h1 className="text-2xl font-bold font-heading text-white">Profile & Settings</h1>
-            <p className="text-white/80 mt-1">Manage your personal details, connections, and preferences</p>
+            <h1 className="text-2xl font-bold font-heading text-white drop-shadow-sm">Profile & Settings</h1>
+            <p className="text-white/80 mt-1 drop-shadow-sm">Manage your personal details, connections, and preferences</p>
           </div>
         </div>
 
@@ -167,10 +167,10 @@ export default function ProfilePage() {
           {/* Profile Tab */}
           <TabsContent value="profile">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2">
+              <Card className="md:col-span-2 bg-white/10 backdrop-blur-sm border-white/20">
                 <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-white drop-shadow-sm">Personal Information</CardTitle>
+                  <CardDescription className="text-white/80 drop-shadow-sm">
                     Update your personal details and runner profile
                   </CardDescription>
                 </CardHeader>
@@ -261,10 +261,10 @@ export default function ProfilePage() {
                 </CardFooter>
               </Card>
               
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardHeader>
-                  <CardTitle>Profile Picture</CardTitle>
-                  <CardDescription>Update your profile image</CardDescription>
+                  <CardTitle className="text-white drop-shadow-sm">Profile Picture</CardTitle>
+                  <CardDescription className="text-white/80 drop-shadow-sm">Update your profile image</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center space-y-4">
                   <Avatar className="h-24 w-24">
@@ -279,10 +279,10 @@ export default function ProfilePage() {
 
           {/* Connections Tab */}
           <TabsContent value="connections">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Activity Data Connections</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Activity Data Connections</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Connect your accounts to import activities from other platforms
                 </CardDescription>
               </CardHeader>
@@ -626,10 +626,10 @@ export default function ProfilePage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Notification Preferences</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Choose what notifications you want to receive
                 </CardDescription>
               </CardHeader>
@@ -688,10 +688,10 @@ export default function ProfilePage() {
 
           {/* Account Tab */}
           <TabsContent value="account">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Account Settings</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Manage your account and preferences
                 </CardDescription>
               </CardHeader>
