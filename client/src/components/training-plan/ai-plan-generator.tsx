@@ -128,19 +128,19 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
 
   return (
     <>
-      <Card className="max-w-3xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <BrainCircuit className="h-6 w-6 text-primary" />
+      <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl">
+        <div className="p-6">
+          <div className="flex items-center space-x-2 mb-6">
+            <BrainCircuit className="h-6 w-6 text-blue-300 drop-shadow-md" />
             <div>
-              <CardTitle>AI Training Plan Generator</CardTitle>
-              <CardDescription>
+              <h2 className="text-xl font-semibold text-white drop-shadow-md">AI Training Plan Generator</h2>
+              <p className="text-white/70 drop-shadow-md">
                 Generate a personalized running plan tailored to your goals and preferences
-              </CardDescription>
+              </p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="px-6 pb-6">
           <Form {...form}>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               {step === 1 && (
@@ -150,10 +150,10 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
                     name="goal"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>What is your primary goal?</FormLabel>
+                        <FormLabel className="text-white drop-shadow-md">What is your primary goal?</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
                               <SelectValue placeholder="Select your goal" />
                             </SelectTrigger>
                           </FormControl>
@@ -176,10 +176,10 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
                       name="raceDistance"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Which distance are you training for?</FormLabel>
+                          <FormLabel className="text-white drop-shadow-md">Which distance are you training for?</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
                                 <SelectValue placeholder="Select race distance" />
                               </SelectTrigger>
                             </FormControl>
