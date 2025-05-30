@@ -6,115 +6,115 @@
 
   <!-- Main Pages -->
   <url>
-    <loc>https://your-domain.replit.app/</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/pricing</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/pricing</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Information Pages -->
   <url>
-    <loc>https://your-domain.replit.app/faq</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/faq</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/terms</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/terms</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/privacy</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/privacy</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/achievements</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/achievements</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <!-- App Pages (require authentication but included for SEO) -->
   <url>
-    <loc>https://your-domain.replit.app/dashboard</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/dashboard</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/training-plan</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/training-plan</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/activities</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/activities</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/goals</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/goals</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/health-metrics</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/health-metrics</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/nutrition</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/nutrition</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/subscription</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/subscription</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/coaches</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/coaches</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/strength-exercises</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/strength-exercises</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://your-domain.replit.app/video-analysis</loc>
-    <lastmod>2025-01-29</lastmod>
+    <loc>https://www.aetherrun.com/video-analysis</loc>
+    <lastmod>2025-05-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
