@@ -120,7 +120,7 @@ export function MobileMenu() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white z-50 border-b">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-b border-white/20 z-50">
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center">
             <img 
@@ -130,11 +130,11 @@ export function MobileMenu() {
             />
           </div>
           <button 
-            className="p-2 rounded-md bg-gray-100 hover:bg-gray-200"
+            className="p-2 rounded-md bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
             onClick={toggleMenu}
             aria-label="Toggle menu"
           >
-            <Menu className="h-6 w-6 text-gray-800" />
+            <Menu className="h-6 w-6 text-white drop-shadow-md" />
           </button>
         </div>
       </div>
