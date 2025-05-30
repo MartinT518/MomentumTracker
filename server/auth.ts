@@ -95,9 +95,24 @@ export function setupAuth(app: Express) {
         // Don't fail registration if onboarding status creation fails
       }
 
+      // Remove password from response for security
+      const userResponse = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        age: user.age,
+        weight: user.weight,
+        height: user.height,
+        experience_level: user.experience_level,
+        bio: user.bio,
+        profile_image: user.profile_image,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      };
+
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(user);
+        res.status(201).json(userResponse);
       });
     } catch (err) {
       next(err);
