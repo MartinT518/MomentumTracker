@@ -29,7 +29,7 @@ export function CurrentGoalBanner({ goalId }: CurrentGoalProps) {
   const displayData = goal || placeholderGoal;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6">
+    <div className="glass-card rounded-xl p-4 md:p-6 mb-6">
       <div className="flex flex-col md:flex-row md:items-center">
         <div className="flex-1">
           <div className="flex items-center">

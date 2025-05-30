@@ -48,7 +48,7 @@ export function WeeklyMetrics() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
       {/* Weekly Distance Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center">
+      <div className="glass-card rounded-xl p-4 flex items-center">
         <div className="rounded-full bg-primary-light/30 p-3 mr-4">
           <BarChart3 className="h-6 w-6 text-primary" />
         </div>
@@ -66,7 +66,7 @@ export function WeeklyMetrics() {
       </div>
       
       {/* Average Pace Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center">
+      <div className="glass-card rounded-xl p-4 flex items-center">
         <div className="rounded-full bg-secondary-light/30 p-3 mr-4">
           <Timer className="h-6 w-6 text-secondary" />
         </div>
@@ -84,7 +84,7 @@ export function WeeklyMetrics() {
       </div>
       
       {/* Active Time Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center">
+      <div className="glass-card rounded-xl p-4 flex items-center">
         <div className="rounded-full bg-accent-light/30 p-3 mr-4">
           <Timer className="h-6 w-6 text-accent" />
         </div>
