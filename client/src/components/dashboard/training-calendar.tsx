@@ -69,27 +69,27 @@ export function TrainingCalendar() {
   const getWorkoutColorClass = (color: "primary" | "secondary" | "accent") => {
     switch (color) {
       case "primary":
-        return "text-primary";
+        return "text-blue-300";
       case "secondary":
-        return "text-secondary";
+        return "text-purple-300";
       case "accent":
-        return "text-accent";
+        return "text-green-300";
       default:
-        return "text-neutral-medium";
+        return "text-white/70";
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl overflow-hidden">
       {/* Days of week header */}
-      <div className="grid grid-cols-7 text-center border-b border-gray-200">
-        <div className="py-2 border-r border-gray-200 text-sm font-medium">Sun</div>
-        <div className="py-2 border-r border-gray-200 text-sm font-medium">Mon</div>
-        <div className="py-2 border-r border-gray-200 text-sm font-medium">Tue</div>
-        <div className="py-2 border-r border-gray-200 text-sm font-medium">Wed</div>
-        <div className="py-2 border-r border-gray-200 text-sm font-medium">Thu</div>
-        <div className="py-2 border-r border-gray-200 text-sm font-medium">Fri</div>
-        <div className="py-2 text-sm font-medium">Sat</div>
+      <div className="grid grid-cols-7 text-center border-b border-white/20">
+        <div className="py-2 border-r border-white/20 text-sm font-medium text-white/80">Sun</div>
+        <div className="py-2 border-r border-white/20 text-sm font-medium text-white/80">Mon</div>
+        <div className="py-2 border-r border-white/20 text-sm font-medium text-white/80">Tue</div>
+        <div className="py-2 border-r border-white/20 text-sm font-medium text-white/80">Wed</div>
+        <div className="py-2 border-r border-white/20 text-sm font-medium text-white/80">Thu</div>
+        <div className="py-2 border-r border-white/20 text-sm font-medium text-white/80">Fri</div>
+        <div className="py-2 text-sm font-medium text-white/80">Sat</div>
       </div>
       
       {/* Calendar grid */}
@@ -100,15 +100,15 @@ export function TrainingCalendar() {
               <div 
                 key={`${weekIndex}-${dayIndex}`} 
                 className={cn(
-                  "calendar-day p-1 border-b border-gray-200 relative cursor-pointer transition-colors hover:bg-neutral-lighter/70",
-                  dayIndex < 6 && "border-r",
-                  !day.isCurrentMonth && "text-neutral-light",
-                  day.isToday && "bg-primary-light/30",
+                  "calendar-day p-1 border-b border-white/20 relative cursor-pointer transition-colors hover:bg-white/10",
+                  dayIndex < 6 && "border-r border-white/20",
+                  !day.isCurrentMonth && "text-white/40",
+                  day.isToday && "bg-gradient-to-r from-[#8a4df0]/30 to-[#3a4db9]/30",
                   weekIndex === 2 && "border-b-0" // Last row, no bottom border
                 )}
                 onClick={() => { if (day.isCurrentMonth) window.location.href = "/training-plan"; }}
               >
-                <div className="font-medium">{day.day}</div>
+                <div className="font-medium text-white drop-shadow-md">{day.day}</div>
                 {day.workout && (
                   <div className={cn(
                     "text-xs font-medium mt-1",
