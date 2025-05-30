@@ -39,7 +39,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen max-w-full animated-gradient">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
       <Sidebar />
       <MobileMenu />
 
