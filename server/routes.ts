@@ -3039,6 +3039,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Activities API
+  app.get("/api/activities", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const activities = await storage.getActivities(req.user.id);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ error: "Failed to fetch activities" });
+    }
+  });
+
+  app.get("/api/activities/recent", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const activities = await storage.getRecentActivities(req.user.id, 5);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching recent activities:", error);
+      res.status(500).json({ error: "Failed to fetch recent activities" });
+    }
+  });
+
+  app.post("/api/activities", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const activityData = {
+        ...req.body,
+        user_id: req.user.id,
+        activity_date: req.body.activity_date || new Date().toISOString().split('T')[0]
+      };
+      
+      const activity = await storage.createActivity(activityData);
+      res.status(201).json(activity);
+    } catch (error) {
+      console.error("Error creating activity:", error);
+      res.status(500).json({ error: "Failed to create activity" });
+    }
+  });
+
   // Health Metrics API
   app.get("/api/health-metrics", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -3068,13 +3111,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
+      // Convert date string to proper format for database
+      const metricDate = req.body.metric_date ? 
+        (typeof req.body.metric_date === 'string' ? req.body.metric_date : new Date(req.body.metric_date).toISOString().split('T')[0]) :
+        new Date().toISOString().split('T')[0];
+      
       const validation = insertHealthMetricsSchema.safeParse({
         ...req.body,
         user_id: req.user.id,
-        metric_date: req.body.metric_date ? new Date(req.body.metric_date) : new Date()
+        metric_date: metricDate
       });
       
       if (!validation.success) {
+        console.error("Health metrics validation error:", validation.error.errors);
         return res.status(400).json({ errors: validation.error.errors });
       }
       

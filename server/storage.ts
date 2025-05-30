@@ -132,6 +132,11 @@ export interface IStorage {
   createTrainingPreferences(data: InsertTrainingPreference): Promise<TrainingPreference>;
   updateTrainingPreferences(id: number, data: Partial<TrainingPreference>): Promise<TrainingPreference>;
   
+  // Activities
+  getActivities(userId: number): Promise<any[]>;
+  getRecentActivities(userId: number, limit: number): Promise<any[]>;
+  createActivity(activity: any): Promise<any>;
+  
   sessionStore: session.SessionStore;
 }
 
