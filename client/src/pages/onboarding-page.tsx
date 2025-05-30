@@ -137,6 +137,32 @@ export default function OnboardingPage() {
     }
   }, [onboardingStatus, setLocation]);
 
+  // Navigation handlers
+  const handleNext = () => {
+    const currentIndex = stepOrder.indexOf(currentStep);
+    if (currentIndex < stepOrder.length - 1) {
+      setCurrentStep(stepOrder[currentIndex + 1]);
+    }
+  };
+
+  const handlePrevious = () => {
+    const currentIndex = stepOrder.indexOf(currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(stepOrder[currentIndex - 1]);
+    }
+  };
+
+  const handleStepChange = (step: OnboardingStep) => {
+    setCurrentStep(step);
+  };
+
+  const handleTabChange = (value: string) => {
+    const step = tabToStepMap[value];
+    if (step) {
+      setCurrentStep(step);
+    }
+  };
+
   // If auth is loading, show loading spinner
   if (isAuthLoading || isStatusLoading) {
     return (
@@ -150,32 +176,6 @@ export default function OnboardingPage() {
   if (!user) {
     return <Redirect to="/auth" />;
   }
-
-  // Handle next step
-  const handleNext = () => {
-    const currentIndex = Object.values(OnboardingStep).indexOf(currentStep);
-    const nextStep = Object.values(OnboardingStep)[currentIndex + 1];
-    
-    if (nextStep) {
-      setCurrentStep(nextStep);
-    }
-  };
-
-  // Handle previous step
-  const handlePrevious = () => {
-    const currentIndex = Object.values(OnboardingStep).indexOf(currentStep);
-    const previousStep = Object.values(OnboardingStep)[currentIndex - 1];
-    
-    if (previousStep) {
-      setCurrentStep(previousStep);
-    }
-  };
-
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    const step = tabToStepMap[value as keyof typeof tabToStepMap];
-    setCurrentStep(step);
-  };
 
   // Handle completing the onboarding process
   const handleComplete = (profileUpdates?: any) => {
