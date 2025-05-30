@@ -103,6 +103,46 @@ export default function OnboardingPage() {
     enabled: !!user, // Only run if user is logged in
   });
 
+  // Fetch saved onboarding data for summary step
+  const { data: savedFitnessGoals } = useQuery({
+    queryKey: ["/api/onboarding/fitness-goals"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/onboarding/fitness-goals");
+        return await res.json();
+      } catch (error) {
+        return null;
+      }
+    },
+    enabled: !!user && currentStep === OnboardingStep.SUMMARY,
+  });
+
+  const { data: savedExperience } = useQuery({
+    queryKey: ["/api/onboarding/experience"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/onboarding/experience");
+        return await res.json();
+      } catch (error) {
+        return null;
+      }
+    },
+    enabled: !!user && currentStep === OnboardingStep.SUMMARY,
+  });
+
+  const { data: savedTrainingPreferences } = useQuery({
+    queryKey: ["/api/onboarding/training-preferences"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/onboarding/training-preferences");
+        return await res.json();
+      } catch (error) {
+        return null;
+      }
+    },
+    enabled: !!user && currentStep === OnboardingStep.SUMMARY,
+  });
+
   // Complete the onboarding process
   const completeOnboardingMutation = useMutation({
     mutationFn: async (profileUpdates?: any) => {
@@ -278,7 +318,11 @@ export default function OnboardingPage() {
                   <SummaryStep 
                     onPrevious={handlePrevious}
                     onComplete={handleComplete}
-                    onboardingData={onboardingData}
+                    onboardingData={{
+                      fitnessGoals: savedFitnessGoals || onboardingData.fitnessGoals,
+                      experience: savedExperience || onboardingData.experience,
+                      trainingPreferences: savedTrainingPreferences || onboardingData.trainingPreferences
+                    }}
                     isLoading={completeOnboardingMutation.isPending}
                   />
                 )}
