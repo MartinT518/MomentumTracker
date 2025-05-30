@@ -580,16 +580,16 @@ export default function GoalsPage() {
         {/* Goals Content */}
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="active" className="flex items-center">
+            <TabsList className="bg-white/10 backdrop-blur-sm border-white/20">
+              <TabsTrigger value="active" className="flex items-center text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
                 <Flag className="mr-2 h-4 w-4" />
                 Active Goals
               </TabsTrigger>
-              <TabsTrigger value="completed" className="flex items-center">
+              <TabsTrigger value="completed" className="flex items-center text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Completed
               </TabsTrigger>
-              <TabsTrigger value="achievements" className="flex items-center">
+              <TabsTrigger value="achievements" className="flex items-center text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
                 <Award className="mr-2 h-4 w-4" />
                 Achievements
               </TabsTrigger>
@@ -598,56 +598,56 @@ export default function GoalsPage() {
           
           <TabsContent value="active">
             {isLoadingGoals ? (
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                  <p className="text-neutral-medium">Loading your goals...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                  <p className="text-white/70 drop-shadow-sm">Loading your goals...</p>
                 </CardContent>
               </Card>
             ) : goalsError ? (
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="text-center py-12">
-                  <h3 className="text-lg font-semibold mb-2 text-red-500">Error loading goals</h3>
-                  <p className="text-neutral-medium mb-4">There was a problem loading your goals. Please try again.</p>
+                  <h3 className="text-lg font-semibold mb-2 text-red-400 drop-shadow-sm">Error loading goals</h3>
+                  <p className="text-white/70 mb-4 drop-shadow-sm">There was a problem loading your goals. Please try again.</p>
                   <Button onClick={() => refetchGoals()}>Retry</Button>
                 </CardContent>
               </Card>
             ) : activeGoals.length === 0 ? (
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="text-center py-12">
-                  <h3 className="text-lg font-semibold mb-2">No active goals</h3>
-                  <p className="text-neutral-medium mb-4">Create your first goal to start tracking your progress</p>
+                  <h3 className="text-lg font-semibold mb-2 text-white drop-shadow-sm">No active goals</h3>
+                  <p className="text-white/70 mb-4 drop-shadow-sm">Create your first goal to start tracking your progress</p>
                   <Button onClick={() => setCreateGoalOpen(true)}>Create Goal</Button>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {activeGoals.map((goal) => (
-                  <Card key={goal.id} className="overflow-hidden">
+                  <Card key={goal.id} className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center">
-                          {getGoalTypeIcon(goal.type)}
-                          <CardTitle className="ml-2 text-lg font-semibold">
+                          {getGoalTypeIcon(goal.type, "h-5 w-5 text-white")}
+                          <CardTitle className="ml-2 text-lg font-semibold text-white drop-shadow-sm">
                             {goal.type === "race" ? goal.distance : "Weight Loss Goal"}
                           </CardTitle>
                         </div>
                         {getStatusBadge(goal.status)}
                       </div>
                       {goal.type === "race" && (
-                        <CardDescription>
+                        <CardDescription className="text-white/80 drop-shadow-sm">
                           Target: {goal.targetTime} • {goal.targetDate}
                         </CardDescription>
                       )}
                       {goal.type === "weight" && (
-                        <CardDescription>
+                        <CardDescription className="text-white/80 drop-shadow-sm">
                           {goal.startingWeight} → {goal.targetWeight}
                         </CardDescription>
                       )}
                     </CardHeader>
                     <CardContent className="pb-2">
                       <div className="flex flex-col space-y-1 mt-2">
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-sm text-white/70 drop-shadow-sm">
                           <span>{goal.progress}% Complete</span>
                           <span>
                             {goal.type === "race" ? goal.trainingPlan :
@@ -657,25 +657,26 @@ export default function GoalsPage() {
                         <Progress value={goal.progress} className="h-2" />
                       </div>
                       
-                      <div className="flex items-center mt-4 text-sm text-muted-foreground">
+                      <div className="flex items-center mt-4 text-sm text-white/70 drop-shadow-sm">
                         {goal.type === "race" ? (
                           <>
-                            <Clock className="h-4 w-4 mr-1.5" />
+                            <Clock className="h-4 w-4 mr-1.5 text-white/70" />
                             <span>Training on schedule</span>
                           </>
                         ) : (
                           <>
-                            <TrendingUp className="h-4 w-4 mr-1.5" />
+                            <TrendingUp className="h-4 w-4 mr-1.5 text-white/70" />
                             <span>-8 lbs so far</span>
                           </>
                         )}
                       </div>
                     </CardContent>
                     <CardFooter className="pt-2 justify-between">
-                      <Button variant="ghost" size="sm">Edit Goal</Button>
+                      <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10">Edit Goal</Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
+                        className="border-white/20 text-white hover:bg-white/10"
                         onClick={() => handleViewGoalDetails(goal)}
                       >
                         View Details
@@ -690,16 +691,16 @@ export default function GoalsPage() {
           <TabsContent value="completed">
             {/* Achievement Demo Section */}
             <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-4">Goal Achievement Celebrations</h3>
+              <h3 className="text-xl font-semibold mb-4 text-white drop-shadow-sm">Goal Achievement Celebrations</h3>
               <GoalAchievementDemo />
             </div>
             
-            <h3 className="text-xl font-semibold mb-4">Completed Goals</h3>
+            <h3 className="text-xl font-semibold mb-4 text-white drop-shadow-sm">Completed Goals</h3>
             {isLoadingGoals ? (
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                  <p className="text-neutral-medium">Loading completed goals...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                  <p className="text-white/70 drop-shadow-sm">Loading completed goals...</p>
                 </CardContent>
               </Card>
             ) : goalsError ? (
