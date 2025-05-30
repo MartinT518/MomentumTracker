@@ -161,52 +161,52 @@ export function NutritionPreferences() {
         {!isEditing ? (
           <div className="space-y-6">
             <div>
-              <h3 className="font-medium mb-2">Dietary Restrictions</h3>
+              <h3 className="font-medium mb-2 text-white drop-shadow-sm">Dietary Restrictions</h3>
               <div className="flex flex-wrap gap-2">
                 {preferences?.dietary_restrictions && Array.isArray(preferences.dietary_restrictions) && preferences.dietary_restrictions.length > 0 ? (
                   preferences.dietary_restrictions.map((restriction) => (
-                    <span key={restriction} className="px-2 py-1 bg-muted rounded-full text-sm">
+                    <span key={restriction} className="px-2 py-1 bg-white/20 backdrop-blur-sm border border-white/20 rounded-full text-sm text-white drop-shadow-sm">
                       {restriction.charAt(0).toUpperCase() + restriction.slice(1)}
                     </span>
                   ))
                 ) : (
-                  <span className="text-muted-foreground">No dietary restrictions</span>
+                  <span className="text-white/70 drop-shadow-sm">No dietary restrictions</span>
                 )}
               </div>
             </div>
             
             <div>
-              <h3 className="font-medium mb-2">Daily Targets</h3>
+              <h3 className="font-medium mb-2 text-white drop-shadow-sm">Daily Targets</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-muted-foreground text-sm">Calories:</span>
-                  <span className="font-medium ml-2">{preferences?.calorie_target || 2500} kcal</span>
+                  <span className="text-white/70 text-sm drop-shadow-sm">Calories:</span>
+                  <span className="font-medium ml-2 text-white drop-shadow-sm">{preferences?.calorie_target || 2500} kcal</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-sm">Meals per day:</span>
-                  <span className="font-medium ml-2">{preferences?.meal_count || 4}</span>
+                  <span className="text-white/70 text-sm drop-shadow-sm">Meals per day:</span>
+                  <span className="font-medium ml-2 text-white drop-shadow-sm">{preferences?.meal_count || 4}</span>
                 </div>
               </div>
             </div>
             
             <div>
-              <h3 className="font-medium mb-2">Macronutrient Distribution</h3>
+              <h3 className="font-medium mb-2 text-white drop-shadow-sm">Macronutrient Distribution</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <span className="text-muted-foreground text-sm">Protein:</span>
-                  <span className="font-medium ml-2">{preferences?.protein_target || 150}g ({proteinPercent}%)</span>
+                  <span className="text-white/70 text-sm drop-shadow-sm">Protein:</span>
+                  <span className="font-medium ml-2 text-white drop-shadow-sm">{preferences?.protein_target || 150}g ({proteinPercent}%)</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-sm">Carbs:</span>
-                  <span className="font-medium ml-2">{preferences?.carbs_target || 300}g ({carbsPercent}%)</span>
+                  <span className="text-white/70 text-sm drop-shadow-sm">Carbs:</span>
+                  <span className="font-medium ml-2 text-white drop-shadow-sm">{preferences?.carbs_target || 300}g ({carbsPercent}%)</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-sm">Fat:</span>
-                  <span className="font-medium ml-2">{preferences?.fat_target || 70}g ({fatPercent}%)</span>
+                  <span className="text-white/70 text-sm drop-shadow-sm">Fat:</span>
+                  <span className="font-medium ml-2 text-white drop-shadow-sm">{preferences?.fat_target || 70}g ({fatPercent}%)</span>
                 </div>
               </div>
               
-              <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
+              <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
                 <div className="flex h-full">
                   <div 
                     className="bg-blue-500 h-full" 
@@ -222,7 +222,7 @@ export function NutritionPreferences() {
                   />
                 </div>
               </div>
-              <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+              <div className="flex justify-between mt-1 text-xs text-white/70 drop-shadow-sm">
                 <span>Protein</span>
                 <span>Carbs</span>
                 <span>Fat</span>
