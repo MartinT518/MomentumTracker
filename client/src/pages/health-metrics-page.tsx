@@ -445,8 +445,8 @@ export default function HealthMetricsPage() {
     return (
       <div className="flex items-center space-x-1 text-xs">
         <div className={`w-2 h-2 rounded-full ${qualityColor.replace('text-', 'bg-')}`}></div>
-        <span className={`${qualityColor}`}>{qualityLabel}</span>
-        <span className="text-gray-400">({availableMetrics}/{totalMetrics} metrics)</span>
+        <span className={`${qualityColor} drop-shadow-sm`}>{qualityLabel}</span>
+        <span className="text-white/60 drop-shadow-sm">({availableMetrics}/{totalMetrics} metrics)</span>
       </div>
     );
   };
@@ -810,40 +810,40 @@ export default function HealthMetricsPage() {
         </div>
         
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="data">Raw Data</TabsTrigger>
+          <TabsList className="bg-white/10 backdrop-blur-sm border-white/20">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Overview</TabsTrigger>
+            <TabsTrigger value="trends" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Trends</TabsTrigger>
+            <TabsTrigger value="data" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Raw Data</TabsTrigger>
           </TabsList>
           
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
             {isLoading ? (
               <div className="flex items-center justify-center p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
               </div>
             ) : error ? (
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center justify-center text-center p-6">
                     <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
-                    <h3 className="text-lg font-medium">Error loading health metrics</h3>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <h3 className="text-lg font-medium text-white drop-shadow-sm">Error loading health metrics</h3>
+                    <p className="text-sm text-white/70 drop-shadow-sm mt-2">
                       There was a problem fetching your health data. Please try again later.
                     </p>
                   </div>
                 </CardContent>
               </Card>
             ) : healthMetrics.length === 0 ? (
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center justify-center text-center p-6">
-                    <Calendar className="h-12 w-12 text-primary mb-4" />
-                    <h3 className="text-lg font-medium">No health metrics found</h3>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <Calendar className="h-12 w-12 text-white mb-4" />
+                    <h3 className="text-lg font-medium text-white drop-shadow-sm">No health metrics found</h3>
+                    <p className="text-sm text-white/70 drop-shadow-sm mt-2">
                       Start tracking your health metrics to see insights here.
                     </p>
-                    <Button className="mt-4" onClick={() => setAddMetricOpen(true)}>
+                    <Button className="mt-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30" onClick={() => setAddMetricOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Health Data
                     </Button>
@@ -1241,45 +1241,45 @@ export default function HealthMetricsPage() {
                     <table className="w-full">
                       <thead>
                         <tr>
-                          <th className="text-left font-medium py-2 px-4 border-b">Date</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">HRV</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">RHR</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">Sleep Quality</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">Sleep Hours</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">Stress</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">Source</th>
-                          <th className="text-left font-medium py-2 px-4 border-b">Energy Score</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">Date</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">HRV</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">RHR</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">Sleep Quality</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">Sleep Hours</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">Stress</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">Source</th>
+                          <th className="text-left font-medium py-2 px-4 border-b border-white/20 text-white drop-shadow-sm">Energy Score</th>
                         </tr>
                       </thead>
                       <tbody>
                         {[...healthMetrics]
                           .sort((a, b) => new Date(b.metric_date).getTime() - new Date(a.metric_date).getTime())
                           .map((metric) => (
-                            <tr key={metric.id} className="hover:bg-neutral-50">
-                              <td className="py-2 px-4 border-b">{formatDate(metric.metric_date)}</td>
-                              <td className="py-2 px-4 border-b">{metric.hrv_score || "-"}</td>
-                              <td className="py-2 px-4 border-b">{metric.resting_heart_rate || "-"}</td>
-                              <td className="py-2 px-4 border-b">{metric.sleep_quality || "-"}/10</td>
-                              <td className="py-2 px-4 border-b">
+                            <tr key={metric.id} className="hover:bg-white/5">
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">{formatDate(metric.metric_date)}</td>
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">{metric.hrv_score || "-"}</td>
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">{metric.resting_heart_rate || "-"}</td>
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">{metric.sleep_quality || "-"}/10</td>
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">
                                 {metric.sleep_duration 
                                   ? `${Math.floor(metric.sleep_duration / 60)}h ${metric.sleep_duration % 60}m` 
                                   : "-"}
                               </td>
-                              <td className="py-2 px-4 border-b">{metric.stress_level || "-"}/10</td>
-                              <td className="py-2 px-4 border-b">
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">{metric.stress_level || "-"}/10</td>
+                              <td className="py-2 px-4 border-b border-white/20 text-white/90 drop-shadow-sm">
                                 <div className="flex items-center">
                                   {metric.source === "manual" ? (
                                     <span className="capitalize">{metric.source}</span>
                                   ) : (
                                     <>
-                                      <Wifi className="h-4 w-4 mr-1 text-blue-500" />
+                                      <Wifi className="h-4 w-4 mr-1 text-blue-400" />
                                       <span className="capitalize">{metric.source}</span>
                                     </>
                                   )}
                                 </div>
                               </td>
-                              <td className="py-2 px-4 border-b">
-                                <div className={`font-medium ${getEnergyColor(calculateEnergyLevel(metric))}`}>
+                              <td className="py-2 px-4 border-b border-white/20">
+                                <div className={`font-medium drop-shadow-sm ${getEnergyColor(calculateEnergyLevel(metric))}`}>
                                   {calculateEnergyLevel(metric)}
                                 </div>
                               </td>
