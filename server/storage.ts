@@ -896,6 +896,40 @@ export class DatabaseStorage implements IStorage {
         )
       );
   }
+
+  // Activities methods
+  async getActivities(userId: number): Promise<any[]> {
+    const { activities } = await import("@shared/schema");
+    const userActivities = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.user_id, userId))
+      .orderBy(desc(activities.activity_date));
+    
+    return userActivities;
+  }
+
+  async getRecentActivities(userId: number, limit: number): Promise<any[]> {
+    const { activities } = await import("@shared/schema");
+    const recentActivities = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.user_id, userId))
+      .orderBy(desc(activities.activity_date))
+      .limit(limit);
+    
+    return recentActivities;
+  }
+
+  async createActivity(activity: any): Promise<any> {
+    const { activities } = await import("@shared/schema");
+    const [newActivity] = await db
+      .insert(activities)
+      .values(activity)
+      .returning();
+    
+    return newActivity;
+  }
 }
 
 // Fallback to memory storage if DB connection fails

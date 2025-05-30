@@ -82,80 +82,98 @@ export default function ActivitiesPage() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
-  // Mock activities for display
-  const activities = [
-    {
-      id: 1,
-      date: "Jul 30, 2023",
-      type: {
-        name: "Long Run",
-        icon: "chart",
-        color: "secondary"
-      },
-      distance: "12.6 mi",
-      time: "1:51:24",
-      pace: "8:51 /mi",
-      heartRate: "152 bpm",
-      effort: {
-        level: "moderate",
-        label: "Moderate"
-      },
-      source: "manual"
-    },
-    {
-      id: 2,
-      date: "Jul 28, 2023",
-      type: {
-        name: "Tempo Run",
-        icon: "speed",
-        color: "primary"
-      },
-      distance: "6.2 mi",
-      time: "48:36",
-      pace: "7:50 /mi",
-      heartRate: "165 bpm",
-      effort: {
-        level: "hard",
-        label: "Hard"
-      },
-      source: "strava"
-    },
-    {
-      id: 3,
-      date: "Jul 26, 2023",
-      type: {
-        name: "Easy Run",
-        icon: "activity",
-        color: "accent"
-      },
-      distance: "5.0 mi",
-      time: "47:15",
-      pace: "9:27 /mi",
-      heartRate: "139 bpm",
-      effort: {
-        level: "easy",
-        label: "Easy"
-      },
-      source: "garmin"
-    }
-  ];
+  // Fetch activities from API
+  const { data: activities = [], isLoading, refetch } = useQuery({
+    queryKey: ["/api/activities"],
+  });
 
-  const handleSaveActivity = () => {
-    // In a real app, send to backend API
-    toast({
-      title: "Activity saved",
-      description: "Your activity has been logged successfully.",
-    });
-    setAddActivityOpen(false);
+  // Format activities for display
+  const formattedActivities = activities.map((activity: any) => ({
+    id: activity.id,
+    date: new Date(activity.activity_date).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }),
+    type: {
+      name: activity.activity_type,
+      icon: "chart" as const,
+      color: "primary" as const
+    },
+    distance: activity.distance ? `${activity.distance} mi` : "N/A",
+    time: activity.duration ? formatDuration(activity.duration) : "N/A",
+    pace: activity.pace || "N/A",
+    heartRate: activity.heart_rate ? `${activity.heart_rate} bpm` : "N/A",
+    effort: {
+      level: activity.effort_level || "moderate",
+      label: activity.effort_level ? activity.effort_level.charAt(0).toUpperCase() + activity.effort_level.slice(1) : "Moderate"
+    },
+    source: activity.source || "manual"
+  }));
+
+  // Helper function to format duration from seconds
+  function formatDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
     
-    // Reset form fields
-    setActivityDate(new Date());
-    setActivityType("run");
-    setDistance("");
-    setDuration("");
-    setHeartRate("");
-    setNotes("");
-    setEffortLevel("moderate");
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  const handleSaveActivity = async () => {
+    try {
+      const activityData = {
+        activity_date: activityDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+        activity_type: activityType,
+        distance: distance ? parseFloat(distance) : null,
+        duration: duration ? parseInt(duration) * 60 : null, // Convert minutes to seconds
+        heart_rate: heartRate ? parseInt(heartRate) : null,
+        effort_level: effortLevel,
+        notes: notes || null,
+        source: "manual"
+      };
+
+      const response = await fetch('/api/activities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(activityData),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save activity');
+      }
+
+      toast({
+        title: "Activity saved",
+        description: "Your activity has been logged successfully.",
+      });
+
+      setAddActivityOpen(false);
+      
+      // Reset form fields
+      setActivityDate(new Date());
+      setActivityType("run");
+      setDistance("");
+      setDuration("");
+      setHeartRate("");
+      setNotes("");
+      setEffortLevel("moderate");
+
+      // Refresh activities list
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save activity. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleImportActivities = () => {
