@@ -72,14 +72,26 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
+      // Validate required fields
+      const { username, password } = req.body;
+      
+      if (!username || username.trim() === '') {
+        return res.status(400).json({ message: "Username is required" });
+      }
+      
+      if (!password || password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      const existingUser = await storage.getUserByUsername(username.trim());
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
+        username: username.trim(),
+        password: await hashPassword(password),
       });
 
       // Create initial onboarding status for new user
@@ -114,8 +126,20 @@ export function setupAuth(app: Express) {
         if (err) return next(err);
         res.status(201).json(userResponse);
       });
-    } catch (err) {
-      next(err);
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      // Handle specific database errors
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Handle other validation errors
+      if (error.message && error.message.includes('username')) {
+        return res.status(400).json({ message: "Invalid username format" });
+      }
+      
+      return res.status(500).json({ message: "Registration failed. Please try again." });
     }
   });
 
