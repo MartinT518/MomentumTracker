@@ -449,53 +449,53 @@ export default function StrengthExercisesPage() {
                   <CardDescription className="text-white/70 drop-shadow-md">
                     Your selected exercises for today's strength training
                   </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {savedWorkout.map(exercise => (
-                  <Badge 
-                    key={exercise.id} 
-                    variant="secondary" 
-                    className="flex items-center gap-1 pr-1"
-                  >
-                    {exercise.name}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => removeFromWorkout(exercise.id)}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {savedWorkout.map(exercise => (
+                      <Badge 
+                        key={exercise.id} 
+                        variant="secondary" 
+                        className="flex items-center gap-1 pr-1 bg-white/20 text-white border-white/30"
+                      >
+                        {exercise.name}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground text-white"
+                          onClick={() => removeFromWorkout(exercise.id)}
+                        >
+                          ×
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={saveWorkout}
+                      className="flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white"
                     >
-                      ×
+                      <Bookmark className="h-4 w-4" />
+                      Save Workout
                     </Button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={saveWorkout}
-                  className="flex items-center gap-2"
-                >
-                  <Bookmark className="h-4 w-4" />
-                  Save Workout
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setSavedWorkout([])}
-                  className="flex items-center gap-2"
-                >
-                  Clear All
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    <Button 
+                      variant="outline"
+                      onClick={() => setSavedWorkout([])}
+                      className="flex items-center gap-2 border-white/30 text-white hover:bg-white/10"
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Main content */}
-        {selectedExercise ? (
-          // Exercise detail view
-          <Card className="border-neutral-200">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
+            {/* Main content */}
+            {selectedExercise ? (
+              // Exercise detail view
+              <Card className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button 
                     variant="ghost" 
@@ -914,8 +914,9 @@ export default function StrengthExercisesPage() {
               </div>
             )}
           </>
-        )}
-      </main>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
