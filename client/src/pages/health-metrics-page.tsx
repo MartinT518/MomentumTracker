@@ -471,19 +471,20 @@ export default function HealthMetricsPage() {
   const timeSeriesData = prepareTimeSeriesData();
 
   return (
-    <div className="flex min-h-screen max-w-full">
-      <Sidebar />
-      <MobileMenu />
-      
-      <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
-        {/* For mobile view padding to account for fixed header */}
-        <div className="md:hidden pt-20"></div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+      <div className="flex min-h-screen max-w-full">
+        <Sidebar />
+        <MobileMenu />
         
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Health Metrics</h1>
-            <p className="text-muted-foreground">Track your biometric data and energy levels</p>
-          </div>
+        <main className="flex-1 overflow-y-auto pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
+          {/* For mobile view padding to account for fixed header */}
+          <div className="md:hidden pt-20"></div>
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-white">Health Metrics</h1>
+              <p className="text-white/80">Track your biometric data and energy levels</p>
+            </div>
           <div className="flex items-center gap-2 mt-4 md:mt-0">
             <Dialog open={importPlatformDialogOpen} onOpenChange={setImportPlatformDialogOpen}>
               <DialogTrigger asChild>
