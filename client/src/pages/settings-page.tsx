@@ -214,40 +214,40 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
       <Sidebar />
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex flex-col space-y-2">
           <div>
             <Link href="/">
-              <Button variant="ghost" size="sm" className="mb-2 px-1">
+              <Button variant="ghost" size="sm" className="mb-2 px-1 text-white/80 hover:text-white hover:bg-white/10">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Dashboard
               </Button>
             </Link>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Settings</h2>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-5 h-auto md:grid-cols-5">
-            <TabsTrigger value="account" className="flex flex-col md:flex-row items-center gap-2 py-2">
+          <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-5 h-auto md:grid-cols-5 bg-white/10 backdrop-blur-sm border-white/20">
+            <TabsTrigger value="account" className="flex flex-col md:flex-row items-center gap-2 py-2 text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
               <UserCog className="h-5 w-5" />
               <span>Account</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex flex-col md:flex-row items-center gap-2 py-2">
+            <TabsTrigger value="security" className="flex flex-col md:flex-row items-center gap-2 py-2 text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
               <Shield className="h-5 w-5" />
               <span>Security</span>
             </TabsTrigger>
-            <TabsTrigger value="training" className="flex flex-col md:flex-row items-center gap-2 py-2">
+            <TabsTrigger value="training" className="flex flex-col md:flex-row items-center gap-2 py-2 text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
               <Activity className="h-5 w-5" />
               <span>Training</span>
             </TabsTrigger>
-            <TabsTrigger value="integrations" className="flex flex-col md:flex-row items-center gap-2 py-2">
+            <TabsTrigger value="integrations" className="flex flex-col md:flex-row items-center gap-2 py-2 text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
               <Unlock className="h-5 w-5" />
               <span>Integrations</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex flex-col md:flex-row items-center gap-2 py-2">
+            <TabsTrigger value="notifications" className="flex flex-col md:flex-row items-center gap-2 py-2 text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
               <BellRing className="h-5 w-5" />
               <span>Notifications</span>
             </TabsTrigger>
@@ -255,10 +255,10 @@ export default function SettingsPage() {
           
           {/* Account Settings */}
           <TabsContent value="account" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Profile Settings</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Profile Settings</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Update your account information and personal details.
                 </CardDescription>
               </CardHeader>
