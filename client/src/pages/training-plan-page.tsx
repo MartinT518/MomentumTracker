@@ -241,30 +241,30 @@ export default function TrainingPlanPage() {
           <TabsContent value="overview">
             <TrainingGoalOverview />
             
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Training Plan Summary</h2>
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-white drop-shadow-md">Training Plan Summary</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                  <div className="text-sm text-white/80 font-medium mb-1">Weekly Mileage</div>
-                  <div className="text-2xl font-bold text-white">{aiPlan?.overview?.weeklyMileage || "32 miles"}</div>
+                  <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Weekly Mileage</div>
+                  <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan?.overview?.weeklyMileage || "32 miles"}</div>
                 </div>
                 <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                  <div className="text-sm text-white/80 font-medium mb-1">Workouts Per Week</div>
-                  <div className="text-2xl font-bold text-white">{aiPlan?.overview?.workoutsPerWeek || "5"} sessions</div>
+                  <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Workouts Per Week</div>
+                  <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan?.overview?.workoutsPerWeek || "5"} sessions</div>
                 </div>
                 <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                  <div className="text-sm text-white/80 font-medium mb-1">Long Run</div>
-                  <div className="text-2xl font-bold text-white">{aiPlan?.overview?.longRunDistance || "12 miles"}</div>
+                  <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Long Run</div>
+                  <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan?.overview?.longRunDistance || "12 miles"}</div>
                 </div>
                 <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                  <div className="text-sm text-white/80 font-medium mb-1">Quality Workouts</div>
-                  <div className="text-2xl font-bold text-white">{aiPlan?.overview?.qualityWorkouts || "2"} per week</div>
+                  <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Quality Workouts</div>
+                  <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan?.overview?.qualityWorkouts || "2"} per week</div>
                 </div>
               </div>
               
               <div className="mt-6">
-                <h3 className="text-lg font-medium mb-3 text-white">Training Philosophy</h3>
-                <p className="text-white/80">
+                <h3 className="text-lg font-medium mb-3 text-white drop-shadow-md">Training Philosophy</h3>
+                <p className="text-white/80 drop-shadow-md">
                   {aiPlan?.philosophy || 
                   `This plan follows a balanced approach with progressive overload to prepare you for your marathon goal.
                   It includes a mix of easy running, speed work, tempo runs, and essential long runs, with appropriate recovery 
@@ -293,14 +293,14 @@ export default function TrainingPlanPage() {
                 )}
                 
                 {!hasSubscription && aiPlan && (
-                  <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                  <div className="mt-6 bg-yellow-400/20 backdrop-blur-lg border border-yellow-300/30 rounded-xl p-6">
                     <div className="flex items-start space-x-4">
-                      <div className="bg-yellow-100 p-2 rounded-full">
-                        <Sparkles className="h-5 w-5 text-yellow-600" />
+                      <div className="bg-yellow-400/30 p-2 rounded-full">
+                        <Sparkles className="h-5 w-5 text-yellow-200 drop-shadow-md" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium mb-1">Training Plan Preview</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
+                        <h3 className="text-lg font-medium mb-1 text-white drop-shadow-md">Training Plan Preview</h3>
+                        <p className="text-sm text-white/80 mb-4 drop-shadow-md">
                           Free users can view the first week of their training plan in detail. Upgrade to premium for the full plan with {aiPlan.weeklyPlans?.length || 'multiple'} weeks of detailed workouts, nutrition advice, and more.
                         </p>
                         <Button 
@@ -320,29 +320,29 @@ export default function TrainingPlanPage() {
           
           <TabsContent value="ai-plan">
             {!hasSubscription ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
-                <Sparkles className="h-12 w-12 mx-auto text-primary/60 mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Premium Feature</h2>
-                <p className="text-muted-foreground mb-6">
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <Sparkles className="h-12 w-12 mx-auto text-blue-300 mb-4 drop-shadow-md" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Premium Feature</h2>
+                <p className="text-white/80 mb-6 drop-shadow-md">
                   Free users can see one week of AI-generated training plans. Upgrade to premium for full access to:
                   <ul className="mt-3 space-y-1 text-left max-w-md mx-auto">
                     <li className="flex items-center">
-                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                      <span className="bg-blue-400/30 text-blue-200 p-1 rounded-full mr-2 flex-shrink-0">
                         <Check className="h-3 w-3" />
                       </span>
-                      Complete multi-week training plans
+                      <span className="text-white/80">Complete multi-week training plans</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                      <span className="bg-blue-400/30 text-blue-200 p-1 rounded-full mr-2 flex-shrink-0">
                         <Check className="h-3 w-3" />
                       </span>
-                      Detailed workouts with warm-up and cool-down routines
+                      <span className="text-white/80">Detailed workouts with warm-up and cool-down routines</span>
                     </li>
                     <li className="flex items-center">
-                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                      <span className="bg-blue-400/30 text-blue-200 p-1 rounded-full mr-2 flex-shrink-0">
                         <Check className="h-3 w-3" />
                       </span>
-                      Nutritional guidance and recovery strategies
+                      <span className="text-white/80">Nutritional guidance and recovery strategies</span>
                     </li>
                   </ul>
                 </p>
@@ -365,14 +365,43 @@ export default function TrainingPlanPage() {
           
           <TabsContent value="adjust-plan">
             {!hasSubscription ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
-                <Zap className="h-12 w-12 mx-auto text-primary/60 mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Premium Feature</h2>
-                <p className="text-muted-foreground mb-6">
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <Zap className="h-12 w-12 mx-auto text-yellow-300 mb-4 drop-shadow-md" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Premium Feature</h2>
+                <p className="text-white/80 mb-6 drop-shadow-md">
                   Get smart adjustments to your training plan based on your performance data, biometrics, and feedback.
                   <ul className="mt-3 space-y-1 text-left max-w-md mx-auto">
                     <li className="flex items-center">
-                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
+                      <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      <span className="text-white/80">AI-powered plan adjustments</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      <span className="text-white/80">Performance data analysis</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      <span className="text-white/80">Personalized recommendations</span>
+                    </li>
+                  </ul>
+                </p>
+                <Button 
+                  size="lg"
+                  asChild
+                >
+                  <Link href="/subscription">Upgrade to Premium</Link>
+                </Button>
+              </div>
+            ) : (
+              <PlanAdjustmentTool onAdjustmentComplete={handlePlanAdjustment} />
+            )}
+          </TabsContent>rimary p-1 rounded-full mr-2 flex-shrink-0">
                         <Check className="h-3 w-3" />
                       </span>
                       Personalized adjustments based on workout completion
