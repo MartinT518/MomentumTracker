@@ -29,7 +29,7 @@ export default function NutritionPage() {
     },
   });
 
-  const hasSubscription = subscriptionData?.isActive || false;
+  const hasSubscription = subscriptionData || false;
 
   // Fetch nutrition preferences
   const { data: preferences, isLoading: isLoadingPreferences } = useQuery({
@@ -61,7 +61,7 @@ export default function NutritionPage() {
 
   if (isLoadingPreferences || isLoadingMealPlan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
         <PageLayout>
           <div className="flex items-center justify-center min-h-[400px]">
             <Loader2 className="h-8 w-8 animate-spin text-white" />
@@ -74,25 +74,24 @@ export default function NutritionPage() {
   // Show upgrade prompt if user doesn't have subscription and tries to access meal planning
   if (!hasSubscription && activeTab === 'meal-planner') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
         <PageLayout>
           <PageTitle 
             title="Nutrition" 
             description="Fuel your training with personalized meal plans"
-            className="text-white"
           />
           
           <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6 text-center">
             <div className="flex flex-col items-center space-y-4">
               <Utensils className="h-16 w-16 text-cyan-300" />
-              <h2 className="text-2xl font-bold text-white">Welcome to Personalized Nutrition</h2>
-              <p className="text-white/80 max-w-lg">
+              <h2 className="text-2xl font-bold text-white drop-shadow-sm">Welcome to Personalized Nutrition</h2>
+              <p className="text-white/80 max-w-lg drop-shadow-sm">
                 Get personalized meal recommendations based on your training load, 
                 dietary restrictions, and fitness goals.
               </p>
               
               <div className="mt-2 p-4 bg-white/10 border border-white/20 rounded-md max-w-lg backdrop-blur-sm">
-                <p className="text-sm text-white">
+                <p className="text-sm text-white drop-shadow-sm">
                   <strong>Note:</strong> Personalized nutrition plans require a premium subscription. 
                   Please upgrade to generate AI-powered meal plans.
                 </p>
@@ -113,12 +112,11 @@ export default function NutritionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 text-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
       <PageLayout>
         <PageTitle 
           title="Nutrition" 
           description="Fuel your training with personalized meal plans"
-          className="text-white"
         />
       
         <Tabs 
@@ -126,10 +124,10 @@ export default function NutritionPage() {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3 bg-white/10 border-white/20">
-            <TabsTrigger value="overview" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="meal-planner" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Meal Planner</TabsTrigger>
-            <TabsTrigger value="preferences" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Preferences</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border-white/20">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Overview</TabsTrigger>
+            <TabsTrigger value="meal-planner" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Meal Planner</TabsTrigger>
+            <TabsTrigger value="preferences" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Preferences</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="mt-6">
