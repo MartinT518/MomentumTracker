@@ -237,7 +237,7 @@ export function NutritionPreferences() {
                 name="dietary_restrictions"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Dietary Restrictions</FormLabel>
+                    <FormLabel className="text-white drop-shadow-sm">Dietary Restrictions</FormLabel>
                     <div className="grid grid-cols-2 mt-2">
                       {dietaryRestrictionOptions.map((option) => (
                         <FormField
@@ -262,9 +262,10 @@ export function NutritionPreferences() {
                                             )
                                           )
                                     }}
+                                    className="border-white/20 data-[state=checked]:bg-white/20 data-[state=checked]:border-white/40"
                                   />
                                 </FormControl>
-                                <FormLabel className="font-normal">
+                                <FormLabel className="font-normal text-white drop-shadow-sm">
                                   {option.label}
                                 </FormLabel>
                               </FormItem>
