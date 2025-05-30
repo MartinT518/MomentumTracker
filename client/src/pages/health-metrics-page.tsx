@@ -482,13 +482,16 @@ export default function HealthMetricsPage() {
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white">Health Metrics</h1>
-              <p className="text-white/80">Track your biometric data and energy levels</p>
+              <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-sm">Health Metrics</h1>
+              <p className="text-white/80 drop-shadow-sm">Track your biometric data and energy levels</p>
             </div>
           <div className="flex items-center gap-2 mt-4 md:mt-0">
             <Dialog open={importPlatformDialogOpen} onOpenChange={setImportPlatformDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button 
+                  variant="outline" 
+                  className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+                >
                   <Wifi className="mr-2 h-4 w-4" />
                   Import Health Data
                 </Button>
@@ -582,7 +585,7 @@ export default function HealthMetricsPage() {
             
             <Dialog open={addMetricOpen} onOpenChange={setAddMetricOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Health Data
                 </Button>
@@ -850,15 +853,15 @@ export default function HealthMetricsPage() {
             ) : (
               <>
                 {/* Today's Energy Card */}
-                <Card>
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg font-medium">Today's Energy</CardTitle>
-                      <div className="text-sm text-muted-foreground">
+                      <CardTitle className="text-lg font-medium text-white drop-shadow-sm">Today's Energy</CardTitle>
+                      <div className="text-sm text-white/70 drop-shadow-sm">
                         Last updated: {latestMetric ? formatDate(latestMetric.metric_date) : "N/A"}
                       </div>
                     </div>
-                    <CardDescription>Your training readiness based on biometric data</CardDescription>
+                    <CardDescription className="text-white/80 drop-shadow-sm">Your training readiness based on biometric data</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-2">
                     <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
@@ -930,9 +933,9 @@ export default function HealthMetricsPage() {
                       {/* Recommendation & Metrics */}
                       <div className="flex-1 space-y-4">
                         <div className="space-y-2">
-                          <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-100">
+                          <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/20">
                             <Zap className={`w-4 h-4 mr-2 ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`} />
-                            <span className={`font-medium ${energyLevel ? getEnergyColor(energyLevel) : "text-gray-400"}`}>
+                            <span className={`font-medium text-white drop-shadow-sm ${energyLevel ? "" : "text-gray-400"}`}>
                               {!energyLevel ? "No data" :
                                 energyLevel >= 85 ? "Excellent Energy" :
                                 energyLevel >= 70 ? "Very Good Energy" :
@@ -945,17 +948,17 @@ export default function HealthMetricsPage() {
                           
                           {latestMetric && getDataQualityIndicator(latestMetric)}
                         </div>
-                        <p className="text-sm text-muted-foreground">{recommendation}</p>
+                        <p className="text-sm text-white/70 drop-shadow-sm">{recommendation}</p>
                         
                         {latestMetric && (
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                            <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
+                            <div className="flex flex-col items-center p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                               <div className="flex items-center mb-1">
                                 <Heart className="h-5 w-5 text-red-500" />
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                                      <HelpCircle className="h-3.5 w-3.5 text-white/70 ml-1 cursor-help" />
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-72">
                                       <p>Heart Rate Variability (HRV) measures the variation between heartbeats. Higher HRV generally indicates better recovery and readiness to train. Elite athletes typically show higher values.</p>
@@ -963,8 +966,8 @@ export default function HealthMetricsPage() {
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
-                              <div className="text-xl font-medium">{latestMetric.hrv_score || "-"}</div>
-                              <div className="text-xs text-muted-foreground">HRV Score</div>
+                              <div className="text-xl font-medium text-white drop-shadow-sm">{latestMetric.hrv_score || "-"}</div>
+                              <div className="text-xs text-white/70 drop-shadow-sm">HRV Score</div>
                             </div>
                             <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
                               <div className="flex items-center mb-1">
