@@ -9,7 +9,7 @@ interface PageLayoutProps {
 
 export function PageLayout({ children, className = "" }: PageLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 flex flex-col">
       <MobileMenu />
       
       <div className="flex flex-1">
