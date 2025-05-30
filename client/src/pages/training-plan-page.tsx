@@ -401,40 +401,53 @@ export default function TrainingPlanPage() {
             ) : (
               <PlanAdjustmentTool onAdjustmentComplete={handlePlanAdjustment} />
             )}
-          </TabsContent>rimary p-1 rounded-full mr-2 flex-shrink-0">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      Personalized adjustments based on workout completion
-                    </li>
-                    <li className="flex items-center">
-                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      Analysis of your biometric data and recovery status
-                    </li>
-                    <li className="flex items-center">
-                      <span className="bg-primary/20 text-primary p-1 rounded-full mr-2 flex-shrink-0">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      Training load optimization and performance insights
-                    </li>
-                  </ul>
+          </TabsContent>
+
+          {/* Human Coach Tab */}
+          <TabsContent value="human-coach" className="space-y-6">
+            {!hasAnnualSubscription ? (
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <Crown className="h-12 w-12 mx-auto text-yellow-300 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Annual Premium Required</h2>
+                <p className="text-white/70 drop-shadow-md mb-6">
+                  Human coach access is available only for Annual Premium subscribers. Get personalized guidance from certified running coaches.
                 </p>
+                <ul className="text-left mb-6 space-y-2 text-white/70 drop-shadow-md">
+                  <li className="flex items-center">
+                    <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
+                      <Check className="h-3 w-3" />
+                    </span>
+                    Personalized adjustments based on workout completion
+                  </li>
+                  <li className="flex items-center">
+                    <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
+                      <Check className="h-3 w-3" />
+                    </span>
+                    Analysis of your biometric data and recovery status
+                  </li>
+                  <li className="flex items-center">
+                    <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
+                      <Check className="h-3 w-3" />
+                    </span>
+                    Training load optimization and performance insights
+                  </li>
+                </ul>
                 <Button 
                   size="lg"
                   asChild
+                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold"
                 >
-                  <Link href="/subscription">Upgrade to Premium</Link>
+                  <Link href="/subscription">Upgrade to Annual Premium</Link>
                 </Button>
               </div>
             ) : !aiPlan ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
-                <Zap className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" />
-                <h2 className="text-2xl font-bold mb-2">No Training Plan Found</h2>
-                <p className="text-muted-foreground mb-6">
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <Zap className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">No Training Plan Found</h2>
+                <p className="text-white/70 drop-shadow-md mb-6">
                   You need to generate a training plan first before you can get AI adjustments to it.
                 </p>
-                <Button variant="default" onClick={() => setSelectedTab('ai-plan')}>
+                <Button variant="default" onClick={() => setSelectedTab('ai-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
                   Generate a Training Plan
                 </Button>
               </div>

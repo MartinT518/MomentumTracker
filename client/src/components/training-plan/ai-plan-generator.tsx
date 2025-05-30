@@ -427,8 +427,8 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
               )}
             </form>
           </Form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
+        </div>
+        <div className="p-6 pt-0 flex justify-between">
           {step > 1 ? (
             <Button variant="outline" onClick={prevStep}>
               Previous
@@ -456,8 +456,8 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
               )}
             </Button>
           )}
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
