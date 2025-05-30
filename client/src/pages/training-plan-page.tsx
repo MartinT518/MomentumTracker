@@ -244,9 +244,9 @@ export default function TrainingPlanPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
               <h2 className="text-xl font-semibold mb-4">Training Plan Summary</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <div className="text-sm text-green-600 font-medium mb-1">Weekly Mileage</div>
-                  <div className="text-2xl font-bold">{aiPlan?.overview?.weeklyMileage || "32 miles"}</div>
+                <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                  <div className="text-sm text-white/80 font-medium mb-1">Weekly Mileage</div>
+                  <div className="text-2xl font-bold text-white">{aiPlan?.overview?.weeklyMileage || "32 miles"}</div>
                 </div>
                 <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
                   <div className="text-sm text-white/80 font-medium mb-1">Workouts Per Week</div>
