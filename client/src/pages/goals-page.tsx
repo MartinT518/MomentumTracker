@@ -409,19 +409,20 @@ export default function GoalsPage() {
   };
 
   return (
-    <div className="flex h-screen max-w-full overflow-hidden">
-      <Sidebar style={{display: "flex"}} />
-      <MobileMenu />
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+      <div className="flex h-screen max-w-full overflow-hidden">
+        <Sidebar style={{display: "flex"}} />
+        <MobileMenu />
 
-      <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
-        {/* For mobile view padding to account for fixed header */}
-        <div className="md:hidden pt-20"></div>
+        <main className="flex-1 overflow-y-auto pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
+          {/* For mobile view padding to account for fixed header */}
+          <div className="md:hidden pt-20"></div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold font-heading text-neutral-darker">Goals</h1>
-            <p className="text-neutral-medium mt-1">Set and track your running goals</p>
-          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold font-heading text-white">Goals</h1>
+              <p className="text-white/80 mt-1">Set and track your running goals</p>
+            </div>
           <div className="mt-4 md:mt-0">
             <Dialog open={createGoalOpen} onOpenChange={setCreateGoalOpen}>
               <DialogTrigger asChild>
@@ -1171,6 +1172,7 @@ export default function GoalsPage() {
           </DialogContent>
         </Dialog>
       </main>
+      </div>
     </div>
   );
 }
