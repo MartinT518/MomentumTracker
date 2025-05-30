@@ -284,15 +284,16 @@ export function NutritionPreferences() {
                   name="calorie_goal"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Calorie Goal (kcal)</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Calorie Goal (kcal)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           {...field} 
                           onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         />
                       </FormControl>
-                      <FormDescription>
+                      <FormDescription className="text-white/70 drop-shadow-sm">
                         Daily calorie target (1200-5000)
                       </FormDescription>
                       <FormMessage />
@@ -305,13 +306,13 @@ export function NutritionPreferences() {
                   name="meal_count"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Meals Per Day</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Meals Per Day</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value, 10))}
                         defaultValue={field.value.toString()}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
                             <SelectValue placeholder="Select number of meals" />
                           </SelectTrigger>
                         </FormControl>
@@ -322,7 +323,7 @@ export function NutritionPreferences() {
                           <SelectItem value="6">6 meals</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>
+                      <FormDescription className="text-white/70 drop-shadow-sm">
                         Number of meals and snacks per day
                       </FormDescription>
                       <FormMessage />
