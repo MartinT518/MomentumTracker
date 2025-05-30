@@ -363,25 +363,7 @@ export default function TrainingPreferencesStep({
         </div>
       </div>
 
-      <div className="flex justify-between pt-6">
-        <Button 
-          variant="outline" 
-          onClick={onPrevious}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <Button 
-          onClick={handleSubmit}
-          disabled={savePreferencesMutation.isPending || !isFormValid()}
-        >
-          {savePreferencesMutation.isPending && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          Continue
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
+
     </div>
   );
 }
