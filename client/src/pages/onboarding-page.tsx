@@ -118,10 +118,10 @@ export default function OnboardingPage() {
   });
 
   const { data: savedExperience } = useQuery({
-    queryKey: ["/api/onboarding/experience"],
+    queryKey: ["/api/onboarding/user-experience"],
     queryFn: async () => {
       try {
-        const res = await apiRequest("GET", "/api/onboarding/experience");
+        const res = await apiRequest("GET", "/api/onboarding/user-experience");
         return await res.json();
       } catch (error) {
         return null;
