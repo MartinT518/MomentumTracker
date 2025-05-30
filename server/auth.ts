@@ -82,6 +82,19 @@ export function setupAuth(app: Express) {
         password: await hashPassword(req.body.password),
       });
 
+      // Create initial onboarding status for new user
+      try {
+        await storage.createOnboardingStatus({
+          user_id: user.id,
+          completed: false,
+          current_step: "welcome",
+          steps_completed: []
+        });
+      } catch (error) {
+        console.error("Error creating onboarding status:", error);
+        // Don't fail registration if onboarding status creation fails
+      }
+
       req.login(user, (err) => {
         if (err) return next(err);
         res.status(201).json(user);

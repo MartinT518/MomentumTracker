@@ -1,17 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect, useLocation } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle, ArrowRight, ArrowLeft, Target, Trophy, Zap, Users } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle } from "lucide-react";
 
 // Import onboarding step components
 import WelcomeStep from "@/components/onboarding/welcome-step";
@@ -78,6 +75,15 @@ export default function OnboardingPage() {
     experience: null,
     trainingPreferences: null
   });
+
+  // Step order for navigation
+  const stepOrder = [
+    OnboardingStep.WELCOME,
+    OnboardingStep.FITNESS_GOALS,
+    OnboardingStep.EXPERIENCE,
+    OnboardingStep.TRAINING_PREFERENCES,
+    OnboardingStep.SUMMARY
+  ];
 
   // Fetch onboarding status
   const { data: onboardingStatus, isLoading: isStatusLoading } = useQuery({
@@ -192,105 +198,172 @@ export default function OnboardingPage() {
     });
   };
 
+  if (isLoading || isStatusLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-300 mx-auto mb-4" />
+          <p className="text-cyan-100">Setting up your experience...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="container max-w-4xl py-10">
-        <Card className="w-full shadow-lg">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">Welcome to MomentumRun</CardTitle>
-              <Badge variant="outline" className="px-3 py-1">
-                <span className="mr-1 text-primary">
-                  <CheckCircle className="h-4 w-4 inline mr-1" />
-                </span>
-                <span>New User</span>
-              </Badge>
-            </div>
-            <CardDescription>
-              Let's personalize your experience to help you achieve your fitness goals.
-            </CardDescription>
-            <Separator />
-          </CardHeader>
-          
-          <OnboardingProgress currentStep={currentStep} />
-          
-          <Tabs 
-            value={stepToTabMap[currentStep]} 
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-5 mx-4">
-              <TabsTrigger value="1">Welcome</TabsTrigger>
-              <TabsTrigger value="2">Goals</TabsTrigger>
-              <TabsTrigger value="3">Experience</TabsTrigger>
-              <TabsTrigger value="4">Preferences</TabsTrigger>
-              <TabsTrigger value="5">Summary</TabsTrigger>
-            </TabsList>
-            
-            <CardContent className="p-6">
-              <TabsContent value="1">
-                <WelcomeStep 
-                  onNext={handleNext} 
-                  user={user} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="2">
-                <FitnessGoalsStep 
-                  onNext={handleNext} 
-                  onPrevious={handlePrevious}
-                  onUpdateData={(data) => updateStepData(OnboardingStep.FITNESS_GOALS, data)}
-                  initialData={onboardingData.fitnessGoals}
-                />
-              </TabsContent>
-              
-              <TabsContent value="3">
-                <ExperienceStep 
-                  onNext={handleNext} 
-                  onPrevious={handlePrevious}
-                  onUpdateData={(data) => updateStepData(OnboardingStep.EXPERIENCE, data)}
-                  initialData={onboardingData.experience}
-                />
-              </TabsContent>
-              
-              <TabsContent value="4">
-                <TrainingPreferencesStep 
-                  onNext={handleNext} 
-                  onPrevious={handlePrevious}
-                  onUpdateData={(data) => updateStepData(OnboardingStep.TRAINING_PREFERENCES, data)}
-                  initialData={onboardingData.trainingPreferences}
-                />
-              </TabsContent>
-              
-              <TabsContent value="5">
-                <SummaryStep 
-                  onPrevious={handlePrevious}
-                  onComplete={handleComplete}
-                  onboardingData={onboardingData}
-                  isLoading={completeOnboardingMutation.isPending}
-                />
-              </TabsContent>
-            </CardContent>
-            
-            <CardFooter className="flex justify-between border-t p-4">
-              <div className="text-sm text-muted-foreground">
-                Take your time to provide accurate information for the best experience.
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-40 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 container mx-auto py-8 px-4 min-h-screen flex items-center justify-center">
+        <div className="max-w-4xl mx-auto w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-cyan-100 to-cyan-300 mb-4">
+              Welcome to AetherRun
+            </h1>
+            <p className="text-xl text-cyan-100/80 max-w-2xl mx-auto">
+              Let's personalize your running journey to help you achieve your fitness goals
+            </p>
+            <Badge className="mt-4 bg-cyan-500/20 text-cyan-100 border-cyan-400/30 backdrop-blur-sm">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              New Runner
+            </Badge>
+          </div>
+
+          {/* Progress Section */}
+          <div className="mb-8">
+            <OnboardingProgress currentStep={currentStep} />
+          </div>
+
+          {/* Main Content Card */}
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl">
+            <CardContent className="p-8">
+              {/* Step Navigation */}
+              <div className="flex justify-center mb-8">
+                <div className="flex space-x-2 p-1 bg-white/5 rounded-full backdrop-blur-sm border border-white/10">
+                  {[
+                    { step: OnboardingStep.WELCOME, icon: Zap, label: "Welcome" },
+                    { step: OnboardingStep.FITNESS_GOALS, icon: Target, label: "Goals" },
+                    { step: OnboardingStep.EXPERIENCE, icon: Trophy, label: "Experience" },
+                    { step: OnboardingStep.TRAINING_PREFERENCES, icon: Users, label: "Preferences" },
+                    { step: OnboardingStep.SUMMARY, icon: CheckCircle, label: "Summary" }
+                  ].map(({ step, icon: Icon, label }, index) => {
+                    const isActive = currentStep === step;
+                    const isCompleted = stepOrder.indexOf(currentStep) > index;
+                    
+                    return (
+                      <button
+                        key={step}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all ${
+                          isActive
+                            ? "bg-cyan-500/30 text-cyan-100 shadow-lg"
+                            : isCompleted
+                            ? "bg-green-500/20 text-green-200"
+                            : "text-white/60 hover:text-white/80"
+                        }`}
+                        onClick={() => handleStepChange(step)}
+                        disabled={!isCompleted && !isActive}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="text-sm font-medium">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              {currentStep === OnboardingStep.SUMMARY && (
-                <Button 
-                  variant="default" 
-                  onClick={() => handleComplete()}
-                  disabled={completeOnboardingMutation.isPending}
+
+              {/* Step Content */}
+              <div className="min-h-[400px]">
+                {currentStep === OnboardingStep.WELCOME && (
+                  <WelcomeStep onNext={handleNext} user={user} />
+                )}
+                {currentStep === OnboardingStep.FITNESS_GOALS && (
+                  <FitnessGoalsStep 
+                    onNext={handleNext} 
+                    onPrevious={handlePrevious}
+                    onUpdateData={(data) => updateStepData(OnboardingStep.FITNESS_GOALS, data)}
+                    initialData={onboardingData.fitnessGoals}
+                  />
+                )}
+                {currentStep === OnboardingStep.EXPERIENCE && (
+                  <ExperienceStep 
+                    onNext={handleNext} 
+                    onPrevious={handlePrevious}
+                    onUpdateData={(data) => updateStepData(OnboardingStep.EXPERIENCE, data)}
+                    initialData={onboardingData.experience}
+                  />
+                )}
+                {currentStep === OnboardingStep.TRAINING_PREFERENCES && (
+                  <TrainingPreferencesStep 
+                    onNext={handleNext} 
+                    onPrevious={handlePrevious}
+                    onUpdateData={(data) => updateStepData(OnboardingStep.TRAINING_PREFERENCES, data)}
+                    initialData={onboardingData.trainingPreferences}
+                  />
+                )}
+                {currentStep === OnboardingStep.SUMMARY && (
+                  <SummaryStep 
+                    onPrevious={handlePrevious}
+                    onComplete={handleComplete}
+                    onboardingData={onboardingData}
+                    isLoading={completeOnboardingMutation.isPending}
+                  />
+                )}
+              </div>
+
+              {/* Navigation Footer */}
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/10">
+                <Button
+                  variant="ghost"
+                  onClick={handlePrevious}
+                  disabled={currentStep === OnboardingStep.WELCOME}
+                  className="text-white/70 hover:text-white hover:bg-white/10"
                 >
-                  {completeOnboardingMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Complete Setup
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Previous
                 </Button>
-              )}
-            </CardFooter>
-          </Tabs>
-        </Card>
+
+                <div className="text-sm text-white/60">
+                  Step {stepOrder.indexOf(currentStep) + 1} of {stepOrder.length}
+                </div>
+
+                {currentStep === OnboardingStep.SUMMARY ? (
+                  <Button 
+                    onClick={() => handleComplete()}
+                    disabled={completeOnboardingMutation.isPending}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0"
+                  >
+                    {completeOnboardingMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Complete Setup
+                    <CheckCircle className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0"
+                  >
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Help Text */}
+          <div className="text-center mt-6">
+            <p className="text-white/60 text-sm">
+              Take your time to provide accurate information for the best personalized experience
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

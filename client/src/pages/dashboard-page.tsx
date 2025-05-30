@@ -11,12 +11,32 @@ import { EnergyLevelCard } from "@/components/dashboard/energy-level-card";
 import { MotivationalQuoteCard, DailyMotivation } from "@/components/dashboard/motivational-quote";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
-import { Plus } from "lucide-react";
+import { Link, Redirect } from "wouter";
+import { Plus, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 
 export default function DashboardPage() {
   const { user } = useAuth();
+
+  // Check onboarding status
+  const { data: onboardingStatus, isLoading: isLoadingOnboarding } = useQuery({
+    queryKey: ["/api/onboarding/status"],
+    enabled: !!user,
+  });
+
+  // Redirect to onboarding if not completed
+  if (!isLoadingOnboarding && onboardingStatus && !onboardingStatus.completed) {
+    return <Redirect to="/onboarding" />;
+  }
+
+  if (isLoadingOnboarding) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen max-w-full">
