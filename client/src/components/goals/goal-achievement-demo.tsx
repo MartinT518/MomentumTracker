@@ -19,7 +19,7 @@ export function GoalAchievementDemo() {
           id: Math.floor(Math.random() * 10000), // Random ID for demo
           user_id: 1,
           title: '100km Club',
-          description: "You've run a total of 100 kilometers since joining MomentumRun!",
+          description: "You've run a total of 100 kilometers since joining AetherRun!",
           achievement_type: 'milestone',
           badge_image: '/assets/badges/milestone-badge.svg',
           earned_at: new Date(),

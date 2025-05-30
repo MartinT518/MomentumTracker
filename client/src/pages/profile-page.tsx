@@ -105,7 +105,7 @@ export default function ProfilePage() {
     // In a real implementation, direct user to download the companion iOS app
     toast({
       title: "Apple Health",
-      description: "Download our iOS app to connect Apple Health data. Search 'MomentumRun' on the App Store.",
+      description: "Download our iOS app to connect Apple Health data. Search 'AetherRun' on the App Store.",
     });
   };
 

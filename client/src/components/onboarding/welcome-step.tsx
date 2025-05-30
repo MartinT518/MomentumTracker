@@ -18,7 +18,7 @@ export default function WelcomeStep({ onNext, user }: WelcomeStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center pb-4">
-        <h1 className="text-3xl font-bold mb-2">Welcome to MomentumRun, {user.first_name || user.username}!</h1>
+        <h1 className="text-3xl font-bold mb-2">Welcome to AetherRun, {user.first_name || user.username}!</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Let's set up your personalized experience to help you achieve your fitness goals.
         </p>
