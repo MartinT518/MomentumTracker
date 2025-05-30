@@ -39,7 +39,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen max-w-full">
+    <div className="flex min-h-screen max-w-full animated-gradient">
       <Sidebar />
       <MobileMenu />
 
@@ -50,8 +50,8 @@ export default function DashboardPage() {
         {/* User Greeting */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold font-heading text-neutral-darker">Welcome back, {user?.username || 'Runner'}!</h1>
-            <p className="text-neutral-medium mt-1">You're making great progress on your training.</p>
+            <h1 className="text-2xl font-bold font-heading text-white">Welcome back, {user?.username || 'Runner'}!</h1>
+            <p className="text-white/80 mt-1">You're making great progress on your training.</p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3">
             <Link href="/activities">
@@ -76,19 +76,19 @@ export default function DashboardPage() {
 
         {/* Today's Workout - Moved to the top */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Workout</h2>
+          <h2 className="text-xl font-semibold font-heading text-white mb-4">Today's Workout</h2>
           <TodaysWorkout />
         </div>
         
         {/* Weekly Overview */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">This Week's Overview</h2>
+          <h2 className="text-xl font-semibold font-heading text-white mb-4">This Week's Overview</h2>
           <WeeklyMetrics />
         </div>
         
         {/* Energy Level - Moved to a separate row and made full width */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Today's Energy</h2>
+          <h2 className="text-xl font-semibold font-heading text-white mb-4">Today's Energy</h2>
           <EnergyLevelCard />
         </div>
 
@@ -98,19 +98,19 @@ export default function DashboardPage() {
         {/* Training Plan Schedule */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Upcoming Workouts</h2>
+            <h2 className="text-xl font-semibold font-heading text-white mb-4">Upcoming Workouts</h2>
             <TrainingCalendar />
           </div>
 
           <div>
             {/* Weekly Progress */}
-            <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Weekly Progress</h2>
+            <h2 className="text-xl font-semibold font-heading text-white mb-4">Weekly Progress</h2>
             <WeeklyProgress />
           </div>
         </div>
 
         {/* Recent Activities */}
-        <h2 className="text-xl font-semibold font-heading text-neutral-darker mb-4">Recent Activities</h2>
+        <h2 className="text-xl font-semibold font-heading text-white mb-4">Recent Activities</h2>
         <RecentActivities />
       </main>
     </div>
