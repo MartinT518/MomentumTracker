@@ -30,41 +30,41 @@ export function TodaysWorkout() {
   const workout = data || placeholderWorkout;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-4 md:p-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
-          <div className="rounded-md bg-primary-light/30 p-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
+          <div className="rounded-md bg-cyan-400/30 p-2">
+            <BarChart3 className="h-5 w-5 text-cyan-300" />
           </div>
-          <h3 className="ml-3 text-lg font-medium">{workout.type}</h3>
+          <h3 className="ml-3 text-lg font-medium text-white">{workout.type}</h3>
         </div>
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary-dark">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-400/30 text-cyan-200">
           Today
         </span>
       </div>
       
-      <div className="border-t border-gray-100 pt-3 pb-1">
+      <div className="border-t border-white/20 pt-3 pb-1">
         <div className="flex justify-between mb-2">
-          <span className="text-neutral-medium">Target Distance</span>
-          <span className="font-medium">{workout.targetDistance}</span>
+          <span className="text-white/70">Target Distance</span>
+          <span className="font-medium text-white">{workout.targetDistance}</span>
         </div>
         <div className="flex justify-between mb-2">
-          <span className="text-neutral-medium">Target Pace</span>
-          <span className="font-medium">{workout.targetPace}</span>
+          <span className="text-white/70">Target Pace</span>
+          <span className="font-medium text-white">{workout.targetPace}</span>
         </div>
         <div className="flex justify-between mb-2">
-          <span className="text-neutral-medium">Zone</span>
-          <span className="font-medium">{workout.zone}</span>
+          <span className="text-white/70">Zone</span>
+          <span className="font-medium text-white">{workout.zone}</span>
         </div>
         <div className="flex justify-between mb-3">
-          <span className="text-neutral-medium">Estimated Time</span>
-          <span className="font-medium">{workout.estimatedTime}</span>
+          <span className="text-white/70">Estimated Time</span>
+          <span className="font-medium text-white">{workout.estimatedTime}</span>
         </div>
       </div>
       
-      <div className="border-t border-gray-100 pt-3">
-        <h4 className="font-medium mb-2">Workout Notes</h4>
-        <p className="text-neutral-medium text-sm">{workout.notes}</p>
+      <div className="border-t border-white/20 pt-3">
+        <h4 className="font-medium mb-2 text-white">Workout Notes</h4>
+        <p className="text-white/70 text-sm">{workout.notes}</p>
       </div>
       
       <div className="mt-4 flex space-x-3">
