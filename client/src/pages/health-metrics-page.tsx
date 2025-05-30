@@ -969,13 +969,13 @@ export default function HealthMetricsPage() {
                               <div className="text-xl font-medium text-white drop-shadow-sm">{latestMetric.hrv_score || "-"}</div>
                               <div className="text-xs text-white/70 drop-shadow-sm">HRV Score</div>
                             </div>
-                            <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
+                            <div className="flex flex-col items-center p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                               <div className="flex items-center mb-1">
                                 <Heart className="h-5 w-5 text-purple-500" />
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                                      <HelpCircle className="h-3.5 w-3.5 text-white/70 ml-1 cursor-help" />
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-72">
                                       <p>Resting Heart Rate is your heart rate when completely at rest. Lower values typically indicate better cardiovascular fitness. Elite endurance athletes often have RHR between 40-50 bpm.</p>
@@ -983,16 +983,16 @@ export default function HealthMetricsPage() {
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
-                              <div className="text-xl font-medium">{latestMetric.resting_heart_rate || "-"}</div>
-                              <div className="text-xs text-muted-foreground">Resting HR</div>
+                              <div className="text-xl font-medium text-white drop-shadow-sm">{latestMetric.resting_heart_rate || "-"}</div>
+                              <div className="text-xs text-white/70 drop-shadow-sm">Resting HR</div>
                             </div>
-                            <div className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
+                            <div className="flex flex-col items-center p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                               <div className="flex items-center mb-1">
                                 <Moon className="h-5 w-5 text-blue-500" />
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-help" />
+                                      <HelpCircle className="h-3.5 w-3.5 text-white/70 ml-1 cursor-help" />
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-72">
                                       <p>Sleep Quality rates how restorative your sleep was on a scale of 1-10. Quality sleep is essential for recovery and adaptation to training. Higher scores indicate better recovery potential.</p>
@@ -1000,8 +1000,8 @@ export default function HealthMetricsPage() {
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
-                              <div className="text-xl font-medium">{latestMetric.sleep_quality || "-"}/10</div>
-                              <div className="text-xs text-muted-foreground">Sleep Quality</div>
+                              <div className="text-xl font-medium text-white drop-shadow-sm">{latestMetric.sleep_quality || "-"}/10</div>
+                              <div className="text-xs text-white/70 drop-shadow-sm">Sleep Quality</div>
                             </div>
                           </div>
                         )}
@@ -1011,13 +1011,17 @@ export default function HealthMetricsPage() {
                 </Card>
 
                 {/* Recent Metrics Chart */}
-                <Card>
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                   <CardHeader>
-                    <CardTitle className="text-lg font-medium">Recent Health Trends</CardTitle>
-                    <CardDescription>Your key health metrics over time</CardDescription>
+                    <CardTitle className="text-lg font-medium text-white drop-shadow-sm">Recent Health Trends</CardTitle>
+                    <CardDescription className="text-white/80 drop-shadow-sm">Your key health metrics over time</CardDescription>
                     <div className="flex space-x-2 mt-2">
                       <Button 
                         variant={timeRange === "7days" ? "default" : "outline"}
+                        className={timeRange === "7days" ? 
+                          "bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30" : 
+                          "bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+                        }
                         size="sm"
                         onClick={() => setTimeRange("7days")}
                       >
@@ -1025,6 +1029,10 @@ export default function HealthMetricsPage() {
                       </Button>
                       <Button 
                         variant={timeRange === "30days" ? "default" : "outline"}
+                        className={timeRange === "30days" ? 
+                          "bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30" : 
+                          "bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+                        }
                         size="sm"
                         onClick={() => setTimeRange("30days")}
                       >
@@ -1032,6 +1040,10 @@ export default function HealthMetricsPage() {
                       </Button>
                       <Button 
                         variant={timeRange === "90days" ? "default" : "outline"}
+                        className={timeRange === "90days" ? 
+                          "bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30" : 
+                          "bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+                        }
                         size="sm"
                         onClick={() => setTimeRange("90days")}
                       >
@@ -1078,10 +1090,10 @@ export default function HealthMetricsPage() {
           
           {/* Trends Tab */}
           <TabsContent value="trends" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle className="text-lg font-medium">Energy Level Analysis</CardTitle>
-                <CardDescription>Track your energy level changes over time</CardDescription>
+                <CardTitle className="text-lg font-medium text-white drop-shadow-sm">Energy Level Analysis</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">Track your energy level changes over time</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -1120,10 +1132,10 @@ export default function HealthMetricsPage() {
             </Card>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardHeader>
-                  <CardTitle className="text-lg font-medium">HRV & Resting Heart Rate</CardTitle>
-                  <CardDescription>Track your heart health metrics</CardDescription>
+                  <CardTitle className="text-lg font-medium text-white drop-shadow-sm">HRV & Resting Heart Rate</CardTitle>
+                  <CardDescription className="text-white/80 drop-shadow-sm">Track your heart health metrics</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-72">
@@ -1150,10 +1162,10 @@ export default function HealthMetricsPage() {
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardHeader>
-                  <CardTitle className="text-lg font-medium">Sleep Metrics</CardTitle>
-                  <CardDescription>Track your sleep quality and duration</CardDescription>
+                  <CardTitle className="text-lg font-medium text-white drop-shadow-sm">Sleep Metrics</CardTitle>
+                  <CardDescription className="text-white/80 drop-shadow-sm">Track your sleep quality and duration</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-72">
@@ -1197,32 +1209,32 @@ export default function HealthMetricsPage() {
           
           {/* Raw Data Tab */}
           <TabsContent value="data" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg font-medium">Health Metrics Log</CardTitle>
+                  <CardTitle className="text-lg font-medium text-white drop-shadow-sm">Health Metrics Log</CardTitle>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setTimeRange("7days")}>
+                    <Button variant="outline" size="sm" className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30" onClick={() => setTimeRange("7days")}>
                       7 Days
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setTimeRange("30days")}>
+                    <Button variant="outline" size="sm" className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30" onClick={() => setTimeRange("30days")}>
                       30 Days
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setTimeRange("90days")}>
+                    <Button variant="outline" size="sm" className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30" onClick={() => setTimeRange("90days")}>
                       90 Days
                     </Button>
                   </div>
                 </div>
-                <CardDescription>Your recorded health data</CardDescription>
+                <CardDescription className="text-white/80 drop-shadow-sm">Your recorded health data</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <div className="flex justify-center p-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-white" />
                   </div>
                 ) : healthMetrics.length === 0 ? (
                   <div className="text-center py-6">
-                    <p className="text-muted-foreground">No health data available for this period.</p>
+                    <p className="text-white/70 drop-shadow-sm">No health data available for this period.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
