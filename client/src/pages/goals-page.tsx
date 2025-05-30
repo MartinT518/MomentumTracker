@@ -795,12 +795,12 @@ export default function GoalsPage() {
         </Tabs>
         {/* Goal Detail Dialog */}
         <Dialog open={showGoalDetail} onOpenChange={setShowGoalDetail}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white/10 backdrop-blur-sm border-white/20">
             <DialogHeader>
-              <DialogTitle className="flex items-center">
+              <DialogTitle className="flex items-center text-white drop-shadow-sm">
                 {selectedGoal && (
                   <>
-                    {getGoalTypeIcon(selectedGoal.type, "h-5 w-5 mr-2")}
+                    {getGoalTypeIcon(selectedGoal.type, "h-5 w-5 mr-2 text-white")}
                     {selectedGoal.type === "race" 
                       ? `${selectedGoal.distance} Race Goal` 
                       : selectedGoal.type === "weight" 
@@ -809,7 +809,7 @@ export default function GoalsPage() {
                   </>
                 )}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-white/80 drop-shadow-sm">
                 {selectedGoal && !isEditMode && (
                   <>
                     {selectedGoal.status && getStatusBadge(selectedGoal.status)}
@@ -823,7 +823,7 @@ export default function GoalsPage() {
                   </>
                 )}
                 {isEditMode && selectedGoal && (
-                  <span className="text-amber-500">Editing goal details</span>
+                  <span className="text-amber-300 drop-shadow-sm">Editing goal details</span>
                 )}
               </DialogDescription>
             </DialogHeader>
@@ -832,40 +832,40 @@ export default function GoalsPage() {
               <div className="py-4">
                 {/* Goal stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  <div className="bg-neutral-50 rounded-lg p-3">
-                    <div className="text-sm text-neutral-500 mb-1">Status</div>
-                    <div className="font-semibold flex items-center">
-                      {selectedGoal.status === "on-track" && <ThumbsUp className="w-4 h-4 mr-1 text-green-500" />}
-                      {selectedGoal.status === "at-risk" && <Clock className="w-4 h-4 mr-1 text-yellow-500" />}
-                      {selectedGoal.status === "behind" && <ThumbsUp className="w-4 h-4 mr-1 text-red-500" />}
-                      {selectedGoal.status === "achieved" && <Award className="w-4 h-4 mr-1 text-blue-500" />}
-                      {selectedGoal.status === "exceeded" && <Trophy className="w-4 h-4 mr-1 text-purple-500" />}
+                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                    <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Status</div>
+                    <div className="font-semibold flex items-center text-white drop-shadow-sm">
+                      {selectedGoal.status === "on-track" && <ThumbsUp className="w-4 h-4 mr-1 text-green-400" />}
+                      {selectedGoal.status === "at-risk" && <Clock className="w-4 h-4 mr-1 text-yellow-400" />}
+                      {selectedGoal.status === "behind" && <ThumbsUp className="w-4 h-4 mr-1 text-red-400" />}
+                      {selectedGoal.status === "achieved" && <Award className="w-4 h-4 mr-1 text-blue-400" />}
+                      {selectedGoal.status === "exceeded" && <Trophy className="w-4 h-4 mr-1 text-purple-400" />}
                       {selectedGoal.status.charAt(0).toUpperCase() + selectedGoal.status.slice(1).replace('-', ' ')}
                     </div>
                   </div>
                   
-                  <div className="bg-neutral-50 rounded-lg p-3">
-                    <div className="text-sm text-neutral-500 mb-1">
+                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                    <div className="text-sm text-white/70 mb-1 drop-shadow-sm">
                       {selectedGoal.completedDate ? "Completed" : "Target Date"}
                     </div>
-                    <div className="font-semibold">
+                    <div className="font-semibold text-white drop-shadow-sm">
                       {selectedGoal.completedDate || selectedGoal.targetDate}
                     </div>
                   </div>
                   
                   {selectedGoal.progress !== undefined && (
-                    <div className="bg-neutral-50 rounded-lg p-3">
-                      <div className="text-sm text-neutral-500 mb-1">Progress</div>
-                      <div className="font-semibold">{selectedGoal.progress}%</div>
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                      <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Progress</div>
+                      <div className="font-semibold text-white drop-shadow-sm">{selectedGoal.progress}%</div>
                     </div>
                   )}
                   
                   {selectedGoal.type === "race" && (
-                    <div className="bg-neutral-50 rounded-lg p-3">
-                      <div className="text-sm text-neutral-500 mb-1">
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                      <div className="text-sm text-white/70 mb-1 drop-shadow-sm">
                         {selectedGoal.actualTime ? "Actual Time" : "Target Time"}
                       </div>
-                      <div className="font-semibold">
+                      <div className="font-semibold text-white drop-shadow-sm">
                         {selectedGoal.actualTime || selectedGoal.targetTime}
                       </div>
                     </div>
@@ -873,14 +873,14 @@ export default function GoalsPage() {
                   
                   {selectedGoal.type === "weight" && (
                     <>
-                      <div className="bg-neutral-50 rounded-lg p-3">
-                        <div className="text-sm text-neutral-500 mb-1">Starting Weight</div>
-                        <div className="font-semibold">{selectedGoal.startingWeight}</div>
+                      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                        <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Starting Weight</div>
+                        <div className="font-semibold text-white drop-shadow-sm">{selectedGoal.startingWeight}</div>
                       </div>
                       
-                      <div className="bg-neutral-50 rounded-lg p-3">
-                        <div className="text-sm text-neutral-500 mb-1">Current Weight</div>
-                        <div className="font-semibold">{selectedGoal.currentWeight}</div>
+                      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                        <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Current Weight</div>
+                        <div className="font-semibold text-white drop-shadow-sm">{selectedGoal.currentWeight}</div>
                       </div>
                     </>
                   )}
@@ -888,18 +888,18 @@ export default function GoalsPage() {
                 
                 {/* Goal Visualization Component */}
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-3">Interactive Goal Visualization</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-white drop-shadow-sm">Interactive Goal Visualization</h3>
                   <GoalVisualization goal={selectedGoal} />
                 </div>
                 
                 {/* Race pace prediction section */}
                 {selectedGoal.type === "race" && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Race Predictions</h3>
-                    <Card>
+                    <h3 className="text-lg font-semibold mb-3 text-white drop-shadow-sm">Race Predictions</h3>
+                    <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-md">Target Pace: {calculatePace(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k")}</CardTitle>
-                        <CardDescription>
+                        <CardTitle className="text-md text-white drop-shadow-sm">Target Pace: {calculatePace(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k")}</CardTitle>
+                        <CardDescription className="text-white/80 drop-shadow-sm">
                           Equivalent performances at other distances
                         </CardDescription>
                       </CardHeader>
