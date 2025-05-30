@@ -121,9 +121,9 @@ export function ProgressCharts() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       {/* Distance Over Time Chart */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 md:p-6 shadow-xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold font-heading text-neutral-darker">Distance Progression</h3>
+          <h3 className="text-lg font-semibold font-heading text-white drop-shadow-lg">Distance Progression</h3>
           <div className="flex space-x-2">
             <Button 
               variant={distanceTimeRange === "week" ? "secondary" : "ghost"} 
@@ -187,9 +187,9 @@ export function ProgressCharts() {
       </div>
       
       {/* Pace Improvement Chart */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 md:p-6 shadow-xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold font-heading text-neutral-darker">Pace Improvement</h3>
+          <h3 className="text-lg font-semibold font-heading text-white drop-shadow-lg">Pace Improvement</h3>
           <div className="flex space-x-2">
             <Button 
               variant={paceTimeRange === "week" ? "secondary" : "ghost"} 
@@ -219,7 +219,7 @@ export function ProgressCharts() {
         </div>
         
         <div className="flex items-center justify-between mb-3">
-          <div className="text-sm text-neutral-medium">Group by run type:</div>
+          <div className="text-sm text-white/70">Group by run type:</div>
           <Select value={selectedRunType} onValueChange={(value) => setSelectedRunType(value as RunType)}>
             <SelectTrigger className="w-[180px] h-8 text-xs">
               <SelectValue placeholder="All Run Types" />
