@@ -256,20 +256,20 @@ export function DailyMotivation() {
   const todayMotivation = motivationMap[dayOfWeek];
   
   return (
-    <div className="bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent p-5 rounded-xl mb-6 shadow-sm border border-primary/10 overflow-hidden relative">
+    <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-5 rounded-xl mb-6 shadow-xl overflow-hidden relative">
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <path d="M50,10 L90,50 L50,90 L10,50 Z" fill="currentColor" className="text-primary" />
-          <circle cx="50" cy="50" r="20" fill="currentColor" className="text-secondary" />
+          <path d="M50,10 L90,50 L50,90 L10,50 Z" fill="currentColor" className="text-white/20" />
+          <circle cx="50" cy="50" r="20" fill="currentColor" className="text-white/30" />
         </svg>
       </div>
       <div className="flex items-start z-10 relative">
-        <div className="bg-white/80 rounded-full p-3 shadow-sm flex-shrink-0 mr-5">
-          <Sparkles className="h-7 w-7 text-primary" />
+        <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 shadow-lg flex-shrink-0 mr-5 border border-white/30">
+          <Sparkles className="h-7 w-7 text-white" />
         </div>
         <div>
-          <h3 className="font-bold text-lg text-neutral-darker mb-1">{todayMotivation.title}</h3>
-          <p className="text-neutral-medium leading-relaxed">{todayMotivation.message}</p>
+          <h3 className="font-bold text-lg text-white mb-1 drop-shadow-lg">{todayMotivation.title}</h3>
+          <p className="text-white/90 leading-relaxed drop-shadow-md">{todayMotivation.message}</p>
         </div>
       </div>
     </div>

@@ -48,17 +48,17 @@ export function WeeklyMetrics() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
       {/* Weekly Distance Card */}
-      <div className="glass-card rounded-xl p-4 flex items-center">
-        <div className="rounded-full bg-primary-light/30 p-3 mr-4">
-          <BarChart3 className="h-6 w-6 text-primary" />
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 flex items-center shadow-xl hover:bg-white/15 transition-all duration-300">
+        <div className="rounded-full bg-white/20 backdrop-blur-sm p-3 mr-4 border border-white/30">
+          <BarChart3 className="h-6 w-6 text-white" />
         </div>
         <div>
-          <p className="text-neutral-medium text-sm">Weekly Distance</p>
+          <p className="text-white/70 text-sm">Weekly Distance</p>
           <div className="flex items-baseline">
-            <span className="text-2xl font-semibold metric-value text-neutral-darker">{metricsData.distance.value}</span>
-            <span className="ml-1 text-neutral-medium text-sm">{metricsData.distance.unit}</span>
+            <span className="text-2xl font-semibold text-white drop-shadow-lg">{metricsData.distance.value}</span>
+            <span className="ml-1 text-white/80 text-sm">{metricsData.distance.unit}</span>
           </div>
-          <p className="text-xs text-accent flex items-center mt-1">
+          <p className="text-xs text-green-300 flex items-center mt-1">
             <ArrowUp className="h-3 w-3 mr-1" />
             {metricsData.distance.change}% from last week
           </p>
@@ -66,17 +66,17 @@ export function WeeklyMetrics() {
       </div>
       
       {/* Average Pace Card */}
-      <div className="glass-card rounded-xl p-4 flex items-center">
-        <div className="rounded-full bg-secondary-light/30 p-3 mr-4">
-          <Timer className="h-6 w-6 text-secondary" />
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 flex items-center shadow-xl hover:bg-white/15 transition-all duration-300">
+        <div className="rounded-full bg-white/20 backdrop-blur-sm p-3 mr-4 border border-white/30">
+          <Timer className="h-6 w-6 text-white" />
         </div>
         <div>
-          <p className="text-neutral-medium text-sm">Average Pace</p>
+          <p className="text-white/70 text-sm">Average Pace</p>
           <div className="flex items-baseline">
-            <span className="text-2xl font-semibold metric-value text-neutral-darker">{metricsData.pace.value}</span>
-            <span className="ml-1 text-neutral-medium text-sm">{metricsData.pace.unit}</span>
+            <span className="text-2xl font-semibold text-white drop-shadow-lg">{metricsData.pace.value}</span>
+            <span className="ml-1 text-white/80 text-sm">{metricsData.pace.unit}</span>
           </div>
-          <p className="text-xs text-accent flex items-center mt-1">
+          <p className="text-xs text-green-300 flex items-center mt-1">
             <ArrowUp className="h-3 w-3 mr-1" />
             {metricsData.pace.change} than last week
           </p>
@@ -84,17 +84,17 @@ export function WeeklyMetrics() {
       </div>
       
       {/* Active Time Card */}
-      <div className="glass-card rounded-xl p-4 flex items-center">
-        <div className="rounded-full bg-accent-light/30 p-3 mr-4">
-          <Timer className="h-6 w-6 text-accent" />
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 flex items-center shadow-xl hover:bg-white/15 transition-all duration-300">
+        <div className="rounded-full bg-white/20 backdrop-blur-sm p-3 mr-4 border border-white/30">
+          <Timer className="h-6 w-6 text-white" />
         </div>
         <div>
-          <p className="text-neutral-medium text-sm">Active Time</p>
+          <p className="text-white/70 text-sm">Active Time</p>
           <div className="flex items-baseline">
-            <span className="text-2xl font-semibold metric-value text-neutral-darker">{metricsData.activeTime.value}</span>
-            <span className="ml-1 text-neutral-medium text-sm">{metricsData.activeTime.unit}</span>
+            <span className="text-2xl font-semibold text-white drop-shadow-lg">{metricsData.activeTime.value}</span>
+            <span className="ml-1 text-white/80 text-sm">{metricsData.activeTime.unit}</span>
           </div>
-          <p className="text-xs text-accent flex items-center mt-1">
+          <p className="text-xs text-green-300 flex items-center mt-1">
             <ArrowUp className="h-3 w-3 mr-1" />
             {metricsData.activeTime.change} than last week
           </p>
