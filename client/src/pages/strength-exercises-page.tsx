@@ -915,6 +915,7 @@ export default function StrengthExercisesPage() {
           </>
         )}
       </main>
+      </div>
     </div>
   );
 }
