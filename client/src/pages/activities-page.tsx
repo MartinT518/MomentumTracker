@@ -697,6 +697,7 @@ export default function ActivitiesPage() {
           </Tabs>
         </div>
       </main>
+      </div>
     </div>
   );
 }

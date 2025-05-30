@@ -218,11 +218,13 @@ export default function NutritionPage() {
   }
 
   return (
-    <PageLayout>
-      <PageTitle 
-        title="Nutrition" 
-        description="Fuel your training with personalized meal plans"
-      />
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+      <PageLayout>
+        <PageTitle 
+          title="Nutrition" 
+          description="Fuel your training with personalized meal plans"
+          className="text-white"
+        />
       
       <Tabs 
         value={activeTab} 
@@ -252,6 +254,7 @@ export default function NutritionPage() {
           <NutritionPreferences />
         </TabsContent>
       </Tabs>
-    </PageLayout>
+      </PageLayout>
+    </div>
   );
 }
