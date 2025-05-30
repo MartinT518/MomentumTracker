@@ -39,14 +39,18 @@ describe('User Registration Integration Test', () => {
   });
 
   beforeEach(async () => {
-    // Clean up any existing test user
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.username, 'testuser')
-    });
+    // Clean up all test users
+    const testUsernames = ['testuser', 'duplicateuser', 'loginuser', 'logoutuser'];
     
-    if (existingUser) {
-      await db.delete(onboarding_status).where(eq(onboarding_status.user_id, existingUser.id));
-      await db.delete(users).where(eq(users.id, existingUser.id));
+    for (const username of testUsernames) {
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.username, username)
+      });
+      
+      if (existingUser) {
+        await db.delete(onboarding_status).where(eq(onboarding_status.user_id, existingUser.id));
+        await db.delete(users).where(eq(users.id, existingUser.id));
+      }
     }
   });
 
