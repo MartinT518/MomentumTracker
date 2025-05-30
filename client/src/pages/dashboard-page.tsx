@@ -43,7 +43,7 @@ export default function DashboardPage() {
       <Sidebar />
       <MobileMenu />
 
-      <main className="flex-1 overflow-y-auto bg-neutral-lighter pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
+      <main className="flex-1 overflow-y-auto pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
         {/* For mobile view padding to account for fixed header */}
         <div className="md:hidden pt-20"></div>
 
