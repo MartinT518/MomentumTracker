@@ -243,39 +243,7 @@ export default function OnboardingPage() {
           {/* Main Content Card */}
           <Card className="bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl">
             <CardContent className="p-8">
-              {/* Step Navigation */}
-              <div className="flex justify-center mb-8">
-                <div className="flex space-x-2 p-1 bg-white/5 rounded-full backdrop-blur-sm border border-white/10">
-                  {[
-                    { step: OnboardingStep.WELCOME, icon: Zap, label: "Welcome" },
-                    { step: OnboardingStep.FITNESS_GOALS, icon: Target, label: "Goals" },
-                    { step: OnboardingStep.EXPERIENCE, icon: Trophy, label: "Experience" },
-                    { step: OnboardingStep.TRAINING_PREFERENCES, icon: Users, label: "Preferences" },
-                    { step: OnboardingStep.SUMMARY, icon: CheckCircle, label: "Summary" }
-                  ].map(({ step, icon: Icon, label }, index) => {
-                    const isActive = currentStep === step;
-                    const isCompleted = stepOrder.indexOf(currentStep) > index;
-                    
-                    return (
-                      <button
-                        key={step}
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all ${
-                          isActive
-                            ? "bg-cyan-500/30 text-cyan-100 shadow-lg"
-                            : isCompleted
-                            ? "bg-green-500/20 text-green-200"
-                            : "text-white/60 hover:text-white/80"
-                        }`}
-                        onClick={() => handleStepChange(step)}
-                        disabled={!isCompleted && !isActive}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="text-sm font-medium">{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+
 
               {/* Step Content */}
               <div className="min-h-[400px]">
