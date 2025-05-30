@@ -177,15 +177,42 @@ export default function OnboardingPage() {
     }
   }, [onboardingStatus, setLocation]);
 
+  // Save current step data before navigation
+  const saveCurrentStepData = async () => {
+    try {
+      switch (currentStep) {
+        case OnboardingStep.FITNESS_GOALS:
+          if (onboardingData.fitnessGoals) {
+            await apiRequest("POST", "/api/onboarding/fitness-goals", onboardingData.fitnessGoals);
+          }
+          break;
+        case OnboardingStep.EXPERIENCE:
+          if (onboardingData.experience) {
+            await apiRequest("POST", "/api/onboarding/user-experience", onboardingData.experience);
+          }
+          break;
+        case OnboardingStep.TRAINING_PREFERENCES:
+          if (onboardingData.trainingPreferences) {
+            await apiRequest("POST", "/api/onboarding/training-preferences", onboardingData.trainingPreferences);
+          }
+          break;
+      }
+    } catch (error) {
+      console.warn("Failed to save step data:", error);
+    }
+  };
+
   // Navigation handlers
-  const handleNext = () => {
+  const handleNext = async () => {
+    await saveCurrentStepData();
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex < stepOrder.length - 1) {
       setCurrentStep(stepOrder[currentIndex + 1]);
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
+    await saveCurrentStepData();
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       setCurrentStep(stepOrder[currentIndex - 1]);
