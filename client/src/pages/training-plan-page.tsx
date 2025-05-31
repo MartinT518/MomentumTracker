@@ -455,7 +455,10 @@ export default function TrainingPlanPage() {
                 </Button>
               </div>
             ) : (
-              <PlanAdjustmentTool />
+              <PlanAdjustmentTool 
+                currentPlan={aiPlan} 
+                onApplyChanges={handlePlanAdjustment}
+              />
             )}
           </TabsContent>
           
