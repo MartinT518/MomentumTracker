@@ -52,21 +52,21 @@ const DraggableWorkout = ({ workout, dayDate, onWorkoutClick, moveWorkout }: Dra
     })
   }));
 
-  // Get intensity color
+  // Get intensity color with glassmorphism
   const getIntensityColor = (intensity: string) => {
     switch (intensity) {
       case 'easy':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500/20 text-green-200 border-green-400/30';
       case 'moderate':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500/20 text-blue-200 border-blue-400/30';
       case 'hard':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-500/20 text-orange-200 border-orange-400/30';
       case 'recovery':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-500/20 text-purple-200 border-purple-400/30';
       case 'race':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500/20 text-red-200 border-red-400/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white/20 text-white/80 border-white/30';
     }
   };
 
@@ -75,14 +75,14 @@ const DraggableWorkout = ({ workout, dayDate, onWorkoutClick, moveWorkout }: Dra
       ref={drag}
       onClick={() => onWorkoutClick(workout)}
       className={cn(
-        "px-1.5 py-0.5 rounded text-xs cursor-pointer group relative",
+        "px-1.5 py-0.5 rounded text-xs cursor-pointer group relative border backdrop-blur-sm",
         getIntensityColor(workout.intensity),
         workout.completed && "line-through opacity-70",
         isDragging && "opacity-50"
       )}
     >
       <span className="flex justify-between items-center">
-        <span>{workout.type}</span>
+        <span className="drop-shadow-sm">{workout.type}</span>
         <Move className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
       </span>
     </div>
@@ -111,11 +111,11 @@ const DroppableDay = ({ day, onWorkoutClick, moveWorkout }: DroppableDayProps) =
     <div 
       ref={drop}
       className={cn(
-        "h-28 p-2 rounded-lg overflow-y-auto border transition-colors",
+        "h-28 p-2 rounded-lg overflow-y-auto border transition-colors bg-white/5 backdrop-blur-sm",
         day.isCurrentDay 
-          ? "border-primary bg-primary/5" 
-          : "border-gray-200 hover:border-gray-300",
-        isOver && "border-dashed border-blue-500 bg-blue-50"
+          ? "border-blue-400/50 bg-blue-500/10" 
+          : "border-white/20 hover:border-white/30",
+        isOver && "border-dashed border-blue-400 bg-blue-500/20"
       )}
     >
       <div className="flex justify-between items-center mb-1">
@@ -392,15 +392,16 @@ export function TrainingPlanCalendar({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Card>
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-medium">Training Schedule</CardTitle>
+            <CardTitle className="text-lg font-medium text-white drop-shadow-sm">Training Schedule</CardTitle>
             <div className="flex space-x-2">
               <Button 
                 variant={viewMode === 'calendar' ? "default" : "outline"} 
                 size="sm"
                 onClick={() => setViewMode('calendar')}
+                className={viewMode === 'calendar' ? "bg-white/20 text-white border-white/30" : "border-white/30 text-white hover:bg-white/10"}
               >
                 <CalendarIcon className="h-4 w-4 mr-1" />
                 Calendar
@@ -409,6 +410,7 @@ export function TrainingPlanCalendar({
                 variant={viewMode === 'list' ? "default" : "outline"} 
                 size="sm"
                 onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? "bg-white/20 text-white border-white/30" : "border-white/30 text-white hover:bg-white/10"}
               >
                 <List className="h-4 w-4 mr-1" />
                 List
@@ -419,13 +421,13 @@ export function TrainingPlanCalendar({
         <CardContent>
           {/* Month navigation */}
           <div className="flex justify-between items-center mb-4">
-            <Button variant="ghost" size="sm" onClick={prevMonth}>
+            <Button variant="ghost" size="sm" onClick={prevMonth} className="text-white hover:bg-white/10">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <h3 className="text-md font-medium">
+            <h3 className="text-md font-medium text-white drop-shadow-sm">
               {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </h3>
-            <Button variant="ghost" size="sm" onClick={nextMonth}>
+            <Button variant="ghost" size="sm" onClick={nextMonth} className="text-white hover:bg-white/10">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -434,14 +436,14 @@ export function TrainingPlanCalendar({
             <div className="grid grid-cols-7 gap-2">
               {/* Day headers */}
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-gray-500 mb-2">
+                <div key={day} className="text-center text-sm font-medium text-white/70 drop-shadow-sm mb-2">
                   {day}
                 </div>
               ))}
               
               {/* Empty slots for days before the first day of month */}
               {Array.from({ length: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay() }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-28 p-2 rounded-lg bg-gray-50 opacity-50"></div>
+                <div key={`empty-${i}`} className="h-28 p-2 rounded-lg bg-white/5 opacity-50"></div>
               ))}
               
               {/* Calendar days */}
@@ -459,19 +461,19 @@ export function TrainingPlanCalendar({
               {workoutDays
                 .filter(day => day.workouts.length > 0)
                 .map((day) => (
-                  <div key={day.date} className="border rounded-lg p-3">
+                  <div key={day.date} className="bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg p-3">
                     <div className="flex justify-between items-center mb-2">
                       <div className="flex items-center">
-                        <CalendarDays className="h-4 w-4 mr-2 text-gray-500" />
+                        <CalendarDays className="h-4 w-4 mr-2 text-white/70" />
                         <span className={cn(
-                          "font-medium",
-                          day.isCurrentDay && "text-primary"
+                          "font-medium text-white drop-shadow-sm",
+                          day.isCurrentDay && "text-blue-300"
                         )}>
                           {day.date}
                         </span>
                       </div>
                       {day.isCurrentDay && (
-                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                        <span className="text-xs bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded-full">
                           Today
                         </span>
                       )}
