@@ -175,8 +175,8 @@ export default function TrainingPlanPage() {
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold font-heading text-white">Training Plan</h1>
-              <p className="text-white/80 mt-1">View and manage your personalized training schedule</p>
+              <h1 className="text-2xl font-bold font-heading text-white drop-shadow-sm">Training Plan</h1>
+              <p className="text-white/80 mt-1 drop-shadow-sm">View and manage your personalized training schedule</p>
             </div>
           
           {selectedTab === "schedule" && selectedWorkout && (
@@ -407,7 +407,7 @@ export default function TrainingPlanPage() {
           </TabsContent>
 
           {/* Human Coach Tab */}
-          <TabsContent value="human-coach" className="space-y-6">
+          <TabsContent value="coach" className="space-y-6">
             {!hasAnnualSubscription ? (
               <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
                 <Crown className="h-12 w-12 mx-auto text-yellow-300 drop-shadow-md mb-4" />
@@ -455,32 +455,15 @@ export default function TrainingPlanPage() {
                 </Button>
               </div>
             ) : (
-              <PlanAdjustmentTool 
-                currentPlan={aiPlan} 
-                onApplyChanges={handlePlanAdjustment}
-              />
+              <PlanAdjustmentTool />
             )}
           </TabsContent>
           
           <TabsContent value="coach">
-            {!hasSubscription ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center max-w-2xl mx-auto">
-                <BookUser className="h-12 w-12 mx-auto text-primary/60 mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Premium Feature</h2>
-                <p className="text-muted-foreground mb-6">
-                  Access to human coaches is available to premium subscribers only. Upgrade your plan to connect with experienced coaches who can provide personalized guidance.
-                </p>
-                <Button 
-                  size="lg"
-                  asChild
-                >
-                  <Link href="/subscription">Upgrade to Premium</Link>
-                </Button>
-              </div>
-            ) : coachView === 'select' ? (
+            {coachView === 'select' ? (
               isLoadingCoaches ? (
                 <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <Loader2 className="h-8 w-8 animate-spin text-white" />
                 </div>
               ) : (
                 <CoachSelection 
@@ -498,7 +481,7 @@ export default function TrainingPlanPage() {
             )}
           </TabsContent>
         </Tabs>
-      </main>
+        </main>
       </div>
     </div>
   );
