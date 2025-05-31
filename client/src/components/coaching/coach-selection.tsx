@@ -164,25 +164,25 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Select a Coach</h2>
+        <h2 className="text-2xl font-bold text-white drop-shadow-sm">Select a Coach</h2>
       </div>
       
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All Coaches</TabsTrigger>
-          <TabsTrigger value="my">My Coaches</TabsTrigger>
+        <TabsList className="mb-4 bg-white/10 border-white/20">
+          <TabsTrigger value="all" className="text-white/80 data-[state=active]:bg-white/20 data-[state=active]:text-white">All Coaches</TabsTrigger>
+          <TabsTrigger value="my" className="text-white/80 data-[state=active]:bg-white/20 data-[state=active]:text-white">My Coaches</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardHeader className="h-32 bg-gray-200 rounded-t-lg"></CardHeader>
+                <Card key={i} className="animate-pulse bg-white/5 backdrop-blur-sm border-white/20">
+                  <CardHeader className="h-32 bg-white/10 rounded-t-lg"></CardHeader>
                   <CardContent className="space-y-4 py-4">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-24 bg-gray-100 rounded"></div>
+                    <div className="h-4 bg-white/20 rounded w-3/4"></div>
+                    <div className="h-3 bg-white/20 rounded w-1/2"></div>
+                    <div className="h-24 bg-white/10 rounded"></div>
                   </CardContent>
                 </Card>
               ))}
@@ -193,8 +193,8 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
                 const existingSession = findExistingSession(coach.id);
                 
                 return (
-                  <Card key={coach.id} className="overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 pb-2">
+                  <Card key={coach.id} className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
+                    <CardHeader className="bg-gradient-to-r from-white/20 to-white/10 pb-2">
                       <div className="flex items-start">
                         <Avatar className="h-16 w-16 border-2 border-background">
                           <AvatarImage src={coach.profile_image || ''} />

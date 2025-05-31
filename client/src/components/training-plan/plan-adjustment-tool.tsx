@@ -174,22 +174,22 @@ const PlanAdjustmentTool: React.FC<PlanAdjustmentToolProps> = ({ currentPlan, on
 
   return (
     <div className="w-full space-y-4">
-      <Card>
+      <Card className="bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
+          <CardTitle className="text-xl flex items-center gap-2 text-white drop-shadow-sm">
+            <Zap className="h-5 w-5 text-white/80" />
             Training Plan AI Adjustment Tool
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-white/70 drop-shadow-sm">
             Our advanced AI analyzes your performance data and makes intelligent adjustments to your training plan
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="performance">Performance Data</TabsTrigger>
-              <TabsTrigger value="preferences">Preferences</TabsTrigger>
-              <TabsTrigger value="results" disabled={!adjustmentResult}>Results</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-white/10 border-white/20">
+              <TabsTrigger value="performance" className="text-white/80 data-[state=active]:bg-white/20 data-[state=active]:text-white">Performance Data</TabsTrigger>
+              <TabsTrigger value="preferences" className="text-white/80 data-[state=active]:bg-white/20 data-[state=active]:text-white">Preferences</TabsTrigger>
+              <TabsTrigger value="results" disabled={!adjustmentResult} className="text-white/80 data-[state=active]:bg-white/20 data-[state=active]:text-white disabled:text-white/40">Results</TabsTrigger>
             </TabsList>
             
             {/* Performance Data Tab */}
