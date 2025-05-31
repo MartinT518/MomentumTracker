@@ -389,18 +389,18 @@ export default function SubscriptionPage() {
 
   // Feature display component
   const FeatureItem = ({ included, text, isHighlighted = false }: { included: boolean; text: string; isHighlighted?: boolean }) => (
-    <div className={`flex items-center gap-2 mt-2 ${isHighlighted ? 'bg-purple-50 dark:bg-purple-900/20 p-1.5 rounded-md' : ''}`}>
+    <div className={`flex items-center gap-2 mt-2 ${isHighlighted ? 'bg-white/10 p-1.5 rounded-md' : ''}`}>
       {included ? (
-        <CheckCircle2 className={`h-5 w-5 ${isHighlighted ? 'text-purple-600' : 'text-green-500'}`} />
+        <CheckCircle2 className={`h-5 w-5 ${isHighlighted ? 'text-purple-400' : 'text-green-400'}`} />
       ) : (
         <XCircle className="h-5 w-5 text-gray-400" />
       )}
       <span className={included 
-        ? `${isHighlighted ? 'text-purple-900 dark:text-purple-200 font-medium' : 'text-foreground'}`
-        : 'text-muted-foreground'
+        ? `${isHighlighted ? 'text-white font-medium drop-shadow-sm' : 'text-white drop-shadow-sm'}`
+        : 'text-white/60 drop-shadow-sm'
       }>
         {text}
-        {isHighlighted && <span className="ml-1 text-xs text-purple-600 dark:text-purple-300">(Annual only)</span>}
+        {isHighlighted && <span className="ml-1 text-xs text-purple-300 drop-shadow-sm">(Annual only)</span>}
       </span>
     </div>
   );
@@ -449,17 +449,17 @@ export default function SubscriptionPage() {
   // Checkout view when a plan has been selected
   if (selectedPlan && clientSecret) {
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
         <Sidebar />
         <div className="flex-1 space-y-4 p-8 pt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold tracking-tight">Complete Your Subscription</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Complete Your Subscription</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Checkout</CardTitle>
-                <CardDescription>Enter your payment details to subscribe</CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Checkout</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">Enter your payment details to subscribe</CardDescription>
               </CardHeader>
               <CardContent>
                 {stripePromise ? (
@@ -477,10 +477,10 @@ export default function SubscriptionPage() {
                 )}
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-                <CardDescription>Review your subscription details</CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Order Summary</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">Review your subscription details</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -583,18 +583,18 @@ export default function SubscriptionPage() {
           </Card>
           
           {/* Free Plan */}
-          <Card className="border-2 border-muted">
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 border-2">
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Free Plan</CardTitle>
-                {!isSubscribed && <Badge variant="outline">Current</Badge>}
+                <CardTitle className="text-white drop-shadow-sm">Free Plan</CardTitle>
+                {!isSubscribed && <Badge variant="outline" className="bg-white/20 text-white border-white/30">Current</Badge>}
               </div>
-              <CardDescription>Basic training features</CardDescription>
+              <CardDescription className="text-white/80 drop-shadow-sm">Basic training features</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <span className="text-3xl font-bold">$0</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-3xl font-bold text-white drop-shadow-sm">$0</span>
+                <span className="text-white/70 drop-shadow-sm">/month</span>
               </div>
               <div className="space-y-2">
                 <FeatureItem included={true} text="Basic activity tracking" />
@@ -629,25 +629,25 @@ export default function SubscriptionPage() {
             return (
               <Card 
                 key={plan.id} 
-                className={`${isAnnual ? 'border-2 border-purple-500 shadow-lg' : 'border-2 border-primary shadow-md'} transition-all duration-300 hover:shadow-xl`}
+                className={`bg-white/10 backdrop-blur-sm border-white/20 ${isAnnual ? 'border-2 border-purple-400/50' : 'border-2 border-blue-400/50'} transition-all duration-300 hover:shadow-xl`}
               >
-                <CardHeader className={`${isAnnual ? 'bg-purple-50 dark:bg-purple-950/20' : ''}`}>
+                <CardHeader className={`${isAnnual ? 'bg-white/5' : 'bg-white/5'}`}>
                   <div className="flex justify-between items-center">
-                    <CardTitle>{plan.name}</CardTitle>
+                    <CardTitle className="text-white drop-shadow-sm">{plan.name}</CardTitle>
                     {isSubscribed && isAnnual === isAnnualPlan && plan.billing_interval === currentPlanInterval ? (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Current</Badge>
+                      <Badge variant="outline" className="bg-green-200/20 text-green-300 border-green-400/50">Current</Badge>
                     ) : isAnnual ? (
-                      <Badge className="bg-purple-600 hover:bg-purple-700">Best Value</Badge>
+                      <Badge className="bg-purple-500/80 hover:bg-purple-600/80 text-white">Best Value</Badge>
                     ) : (
-                      <Badge>Basic Plan</Badge>
+                      <Badge className="bg-blue-500/80 text-white">Basic Plan</Badge>
                     )}
                   </div>
-                  <CardDescription className="mt-2">{plan.description}</CardDescription>
+                  <CardDescription className="mt-2 text-white/80 drop-shadow-sm">{plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <span className="text-3xl font-bold">${formatPrice(plan.price)}</span>
-                    <span className="text-muted-foreground">/{plan.billing_interval}</span>
+                    <span className="text-3xl font-bold text-white drop-shadow-sm">${formatPrice(plan.price)}</span>
+                    <span className="text-white/70 drop-shadow-sm">/{plan.billing_interval}</span>
                     {isAnnual && (
                       <span className="ml-2 inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-300">
                         Save 20%
