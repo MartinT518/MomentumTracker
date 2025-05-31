@@ -463,7 +463,22 @@ export default function TrainingPlanPage() {
           </TabsContent>
           
           <TabsContent value="coach">
-            {coachView === 'select' ? (
+            {!hasSubscription ? (
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <BookUser className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Premium Feature</h2>
+                <p className="text-white/70 drop-shadow-md mb-6">
+                  Access to human coaches is available to premium subscribers only. Upgrade your plan to connect with experienced coaches who can provide personalized guidance.
+                </p>
+                <Button 
+                  size="lg"
+                  asChild
+                  className="bg-blue-500 hover:bg-blue-400 text-white"
+                >
+                  <Link href="/subscription">Upgrade to Premium</Link>
+                </Button>
+              </div>
+            ) : coachView === 'select' ? (
               isLoadingCoaches ? (
                 <div className="flex justify-center items-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-white" />
