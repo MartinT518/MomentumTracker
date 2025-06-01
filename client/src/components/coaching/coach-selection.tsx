@@ -201,15 +201,15 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
                           <AvatarFallback>{coach.name?.[0]?.toUpperCase() || 'C'}</AvatarFallback>
                         </Avatar>
                         <div className="ml-3 space-y-1">
-                          <CardTitle className="text-lg">{coach.name}</CardTitle>
-                          <CardDescription>
+                          <CardTitle className="text-lg text-white drop-shadow-sm">{coach.name}</CardTitle>
+                          <CardDescription className="text-white/70 drop-shadow-sm">
                             {coach.specialty || 'Running Coach'}
                           </CardDescription>
                           <div className="flex items-center mt-1">
-                            <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                            <span className="text-sm font-medium">
+                            <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                            <span className="text-sm font-medium text-white/80 drop-shadow-sm">
                               {(Math.random() * 2 + 3).toFixed(1)} 
-                              <span className="text-muted-foreground font-normal ml-1">
+                              <span className="text-white/60 font-normal ml-1">
                                 ({Math.floor(Math.random() * 40 + 10)} reviews)
                               </span>
                             </span>
@@ -220,23 +220,23 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
                     
                     <CardContent className="pt-4">
                       <div className="flex mb-3">
-                        <Badge variant="outline" className="mr-2">
+                        <Badge variant="outline" className="mr-2 bg-white/10 border-white/30 text-white/80">
                           {Math.floor(Math.random() * 10 + 3)} yrs exp
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="bg-white/10 border-white/30 text-white/80">
                           {coach.available ? 'Available' : 'Limited Availability'}
                         </Badge>
                       </div>
                       
-                      <p className="text-sm line-clamp-3 mb-3">
+                      <p className="text-sm line-clamp-3 mb-3 text-white/70 drop-shadow-sm">
                         {coach.bio || `${coach.name} is an experienced running coach specializing in ${coach.specialty || 'distance running'}. With a proven track record of helping athletes achieve their goals.`}
                       </p>
                       
                       <div className="space-y-2">
-                        <div className="text-sm font-medium">Specialties:</div>
+                        <div className="text-sm font-medium text-white drop-shadow-sm">Specialties:</div>
                         <div className="flex flex-wrap gap-1.5">
                           {(coach.specialty?.split(',') || ['Marathon', 'Half Marathon', '5K/10K']).map((specialty, i) => (
-                            <Badge key={i} variant="secondary" className="font-normal">
+                            <Badge key={i} variant="secondary" className="font-normal bg-white/15 text-white/80 border-white/20">
                               {specialty.trim()}
                             </Badge>
                           ))}
@@ -245,10 +245,10 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
                       
                       {coach.certifications && (
                         <div className="mt-3 space-y-2">
-                          <div className="text-sm font-medium">Certifications:</div>
+                          <div className="text-sm font-medium text-white drop-shadow-sm">Certifications:</div>
                           <div className="flex flex-wrap gap-1.5">
                             {coach.certifications.split(',').map((cert, i) => (
-                              <Badge key={i} variant="outline" className="font-normal">
+                              <Badge key={i} variant="outline" className="font-normal bg-white/10 border-white/30 text-white/80">
                                 {cert.trim()}
                               </Badge>
                             ))}
@@ -257,10 +257,10 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
                       )}
                     </CardContent>
                     
-                    <CardFooter className="bg-gray-50 dark:bg-gray-900/50 border-t flex justify-between">
+                    <CardFooter className="bg-white/5 border-t border-white/20 flex justify-between">
                       {existingSession ? (
                         <Button 
-                          className="w-full"
+                          className="w-full bg-blue-500 hover:bg-blue-400 text-white border-none"
                           onClick={() => handleContinueWithSession(coach, existingSession.id.toString())}
                         >
                           <Calendar className="mr-2 h-4 w-4" />
@@ -268,7 +268,7 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
                         </Button>
                       ) : (
                         <Button 
-                          className="w-full" 
+                          className="w-full bg-blue-500 hover:bg-blue-400 text-white border-none" 
                           onClick={() => handleCoachSelect(coach)}
                         >
                           Start Coaching
@@ -284,13 +284,14 @@ export function CoachSelection({ onCoachSelected, subscriptionActive }: CoachSel
         
         <TabsContent value="my">
           {sessions.length === 0 ? (
-            <div className="text-center p-8 border rounded-lg">
-              <h3 className="text-lg font-medium mb-2">No Active Coaching Sessions</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className="text-center p-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
+              <h3 className="text-lg font-medium mb-2 text-white drop-shadow-sm">No Active Coaching Sessions</h3>
+              <p className="text-white/70 drop-shadow-sm mb-4">
                 You don't have any active coaching sessions. Select a coach to get started.
               </p>
               <Button 
                 variant="outline" 
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
                 onClick={() => {
                   const element = document.querySelector('[data-value="all"]');
                   if (element instanceof HTMLElement) {
