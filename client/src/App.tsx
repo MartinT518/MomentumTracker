@@ -23,7 +23,7 @@ import HealthMetricsPage from "@/pages/health-metrics-page";
 import NutritionPage from "@/pages/nutrition-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import IntegrationCallbackPage from "@/pages/integration-callback-page";
-import AchievementsPage from "@/pages/achievements-page";
+
 import PricingPage from "@/pages/pricing-page";
 // Information pages
 import FAQPage from "@/pages/faq-page";
@@ -54,7 +54,7 @@ function Router() {
       <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
       <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
       <ProtectedRoute path="/nutrition" component={NutritionPage} />
-      <ProtectedRoute path="/achievements" component={AchievementsPage} />
+
       {/* Information pages */}
       <Route path="/faq" component={FAQPage} />
       <Route path="/terms" component={TermsPage} />

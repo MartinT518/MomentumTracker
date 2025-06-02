@@ -91,12 +91,7 @@ export function Sidebar({ className, style }: SidebarProps) {
       active: location === "/coaches",
     },
 
-    {
-      title: "Achievements",
-      href: "/achievements",
-      icon: Crown,
-      active: location === "/achievements",
-    },
+
   ];
   
   const accountNavItems = [
