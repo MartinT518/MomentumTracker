@@ -346,18 +346,18 @@ export default function ActivitiesPage() {
                   Log Activity
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-blue-900/95 via-blue-800/95 to-cyan-700/95 backdrop-blur-lg border border-white/20 text-white">
                 <DialogHeader>
-                  <DialogTitle>Log New Activity</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-white drop-shadow-sm">Log New Activity</DialogTitle>
+                  <DialogDescription className="text-white/70 drop-shadow-sm">
                     Manually add your workout details
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="activity-type">Activity Type</Label>
+                    <Label htmlFor="activity-type" className="text-white drop-shadow-sm">Activity Type</Label>
                     <Select value={activityType} onValueChange={setActivityType}>
-                      <SelectTrigger id="activity-type">
+                      <SelectTrigger id="activity-type" className="bg-white/10 border-white/30 text-white">
                         <SelectValue placeholder="Select activity type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -373,12 +373,12 @@ export default function ActivitiesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Activity Date</Label>
+                    <Label className="text-white drop-shadow-sm">Activity Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full justify-start text-left font-normal"
+                          className="w-full justify-start text-left font-normal bg-white/10 border-white/30 text-white hover:bg-white/20"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {activityDate ? format(activityDate, "PPP") : "Pick a date"}
@@ -397,7 +397,7 @@ export default function ActivitiesPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="distance">Distance (miles)</Label>
+                      <Label htmlFor="distance" className="text-white drop-shadow-sm">Distance (miles)</Label>
                       <Input
                         id="distance"
                         type="number"
@@ -405,34 +405,37 @@ export default function ActivitiesPage() {
                         placeholder="0.00"
                         value={distance}
                         onChange={(e) => setDistance(e.target.value)}
+                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="duration">Duration (hh:mm:ss)</Label>
+                      <Label htmlFor="duration" className="text-white drop-shadow-sm">Duration (hh:mm:ss)</Label>
                       <Input
                         id="duration"
                         placeholder="00:00:00"
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
+                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="heart-rate">Avg. Heart Rate (bpm)</Label>
+                      <Label htmlFor="heart-rate" className="text-white drop-shadow-sm">Avg. Heart Rate (bpm)</Label>
                       <Input
                         id="heart-rate"
                         type="number"
                         placeholder="0"
                         value={heartRate}
                         onChange={(e) => setHeartRate(e.target.value)}
+                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="effort-level">Effort Level</Label>
+                      <Label htmlFor="effort-level" className="text-white drop-shadow-sm">Effort Level</Label>
                       <Select value={effortLevel} onValueChange={setEffortLevel}>
-                        <SelectTrigger id="effort-level">
+                        <SelectTrigger id="effort-level" className="bg-white/10 border-white/30 text-white">
                           <SelectValue placeholder="Select effort level" />
                         </SelectTrigger>
                         <SelectContent>
@@ -445,18 +448,19 @@ export default function ActivitiesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="notes" className="text-white drop-shadow-sm">Notes</Label>
                     <Input
                       id="notes"
                       placeholder="Add any notes about this activity"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
+                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddActivityOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSaveActivity}>Save Activity</Button>
+                  <Button variant="outline" onClick={() => setAddActivityOpen(false)} className="bg-white/10 hover:bg-white/20 text-white border-white/30">Cancel</Button>
+                  <Button onClick={handleSaveActivity} className="bg-white/20 hover:bg-white/30 text-white border-white/30">Save Activity</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
