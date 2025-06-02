@@ -36,27 +36,27 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
   };
 
   return (
-    <Card className="mt-4 overflow-hidden border-primary/10 shadow-sm hover:shadow-md transition-all duration-300">
-      <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 pb-4">
+    <Card className="mt-4 overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
+      <CardHeader className="bg-white/10 backdrop-blur-sm pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-primary/10 p-2 rounded-full">
-              <Dumbbell className="h-5 w-5 text-primary" />
+            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full">
+              <Dumbbell className="h-5 w-5 text-orange-300" />
             </div>
-            <CardTitle className="text-lg">Strength Training Recommendation</CardTitle>
+            <CardTitle className="text-lg text-white drop-shadow-sm">Strength Training Recommendation</CardTitle>
           </div>
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+          <Badge variant="outline" className="bg-white/20 text-white border-white/30">
             AI Coach
           </Badge>
         </div>
-        <CardDescription>
+        <CardDescription className="text-white/80 drop-shadow-sm">
           Strength training complements your running to improve performance and reduce injury risk
         </CardDescription>
       </CardHeader>
       
       <CardContent className="pt-4">
         <div className="space-y-4">
-          <p className="text-neutral-dark">
+          <p className="text-white/80 drop-shadow-sm">
             Based on your current training plan, I recommend adding strength training on:
           </p>
           
@@ -64,14 +64,14 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
             {suggestedDays.map((day, i) => (
               <div 
                 key={i} 
-                className="flex items-center p-3 rounded-lg border border-neutral-200 bg-neutral-50"
+                className="flex items-center p-3 rounded-lg border border-white/20 bg-white/10 backdrop-blur-sm"
               >
-                <Calendar className="h-5 w-5 text-neutral-medium mr-3" />
+                <Calendar className="h-5 w-5 text-white/70 mr-3" />
                 <div>
-                  <p className="font-medium text-neutral-darker">
+                  <p className="font-medium text-white drop-shadow-sm">
                     {formatDay(day.date)}
                   </p>
-                  <p className="text-sm text-neutral-medium">
+                  <p className="text-sm text-white/70 drop-shadow-sm">
                     {day.intensity === "rest" 
                       ? "Rest day - perfect for strength work" 
                       : day.intensity === "recovery" 
@@ -85,8 +85,8 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
           
           {expanded && (
             <div className="mt-4 space-y-3 animate-fadeIn">
-              <h4 className="font-medium text-neutral-darker">Why add strength training?</h4>
-              <ul className="list-disc pl-5 space-y-1 text-sm text-neutral-medium">
+              <h4 className="font-medium text-white drop-shadow-sm">Why add strength training?</h4>
+              <ul className="list-disc pl-5 space-y-1 text-sm text-white/80 drop-shadow-sm">
                 <li>Improves running economy and efficiency</li>
                 <li>Prevents injuries by strengthening supporting muscles</li>
                 <li>Enhances overall athletic performance</li>
@@ -94,8 +94,8 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
                 <li>Corrects muscle imbalances common in runners</li>
               </ul>
               
-              <h4 className="font-medium text-neutral-darker mt-4">Recommended approach:</h4>
-              <ul className="list-disc pl-5 space-y-1 text-sm text-neutral-medium">
+              <h4 className="font-medium text-white drop-shadow-sm mt-4">Recommended approach:</h4>
+              <ul className="list-disc pl-5 space-y-1 text-sm text-white/80 drop-shadow-sm">
                 <li>Start with bodyweight exercises if you're new to strength training</li>
                 <li>Focus on compound movements that target multiple muscle groups</li>
                 <li>Keep sessions to 20-30 minutes on easy or rest days</li>
@@ -109,7 +109,7 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
             variant="ghost" 
             size="sm" 
             onClick={() => setExpanded(!expanded)}
-            className="w-full justify-between mt-2"
+            className="w-full justify-between mt-2 text-white/80 hover:text-white hover:bg-white/10"
           >
             {expanded ? "Show less" : "Learn more about strength training benefits"}
             <ArrowRight className={cn(
@@ -120,13 +120,13 @@ export function StrengthTrainingSuggestion({ currentWeekSchedule }: StrengthTrai
         </div>
       </CardContent>
       
-      <CardFooter className="bg-neutral-50 border-t border-neutral-200 gap-3 flex-wrap flex-col">
-        <Button asChild className="w-full">
+      <CardFooter className="bg-white/10 backdrop-blur-sm border-t border-white/20 gap-3 flex-wrap flex-col">
+        <Button asChild className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30">
           <Link to="/strength-exercises">
             <Dumbbell className="h-4 w-4 mr-2" /> View Recommended Exercises
           </Link>
         </Button>
-        <p className="text-xs text-neutral-medium text-center w-full mt-2">
+        <p className="text-xs text-white/70 text-center w-full mt-2 drop-shadow-sm">
           Free video demonstrations available for all users without subscription
         </p>
       </CardFooter>
