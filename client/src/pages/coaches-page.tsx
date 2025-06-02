@@ -169,9 +169,9 @@ export default function CoachesPage() {
     
     if (!sessions?.length) {
       return (
-        <Card className="col-span-full p-6 text-center">
-          <p className="text-muted-foreground">You don't have any coaching sessions scheduled yet.</p>
-          <Button className="mt-4" variant="outline" asChild>
+        <Card className="col-span-full p-6 text-center bg-white/10 backdrop-blur-sm border-white/20">
+          <p className="text-white/70 drop-shadow-sm">You don't have any coaching sessions scheduled yet.</p>
+          <Button className="mt-4 bg-white/20 hover:bg-white/30 text-white border-white/30" variant="outline" asChild>
             <Link to="/coaches">Find a Coach</Link>
           </Button>
         </Card>
@@ -189,39 +189,39 @@ export default function CoachesPage() {
     
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-medium">Upcoming Sessions</h3>
+        <h3 className="text-lg font-medium text-white drop-shadow-sm">Upcoming Sessions</h3>
         {upcomingSessions.length === 0 ? (
-          <p className="text-muted-foreground">No upcoming sessions scheduled.</p>
+          <p className="text-white/70 drop-shadow-sm">No upcoming sessions scheduled.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {upcomingSessions.map((session: CoachingSession) => {
               const coach = coaches?.find((c: Coach) => c.id === session.coach_id);
               return (
-                <Card key={session.id}>
+                <Card key={session.id} className="bg-white/10 backdrop-blur-sm border-white/20">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-base">{session.type} Session</CardTitle>
-                      <Badge>{session.status}</Badge>
+                      <CardTitle className="text-base text-white drop-shadow-sm">{session.type} Session</CardTitle>
+                      <Badge className="bg-white/20 text-white border-white/30">{session.status}</Badge>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-white/80 drop-shadow-sm">
                       {format(new Date(session.session_date), 'MMMM d, yyyy - h:mm a')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center space-x-2">
-                      <User2 className="h-4 w-4 text-muted-foreground" />
-                      <span>{coach?.name || 'Coach'}</span>
+                      <User2 className="h-4 w-4 text-white/70" />
+                      <span className="text-white/80 drop-shadow-sm">{coach?.name || 'Coach'}</span>
                     </div>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{session.duration_minutes} minutes</span>
+                      <Calendar className="h-4 w-4 text-white/70" />
+                      <span className="text-white/80 drop-shadow-sm">{session.duration_minutes} minutes</span>
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
                       Reschedule
                     </Button>
-                    <Button variant="destructive" size="sm">
+                    <Button variant="destructive" size="sm" className="bg-red-500/20 hover:bg-red-500/30 text-white border-red-400/30">
                       Cancel
                     </Button>
                   </CardFooter>
@@ -233,31 +233,37 @@ export default function CoachesPage() {
         
         {pastSessions.length > 0 && (
           <>
-            <Separator />
-            <h3 className="text-lg font-medium mt-6">Past Sessions</h3>
+            <Separator className="bg-white/20" />
+            <h3 className="text-lg font-medium mt-6 text-white drop-shadow-sm">Past Sessions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {pastSessions.slice(0, 4).map((session: CoachingSession) => {
                 const coach = coaches?.find((c: Coach) => c.id === session.coach_id);
                 return (
-                  <Card key={session.id}>
+                  <Card key={session.id} className="bg-white/10 backdrop-blur-sm border-white/20">
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-base">{session.type} Session</CardTitle>
-                        <Badge variant={session.status === 'completed' ? 'default' : 'destructive'}>
+                        <CardTitle className="text-base text-white drop-shadow-sm">{session.type} Session</CardTitle>
+                        <Badge 
+                          variant={session.status === 'completed' ? 'default' : 'destructive'}
+                          className={session.status === 'completed' 
+                            ? "bg-green-500/20 text-white border-green-400/30" 
+                            : "bg-red-500/20 text-white border-red-400/30"
+                          }
+                        >
                           {session.status}
                         </Badge>
                       </div>
-                      <CardDescription>
+                      <CardDescription className="text-white/80 drop-shadow-sm">
                         {format(new Date(session.session_date), 'MMMM d, yyyy')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center space-x-2">
-                        <User2 className="h-4 w-4 text-muted-foreground" />
-                        <span>{coach?.name || 'Coach'}</span>
+                        <User2 className="h-4 w-4 text-white/70" />
+                        <span className="text-white/80 drop-shadow-sm">{coach?.name || 'Coach'}</span>
                       </div>
                       {session.recording_url && (
-                        <Button variant="link" className="p-0 h-auto mt-2" asChild>
+                        <Button variant="link" className="p-0 h-auto mt-2 text-blue-300 hover:text-blue-200" asChild>
                           <a href={session.recording_url} target="_blank" rel="noopener noreferrer">
                             View Recording
                           </a>
@@ -270,7 +276,7 @@ export default function CoachesPage() {
             </div>
             {pastSessions.length > 4 && (
               <div className="text-center mt-4">
-                <Button variant="outline">View All Past Sessions</Button>
+                <Button variant="outline" className="bg-white/20 hover:bg-white/30 text-white border-white/30">View All Past Sessions</Button>
               </div>
             )}
           </>
