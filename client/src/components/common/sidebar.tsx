@@ -160,15 +160,12 @@ export function Sidebar({ className, style }: SidebarProps) {
     <aside className={cn("hidden lg:flex flex-col w-64 bg-white/10 backdrop-blur-xl border-r border-white/20", className)} style={style}>
       <div className="p-4 border-b border-white/20">
         <Link href="/dashboard">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <img 
               src={aetherRunLogo} 
               alt="AetherRun Logo" 
-              className="w-8 h-8 object-contain"
+              className="w-32 h-12 object-contain"
             />
-            <span className="text-xl font-bold text-white">
-              <span className="text-cyan-300">Aether</span>Run
-            </span>
           </div>
         </Link>
       </div>
