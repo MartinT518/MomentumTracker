@@ -204,16 +204,18 @@ export default function CoachManagementPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
         <MobileMenu />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-6 md:p-10">
+          <main className="flex-1 p-6 md:p-10 lg:pt-6">
             <div className="text-center py-20">
-              <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
-              <p className="text-muted-foreground">
-                You don't have permission to access this page.
-              </p>
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-8 max-w-md mx-auto">
+                <h1 className="text-3xl font-bold mb-4 text-white drop-shadow-sm">Access Denied</h1>
+                <p className="text-white/80 drop-shadow-sm">
+                  You don't have permission to access this page.
+                </p>
+              </div>
             </div>
           </main>
         </div>
@@ -226,7 +228,7 @@ export default function CoachManagementPage() {
       <MobileMenu />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-6 md:p-10">
+        <main className="flex-1 p-6 md:p-10 lg:pt-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-white drop-shadow-sm">Coach Management</h1>
@@ -325,9 +327,9 @@ export default function CoachManagementPage() {
                       name="specialties"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Specialties</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Specialties</FormLabel>
                           <FormControl>
-                            <Input placeholder="Marathon, Trail Running, etc." {...field} />
+                            <Input placeholder="Marathon, Trail Running, etc." className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -339,9 +341,9 @@ export default function CoachManagementPage() {
                       name="certifications"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Certifications</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Certifications</FormLabel>
                           <FormControl>
-                            <Input placeholder="USATF Level 2, RRCA, etc." {...field} />
+                            <Input placeholder="USATF Level 2, RRCA, etc." className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -353,11 +355,12 @@ export default function CoachManagementPage() {
                       name="bio"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Bio</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Bio</FormLabel>
                           <FormControl>
                             <Textarea 
                               placeholder="Coach's biography and background"
                               rows={4}
+                              className="bg-white/10 border-white/30 text-white placeholder:text-white/60 resize-none"
                               {...field} 
                             />
                           </FormControl>
@@ -371,9 +374,9 @@ export default function CoachManagementPage() {
                       name="photoUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Photo URL</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Photo URL</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://example.com/photo.jpg" {...field} />
+                            <Input placeholder="https://example.com/photo.jpg" className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -384,10 +387,10 @@ export default function CoachManagementPage() {
                       control={form.control}
                       name="isActive"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/30 bg-white/5 p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>Active Status</FormLabel>
-                            <p className="text-sm text-muted-foreground">
+                            <FormLabel className="text-white drop-shadow-sm">Active Status</FormLabel>
+                            <p className="text-sm text-white/60 drop-shadow-sm">
                               Make this coach visible to users
                             </p>
                           </div>
@@ -402,7 +405,11 @@ export default function CoachManagementPage() {
                     />
                     
                     <div className="flex items-center gap-2 pt-2">
-                      <Button type="submit" disabled={createCoachMutation.isPending || updateCoachMutation.isPending}>
+                      <Button 
+                        type="submit" 
+                        disabled={createCoachMutation.isPending || updateCoachMutation.isPending}
+                        className="bg-white/20 hover:bg-white/30 text-white border-white/30 drop-shadow-sm"
+                      >
                         {(createCoachMutation.isPending || updateCoachMutation.isPending) && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
@@ -410,7 +417,11 @@ export default function CoachManagementPage() {
                       </Button>
                       
                       {editingCoachId && (
-                        <Button variant="outline" onClick={handleCancelEdit}>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleCancelEdit}
+                          className="bg-white/10 hover:bg-white/20 text-white border-white/30 drop-shadow-sm"
+                        >
                           Cancel
                         </Button>
                       )}
@@ -421,26 +432,26 @@ export default function CoachManagementPage() {
             </Card>
 
             {/* Coach List */}
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center text-white drop-shadow-sm">
                   <Users className="h-5 w-5 mr-2" />
                   Coaches List
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/70 drop-shadow-sm">
                   Manage existing coaches
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <div className="flex justify-center p-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-white" />
                   </div>
                 ) : coaches.length === 0 ? (
                   <div className="text-center py-8">
-                    <UserPlus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No coaches yet</h3>
-                    <p className="text-muted-foreground mt-1">
+                    <UserPlus className="h-12 w-12 mx-auto text-white/60 mb-4" />
+                    <h3 className="text-lg font-medium text-white drop-shadow-sm">No coaches yet</h3>
+                    <p className="text-white/60 drop-shadow-sm mt-1">
                       Add your first coach using the form
                     </p>
                   </div>
@@ -448,32 +459,32 @@ export default function CoachManagementPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4">Name</th>
-                          <th className="text-left py-3 px-4 hidden md:table-cell">Specialties</th>
-                          <th className="text-left py-3 px-4 hidden lg:table-cell">Experience</th>
-                          <th className="text-left py-3 px-4">Status</th>
-                          <th className="text-right py-3 px-4">Actions</th>
+                        <tr className="border-b border-white/20">
+                          <th className="text-left py-3 px-4 text-white drop-shadow-sm">Name</th>
+                          <th className="text-left py-3 px-4 hidden md:table-cell text-white drop-shadow-sm">Specialties</th>
+                          <th className="text-left py-3 px-4 hidden lg:table-cell text-white drop-shadow-sm">Experience</th>
+                          <th className="text-left py-3 px-4 text-white drop-shadow-sm">Status</th>
+                          <th className="text-right py-3 px-4 text-white drop-shadow-sm">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {coaches.map((coach: any) => (
-                          <tr key={coach.id} className="border-b hover:bg-muted/50">
+                          <tr key={coach.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
                             <td className="py-3 px-4">
-                              <div className="font-medium">{coach.name}</div>
-                              <div className="text-sm text-muted-foreground">{coach.title}</div>
+                              <div className="font-medium text-white drop-shadow-sm">{coach.name}</div>
+                              <div className="text-sm text-white/60 drop-shadow-sm">{coach.title}</div>
                             </td>
-                            <td className="py-3 px-4 hidden md:table-cell">
+                            <td className="py-3 px-4 hidden md:table-cell text-white/80 drop-shadow-sm">
                               {coach.specialties}
                             </td>
-                            <td className="py-3 px-4 hidden lg:table-cell">
+                            <td className="py-3 px-4 hidden lg:table-cell text-white/80 drop-shadow-sm">
                               {coach.experience_years} years
                             </td>
                             <td className="py-3 px-4">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium drop-shadow-sm ${
                                 coach.status === 'active' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
+                                  ? 'bg-green-500/20 text-green-300 border border-green-400/30' 
+                                  : 'bg-red-500/20 text-red-300 border border-red-400/30'
                               }`}>
                                 {coach.status === 'active' ? 'Active' : 'Inactive'}
                               </span>
@@ -484,6 +495,7 @@ export default function CoachManagementPage() {
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => handleEditCoach(coach)}
+                                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 drop-shadow-sm"
                                 >
                                   Edit
                                 </Button>
@@ -492,6 +504,7 @@ export default function CoachManagementPage() {
                                   size="sm"
                                   onClick={() => deleteCoachMutation.mutate(coach.id)}
                                   disabled={deleteCoachMutation.isPending}
+                                  className="bg-red-500/20 hover:bg-red-500/30 text-red-300 border-red-400/30 drop-shadow-sm"
                                 >
                                   {deleteCoachMutation.isPending ? (
                                     <Loader2 className="h-3 w-3 animate-spin" />
