@@ -7,6 +7,7 @@ import { CheckCircle2, Star, Zap, Users, Target, ArrowRight } from 'lucide-react
 import { LoginModal, RegisterModal } from '@/components/auth/auth-modal';
 import { Link } from 'wouter';
 import { AppFooter } from '@/components/common/app-footer';
+import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
 
 const pricingPlans = [
   {
@@ -105,7 +106,11 @@ export default function PricingPage() {
           <div className="flex items-center justify-between">
             <Link href="/">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg"></div>
+                <img 
+                  src={aetherRunLogo} 
+                  alt="AetherRun Logo" 
+                  className="w-8 h-8 object-contain"
+                />
                 <span className="text-xl font-bold text-white">
                   <span className="text-cyan-300">Aether</span>Run
                 </span>
