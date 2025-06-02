@@ -208,15 +208,15 @@ export default function ActivitiesPage() {
   const getSourceBadge = (source: string) => {
     switch (source) {
       case "strava":
-        return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Strava</Badge>;
+        return <Badge className="bg-orange-500/20 text-orange-300 border border-orange-400/30 drop-shadow-sm">Strava</Badge>;
       case "garmin":
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Garmin</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-300 border border-blue-400/30 drop-shadow-sm">Garmin</Badge>;
       case "polar":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Polar</Badge>;
+        return <Badge className="bg-red-500/20 text-red-300 border border-red-400/30 drop-shadow-sm">Polar</Badge>;
       case "manual":
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Manual</Badge>;
+        return <Badge className="bg-gray-500/20 text-gray-300 border border-gray-400/30 drop-shadow-sm">Manual</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Manual</Badge>;
+        return <Badge className="bg-gray-500/20 text-gray-300 border border-gray-400/30 drop-shadow-sm">Manual</Badge>;
     }
   };
 
@@ -239,7 +239,7 @@ export default function ActivitiesPage() {
           <div className="mt-4 md:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Dialog open={importActivitiesOpen} onOpenChange={setImportActivitiesOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center">
+                <Button variant="outline" className="flex items-center bg-white/10 hover:bg-white/20 text-white border-white/30 drop-shadow-sm">
                   <FileUp className="w-4 h-4 mr-2" />
                   Import Activities
                 </Button>
@@ -341,7 +341,7 @@ export default function ActivitiesPage() {
 
             <Dialog open={addActivityOpen} onOpenChange={setAddActivityOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center">
+                <Button className="flex items-center bg-white/20 hover:bg-white/30 text-white border-white/30 drop-shadow-sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Log Activity
                 </Button>
@@ -464,17 +464,17 @@ export default function ActivitiesPage() {
         </div>
 
         {/* Activities Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-6 mb-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <TabsList>
-                <TabsTrigger value="all">All Activities</TabsTrigger>
-                <TabsTrigger value="runs">Runs</TabsTrigger>
-                <TabsTrigger value="workouts">Workouts</TabsTrigger>
-                <TabsTrigger value="races">Races</TabsTrigger>
+              <TabsList className="bg-white/10 backdrop-blur-sm border-white/20">
+                <TabsTrigger value="all" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">All Activities</TabsTrigger>
+                <TabsTrigger value="runs" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Runs</TabsTrigger>
+                <TabsTrigger value="workouts" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Workouts</TabsTrigger>
+                <TabsTrigger value="races" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Races</TabsTrigger>
               </TabsList>
               
-              <Button variant="outline" size="sm" className="flex items-center text-xs">
+              <Button variant="outline" size="sm" className="flex items-center text-xs bg-white/10 hover:bg-white/20 text-white border-white/30">
                 <Filter className="w-3 h-3 mr-1" />
                 Filter
               </Button>
@@ -483,9 +483,9 @@ export default function ActivitiesPage() {
             <TabsContent value="all" className="space-y-4">
               <div className="flex justify-end items-center mb-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">Show:</span>
+                  <span className="text-sm text-white/70 drop-shadow-sm">Show:</span>
                   <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="w-[80px]">
+                    <SelectTrigger className="w-[80px] bg-white/10 border-white/30 text-white">
                       <SelectValue placeholder="10" />
                     </SelectTrigger>
                     <SelectContent>
@@ -499,46 +499,46 @@ export default function ActivitiesPage() {
               </div>
               
               <Table>
-                <TableCaption>A list of your recent activities.</TableCaption>
+                <TableCaption className="text-white/70 drop-shadow-sm">A list of your recent activities.</TableCaption>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Activity</TableHead>
-                    <TableHead>Distance</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Pace</TableHead>
-                    <TableHead>Heart Rate</TableHead>
-                    <TableHead>Effort</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                  <TableRow className="border-b border-white/20">
+                    <TableHead className="text-white drop-shadow-sm">Date</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Activity</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Distance</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Time</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Pace</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Heart Rate</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Effort</TableHead>
+                    <TableHead className="text-white drop-shadow-sm">Source</TableHead>
+                    <TableHead className="text-right text-white drop-shadow-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {activities.map((activity) => (
-                    <TableRow key={activity.id}>
-                      <TableCell>{activity.date}</TableCell>
+                    <TableRow key={activity.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                      <TableCell className="text-white/80 drop-shadow-sm">{activity.date}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
-                          {activity.type.icon === "chart" && <BarChart3 className="h-4 w-4 mr-2 text-secondary" />}
-                          {activity.type.icon === "speed" && <Clock className="h-4 w-4 mr-2 text-primary" />}
-                          {activity.type.icon === "activity" && <Navigation className="h-4 w-4 mr-2 text-accent" />}
-                          <span>{activity.type.name}</span>
+                          {activity.type.icon === "chart" && <BarChart3 className="h-4 w-4 mr-2 text-blue-300" />}
+                          {activity.type.icon === "speed" && <Clock className="h-4 w-4 mr-2 text-cyan-300" />}
+                          {activity.type.icon === "activity" && <Navigation className="h-4 w-4 mr-2 text-blue-300" />}
+                          <span className="text-white drop-shadow-sm">{activity.type.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{activity.distance}</TableCell>
-                      <TableCell>{activity.time}</TableCell>
-                      <TableCell>{activity.pace}</TableCell>
+                      <TableCell className="text-white/80 drop-shadow-sm">{activity.distance}</TableCell>
+                      <TableCell className="text-white/80 drop-shadow-sm">{activity.time}</TableCell>
+                      <TableCell className="text-white/80 drop-shadow-sm">{activity.pace}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
-                          <Heart className="h-3 w-3 mr-1 text-red-500" />
-                          {activity.heartRate}
+                          <Heart className="h-3 w-3 mr-1 text-red-400" />
+                          <span className="text-white/80 drop-shadow-sm">{activity.heartRate}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge className={
-                          activity.effort.level === "easy" ? "bg-green-100 text-green-800" :
-                          activity.effort.level === "moderate" ? "bg-blue-100 text-blue-800" :
-                          "bg-red-100 text-red-800"
+                          activity.effort.level === "easy" ? "bg-green-500/20 text-green-300 border-green-400/30" :
+                          activity.effort.level === "moderate" ? "bg-blue-500/20 text-blue-300 border-blue-400/30" :
+                          "bg-red-500/20 text-red-300 border-red-400/30"
                         }>
                           {activity.effort.label}
                         </Badge>
