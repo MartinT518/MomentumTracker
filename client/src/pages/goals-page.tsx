@@ -1,5 +1,4 @@
-import { Sidebar } from "@/components/common/sidebar";
-import { MobileMenu } from "@/components/common/mobile-menu";
+import { AppLayout } from "@/components/common/app-layout";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -409,20 +408,25 @@ export default function GoalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
-      <div className="flex h-screen max-w-full overflow-hidden">
-        <Sidebar style={{display: "flex"}} />
-        <MobileMenu />
-
-        <main className="flex-1 overflow-y-auto pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
-          {/* For mobile view padding to account for fixed header */}
-          <div className="md:hidden pt-20"></div>
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold font-heading text-white">Goals</h1>
-              <p className="text-white/80 mt-1">Set and track your running goals</p>
+    <AppLayout>
+      <div className="max-w-6xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-yellow-300" />
             </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+                Goals & Achievements
+              </h1>
+              <p className="text-white/80 text-lg drop-shadow-md">
+                Set targets, track progress, and celebrate your accomplishments
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="mt-4 md:mt-0">
             <Dialog open={createGoalOpen} onOpenChange={setCreateGoalOpen}>
               <DialogTrigger asChild>
@@ -1172,8 +1176,8 @@ export default function GoalsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </main>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
