@@ -163,7 +163,7 @@ export function MobileMenu() {
             <img 
               src={aetherRunLogo} 
               alt="AetherRun Logo" 
-              className="w-24 h-9 object-contain"
+              className="w-72 h-27 object-contain"
             />
           </div>
           <button 

@@ -164,7 +164,7 @@ export function Sidebar({ className, style }: SidebarProps) {
             <img 
               src={aetherRunLogo} 
               alt="AetherRun Logo" 
-              className="w-32 h-12 object-contain"
+              className="w-96 h-36 object-contain"
             />
           </div>
         </Link>
