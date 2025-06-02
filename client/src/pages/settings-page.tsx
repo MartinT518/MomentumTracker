@@ -270,9 +270,9 @@ export default function SettingsPage() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="Username" {...field} />
+                            <Input placeholder="Username" {...field} className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -283,9 +283,9 @@ export default function SettingsPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email Address</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Email Address</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="Email" {...field} />
+                            <Input type="email" placeholder="Email" {...field} className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -294,6 +294,7 @@ export default function SettingsPage() {
                     <Button 
                       type="submit" 
                       disabled={updateProfileMutation.isPending || !profileForm.formState.isDirty}
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                     >
                       {updateProfileMutation.isPending ? "Updating..." : "Update Profile"}
                     </Button>
@@ -305,10 +306,10 @@ export default function SettingsPage() {
           
           {/* Security Settings */}
           <TabsContent value="security" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Password</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Password</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Change your password to keep your account secure.
                 </CardDescription>
               </CardHeader>
@@ -320,9 +321,9 @@ export default function SettingsPage() {
                       name="currentPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Current Password</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Current Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Current password" {...field} />
+                            <Input type="password" placeholder="Current password" {...field} className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -333,9 +334,9 @@ export default function SettingsPage() {
                       name="newPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>New Password</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">New Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="New password" {...field} />
+                            <Input type="password" placeholder="New password" {...field} className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -346,9 +347,9 @@ export default function SettingsPage() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Confirm Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Confirm password" {...field} />
+                            <Input type="password" placeholder="Confirm password" {...field} className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -357,6 +358,7 @@ export default function SettingsPage() {
                     <Button 
                       type="submit" 
                       disabled={updatePasswordMutation.isPending || !securityForm.formState.isDirty}
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                     >
                       {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
                     </Button>
@@ -368,10 +370,10 @@ export default function SettingsPage() {
           
           {/* Training Preferences */}
           <TabsContent value="training" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Training Preferences</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Training Preferences</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Update your training preferences to get customized training plans and workouts.
                 </CardDescription>
               </CardHeader>
@@ -383,7 +385,7 @@ export default function SettingsPage() {
           
           {/* Integrations Settings */}
           <TabsContent value="integrations" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardContent className="pt-6">
                 <IntegrationSettings />
               </CardContent>
@@ -392,18 +394,18 @@ export default function SettingsPage() {
           
           {/* Notifications Settings */}
           <TabsContent value="notifications" className="space-y-4">
-            <Card>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">Notification Preferences</CardTitle>
+                <CardDescription className="text-white/80 drop-shadow-sm">
                   Choose which notifications you'd like to receive.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="email-notifications">Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="email-notifications" className="text-white drop-shadow-sm">Email Notifications</Label>
+                    <p className="text-sm text-white/60 drop-shadow-sm">
                       Receive important updates via email.
                     </p>
                   </div>
@@ -415,8 +417,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="training-reminders">Training Reminders</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="training-reminders" className="text-white drop-shadow-sm">Training Reminders</Label>
+                    <p className="text-sm text-white/60 drop-shadow-sm">
                       Get notified about your upcoming workouts.
                     </p>
                   </div>
@@ -428,8 +430,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="achievement-alerts">Achievement Alerts</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="achievement-alerts" className="text-white drop-shadow-sm">Achievement Alerts</Label>
+                    <p className="text-sm text-white/60 drop-shadow-sm">
                       Receive notifications when you earn achievements.
                     </p>
                   </div>
@@ -441,8 +443,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="community-updates">Community Updates</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="community-updates" className="text-white drop-shadow-sm">Community Updates</Label>
+                    <p className="text-sm text-white/60 drop-shadow-sm">
                       Stay informed about community events and challenges.
                     </p>
                   </div>
@@ -457,6 +459,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={saveNotificationSettings}
                   disabled={updateNotificationsMutation.isPending}
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                 >
                   {updateNotificationsMutation.isPending ? "Saving..." : "Save Preferences"}
                 </Button>
