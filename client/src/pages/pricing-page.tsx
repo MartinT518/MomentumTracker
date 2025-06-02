@@ -3,11 +3,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Star, Zap, Users, Target, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Star, Zap, Users, Target, ArrowRight, ArrowLeft } from 'lucide-react';
 import { LoginModal, RegisterModal } from '@/components/auth/auth-modal';
 import { Link } from 'wouter';
-import { AppFooter } from '@/components/common/app-footer';
-import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
+import { AppLayout } from '@/components/common/app-layout';
 
 const pricingPlans = [
   {
