@@ -60,25 +60,37 @@ export default function NutritionPage() {
 
   if (isLoadingPreferences || isLoadingMealPlan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
-        <PageLayout>
+      <AppLayout>
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-center min-h-[400px]">
             <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
-        </PageLayout>
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   // Show upgrade prompt if user doesn't have subscription and tries to access meal planning
   if (!hasSubscription && activeTab === 'meal-planner') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
-        <PageLayout>
-          <PageTitle 
-            title="Nutrition" 
-            description="Fuel your training with personalized meal plans"
-          />
+      <AppLayout>
+        <div className="max-w-6xl mx-auto">
+          {/* Page Header */}
+          <div className="mb-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <Utensils className="w-6 h-6 text-green-300" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+                  Nutrition
+                </h1>
+                <p className="text-white/80 text-lg drop-shadow-md">
+                  Fuel your training with personalized meal plans
+                </p>
+              </div>
+            </div>
+          </div>
           
           <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6 text-center">
             <div className="flex flex-col items-center space-y-4">
@@ -105,47 +117,65 @@ export default function NutritionPage() {
               />
             </div>
           </div>
-        </PageLayout>
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
-      <PageLayout>
-        <PageTitle 
-          title="Nutrition" 
-          description="Fuel your training with personalized meal plans"
-        />
+    <AppLayout>
+      <div className="max-w-6xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <Utensils className="w-6 h-6 text-green-300" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+                Nutrition
+              </h1>
+              <p className="text-white/80 text-lg drop-shadow-md">
+                Fuel your training with personalized meal plans
+              </p>
+            </div>
+          </div>
+        </div>
       
         <Tabs 
           value={activeTab} 
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border-white/20">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Overview</TabsTrigger>
-            <TabsTrigger value="meal-planner" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Meal Planner</TabsTrigger>
-            <TabsTrigger value="preferences" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10">Preferences</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">Overview</TabsTrigger>
+            <TabsTrigger value="meal-planner" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">Meal Planner</TabsTrigger>
+            <TabsTrigger value="preferences" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">Preferences</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="overview" className="mt-6">
-            <NutritionOverview />
+          <TabsContent value="overview" className="mt-8">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+              <NutritionOverview />
+            </div>
           </TabsContent>
           
-          <TabsContent value="meal-planner" className="mt-6">
-            <SimpleMealPlan 
-              onUpdateMealPlan={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user?.id, currentDate] });
-              }} 
-            />
+          <TabsContent value="meal-planner" className="mt-8">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+              <SimpleMealPlan 
+                onUpdateMealPlan={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", user?.id, currentDate] });
+                }} 
+              />
+            </div>
           </TabsContent>
           
-          <TabsContent value="preferences" className="mt-6">
-            <NutritionPreferences />
+          <TabsContent value="preferences" className="mt-8">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+              <NutritionPreferences />
+            </div>
           </TabsContent>
         </Tabs>
-      </PageLayout>
-    </div>
+      </div>
+    </AppLayout>
   );
 }
