@@ -120,7 +120,7 @@ export function MobileMenu() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-b border-white/20 z-50">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-b border-white/20 z-50">
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center">
             <img 
