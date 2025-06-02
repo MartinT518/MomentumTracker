@@ -244,18 +244,18 @@ export default function ActivitiesPage() {
                   Import Activities
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-blue-900/95 via-blue-800/95 to-cyan-700/95 backdrop-blur-lg border border-white/20 text-white">
                 <DialogHeader>
-                  <DialogTitle>Import Activities</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-white drop-shadow-sm">Import Activities</DialogTitle>
+                  <DialogDescription className="text-white/70 drop-shadow-sm">
                     Import your running activities from connected platforms
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="import-source">Select Source</Label>
+                    <Label htmlFor="import-source" className="text-white drop-shadow-sm">Select Source</Label>
                     <Select value={importSource} onValueChange={setImportSource}>
-                      <SelectTrigger id="import-source">
+                      <SelectTrigger id="import-source" className="bg-white/10 border-white/30 text-white">
                         <SelectValue placeholder="Select source" />
                       </SelectTrigger>
                       <SelectContent>
@@ -272,12 +272,12 @@ export default function ActivitiesPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Start Date</Label>
+                      <Label className="text-white drop-shadow-sm">Start Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="w-full justify-start text-left font-normal"
+                            className="w-full justify-start text-left font-normal bg-white/10 border-white/30 text-white hover:bg-white/20"
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {startDate ? format(startDate, "PPP") : "Pick a date"}
@@ -294,12 +294,12 @@ export default function ActivitiesPage() {
                       </Popover>
                     </div>
                     <div className="space-y-2">
-                      <Label>End Date</Label>
+                      <Label className="text-white drop-shadow-sm">End Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="w-full justify-start text-left font-normal"
+                            className="w-full justify-start text-left font-normal bg-white/10 border-white/30 text-white hover:bg-white/20"
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {endDate ? format(endDate, "PPP") : "Pick a date"}
@@ -318,7 +318,7 @@ export default function ActivitiesPage() {
                   </div>
 
                   <div className="pt-2">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-white/60 drop-shadow-sm">
                       {importSource === "strava" && "Importing from Strava requires an active connection in your profile settings."}
                       {importSource === "garmin" && "Importing from Garmin Connect requires an active connection in your profile settings."}
                       {importSource === "polar" && "Importing from Polar Flow requires an active connection in your profile settings."}
@@ -330,8 +330,8 @@ export default function ActivitiesPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setImportActivitiesOpen(false)}>Cancel</Button>
-                  <Button onClick={handleImportActivities}>
+                  <Button variant="outline" onClick={() => setImportActivitiesOpen(false)} className="bg-white/10 hover:bg-white/20 text-white border-white/30">Cancel</Button>
+                  <Button onClick={handleImportActivities} className="bg-white/20 hover:bg-white/30 text-white border-white/30">
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Import Activities
                   </Button>
