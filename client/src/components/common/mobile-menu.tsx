@@ -2,12 +2,12 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import AetherRunLogo from "@/assets/aether-run-logo.png";
+import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
 import {
   BarChart3,
   ListTodo,
   Activity,
-  Zap,
+  Target,
   User,
   Settings,
   LogOut,
@@ -20,6 +20,10 @@ import {
   CreditCard,
   ShieldCheck,
   UserCog,
+  Users,
+  Crown,
+  HelpCircle,
+  DollarSign,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
 
@@ -97,8 +101,26 @@ export function MobileMenu() {
     {
       title: "Goals",
       href: "/goals",
-      icon: Zap,
+      icon: Target,
       active: location === "/goals",
+    },
+    {
+      title: "Coaches",
+      href: "/coaches",
+      icon: Users,
+      active: location === "/coaches",
+    },
+    {
+      title: "Community",
+      href: "/community",
+      icon: Users,
+      active: location === "/community",
+    },
+    {
+      title: "Achievements",
+      href: "/achievements",
+      icon: Crown,
+      active: location === "/achievements",
     },
     {
       title: "Profile",
@@ -118,6 +140,18 @@ export function MobileMenu() {
       icon: CreditCard,
       active: location === "/subscription" || location.startsWith("/subscription/"),
     },
+    {
+      title: "FAQ & Support",
+      href: "/faq",
+      icon: HelpCircle,
+      active: location === "/faq",
+    },
+    {
+      title: "Pricing",
+      href: "/pricing",
+      icon: DollarSign,
+      active: location === "/pricing",
+    },
   ];
 
   return (
@@ -125,12 +159,15 @@ export function MobileMenu() {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-b border-white/20 z-50">
         <div className="flex items-center justify-between p-2">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
             <img 
-              src={AetherRunLogo} 
-              alt="AetherRun" 
-              className="h-10 w-auto object-contain" 
+              src={aetherRunLogo} 
+              alt="AetherRun Logo" 
+              className="w-8 h-8 object-contain"
             />
+            <span className="text-lg font-bold text-white">
+              <span className="text-cyan-300">Aether</span>Run
+            </span>
           </div>
           <button 
             className="p-2 rounded-md bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"

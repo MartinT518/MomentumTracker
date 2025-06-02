@@ -17,10 +17,13 @@ import {
   Search,
   ShieldCheck,
   UserCog,
+  Users,
+  Target,
+  HelpCircle,
+  DollarSign,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
-// Import the new logo
-import AetherRunLogo from "@/assets/aether-run-logo.png";
+import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
 
 interface SidebarProps {
   className?: string;
@@ -78,8 +81,26 @@ export function Sidebar({ className, style }: SidebarProps) {
     {
       title: "Goals",
       href: "/goals",
-      icon: Zap,
+      icon: Target,
       active: location === "/goals",
+    },
+    {
+      title: "Coaches",
+      href: "/coaches",
+      icon: Users,
+      active: location === "/coaches",
+    },
+    {
+      title: "Community",
+      href: "/community",
+      icon: Users,
+      active: location === "/community",
+    },
+    {
+      title: "Achievements",
+      href: "/achievements",
+      icon: Crown,
+      active: location === "/achievements",
     },
   ];
   
@@ -136,38 +157,41 @@ export function Sidebar({ className, style }: SidebarProps) {
   ];
 
   return (
-    <aside className={cn("hidden lg:flex flex-col w-64 glass-nav", className)}>
-      <div className="p-2 border-b border-white/20">
-        <div className="flex items-center justify-center p-3">
-          <div className="relative h-16 w-full max-w-[220px]">
+    <aside className={cn("hidden lg:flex flex-col w-64 bg-white/10 backdrop-blur-xl border-r border-white/20", className)} style={style}>
+      <div className="p-4 border-b border-white/20">
+        <Link href="/dashboard">
+          <div className="flex items-center space-x-2">
             <img 
-              src={AetherRunLogo} 
-              alt="AetherRun" 
-              className="h-auto w-full object-contain" 
+              src={aetherRunLogo} 
+              alt="AetherRun Logo" 
+              className="w-8 h-8 object-contain"
             />
+            <span className="text-xl font-bold text-white">
+              <span className="text-cyan-300">Aether</span>Run
+            </span>
           </div>
-        </div>
+        </Link>
       </div>
       
-      <div className="px-4 py-3 border-b border-gray-200">
+      <div className="px-4 py-3 border-b border-white/20">
         <SearchButton />
       </div>
       
       <nav className="flex-grow overflow-y-auto">
         <div className="px-4 pt-6 pb-2">
-          <p className="text-xs font-medium text-neutral-medium tracking-wider uppercase">Main</p>
+          <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Main</p>
         </div>
         <ul>
           {navItems.map((item) => (
             <li key={item.title}>
               <Link href={item.href}>
                 <div className={cn(
-                  "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter cursor-pointer",
-                  item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                  "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                  item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
                 )}>
                   <item.icon className={cn(
-                    "h-5 w-5 mr-3 text-neutral-medium",
-                    item.active && "text-primary"
+                    "h-5 w-5 mr-3 text-white/60",
+                    item.active && "text-cyan-300"
                   )} />
                   {item.title}
                 </div>
@@ -177,24 +201,24 @@ export function Sidebar({ className, style }: SidebarProps) {
         </ul>
         
         <div className="px-4 pt-6 pb-2">
-          <p className="text-xs font-medium text-neutral-medium tracking-wider uppercase">Account</p>
+          <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Account</p>
         </div>
         <ul>
           {accountItems.map((item) => (
             <li key={item.title}>
               <Link href={item.href}>
                 <div className={cn(
-                  "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter cursor-pointer",
-                  item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                  "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                  item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
                 )}>
                   <item.icon className={cn(
-                    "h-5 w-5 mr-3 text-neutral-medium",
-                    item.active && "text-primary"
+                    "h-5 w-5 mr-3 text-white/60",
+                    item.active && "text-cyan-300"
                   )} />
                   <div className="flex items-center">
                     {item.title}
                     {item.isPremium && (
-                      <Crown className="h-3.5 w-3.5 ml-2 text-amber-500" />
+                      <Crown className="h-3.5 w-3.5 ml-2 text-amber-400" />
                     )}
                   </div>
                 </div>
@@ -203,23 +227,58 @@ export function Sidebar({ className, style }: SidebarProps) {
           ))}
         </ul>
         
+        {/* Additional navigation items */}
+        <div className="px-4 pt-6 pb-2">
+          <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Support</p>
+        </div>
+        <ul>
+          <li>
+            <Link href="/faq">
+              <div className={cn(
+                "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                location === "/faq" && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+              )}>
+                <HelpCircle className={cn(
+                  "h-5 w-5 mr-3 text-white/60",
+                  location === "/faq" && "text-cyan-300"
+                )} />
+                FAQ & Support
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link href="/pricing">
+              <div className={cn(
+                "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                location === "/pricing" && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+              )}>
+                <DollarSign className={cn(
+                  "h-5 w-5 mr-3 text-white/60",
+                  location === "/pricing" && "text-cyan-300"
+                )} />
+                Pricing
+              </div>
+            </Link>
+          </li>
+        </ul>
+        
         {/* Only show admin section to admin users */}
         {isAdmin && (
           <>
             <div className="px-4 pt-6 pb-2">
-              <p className="text-xs font-medium text-neutral-medium tracking-wider uppercase">Admin</p>
+              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Admin</p>
             </div>
             <ul>
               {adminItems.map((item) => (
                 <li key={item.title}>
                   <Link href={item.href}>
                     <div className={cn(
-                      "flex items-center px-4 py-3 text-neutral-dark hover:bg-neutral-lighter cursor-pointer",
-                      item.active && "bg-primary-light/30 border-r-4 border-primary font-medium text-neutral-darker"
+                      "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                      item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
                     )}>
                       <item.icon className={cn(
-                        "h-5 w-5 mr-3 text-neutral-medium",
-                        item.active && "text-primary"
+                        "h-5 w-5 mr-3 text-white/60",
+                        item.active && "text-cyan-300"
                       )} />
                       {item.title}
                     </div>
@@ -231,11 +290,11 @@ export function Sidebar({ className, style }: SidebarProps) {
         )}
       </nav>
       
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-white/20">
         <button 
           onClick={handleLogout}
           disabled={logoutMutation.isPending}
-          className="flex items-center text-neutral-dark hover:text-primary"
+          className="flex items-center text-white/80 hover:text-white transition-colors w-full"
         >
           <LogOut className="h-5 w-5 mr-3" />
           Log out
