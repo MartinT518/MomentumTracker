@@ -254,24 +254,24 @@ export function TrainingPreferences() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
   
   return (
-    <Card>
+    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
       <CardHeader>
-        <CardTitle>Running Profile & Training Preferences</CardTitle>
-        <CardDescription>Update your running preferences to get more accurate training plans</CardDescription>
+        <CardTitle className="text-white drop-shadow-sm">Running Profile & Training Preferences</CardTitle>
+        <CardDescription className="text-white/70 drop-shadow-sm">Update your running preferences to get more accurate training plans</CardDescription>
       </CardHeader>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium">Experience & Fitness Level</h3>
-              <p className="text-sm text-muted-foreground mb-4">Tell us about your current running experience</p>
+              <h3 className="text-lg font-medium text-white drop-shadow-sm">Experience & Fitness Level</h3>
+              <p className="text-sm text-white/60 drop-shadow-sm mb-4">Tell us about your current running experience</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Current running level */}
@@ -280,13 +280,13 @@ export function TrainingPreferences() {
                   name="currentLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current running level</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Current running level</FormLabel>
                       <Select 
                         value={field.value} 
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/30 text-white">
                             <SelectValue placeholder="Select your level" />
                           </SelectTrigger>
                         </FormControl>
@@ -307,9 +307,9 @@ export function TrainingPreferences() {
                   name="weeklyMileage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current weekly mileage</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Current weekly mileage</FormLabel>
                       <FormControl>
-                        <Input {...field} type="text" placeholder="e.g. 20-25 miles" />
+                        <Input {...field} type="text" placeholder="e.g. 20-25 miles" className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -321,13 +321,13 @@ export function TrainingPreferences() {
                   name="daysPerWeek"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Training days per week</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Training days per week</FormLabel>
                       <Select 
                         value={field.value} 
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/30 text-white">
                             <SelectValue placeholder="Select days" />
                           </SelectTrigger>
                         </FormControl>
@@ -349,9 +349,9 @@ export function TrainingPreferences() {
                   name="longRunDistance"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Typical long run distance</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Typical long run distance</FormLabel>
                       <FormControl>
-                        <Input {...field} type="text" placeholder="e.g. 8 miles" />
+                        <Input {...field} type="text" placeholder="e.g. 8 miles" className="bg-white/10 border-white/30 text-white placeholder:text-white/50" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -359,11 +359,11 @@ export function TrainingPreferences() {
               </div>
             </div>
             
-            <Separator />
+            <Separator className="bg-white/20" />
             
             <div>
-              <h3 className="text-lg font-medium">Training Preferences</h3>
-              <p className="text-sm text-muted-foreground mb-4">Customize how your training plans are structured</p>
+              <h3 className="text-lg font-medium text-white drop-shadow-sm">Training Preferences</h3>
+              <p className="text-sm text-white/60 drop-shadow-sm mb-4">Customize how your training plans are structured</p>
               
               <div className="space-y-4">
                 {/* Preferred days */}
@@ -372,7 +372,7 @@ export function TrainingPreferences() {
                   name="preferredDays"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preferred running days</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Preferred running days</FormLabel>
                       <div className="flex flex-wrap gap-4 mt-2">
                         {daysOfWeek.map((day) => (
                           <FormItem
@@ -388,9 +388,10 @@ export function TrainingPreferences() {
                                     : field.value?.filter((val) => val !== day.value);
                                   field.onChange(updatedValue);
                                 }}
+                                className="border-white/30 data-[state=checked]:bg-white/20 data-[state=checked]:text-white"
                               />
                             </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
+                            <FormLabel className="font-normal cursor-pointer text-white/80 drop-shadow-sm">
                               {day.label}
                             </FormLabel>
                           </FormItem>
@@ -406,13 +407,13 @@ export function TrainingPreferences() {
                   name="preferredTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preferred time of day</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Preferred time of day</FormLabel>
                       <Select 
                         value={field.value} 
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/30 text-white">
                             <SelectValue placeholder="Select time" />
                           </SelectTrigger>
                         </FormControl>
@@ -433,13 +434,13 @@ export function TrainingPreferences() {
                   name="longRunDay"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preferred long run day</FormLabel>
+                      <FormLabel className="text-white drop-shadow-sm">Preferred long run day</FormLabel>
                       <Select 
                         value={field.value} 
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/30 text-white">
                             <SelectValue placeholder="Select day" />
                           </SelectTrigger>
                         </FormControl>
@@ -646,14 +647,14 @@ export function TrainingPreferences() {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Additional notes</FormLabel>
-                  <FormDescription>
+                  <FormLabel className="text-white drop-shadow-sm">Additional notes</FormLabel>
+                  <FormDescription className="text-white/60 drop-shadow-sm">
                     Any other details that might be relevant for your training plan
                   </FormDescription>
                   <FormControl>
                     <Textarea
                       placeholder="E.g., specific races, injury concerns, or other preferences"
-                      className="min-h-[100px]"
+                      className="min-h-[100px] bg-white/10 border-white/30 text-white placeholder:text-white/50"
                       {...field}
                     />
                   </FormControl>
@@ -663,7 +664,7 @@ export function TrainingPreferences() {
           </CardContent>
           
           <CardFooter>
-            <Button type="submit" disabled={saving} className="ml-auto">
+            <Button type="submit" disabled={saving} className="ml-auto bg-white/20 hover:bg-white/30 text-white border-white/30">
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
