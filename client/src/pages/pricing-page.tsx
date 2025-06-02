@@ -7,6 +7,8 @@ import { CheckCircle2, Star, Zap, Users, Target, ArrowRight, ArrowLeft } from 'l
 import { LoginModal, RegisterModal } from '@/components/auth/auth-modal';
 import { Link } from 'wouter';
 import { AppLayout } from '@/components/common/app-layout';
+import { AppFooter } from '@/components/common/app-footer';
+import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
 
 const pricingPlans = [
   {
