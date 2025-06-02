@@ -130,22 +130,16 @@ export function MobileMenu() {
       active: location === "/settings",
     },
     {
-      title: "Billing",
-      href: "/pricing",
+      title: "Subscription",
+      href: "/subscription",
       icon: CreditCard,
-      active: location === "/pricing",
+      active: location === "/subscription",
     },
     {
       title: "FAQ & Support",
       href: "/faq",
       icon: HelpCircle,
       active: location === "/faq",
-    },
-    {
-      title: "Pricing",
-      href: "/pricing",
-      icon: DollarSign,
-      active: location === "/pricing",
     },
   ];
 

@@ -133,13 +133,6 @@ export function Sidebar({ className, style }: SidebarProps) {
       icon: Settings,
       active: location === "/settings",
     },
-    {
-      title: "Billing",
-      href: "/pricing",
-      icon: CreditCard,
-      active: location === "/pricing",
-      isPremium: true,
-    },
   ];
   
   const adminItems = [
@@ -207,12 +200,7 @@ export function Sidebar({ className, style }: SidebarProps) {
                     "h-5 w-5 mr-3 text-white/60",
                     item.active && "text-cyan-300"
                   )} />
-                  <div className="flex items-center">
-                    {item.title}
-                    {item.isPremium && (
-                      <Crown className="h-3.5 w-3.5 ml-2 text-amber-400" />
-                    )}
-                  </div>
+                  {item.title}
                 </div>
               </Link>
             </li>
