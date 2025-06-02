@@ -23,7 +23,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
-import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
+import aetherRunLogo from "@assets/Latesttest.png";
 
 interface SidebarProps {
   className?: string;
