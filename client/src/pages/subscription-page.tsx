@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, AlertCircle, ArrowRight, Star, Zap, Users, Target } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Sidebar } from '@/components/common/sidebar';
+import { MobileMenu } from '@/components/common/mobile-menu';
 import { LoginModal, RegisterModal } from '@/components/auth/auth-modal';
 
 // Initialize Stripe
@@ -414,9 +415,11 @@ export default function SubscriptionPage() {
   // Loading state
   if (isLoadingPlans) {
     return (
-      <div className="flex min-h-screen bg-background">
-        <Sidebar />
-        <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+        <MobileMenu />
+        <div className="flex flex-1">
+          <Sidebar />
+          <div className="flex-1 space-y-4 p-8 pt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold tracking-tight">Subscription Plans</h2>
           </div>
@@ -441,6 +444,7 @@ export default function SubscriptionPage() {
               </Card>
             ))}
           </div>
+          </div>
         </div>
       </div>
     );
@@ -449,9 +453,11 @@ export default function SubscriptionPage() {
   // Checkout view when a plan has been selected
   if (selectedPlan && clientSecret) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
-        <Sidebar />
-        <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+        <MobileMenu />
+        <div className="flex flex-1">
+          <Sidebar />
+          <div className="flex-1 space-y-4 p-8 pt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Complete Your Subscription</h2>
           </div>
@@ -507,6 +513,7 @@ export default function SubscriptionPage() {
               </CardContent>
             </Card>
           </div>
+          </div>
         </div>
       </div>
     );
@@ -514,9 +521,11 @@ export default function SubscriptionPage() {
 
   // Plan selection view
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
-      <Sidebar />
-      <div className="flex-1 space-y-6 p-8 pt-6">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
+      <MobileMenu />
+      <div className="flex flex-1">
+        <Sidebar />
+        <div className="flex-1 space-y-6 p-8 pt-6">
         <div className="space-y-0.5">
           <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Subscription Plans</h2>
           <p className="text-white/80 drop-shadow-sm">Choose the perfect plan for your training needs</p>
@@ -712,6 +721,7 @@ export default function SubscriptionPage() {
               </Card>
             );
           })}
+        </div>
         </div>
       </div>
     </div>
