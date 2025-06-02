@@ -907,32 +907,32 @@ export default function GoalsPage() {
                         <div className="space-y-2">
                           {selectedGoal.distance !== "5k" && (
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">5K:</span>
-                              <span className="font-medium">
+                              <span className="text-white/70 drop-shadow-sm">5K:</span>
+                              <span className="font-medium text-white drop-shadow-sm">
                                 {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "10k", "5k")}
                               </span>
                             </div>
                           )}
                           {selectedGoal.distance !== "10k" && (
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">10K:</span>
-                              <span className="font-medium">
+                              <span className="text-white/70 drop-shadow-sm">10K:</span>
+                              <span className="font-medium text-white drop-shadow-sm">
                                 {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k", "10k")}
                               </span>
                             </div>
                           )}
                           {selectedGoal.distance !== "half-marathon" && (
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Half Marathon:</span>
-                              <span className="font-medium">
+                              <span className="text-white/70 drop-shadow-sm">Half Marathon:</span>
+                              <span className="font-medium text-white drop-shadow-sm">
                                 {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k", "half-marathon")}
                               </span>
                             </div>
                           )}
                           {selectedGoal.distance !== "marathon" && (
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Marathon:</span>
-                              <span className="font-medium">
+                              <span className="text-white/70 drop-shadow-sm">Marathon:</span>
+                              <span className="font-medium text-white drop-shadow-sm">
                                 {predictTime(selectedGoal.targetTime || "00:25:00", selectedGoal.distance || "5k", "marathon")}
                               </span>
                             </div>
@@ -946,17 +946,17 @@ export default function GoalsPage() {
                 {/* Training plan section for active race goals */}
                 {selectedGoal.type === "race" && selectedGoal.trainingPlan && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Training Plan</h3>
-                    <Card>
+                    <h3 className="text-lg font-semibold mb-3 text-white drop-shadow-sm">Training Plan</h3>
+                    <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-md">{selectedGoal.trainingPlan}</CardTitle>
+                        <CardTitle className="text-md text-white drop-shadow-sm">{selectedGoal.trainingPlan}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-neutral-medium">
+                        <p className="text-sm text-white/70 drop-shadow-sm">
                           Your personalized training plan to help you reach your race goal. 
                           Includes a mix of easy runs, tempo work, and long runs to build endurance and speed.
                         </p>
-                        <Button variant="outline" size="sm" className="mt-3">
+                        <Button variant="outline" size="sm" className="mt-3 bg-white/10 hover:bg-white/20 text-white border-white/30">
                           <Bookmark className="w-4 h-4 mr-2" />
                           View Full Plan
                         </Button>
@@ -967,50 +967,50 @@ export default function GoalsPage() {
                 
                 {/* Related activities section */}
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-3">Related Activities</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-white drop-shadow-sm">Related Activities</h3>
                   {selectedGoal.type === "race" ? (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                         <div>
-                          <div className="font-medium">Long Run</div>
-                          <div className="text-sm text-neutral-500">Jul 23, 2023</div>
+                          <div className="font-medium text-white drop-shadow-sm">Long Run</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">Jul 23, 2023</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">10.2 miles</div>
-                          <div className="text-sm text-neutral-500">1:32:45</div>
+                          <div className="font-medium text-white drop-shadow-sm">10.2 miles</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">1:32:45</div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                         <div>
-                          <div className="font-medium">Tempo Run</div>
-                          <div className="text-sm text-neutral-500">Jul 19, 2023</div>
+                          <div className="font-medium text-white drop-shadow-sm">Tempo Run</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">Jul 19, 2023</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">6 miles</div>
-                          <div className="text-sm text-neutral-500">48:12</div>
+                          <div className="font-medium text-white drop-shadow-sm">6 miles</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">48:12</div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                         <div>
-                          <div className="font-medium">Weight Check-in</div>
-                          <div className="text-sm text-neutral-500">Jul 28, 2023</div>
+                          <div className="font-medium text-white drop-shadow-sm">Weight Check-in</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">Jul 28, 2023</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">157 lbs</div>
-                          <div className="text-sm text-neutral-500">-2 lbs (week)</div>
+                          <div className="font-medium text-white drop-shadow-sm">157 lbs</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">-2 lbs (week)</div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                         <div>
-                          <div className="font-medium">Weight Check-in</div>
-                          <div className="text-sm text-neutral-500">Jul 21, 2023</div>
+                          <div className="font-medium text-white drop-shadow-sm">Weight Check-in</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">Jul 21, 2023</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">159 lbs</div>
-                          <div className="text-sm text-neutral-500">-1.5 lbs (week)</div>
+                          <div className="font-medium text-white drop-shadow-sm">159 lbs</div>
+                          <div className="text-sm text-white/60 drop-shadow-sm">-1.5 lbs (week)</div>
                         </div>
                       </div>
                     </div>
@@ -1019,10 +1019,10 @@ export default function GoalsPage() {
                 
                 {/* Notes and recommendations */}
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-3">Coach's Notes</h3>
-                  <Card>
+                  <h3 className="text-lg font-semibold mb-3 text-white drop-shadow-sm">Coach's Notes</h3>
+                  <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                     <CardContent className="pt-6">
-                      <div className="text-sm">
+                      <div className="text-sm text-white/80 drop-shadow-sm">
                         {selectedGoal.type === "race" ? (
                           selectedGoal.status === "achieved" || selectedGoal.status === "exceeded" ? (
                             "Congratulations on completing your race goal! You've shown great dedication and progress in your training. Consider setting a more challenging goal for your next race."
