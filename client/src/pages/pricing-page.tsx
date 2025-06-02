@@ -343,7 +343,9 @@ export default function PricingPage() {
 
   // Render pricing cards
   const renderPricingCards = () => {
-    const plansToShow = user ? plans : pricingPlans;
+    // Always include the free plan from pricingPlans, then add database plans for authenticated users
+    const freePlan = pricingPlans.find(p => p.name === "Free");
+    const plansToShow = user ? [freePlan, ...plans] : pricingPlans;
     
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
