@@ -135,10 +135,10 @@ export function MobileMenu() {
       active: location === "/settings",
     },
     {
-      title: "Subscription",
-      href: "/subscription",
+      title: "Billing",
+      href: "/pricing",
       icon: CreditCard,
-      active: location === "/subscription" || location.startsWith("/subscription/"),
+      active: location === "/pricing",
     },
     {
       title: "FAQ & Support",
