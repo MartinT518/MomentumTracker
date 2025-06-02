@@ -634,6 +634,8 @@ export default function PricingPage() {
           ))}
         </div>
       </main>
+        </div>
+      )}
 
       {/* Auth Modals */}
       <LoginModal 
