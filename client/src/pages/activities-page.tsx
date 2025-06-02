@@ -549,6 +549,7 @@ export default function ActivitiesPage() {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleViewActivity(activity.id)}
+                          className="text-white/80 hover:bg-white/10 hover:text-white"
                         >
                           View
                         </Button>
@@ -559,24 +560,24 @@ export default function ActivitiesPage() {
               </Table>
               
               <Pagination>
-                <PaginationContent>
+                <PaginationContent className="text-white">
                   <PaginationItem>
-                    <PaginationPrevious href="#" />
+                    <PaginationPrevious href="#" className="text-white/80 hover:bg-white/10 hover:text-white border-white/30" />
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
+                    <PaginationLink href="#" isActive className="bg-white/20 text-white border-white/30">1</PaginationLink>
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationLink href="#">2</PaginationLink>
+                    <PaginationLink href="#" className="text-white/80 hover:bg-white/10 hover:text-white border-white/30">2</PaginationLink>
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationLink href="#">3</PaginationLink>
+                    <PaginationLink href="#" className="text-white/80 hover:bg-white/10 hover:text-white border-white/30">3</PaginationLink>
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationEllipsis />
+                    <PaginationEllipsis className="text-white/60" />
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationNext href="#" />
+                    <PaginationNext href="#" className="text-white/80 hover:bg-white/10 hover:text-white border-white/30" />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
