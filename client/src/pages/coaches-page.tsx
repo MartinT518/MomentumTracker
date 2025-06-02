@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { SubscriptionGate } from '@/components/common/subscription-gate';
-import { Sidebar } from '@/components/common/sidebar';
+import { AppLayout } from '@/components/common/app-layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -89,22 +89,22 @@ export default function CoachesPage() {
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[1, 2, 3].map((i) => (
-        <Card key={i} className="animate-pulse">
+        <Card key={i} className="animate-pulse bg-white/10 backdrop-blur-sm border-white/20">
           <CardHeader className="space-y-2">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-full bg-muted"></div>
+              <div className="h-12 w-12 rounded-full bg-white/20"></div>
               <div>
-                <div className="h-4 bg-muted rounded-md w-24"></div>
-                <div className="h-3 bg-muted rounded-md w-16 mt-2"></div>
+                <div className="h-4 bg-white/20 rounded-md w-24"></div>
+                <div className="h-3 bg-white/20 rounded-md w-16 mt-2"></div>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
-            <div className="h-4 bg-muted rounded-md w-5/6"></div>
+            <div className="h-4 bg-white/20 rounded-md w-full mb-2"></div>
+            <div className="h-4 bg-white/20 rounded-md w-5/6"></div>
           </CardContent>
           <CardFooter>
-            <div className="h-9 bg-muted rounded-md w-full"></div>
+            <div className="h-9 bg-white/20 rounded-md w-full"></div>
           </CardFooter>
         </Card>
       ))}
@@ -119,8 +119,8 @@ export default function CoachesPage() {
     
     if (!coaches?.length) {
       return (
-        <Card className="col-span-full p-6 text-center">
-          <p className="text-muted-foreground">No coaches available at the moment. Check back soon!</p>
+        <Card className="col-span-full p-6 text-center bg-white/10 backdrop-blur-sm border-white/20">
+          <p className="text-white/70 drop-shadow-sm">No coaches available at the moment. Check back soon!</p>
         </Card>
       );
     }
@@ -128,30 +128,30 @@ export default function CoachesPage() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {coaches.map((coach: Coach) => (
-          <Card key={coach.id}>
+          <Card key={coach.id} className="bg-white/10 backdrop-blur-sm border-white/20">
             <CardHeader>
               <div className="flex items-center space-x-4">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={coach.profile_image} alt={coach.name} />
-                  <AvatarFallback>{coach.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-white/20 text-white">{coach.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-lg">{coach.name}</CardTitle>
-                  <CardDescription>{coach.specialty}</CardDescription>
+                  <CardTitle className="text-lg text-white drop-shadow-sm">{coach.name}</CardTitle>
+                  <CardDescription className="text-white/80 drop-shadow-sm">{coach.specialty}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="line-clamp-3 text-sm text-muted-foreground">{coach.bio}</p>
+              <p className="line-clamp-3 text-sm text-white/70 drop-shadow-sm">{coach.bio}</p>
               <div className="flex items-center space-x-2 mt-4">
-                <Badge variant="secondary">{coach.experience_years} years exp.</Badge>
-                <Badge variant="outline">
+                <Badge variant="secondary" className="bg-white/20 text-white border-white/30">{coach.experience_years} years exp.</Badge>
+                <Badge variant="outline" className="border-white/30 text-white/80">
                   ${coach.hourly_rate}/hour
                 </Badge>
               </div>
             </CardContent>
             <CardFooter>
-              <Button asChild className="w-full">
+              <Button asChild className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30">
                 <Link to={`/coaches/${coach.id}`}>View Profile</Link>
               </Button>
             </CardFooter>
@@ -280,11 +280,23 @@ export default function CoachesPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Coaching</h2>
+    <AppLayout>
+      <div className="max-w-6xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-300" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+                Coaching
+              </h1>
+              <p className="text-white/80 text-lg drop-shadow-md">
+                Get personalized guidance from experienced running coaches
+              </p>
+            </div>
+          </div>
         </div>
         
         {/* This is the key component that gates the feature based on subscription */}
@@ -295,25 +307,29 @@ export default function CoachesPage() {
           description="Get personalized guidance from experienced running coaches. Available exclusively for annual subscribers."
         >
           <Tabs defaultValue="coaches">
-            <TabsList>
-              <TabsTrigger value="coaches">
+            <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl">
+              <TabsTrigger value="coaches" className="flex items-center text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">
                 <Users className="mr-2 h-4 w-4" />
                 Coaches
               </TabsTrigger>
-              <TabsTrigger value="my-sessions">
+              <TabsTrigger value="my-sessions" className="flex items-center text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">
                 <Calendar className="mr-2 h-4 w-4" />
                 My Sessions
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="coaches" className="mt-6">
-              <CoachesList />
+            <TabsContent value="coaches" className="mt-8">
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+                <CoachesList />
+              </div>
             </TabsContent>
-            <TabsContent value="my-sessions" className="mt-6">
-              <SessionsList />
+            <TabsContent value="my-sessions" className="mt-8">
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+                <SessionsList />
+              </div>
             </TabsContent>
           </Tabs>
         </SubscriptionGate>
       </div>
-    </div>
+    </AppLayout>
   );
 }

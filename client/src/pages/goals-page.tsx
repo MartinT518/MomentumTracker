@@ -601,31 +601,32 @@ export default function GoalsPage() {
           </div>
           
           <TabsContent value="active">
-            {isLoadingGoals ? (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
-                  <p className="text-white/70 drop-shadow-sm">Loading your goals...</p>
-                </CardContent>
-              </Card>
-            ) : goalsError ? (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="text-center py-12">
-                  <h3 className="text-lg font-semibold mb-2 text-red-400 drop-shadow-sm">Error loading goals</h3>
-                  <p className="text-white/70 mb-4 drop-shadow-sm">There was a problem loading your goals. Please try again.</p>
-                  <Button onClick={() => refetchGoals()}>Retry</Button>
-                </CardContent>
-              </Card>
-            ) : activeGoals.length === 0 ? (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="text-center py-12">
-                  <h3 className="text-lg font-semibold mb-2 text-white drop-shadow-sm">No active goals</h3>
-                  <p className="text-white/70 mb-4 drop-shadow-sm">Create your first goal to start tracking your progress</p>
-                  <Button onClick={() => setCreateGoalOpen(true)}>Create Goal</Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+              {isLoadingGoals ? (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                    <p className="text-white/70 drop-shadow-sm">Loading your goals...</p>
+                  </CardContent>
+                </Card>
+              ) : goalsError ? (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="text-center py-12">
+                    <h3 className="text-lg font-semibold mb-2 text-red-400 drop-shadow-sm">Error loading goals</h3>
+                    <p className="text-white/70 mb-4 drop-shadow-sm">There was a problem loading your goals. Please try again.</p>
+                    <Button onClick={() => refetchGoals()}>Retry</Button>
+                  </CardContent>
+                </Card>
+              ) : activeGoals.length === 0 ? (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="text-center py-12">
+                    <h3 className="text-lg font-semibold mb-2 text-white drop-shadow-sm">No active goals</h3>
+                    <p className="text-white/70 mb-4 drop-shadow-sm">Create your first goal to start tracking your progress</p>
+                    <Button onClick={() => setCreateGoalOpen(true)}>Create Goal</Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {activeGoals.map((goal) => (
                   <Card key={goal.id} className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
                     <CardHeader className="pb-2">
@@ -688,8 +689,9 @@ export default function GoalsPage() {
                     </CardFooter>
                   </Card>
                 ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </TabsContent>
           
           <TabsContent value="completed">
