@@ -38,7 +38,10 @@ export function MobileMenu() {
 
   const toggleMenu = () => {
     console.log("Toggle menu clicked, current state:", isOpen);
-    setIsOpen(!isOpen);
+    setIsOpen(prev => {
+      console.log("Setting new state:", !prev);
+      return !prev;
+    });
   };
 
   const closeMenu = () => {

@@ -118,8 +118,8 @@ export default function CoachManagementPage() {
         experience_years: rest.experience_years, // Keep as string as per DB schema
         hourlyRate: rest.hourlyRate,
         status: rest.isActive ? 'active' : 'inactive',
-        specialties: rest.specialty, // Match field name with server expectations
-        photoUrl: rest.profileImage, // Match field name with server expectations
+        specialties: rest.specialties, // Keep consistent with form field name
+        photo_url: rest.photoUrl, // Match field name with server expectations
       });
       return res.json();
     },
