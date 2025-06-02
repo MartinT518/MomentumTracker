@@ -61,6 +61,12 @@ export default function DashboardPage() {
         <div className="mb-12">
           <TodaysWorkout />
         </div>
+
+        {/* Energy Level - Standalone for emphasis */}
+        <div className="mb-12">
+          <EnergyLevelCard />
+        </div>
+
         {/* Core Metrics Grid - Only 2 essential cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Weekly Progress */}
