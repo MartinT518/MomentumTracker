@@ -159,15 +159,12 @@ export function MobileMenu() {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-b border-white/20 z-50">
         <div className="flex items-center justify-between p-2">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <img 
               src={aetherRunLogo} 
               alt="AetherRun Logo" 
-              className="w-8 h-8 object-contain"
+              className="w-24 h-9 object-contain"
             />
-            <span className="text-lg font-bold text-white">
-              <span className="text-cyan-300">Aether</span>Run
-            </span>
           </div>
           <button 
             className="p-2 rounded-md bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
