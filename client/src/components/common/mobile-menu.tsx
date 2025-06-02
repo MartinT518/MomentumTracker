@@ -110,12 +110,7 @@ export function MobileMenu() {
       icon: Users,
       active: location === "/coaches",
     },
-    {
-      title: "Community",
-      href: "/community",
-      icon: Users,
-      active: location === "/community",
-    },
+
     {
       title: "Achievements",
       href: "/achievements",
