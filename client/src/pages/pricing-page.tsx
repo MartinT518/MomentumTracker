@@ -633,105 +633,6 @@ export default function PricingPage() {
             </Card>
           ))}
         </div>
-
-        {/* Feature Comparison */}
-        <div className="mt-20">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Why Choose AetherRun?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-orange-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">AI-Powered Training</h3>
-              <p className="text-white/70">
-                Personalized training plans that adapt to your progress and goals using advanced AI.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-blue-300" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Smart Analytics</h3>
-              <p className="text-white/70">
-                Deep insights into your performance with predictive analytics and trend analysis.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-green-300" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Expert Coaches</h3>
-              <p className="text-white/70">
-                Access to certified running coaches for personalized guidance and support.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="w-8 h-8 text-purple-300" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Platform Integration</h3>
-              <p className="text-white/70">
-                Seamlessly connect with Strava, Garmin, Polar, and other popular fitness platforms.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-20 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                What's included in the free trial?
-              </h3>
-              <p className="text-white/80">
-                You get full access to all Premium features for 14 days, including AI training plans, 
-                advanced analytics, and platform integrations. No credit card required.
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Can I change plans anytime?
-              </h3>
-              <p className="text-white/80">
-                Yes, you can upgrade or downgrade your plan at any time. Changes take effect 
-                immediately, and you'll be charged or credited accordingly.
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                What's the difference between Monthly and Annual plans?
-              </h3>
-              <p className="text-white/80">
-                Annual subscribers save money and get exclusive features like access to human coaches, 
-                early access to new features, and priority support.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="mt-20 text-center bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Transform Your Running?
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of runners who have already elevated their performance with AetherRun.
-          </p>
-          <Button 
-            size="lg"
-            className="bg-white text-orange-600 hover:bg-gray-100 font-semibold px-8 py-4"
-            onClick={() => setIsRegisterModalOpen(true)}
-          >
-            Start Your Free Trial
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        </div>
       </main>
 
       {/* Auth Modals */}
@@ -743,30 +644,6 @@ export default function PricingPage() {
           setIsRegisterModalOpen(true);
         }}
       />
-      <RegisterModal 
-        isOpen={isRegisterModalOpen} 
-        onClose={() => setIsRegisterModalOpen(false)}
-        onSwitchToLogin={() => {
-          setIsRegisterModalOpen(false);
-          setIsLoginModalOpen(true);
-        }}
-      />
-      
-          <div className="p-4 md:p-6">{renderPricingCards()}</div>
-          <AppFooter />
-        </div>
-      )}
-
-      {/* Auth Modals */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)}
-        onSwitchToRegister={() => {
-          setIsLoginModalOpen(false);
-          setIsRegisterModalOpen(true);
-        }}
-      />
-      
       <RegisterModal 
         isOpen={isRegisterModalOpen} 
         onClose={() => setIsRegisterModalOpen(false)}
