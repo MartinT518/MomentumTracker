@@ -54,7 +54,7 @@ function Router() {
       <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
       <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
       <ProtectedRoute path="/nutrition" component={NutritionPage} />
-      <Route path="/achievements" component={AchievementsPage} />
+      <ProtectedRoute path="/achievements" component={AchievementsPage} />
       {/* Information pages */}
       <Route path="/faq" component={FAQPage} />
       <Route path="/terms" component={TermsPage} />
