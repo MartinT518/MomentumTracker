@@ -13,11 +13,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useEffect } from "react";
-import { Link } from "wouter";
-import { AppFooter } from "@/components/common/app-footer";
-import aetherRunLogo from "@assets/Minimalist_AetherRun_logo_with_Aether_in_bold_-1747657788061.png";
+import { AppLayout } from "@/components/common/app-layout";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -60,41 +58,8 @@ export default function FAQPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-indigo-800"
-         style={{
-           background: `
-             linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(79, 70, 229, 0.8) 100%),
-             radial-gradient(circle at 30% 50%, rgba(147, 51, 234, 0.3) 0%, transparent 50%),
-             radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%)
-           `
-         }}>
-      {/* Header */}
-      <header className="border-b border-white/20 bg-white/10 backdrop-blur-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <div className="flex items-center space-x-2">
-                <img 
-                  src={aetherRunLogo} 
-                  alt="AetherRun Logo" 
-                  className="w-8 h-8 object-contain"
-                />
-                <span className="text-xl font-bold text-white">
-                  <span className="text-cyan-300">Aether</span>Run
-                </span>
-              </div>
-            </Link>
-            <Link href="/">
-              <Button className="bg-white/20 hover:bg-white/30 text-white border-white/20">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto py-8 px-4">
+    <AppLayout>
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 text-white drop-shadow-lg">Frequently Asked Questions</h1>
           <p className="text-xl text-white/80 drop-shadow-md">Find answers to common questions about AetherRun</p>
@@ -266,8 +231,6 @@ export default function FAQPage() {
           </CardContent>
         </Card>
       </div>
-
-      <AppFooter />
-    </div>
+    </AppLayout>
   );
 }
