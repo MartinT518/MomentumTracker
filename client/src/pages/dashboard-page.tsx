@@ -47,71 +47,52 @@ export default function DashboardPage() {
         {/* For mobile view padding to account for fixed header */}
         <div className="md:hidden pt-20"></div>
 
-        {/* User Greeting with Glass Effect */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 p-6 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl hover:bg-white/15 transition-all duration-300">
-          <div>
-            <h1 className="text-2xl font-bold font-heading text-white drop-shadow-lg">Welcome back, {user?.username || 'Runner'}!</h1>
-            <p className="text-white/90 mt-1 drop-shadow-md">You're making great progress on your training.</p>
-          </div>
-          <div className="mt-4 md:mt-0 flex space-x-3">
-            <Link href="/activities">
-              <Button className="inline-flex items-center bg-gradient-to-r from-[#8a4df0] to-[#3a4db9] hover:from-[#7a3de0] hover:to-[#2a3da9] text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                <Plus className="-ml-1 mr-2 h-5 w-5" />
-                Log Activity
-              </Button>
-            </Link>
-          </div>
-        </div>
-        
-        {/* Daily Motivation Banner */}
-        <DailyMotivation />
-        
-        {/* Motivational Quote */}
-        <div className="mb-6">
-          <MotivationalQuoteCard />
+        {/* Simplified User Greeting */}
+        <div className="mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg">
+            Welcome back, {user?.username || 'Runner'}!
+          </h1>
+          <p className="text-white/80 text-xl drop-shadow-md">
+            Ready to crush your running goals today?
+          </p>
         </div>
 
-        {/* Current Goal Banner */}
-        <CurrentGoalBanner />
-
-        {/* Today's Workout - Moved to the top */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold font-heading text-white mb-4 drop-shadow-lg">Today's Workout</h2>
+        {/* Hero Section - Today's Workout */}
+        <div className="mb-12">
           <TodaysWorkout />
         </div>
-        
-        {/* Weekly Overview */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold font-heading text-white mb-4 drop-shadow-lg">This Week's Overview</h2>
-          <WeeklyMetrics />
-        </div>
-        
-        {/* Energy Level - Moved to a separate row and made full width */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold font-heading text-white mb-4 drop-shadow-lg">Today's Energy</h2>
-          <EnergyLevelCard />
-        </div>
-
-        {/* Progress Charts */}
-        <ProgressCharts />
-
-        {/* Training Plan Schedule */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <h2 className="text-xl font-semibold font-heading text-white mb-4 drop-shadow-lg">Upcoming Workouts</h2>
-            <TrainingCalendar />
-          </div>
-
+        {/* Core Metrics Grid - Only 2 essential cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Weekly Progress */}
           <div>
-            {/* Weekly Progress */}
-            <h2 className="text-xl font-semibold font-heading text-white mb-4 drop-shadow-lg">Weekly Progress</h2>
             <WeeklyProgress />
           </div>
+          
+          {/* Recent Activities */}
+          <div>
+            <RecentActivities />
+          </div>
         </div>
 
-        {/* Recent Activities */}
-        <h2 className="text-xl font-semibold font-heading text-white mb-4 drop-shadow-lg">Recent Activities</h2>
-        <RecentActivities />
+        {/* Motivational Section */}
+        <div className="mb-12">
+          <DailyMotivation />
+        </div>
+
+        {/* Quick Actions - Simplified */}
+        <div className="flex gap-6 justify-center">
+          <Link href="/activities">
+            <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border-white/30 px-8">
+              <Plus className="w-5 h-5 mr-2" />
+              Log Activity
+            </Button>
+          </Link>
+          <Link href="/training-plan">
+            <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8">
+              View Training Plan
+            </Button>
+          </Link>
+        </div>
       </main>
     </div>
   );
