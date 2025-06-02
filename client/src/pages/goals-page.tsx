@@ -583,17 +583,17 @@ export default function GoalsPage() {
 
         {/* Goals Content */}
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex justify-between items-center mb-4">
-            <TabsList className="bg-white/10 backdrop-blur-sm border-white/20">
-              <TabsTrigger value="active" className="flex items-center text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
+          <div className="mb-8">
+            <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl">
+              <TabsTrigger value="active" className="flex items-center text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">
                 <Flag className="mr-2 h-4 w-4" />
                 Active Goals
               </TabsTrigger>
-              <TabsTrigger value="completed" className="flex items-center text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
+              <TabsTrigger value="completed" className="flex items-center text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">
                 <ThumbsUp className="mr-2 h-4 w-4" />
                 Completed
               </TabsTrigger>
-              <TabsTrigger value="achievements" className="flex items-center text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">
+              <TabsTrigger value="achievements" className="flex items-center text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">
                 <Award className="mr-2 h-4 w-4" />
                 Achievements
               </TabsTrigger>
@@ -693,107 +693,111 @@ export default function GoalsPage() {
           </TabsContent>
           
           <TabsContent value="completed">
-            {/* Achievement Demo Section */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-white drop-shadow-sm">Goal Achievement Celebrations</h3>
-              <GoalAchievementDemo />
-            </div>
-            
-            <h3 className="text-xl font-semibold mb-4 text-white drop-shadow-sm">Completed Goals</h3>
-            {isLoadingGoals ? (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
-                  <p className="text-white/70 drop-shadow-sm">Loading completed goals...</p>
-                </CardContent>
-              </Card>
-            ) : goalsError ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <h3 className="text-lg font-semibold mb-2 text-red-500">Error loading goals</h3>
-                  <p className="text-neutral-medium mb-4">There was a problem loading your goals. Please try again.</p>
-                  <Button onClick={() => refetchGoals()}>Retry</Button>
-                </CardContent>
-              </Card>
-            ) : completedGoals.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <h3 className="text-lg font-semibold mb-2">No completed goals yet</h3>
-                  <p className="text-neutral-medium">Complete your first goal to see it here</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {completedGoals.map((goal) => (
-                  <Card key={goal.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center">
-                          {getGoalTypeIcon(goal.type)}
-                          <CardTitle className="ml-2 text-lg font-semibold">
-                            {goal.type === "race" ? goal.distance : goal.title}
-                          </CardTitle>
-                        </div>
-                        {getStatusBadge(goal.status)}
-                      </div>
-                      <CardDescription>
-                        Completed: {goal.completedDate}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="mt-2 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-neutral-50 p-2 rounded-md">
-                            <div className="text-xs text-neutral-500">Target</div>
-                            <div className="font-medium">
-                              {goal.type === "race" ? goal.targetTime : goal.target}
-                            </div>
-                          </div>
-                          <div className="bg-neutral-50 p-2 rounded-md">
-                            <div className="text-xs text-neutral-500">Actual</div>
-                            <div className="font-medium">
-                              {goal.type === "race" ? goal.actualTime : goal.actual}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center mt-4 text-sm text-muted-foreground">
-                        <Award className="h-4 w-4 mr-1.5 text-yellow-500" />
-                        <span>
-                          {goal.status === "achieved" ? "Goal achieved! Great work!" : "Goal exceeded! Outstanding!"}
-                        </span>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => handleViewGoalDetails(goal)}
-                      >
-                        View Details
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+              {/* Achievement Demo Section */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4 text-white drop-shadow-sm">Goal Achievement Celebrations</h3>
+                <GoalAchievementDemo />
               </div>
-            )}
+              
+              <h3 className="text-xl font-semibold mb-4 text-white drop-shadow-sm">Completed Goals</h3>
+              {isLoadingGoals ? (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                    <p className="text-white/70 drop-shadow-sm">Loading completed goals...</p>
+                  </CardContent>
+                </Card>
+              ) : goalsError ? (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="text-center py-12">
+                    <h3 className="text-lg font-semibold mb-2 text-red-400 drop-shadow-sm">Error loading goals</h3>
+                    <p className="text-white/70 mb-4 drop-shadow-sm">There was a problem loading your goals. Please try again.</p>
+                    <Button onClick={() => refetchGoals()}>Retry</Button>
+                  </CardContent>
+                </Card>
+              ) : completedGoals.length === 0 ? (
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="text-center py-12">
+                    <h3 className="text-lg font-semibold mb-2 text-white drop-shadow-sm">No completed goals yet</h3>
+                    <p className="text-white/70 drop-shadow-sm">Complete your first goal to see it here</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {completedGoals.map((goal) => (
+                    <Card key={goal.id} className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center">
+                            {getGoalTypeIcon(goal.type, "h-5 w-5 text-white")}
+                            <CardTitle className="ml-2 text-lg font-semibold text-white drop-shadow-sm">
+                              {goal.type === "race" ? goal.distance : goal.title}
+                            </CardTitle>
+                          </div>
+                          {getStatusBadge(goal.status)}
+                        </div>
+                        <CardDescription className="text-white/80 drop-shadow-sm">
+                          Completed: {goal.completedDate}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <div className="mt-2 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <div className="text-xs text-white/70 drop-shadow-sm">Target</div>
+                              <div className="font-medium text-white drop-shadow-sm">
+                                {goal.type === "race" ? goal.targetTime : goal.target}
+                              </div>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <div className="text-xs text-white/70 drop-shadow-sm">Actual</div>
+                              <div className="font-medium text-white drop-shadow-sm">
+                                {goal.type === "race" ? goal.actualTime : goal.actual}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center mt-4 text-sm text-white/70 drop-shadow-sm">
+                          <Award className="h-4 w-4 mr-1.5 text-yellow-400" />
+                          <span>
+                            {goal.status === "achieved" ? "Goal achieved! Great work!" : "Goal exceeded! Outstanding!"}
+                          </span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="pt-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-white/80 hover:text-white hover:bg-white/10"
+                          onClick={() => handleViewGoalDetails(goal)}
+                        >
+                          View Details
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
           </TabsContent>
           
           <TabsContent value="achievements">
-            <div className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Achievement Test Interface</CardTitle>
-                  <CardDescription>
-                    Use this interface to test the achievement popup functionality
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <TestAchievement />
-                </CardContent>
-              </Card>
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-xl">
+              <div className="space-y-8">
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardHeader>
+                    <CardTitle className="text-white drop-shadow-sm">Achievement Test Interface</CardTitle>
+                    <CardDescription className="text-white/80 drop-shadow-sm">
+                      Use this interface to test the achievement popup functionality
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <TestAchievement />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
