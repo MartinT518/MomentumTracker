@@ -222,24 +222,24 @@ export default function CoachManagementPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
       <MobileMenu />
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-6 md:p-10">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold">Coach Management</h1>
-              <p className="text-muted-foreground">Add, edit or remove coaches from the platform</p>
+              <h1 className="text-3xl font-bold text-white drop-shadow-sm">Coach Management</h1>
+              <p className="text-white/70 drop-shadow-sm">Add, edit or remove coaches from the platform</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Coach Form */}
-            <Card className="lg:col-span-1">
+            <Card className="lg:col-span-1 bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
-                <CardTitle>{editingCoachId ? "Edit Coach" : "Add New Coach"}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-white drop-shadow-sm">{editingCoachId ? "Edit Coach" : "Add New Coach"}</CardTitle>
+                <CardDescription className="text-white/70 drop-shadow-sm">
                   {editingCoachId 
                     ? "Update coach information" 
                     : "Fill in the details to add a new coach"}
@@ -253,9 +253,9 @@ export default function CoachManagementPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Name</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Coach's full name" {...field} />
+                            <Input placeholder="Coach's full name" className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -267,9 +267,9 @@ export default function CoachManagementPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="coach@example.com" {...field} />
+                            <Input placeholder="coach@example.com" className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -281,9 +281,9 @@ export default function CoachManagementPage() {
                       name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Title</FormLabel>
+                          <FormLabel className="text-white drop-shadow-sm">Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Senior Running Coach" {...field} />
+                            <Input placeholder="e.g. Senior Running Coach" className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -296,9 +296,9 @@ export default function CoachManagementPage() {
                         name="experience_years"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Years of Experience</FormLabel>
+                            <FormLabel className="text-white drop-shadow-sm">Years of Experience</FormLabel>
                             <FormControl>
-                              <Input placeholder="5" {...field} />
+                              <Input placeholder="5" className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -310,9 +310,9 @@ export default function CoachManagementPage() {
                         name="hourlyRate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Hourly Rate ($)</FormLabel>
+                            <FormLabel className="text-white drop-shadow-sm">Hourly Rate ($)</FormLabel>
                             <FormControl>
-                              <Input placeholder="75.00" {...field} />
+                              <Input placeholder="75.00" className="bg-white/10 border-white/30 text-white placeholder:text-white/60" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
