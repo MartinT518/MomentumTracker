@@ -111,12 +111,7 @@ export function MobileMenu() {
       active: location === "/coaches",
     },
 
-    {
-      title: "Achievements",
-      href: "/achievements",
-      icon: Crown,
-      active: location === "/achievements",
-    },
+
     {
       title: "Profile",
       href: "/profile",
