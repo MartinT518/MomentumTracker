@@ -41,12 +41,7 @@
     <priority>0.5</priority>
   </url>
 
-  <url>
-    <loc>https://www.aetherrun.com/achievements</loc>
-    <lastmod>2025-05-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
+
 
   <!-- App Pages (require authentication but included for SEO) -->
   <url>
