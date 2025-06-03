@@ -3,8 +3,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Sidebar } from '@/components/common/sidebar';
-import { MobileMenu } from '@/components/common/mobile-menu';
+import { AppLayout } from '@/components/common/app-layout';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Shield, Unlock, UserCog, BellRing, ArrowLeft, Activity } from 'lucide-react';
+import { Shield, Unlock, UserCog, BellRing, Activity } from 'lucide-react';
 import { IntegrationSettings } from '@/components/settings/integration-settings';
 import { TrainingPreferences } from '@/components/settings/training-preferences';
 import { Link } from 'wouter';
@@ -214,19 +213,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white flex">
-      <Sidebar />
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex flex-col space-y-2">
-          <div>
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="mb-2 px-1 text-white/80 hover:text-white hover:bg-white/10">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
+    <AppLayout>
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col space-y-2 mb-6">
           <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Settings</h2>
+          <p className="text-white/70 drop-shadow-sm">Manage your account, security, and preferences</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -468,6 +459,6 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 }
