@@ -9,8 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, UserPlus, Users } from 'lucide-react';
-import { Sidebar } from '@/components/common/sidebar';
-import { MobileMenu } from '@/components/common/mobile-menu';
+import { AppLayout } from '@/components/common/app-layout';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Switch } from '@/components/ui/switch';
@@ -204,37 +203,30 @@ export default function CoachManagementPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
-        <MobileMenu />
-        <div className="flex flex-1">
-          <Sidebar />
-          <main className="flex-1 p-6 md:p-10 lg:pt-6">
-            <div className="text-center py-20">
-              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-8 max-w-md mx-auto">
-                <h1 className="text-3xl font-bold mb-4 text-white drop-shadow-sm">Access Denied</h1>
-                <p className="text-white/80 drop-shadow-sm">
-                  You don't have permission to access this page.
-                </p>
-              </div>
+      <AppLayout>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center py-20">
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-8 max-w-md mx-auto">
+              <h1 className="text-3xl font-bold mb-4 text-white drop-shadow-sm">Access Denied</h1>
+              <p className="text-white/80 drop-shadow-sm">
+                You don't have permission to access this page.
+              </p>
             </div>
-          </main>
+          </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700">
-      <MobileMenu />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-6 md:p-10 lg:pt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white drop-shadow-sm">Coach Management</h1>
-              <p className="text-white/70 drop-shadow-sm">Add, edit or remove coaches from the platform</p>
-            </div>
+    <AppLayout>
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white drop-shadow-sm">Coach Management</h1>
+            <p className="text-white/70 drop-shadow-sm">Add, edit or remove coaches from the platform</p>
           </div>
+        </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Coach Form */}
@@ -521,8 +513,7 @@ export default function CoachManagementPage() {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
-    </div>
-  );
-}
+        </div>
+      </AppLayout>
+    );
+  }
