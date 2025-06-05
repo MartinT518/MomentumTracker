@@ -1,0 +1,100 @@
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'cache-control': 'no-cache, no-store',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'content-security-policy': "base-uri 'none'; default-src 'none'; form-action 'none'; frame-ancestors 'none'; img-src 'self'; script-src 'self' 'report-sample'; style-src 'self'; worker-src 'none'; upgrade-insecure-requests; report-uri https://q.stripe.com/csp-violation?q=HuI9xC0KrjddVEEAYqnQgaM4GrXiCcErlWS4RrJ0KsdVJPVolbVwDUz9pIu2d2r4wtqAsYctxgx2LuRa",
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'request-id': 'req_FFzHGFlkMNO2DQ',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'stripe-version': '2025-04-30.basil',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+vary: 'Origin',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'x-stripe-priority-routing-enabled': 'true',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'x-stripe-routing-context-priority-tier': 'api-testmode',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'x-wc': 'ABGHI',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'strict-transport-security': 'max-age=63072000; includeSubDomains; preload'
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+},
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+statusCode: 404,
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+requestId: 'req_FFzHGFlkMNO2DQ'
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+},
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+rawType: 'invalid_request_error',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+code: 'resource_missing',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+doc_url: 'https://stripe.com/docs/error-codes/resource-missing',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+param: 'id',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+detail: undefined,
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+headers: {
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+server: 'nginx',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+date: 'Thu, 05 Jun 2025 19:48:51 GMT',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'content-type': 'application/json',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'content-length': '339',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+connection: 'keep-alive',
+2025-06-05 22:48:51.76
+dbd1c97e
+User
+'access-control-allow-credentials': 'true',

@@ -3912,28 +3912,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // If the user already has a subscription, retrieve it
       if (user.stripe_subscription_id) {
-        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id) as ExpandedSubscription;
+        try {
+          const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id) as ExpandedSubscription;
         
-        let clientSecret = null;
-        const latestInvoice = subscription.latest_invoice;
-        
-        if (latestInvoice && typeof latestInvoice !== 'string') {
-          const paymentIntent = latestInvoice.payment_intent;
+          let clientSecret = null;
+          const latestInvoice = subscription.latest_invoice;
           
-          if (typeof paymentIntent === 'string') {
-            const pi = await stripe.paymentIntents.retrieve(paymentIntent);
-            clientSecret = pi.client_secret;
-          } else if (paymentIntent) {
-            clientSecret = paymentIntent.client_secret;
+          if (latestInvoice && typeof latestInvoice !== 'string') {
+            const paymentIntent = latestInvoice.payment_intent;
+            
+            if (typeof paymentIntent === 'string') {
+              const pi = await stripe.paymentIntents.retrieve(paymentIntent);
+              clientSecret = pi.client_secret;
+            } else if (paymentIntent) {
+              clientSecret = paymentIntent.client_secret;
+            }
           }
+          
+          res.send({
+            subscriptionId: subscription.id,
+            clientSecret: clientSecret || undefined
+          });
+          
+          return;
+        } catch (stripeError: any) {
+          console.warn(`Stripe subscription ${user.stripe_subscription_id} not found, clearing invalid ID:`, stripeError.message);
+          // Clear the invalid subscription ID from the user record
+          await storage.updateUserSubscription(user.id, {
+            stripeSubscriptionId: null,
+            status: null
+          });
+          // Continue to create a new subscription
         }
-        
-        res.send({
-          subscriptionId: subscription.id,
-          clientSecret: clientSecret || undefined
-        });
-        
-        return;
       }
       
       // Create a new customer if needed
