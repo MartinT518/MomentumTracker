@@ -42,11 +42,13 @@ export default function NutritionPage() {
     queryKey: ['/api/nutrition/meal-plans', user?.id, currentDate],
     queryFn: () => getMealPlan(user!.id, currentDate),
     enabled: !!user?.id,
+    retry: false, // Don't retry failed requests
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
   useEffect(() => {
     if (mealPlanError) {
-      console.error("Error fetching meal plan:", mealPlanError);
+      console.warn("Meal plan not available:", mealPlanError);
     }
   }, [mealPlanError]);
 
