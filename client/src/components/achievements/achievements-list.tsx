@@ -127,7 +127,7 @@ export const AchievementsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-10 bg-gray-50 rounded-lg">
+        <div className="text-center py-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
           <Award className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-lg font-medium">No achievements yet</h3>
           <p className="mt-1 text-sm text-gray-500">

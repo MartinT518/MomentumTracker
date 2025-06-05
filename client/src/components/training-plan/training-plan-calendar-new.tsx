@@ -482,7 +482,7 @@ export function TrainingPlanCalendar({
                       {day.workouts.map((workout) => (
                         <div 
                           key={workout.id} 
-                          className="pl-6 border-l-2 border-l-gray-200 cursor-pointer hover:bg-gray-50 rounded-r-lg p-2"
+                          className="pl-6 border-l-2 border-l-white/20 cursor-pointer hover:bg-white/10 backdrop-blur-sm rounded-r-lg p-2"
                           onClick={() => onWorkoutClick(workout)}
                         >
                           <div className="flex justify-between items-start mb-1">
