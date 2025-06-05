@@ -3005,27 +3005,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/coaching-sessions", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const validation = insertCoachingSessionSchema.safeParse({
-        ...req.body,
-        athlete_id: req.user.id
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const session = await storage.createCoachingSession(validation.data);
-      res.status(201).json(session);
-    } catch (error) {
-      console.error("Error booking coaching session:", error);
-      res.status(500).json({ error: "Failed to book coaching session" });
-    }
-  });
-
   app.patch("/api/coaching-sessions/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     

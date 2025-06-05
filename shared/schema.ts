@@ -451,20 +451,13 @@ export const subscription_plans = pgTable("subscription_plans", {
 });
 
 // Insert schemas for validations
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  email: true,
-  age: true,
-  weight: true,
-  height: true,
-  experience_level: true,
-  bio: true,
-  profile_image: true,
-}).omit({
+export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   created_at: true,
   updated_at: true,
+  subscription_status: true,
+  stripe_customer_id: true,
+  stripe_subscription_id: true,
 });
 
 export const insertGoalSchema = createInsertSchema(goals).omit({
