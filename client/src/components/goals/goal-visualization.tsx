@@ -189,7 +189,7 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
     }
     
     // Generate actual pace data from activities
-    const paceData = [];
+    const paceDataPoints = [];
     
     // Target pace calculation
     const targetPace = goal.targetTime ? 
@@ -205,7 +205,7 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
       // Calculate pace in minutes per km
       const paceMinutes = activity.duration / 60 / (activity.distance / 1000);
       
-      paceData.push({
+      paceDataPoints.push({
         date: new Date(activity.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         pace: paceMinutes,
         target: targetPaceMinutes
@@ -213,13 +213,13 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
     }
     
     // Add future target point
-    paceData.push({
+    paceDataPoints.push({
       date: "Target",
       pace: null,
       target: targetPaceMinutes
     });
     
-    return paceData;
+    return paceDataPoints;
   };
   
   // Generate comparison data (compare with similar goals by other users)
