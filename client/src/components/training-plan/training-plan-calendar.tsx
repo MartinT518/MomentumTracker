@@ -252,7 +252,7 @@ export function TrainingPlanCalendar({ onWorkoutClick }: CalendarProps) {
             
             {/* Empty slots for days before the first day of month */}
             {Array.from({ length: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay() }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-28 p-2 rounded-lg bg-gray-50 opacity-50"></div>
+              <div key={`empty-${i}`} className="h-28 p-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 opacity-50"></div>
             ))}
             
             {/* Calendar days */}
