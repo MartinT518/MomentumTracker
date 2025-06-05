@@ -821,7 +821,7 @@ export default function GoalsPage() {
               </DialogTitle>
               <DialogDescription className="text-white/80 drop-shadow-sm">
                 {selectedGoal && !isEditMode && (
-                  <>
+                  <div className="flex items-center">
                     {selectedGoal.status && getStatusBadge(selectedGoal.status)}
                     <span className="ml-2">
                       {selectedGoal.type === "race" 
@@ -830,7 +830,7 @@ export default function GoalsPage() {
                           ? `Target: ${selectedGoal.targetWeight}` 
                           : selectedGoal.target}
                     </span>
-                  </>
+                  </div>
                 )}
                 {isEditMode && selectedGoal && (
                   <span className="text-amber-300 drop-shadow-sm">Editing goal details</span>
@@ -1055,14 +1055,14 @@ export default function GoalsPage() {
             
             {selectedGoal && isEditMode && (
               <div className="py-4">
-                <div className="space-y-4 p-4 border rounded-lg bg-neutral-50">
+                <div className="space-y-4 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
                   <div className="space-y-2">
-                    <Label htmlFor="goal-type">Goal Type</Label>
+                    <Label htmlFor="goal-type" className="text-white drop-shadow-sm">Goal Type</Label>
                     <Select 
                       value={newGoalType}
                       onValueChange={handleGoalTypeChange}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
                         <SelectValue placeholder="Select a goal type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1071,18 +1071,18 @@ export default function GoalsPage() {
                         <SelectItem value="fitness">General Fitness</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Changing goal type will reset specific goal settings</p>
+                    <p className="text-xs text-white/60 drop-shadow-sm">Changing goal type will reset specific goal settings</p>
                   </div>
                   
                   {newGoalType === "race" && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="race-distance">Race Distance</Label>
+                        <Label htmlFor="race-distance" className="text-white drop-shadow-sm">Race Distance</Label>
                         <Select 
                           value={raceDistance}
                           onValueChange={setRaceDistance}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
                             <SelectValue placeholder="Select race distance" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1095,22 +1095,23 @@ export default function GoalsPage() {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="target-time">Target Time (hh:mm:ss)</Label>
+                        <Label htmlFor="target-time" className="text-white drop-shadow-sm">Target Time (hh:mm:ss)</Label>
                         <Input 
                           id="target-time" 
                           value={targetTime}
                           onChange={(e) => setTargetTime(e.target.value)}
-                          placeholder="e.g. 1:45:30" 
+                          placeholder="e.g. 1:45:30"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="experience">Experience Level</Label>
+                        <Label htmlFor="experience" className="text-white drop-shadow-sm">Experience Level</Label>
                         <Select 
                           value={experience}
                           onValueChange={setExperience}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
                             <SelectValue placeholder="Select experience level" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1126,26 +1127,28 @@ export default function GoalsPage() {
                   {newGoalType === "weight" && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="starting-weight">Current Weight (lbs)</Label>
+                        <Label htmlFor="starting-weight" className="text-white drop-shadow-sm">Current Weight (lbs)</Label>
                         <Input 
                           id="starting-weight" 
                           value={startingWeight}
                           onChange={(e) => setStartingWeight(e.target.value)}
                           placeholder="e.g. 180" 
                           type="number"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="weight-loss">Weight Loss Goal (lbs)</Label>
+                        <Label htmlFor="weight-loss" className="text-white drop-shadow-sm">Weight Loss Goal (lbs)</Label>
                         <Input 
                           id="weight-loss" 
                           value={weightLossAmount}
                           onChange={(e) => setWeightLossAmount(e.target.value)}
                           placeholder="e.g. 15" 
                           type="number"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-white/60 drop-shadow-sm">
                           Target Weight: {startingWeight && weightLossAmount 
                           ? (parseFloat(startingWeight) - parseFloat(weightLossAmount)).toFixed(1) 
                           : '---'} lbs
@@ -1155,12 +1158,13 @@ export default function GoalsPage() {
                   )}
                   
                   <div className="space-y-2">
-                    <Label htmlFor="target-date">Target Date</Label>
+                    <Label htmlFor="target-date" className="text-white drop-shadow-sm">Target Date</Label>
                     <Input 
                       id="target-date" 
                       value={targetDate?.toISOString().split('T')[0] || ''}
                       onChange={(e) => setTargetDate(new Date(e.target.value))}
-                      type="date" 
+                      type="date"
+                      className="bg-white/10 border-white/20 text-white"
                     />
                   </div>
                 </div>
