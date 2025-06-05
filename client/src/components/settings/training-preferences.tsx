@@ -381,11 +381,12 @@ export function TrainingPreferences() {
                           >
                             <FormControl>
                               <Checkbox
-                                checked={field.value?.includes(day.value)}
+                                checked={Array.isArray(field.value) ? field.value.includes(day.value) : false}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   const updatedValue = checked
-                                    ? [...field.value, day.value]
-                                    : field.value?.filter((val) => val !== day.value);
+                                    ? [...currentValue, day.value]
+                                    : currentValue.filter((val) => val !== day.value);
                                   field.onChange(updatedValue);
                                 }}
                                 className="border-white/30 data-[state=checked]:bg-white/20 data-[state=checked]:text-white"
@@ -496,11 +497,12 @@ export function TrainingPreferences() {
                             >
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value?.includes(activity.value)}
+                                  checked={Array.isArray(field.value) ? field.value.includes(activity.value) : false}
                                   onCheckedChange={(checked) => {
+                                    const currentValue = Array.isArray(field.value) ? field.value : [];
                                     const updatedValue = checked
-                                      ? [...field.value, activity.value]
-                                      : field.value?.filter((val) => val !== activity.value);
+                                      ? [...currentValue, activity.value]
+                                      : currentValue.filter((val) => val !== activity.value);
                                     field.onChange(updatedValue);
                                   }}
                                 />
@@ -534,11 +536,12 @@ export function TrainingPreferences() {
                           >
                             <FormControl>
                               <Checkbox
-                                checked={field.value?.includes(type.value)}
+                                checked={Array.isArray(field.value) ? field.value.includes(type.value) : false}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
                                   const updatedValue = checked
-                                    ? [...field.value, type.value]
-                                    : field.value?.filter((val) => val !== type.value);
+                                    ? [...currentValue, type.value]
+                                    : currentValue.filter((val) => val !== type.value);
                                   field.onChange(updatedValue);
                                 }}
                               />
