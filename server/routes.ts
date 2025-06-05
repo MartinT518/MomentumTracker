@@ -4478,7 +4478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         coach_id,
         status: "active",
         type: "coaching",
-        session_date: new Date(),
+        session_date: new Date().toISOString(),
         duration_minutes: 60,
         notes: `Goals: ${goals || "Not specified"}\nQuestions: ${questions || "None"}`
       });
