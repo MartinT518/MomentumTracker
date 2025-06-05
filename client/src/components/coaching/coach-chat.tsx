@@ -301,7 +301,7 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
                     <div className="font-medium mb-1">Training Plan Suggestion</div>
                     <div className="text-sm mb-2">{suggestion.description}</div>
                     
-                    <div className="bg-white rounded p-3 mb-3 text-sm">
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded p-3 mb-3 text-sm text-white drop-shadow-sm">
                       <div className="font-medium">{suggestion.workout.type}</div>
                       <div className="text-gray-600 mt-1">{suggestion.workout.details}</div>
                       <div className="text-blue-600 mt-2">
