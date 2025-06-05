@@ -72,11 +72,16 @@ export async function getMealPlan(userId: number, date: string): Promise<AIGener
   try {
     const response = await apiRequest("GET", `/api/nutrition/meal-plans/${userId}/${date}`);
     if (!response.ok) {
+      if (response.status === 404) {
+        // No meal plan exists for this date, which is normal
+        return null;
+      }
+      console.warn(`Failed to fetch meal plan: ${response.status} ${response.statusText}`);
       return null;
     }
     return await response.json();
   } catch (error) {
-    console.error("Error fetching meal plan:", error);
+    console.warn("Error fetching meal plan:", error);
     return null;
   }
 }
@@ -136,8 +141,8 @@ export async function generateMealPlan(
     
     return await response.json();
   } catch (error) {
-    console.error("Error generating meal plan:", error);
-    throw error; // Re-throw to allow the component to handle it
+    console.warn("Error generating meal plan:", error);
+    return null; // Return null instead of throwing to prevent unhandled rejections
   }
 }
 
