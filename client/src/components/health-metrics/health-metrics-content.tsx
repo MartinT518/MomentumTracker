@@ -54,7 +54,7 @@ export function HealthMetricsContent() {
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-2">Health Metrics</h1>
         <p className="text-lg text-neutral-dark mb-6">Track your biometric data and energy levels</p>
-        <div className="bg-white rounded-lg shadow p-8 text-center">
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg shadow p-8 text-center">
           <p className="text-neutral-dark">No health metrics found. Import data to get started.</p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export function HealthMetricsContent() {
       <p className="text-lg text-neutral-dark mb-6">Track your biometric data and energy levels</p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {healthMetrics.map((metric) => (
-          <div key={metric.id} className="bg-white rounded-lg shadow p-4">
+          <div key={metric.id} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg shadow p-4">
             <div className="font-medium">{new Date(metric.date).toLocaleDateString()}</div>
             <div className="mt-2">
               {metric.hrvScore && <div>HRV Score: {metric.hrvScore}</div>}

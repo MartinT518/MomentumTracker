@@ -77,7 +77,7 @@ export function GoalAchievementPopup(props: GoalAchievementPopupProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <Card className="w-full max-w-md bg-white rounded-xl shadow-2xl border-0 animate-popup">
+      <Card className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl animate-popup">
         <CardHeader className="pb-4 text-center">
           <div className="mx-auto mb-4 bg-primary/10 p-3 rounded-full">
             <AchievementIcon type={currentAchievement.achievement_type || currentAchievement.type || 'milestone'} />

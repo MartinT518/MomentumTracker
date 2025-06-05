@@ -165,7 +165,7 @@ export function WorkoutDetailView() {
               <p className="text-sm text-neutral-700 mb-3">{workout.mainSet.description}</p>
               
               {workout.mainSet.intervals && (
-                <div className="bg-gray-50 rounded-lg p-3 space-y-3">
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 space-y-3">
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
                     <div className="flex items-center">
                       <span className="text-xs font-medium text-gray-500 mr-2">Sets:</span>
