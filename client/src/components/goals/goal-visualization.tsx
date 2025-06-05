@@ -659,38 +659,40 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
         {renderChart()}
         
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-neutral-50 rounded-lg p-3">
-            <div className="text-sm text-neutral-500 mb-1">Current Progress</div>
-            <div className="font-semibold text-lg">
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+            <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Current Progress</div>
+            <div className="font-semibold text-lg text-white drop-shadow-sm">
               {progressData ? `${progressData.currentProgress}%` : `${goal.progress}%`}
             </div>
           </div>
           
-          <div className="bg-neutral-50 rounded-lg p-3">
-            <div className="text-sm text-neutral-500 mb-1">Status</div>
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+            <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Status</div>
             <div className="font-semibold text-lg">
               {progressData ? 
                 (progressData.prediction.isOnTrack ? 
-                  <span className="flex items-center text-green-600">
+                  <span className="flex items-center text-green-400 drop-shadow-sm">
                     <TrendingUp className="w-4 h-4 mr-1.5" />
                     On Track
                   </span> : 
-                  <span className="flex items-center text-yellow-600">
+                  <span className="flex items-center text-yellow-400 drop-shadow-sm">
                     <Clock className="w-4 h-4 mr-1.5" />
                     Behind Schedule
                   </span>
                 ) :
-                (goal.status === "on-track" ? "On Track" : 
-                 goal.status === "at-risk" ? "At Risk" : 
-                 goal.status === "behind" ? "Behind" : 
-                 goal.status === "achieved" ? "Achieved" : "Exceeded")
+                <span className="text-white drop-shadow-sm">
+                  {goal.status === "on-track" ? "On Track" : 
+                   goal.status === "at-risk" ? "At Risk" : 
+                   goal.status === "behind" ? "Behind" : 
+                   goal.status === "achieved" ? "Achieved" : "Exceeded"}
+                </span>
               }
             </div>
           </div>
           
-          <div className="bg-neutral-50 rounded-lg p-3">
-            <div className="text-sm text-neutral-500 mb-1">Estimated Completion</div>
-            <div className="font-semibold text-lg">
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+            <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Estimated Completion</div>
+            <div className="font-semibold text-lg text-white drop-shadow-sm">
               {progressData && progressData.prediction.estimatedCompletionDate ? 
                 new Date(progressData.prediction.estimatedCompletionDate).toLocaleDateString('en-US', {
                   month: 'short',
@@ -699,26 +701,26 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
                 goal.targetDate
               }
             </div>
-            <div className="text-xs text-neutral-500 mt-1">
+            <div className="text-xs text-white/60 mt-1 drop-shadow-sm">
               {progressData && progressData.prediction.daysAhead ? 
-                <span className="text-green-600">{progressData.prediction.daysAhead} days ahead</span> :
+                <span className="text-green-400">{progressData.prediction.daysAhead} days ahead</span> :
                 progressData && progressData.prediction.daysBehind ?
-                <span className="text-yellow-600">{progressData.prediction.daysBehind} days behind</span> :
+                <span className="text-yellow-400">{progressData.prediction.daysBehind} days behind</span> :
                 "On schedule"
               }
             </div>
           </div>
           
           {(chartType === "pace" && goal.type === "race" && paceData) && (
-            <div className="bg-neutral-50 rounded-lg p-3">
-              <div className="text-sm text-neutral-500 mb-1">Pace Improvement</div>
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+              <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Pace Improvement</div>
               <div className="font-semibold text-lg">
                 {paceData.improvement.percentage > 0 ? 
-                  <span className="text-green-600">+{paceData.improvement.percentage}%</span> :
-                  <span className="text-red-600">{paceData.improvement.percentage}%</span>
+                  <span className="text-green-400 drop-shadow-sm">+{paceData.improvement.percentage}%</span> :
+                  <span className="text-red-400 drop-shadow-sm">{paceData.improvement.percentage}%</span>
                 }
               </div>
-              <div className="text-xs text-neutral-500 mt-1">
+              <div className="text-xs text-white/60 mt-1 drop-shadow-sm">
                 {paceData.improvement.absolute > 0 ? 
                   `${paceData.improvement.absolute} min/mile faster` :
                   `${Math.abs(paceData.improvement.absolute)} min/mile slower`
@@ -728,12 +730,12 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
           )}
           
           {(chartType === "comparison" && comparisonData) && (
-            <div className="bg-neutral-50 rounded-lg p-3">
-              <div className="text-sm text-neutral-500 mb-1">User Ranking</div>
-              <div className="font-semibold text-lg">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+              <div className="text-sm text-white/70 mb-1 drop-shadow-sm">User Ranking</div>
+              <div className="font-semibold text-lg text-white drop-shadow-sm">
                 {comparisonData.ranking.position || `${comparisonData.ranking.percentile}th percentile`}
               </div>
-              <div className="text-xs text-neutral-500 mt-1">
+              <div className="text-xs text-white/60 mt-1 drop-shadow-sm">
                 {comparisonData.ranking.percentile > 75 ? 
                   "Top performer" :
                   comparisonData.ranking.percentile > 50 ?
@@ -748,15 +750,15 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
           
           {goal.type === "race" && (
             <>
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="text-sm text-neutral-500 mb-1">Target Time</div>
-                <div className="font-semibold text-lg">{goal.targetTime}</div>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Target Time</div>
+                <div className="font-semibold text-lg text-white drop-shadow-sm">{goal.targetTime}</div>
               </div>
               
               {chartType !== "comparison" && chartType !== "pace" && (
-                <div className="bg-neutral-50 rounded-lg p-3">
-                  <div className="text-sm text-neutral-500 mb-1">Training Plan</div>
-                  <div className="font-semibold text-lg">{goal.trainingPlan?.split('-').pop().trim() || "Custom"}</div>
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                  <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Training Plan</div>
+                  <div className="font-semibold text-lg text-white drop-shadow-sm">{goal.trainingPlan?.split('-').pop().trim() || "Custom"}</div>
                 </div>
               )}
             </>
@@ -764,9 +766,9 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
           
           {goal.type === "weight" && (
             <>
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="text-sm text-neutral-500 mb-1">Current Weight</div>
-                <div className="font-semibold text-lg">
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Current Weight</div>
+                <div className="font-semibold text-lg text-white drop-shadow-sm">
                   {weightData ? 
                     `${weightData.currentWeight} lbs` :
                     goal.currentWeight
@@ -775,22 +777,22 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
               </div>
               
               {weightData && (
-                <div className="bg-neutral-50 rounded-lg p-3">
-                  <div className="text-sm text-neutral-500 mb-1">Projected Final</div>
-                  <div className="font-semibold text-lg">{weightData.projection.expectedFinalWeight} lbs</div>
-                  <div className="text-xs text-neutral-500 mt-1">
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                  <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Projected Final</div>
+                  <div className="font-semibold text-lg text-white drop-shadow-sm">{weightData.projection.expectedFinalWeight} lbs</div>
+                  <div className="text-xs text-white/60 mt-1 drop-shadow-sm">
                     {weightData.projection.expectedFinalWeight <= weightData.targetWeight ? 
-                      <span className="text-green-600">Will reach target</span> :
-                      <span className="text-yellow-600">{weightData.projection.expectedFinalWeight - weightData.targetWeight} lbs short</span>
+                      <span className="text-green-400">Will reach target</span> :
+                      <span className="text-yellow-400">{weightData.projection.expectedFinalWeight - weightData.targetWeight} lbs short</span>
                     }
                   </div>
                 </div>
               )}
               
               {(!weightData || chartType !== "progress") && (
-                <div className="bg-neutral-50 rounded-lg p-3">
-                  <div className="text-sm text-neutral-500 mb-1">Target Weight</div>
-                  <div className="font-semibold text-lg">{goal.targetWeight}</div>
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                  <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Target Weight</div>
+                  <div className="font-semibold text-lg text-white drop-shadow-sm">{goal.targetWeight}</div>
                 </div>
               )}
             </>
@@ -798,14 +800,14 @@ export function GoalVisualization({ goal, activities = [], className }: GoalVisu
           
           {goal.type === "custom" && (
             <>
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="text-sm text-neutral-500 mb-1">Current</div>
-                <div className="font-semibold text-lg">{goal.actual}</div>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Current</div>
+                <div className="font-semibold text-lg text-white drop-shadow-sm">{goal.actual}</div>
               </div>
               
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="text-sm text-neutral-500 mb-1">Target</div>
-                <div className="font-semibold text-lg">{goal.target}</div>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+                <div className="text-sm text-white/70 mb-1 drop-shadow-sm">Target</div>
+                <div className="font-semibold text-lg text-white drop-shadow-sm">{goal.target}</div>
               </div>
             </>
           )}
