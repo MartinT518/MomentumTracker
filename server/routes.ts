@@ -840,7 +840,6 @@ import {
   insertSubscriptionPlanSchema,
   insertHealthMetricsSchema,
   insertIntegrationConnectionSchema,
-  insertCoachingSessionSchema,
   subscription_plans,
   users,
   health_metrics,
