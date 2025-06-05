@@ -819,11 +819,11 @@ export default function GoalsPage() {
                   </>
                 )}
               </DialogTitle>
-              <DialogDescription className="text-white/80 drop-shadow-sm">
+              <div className="text-white/80 drop-shadow-sm text-sm">
                 {selectedGoal && !isEditMode && (
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
                     {selectedGoal.status && getStatusBadge(selectedGoal.status)}
-                    <span className="ml-2">
+                    <span>
                       {selectedGoal.type === "race" 
                         ? `Target: ${selectedGoal.targetTime}` 
                         : selectedGoal.type === "weight" 
@@ -835,7 +835,7 @@ export default function GoalsPage() {
                 {isEditMode && selectedGoal && (
                   <span className="text-amber-300 drop-shadow-sm">Editing goal details</span>
                 )}
-              </DialogDescription>
+              </div>
             </DialogHeader>
 
             {selectedGoal && !isEditMode && (
