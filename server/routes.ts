@@ -840,6 +840,7 @@ import {
   insertSubscriptionPlanSchema,
   insertHealthMetricsSchema,
   insertIntegrationConnectionSchema,
+  insertCoachingSessionSchema,
   subscription_plans,
   users,
   health_metrics,
@@ -4460,28 +4461,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { coach_id, goals, questions } = req.body;
+      const validation = insertCoachingSessionSchema.safeParse({
+        athlete_id: user.id,
+        coach_id: req.body.coach_id,
+        status: "active",
+        type: "coaching",
+        session_date: new Date(),
+        duration_minutes: 60,
+        notes: `Goals: ${req.body.goals || "Not specified"}\nQuestions: ${req.body.questions || "None"}`
+      });
       
-      if (!coach_id) {
-        return res.status(400).json({ error: "Coach ID is required" });
+      if (!validation.success) {
+        return res.status(400).json({ errors: validation.error.errors });
       }
       
       // Verify coach exists
-      const coach = await storage.getCoachById(coach_id);
+      const coach = await storage.getCoachById(validation.data.coach_id);
       if (!coach) {
         return res.status(404).json({ error: "Coach not found" });
       }
       
       // Create coaching session
-      const session = await storage.createCoachingSession({
-        athlete_id: user.id,
-        coach_id,
-        status: "active",
-        type: "coaching",
-        session_date: new Date().toISOString(),
-        duration_minutes: 60,
-        notes: `Goals: ${goals || "Not specified"}\nQuestions: ${questions || "None"}`
-      });
+      const session = await storage.createCoachingSession(validation.data);
       
       res.status(201).json(session);
     } catch (error: any) {
