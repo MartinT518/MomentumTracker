@@ -40,6 +40,10 @@ export function Sidebar({ className, style }: SidebarProps) {
 
   // Check if user is an admin
   const isAdmin = user?.is_admin;
+  
+  // Debug logging
+  console.log('User data:', user);
+  console.log('Is admin:', isAdmin);
 
   const navItems = [
     {
