@@ -40,10 +40,6 @@ export function Sidebar({ className, style }: SidebarProps) {
 
   // Check if user is an admin
   const isAdmin = user?.is_admin;
-  
-  // Debug logging
-  console.log('User data:', user);
-  console.log('Is admin:', isAdmin);
 
   const navItems = [
     {
@@ -166,6 +162,18 @@ export function Sidebar({ className, style }: SidebarProps) {
       <div className="px-4 py-3 border-b border-white/20">
         <SearchButton />
       </div>
+      
+      {/* Admin quick access for admin users */}
+      {isAdmin && (
+        <div className="px-4 py-3 border-b border-white/20">
+          <Link href="/admin">
+            <div className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-purple-500/20 to-pink-600/20 border border-purple-500/30 rounded-lg text-purple-300 hover:from-purple-500/30 hover:to-pink-600/30 hover:text-purple-200 transition-all">
+              <Crown className="h-4 w-4 mr-2" />
+              <span className="text-sm font-medium">Admin Panel</span>
+            </div>
+          </Link>
+        </div>
+      )}
       
       <nav className="flex-grow overflow-y-auto">
         <div className="px-4 pt-6 pb-2">
