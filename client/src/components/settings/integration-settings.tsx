@@ -351,6 +351,12 @@ export function IntegrationSettings() {
       name: 'Polar Flow',
       description: 'Connect with Polar to sync activities, heart rate, and recovery metrics',
       connected: isPlatformConnected('polar'),
+    },
+    {
+      id: 'apple_health',
+      name: 'Apple Health',
+      description: 'Connect with Apple Health to sync health data, workouts, and activity metrics',
+      connected: false, // Will be managed by the Apple Health component directly
     }
   ];
   
@@ -387,8 +393,11 @@ export function IntegrationSettings() {
           {/* Live Polar Integration */}
           <PolarIntegration />
           
+          {/* Apple Health Integration */}
+          <AppleHealthIntegration />
+          
           {/* Other platform integrations */}
-          {platforms.filter(p => p.id !== 'strava' && p.id !== 'polar').map((platform) => (
+          {platforms.filter(p => p.id !== 'strava' && p.id !== 'polar' && p.id !== 'apple_health').map((platform) => (
             <Card key={platform.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center">
