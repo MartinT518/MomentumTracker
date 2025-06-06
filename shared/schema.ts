@@ -22,6 +22,10 @@ export const users = pgTable("users", {
   stripe_subscription_id: text("stripe_subscription_id"),
   subscription_status: varchar("subscription_status", { length: 20 }).default("free"), // free, active, canceled, past_due
   subscription_end_date: timestamp("subscription_end_date"),
+  // Admin and role management
+  is_admin: boolean("is_admin").default(false),
+  role: varchar("role", { length: 20 }).default("user"), // user, coach, admin
+  permissions: json("permissions").default([]), // Array of permission strings
 });
 
 // Training goals
