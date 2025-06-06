@@ -784,24 +784,7 @@ function mapGarminActivityType(garminType: string): string {
   return typeMap[garminType] || 'other';
 }
 
-function mapPolarActivityType(polarType: string): string {
-  const typeMap: Record<string, string> = {
-    'RUNNING': 'run',
-    'JOGGING': 'run',
-    'TREADMILL': 'run',
-    'TRAIL_RUNNING': 'run',
-    'CYCLING': 'bike',
-    'INDOOR_CYCLING': 'bike',
-    'SWIMMING': 'swim',
-    'WALKING': 'walk',
-    'HIKING': 'hike',
-    'STRENGTH_TRAINING': 'strength',
-    'CIRCUIT_TRAINING': 'strength',
-    'YOGA': 'yoga'
-  };
-  
-  return typeMap[polarType] || 'other';
-}
+
 
 // Set up OpenAI model for nutrition recommendations
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
@@ -1569,26 +1552,7 @@ async function processPolarSync(connection: any, userId: number) {
   });
 }
 
-function mapPolarActivityType(polarType: string): string {
-  // Map Polar activity types to our standard activity types
-  const mapping: { [key: string]: string } = {
-    'RUNNING': 'run',
-    'CYCLING': 'cycle', 
-    'WALKING': 'walk',
-    'SWIMMING': 'swim',
-    'YOGA': 'yoga',
-    'STRENGTH_TRAINING': 'strength',
-    'CROSS_TRAINING': 'cross_training',
-    'CARDIO': 'cardio',
-    'OUTDOOR_CYCLING': 'cycle',
-    'INDOOR_CYCLING': 'cycle',
-    'TRAIL_RUNNING': 'run',
-    'TREADMILL_RUNNING': 'run',
-    'OTHER': 'other'
-  };
-  
-  return mapping[polarType?.toUpperCase()] || 'other';
-}
+
 
 // Google Fit data sync function
 async function processGoogleFitSync(connection: any, userId: number) {
