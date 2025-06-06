@@ -2479,18 +2479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all coaches (admin only)
   app.get("/api/admin/coaches", requireAdmin, async (req, res) => {
     try {
-      const allCoaches = await db.select({
-        id: coaches.id,
-        name: coaches.name,
-        email: coaches.email,
-        specialties: coaches.specialties,
-        experience_years: coaches.experience_years,
-        bio: coaches.bio,
-        rating: coaches.rating,
-        is_active: coaches.is_active,
-        user_count: coaches.user_count
-      }).from(coaches);
-      
+      const allCoaches = await db.select().from(coaches);
       res.json(allCoaches);
     } catch (error) {
       console.error("Error fetching coaches:", error);
