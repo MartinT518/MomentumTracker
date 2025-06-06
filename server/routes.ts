@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { setupStravaIntegration } from "./strava-integration";
 import OpenAI from "openai";
 import axios from "axios";
 import { and, eq, desc, asc, gte, lte, or, sql } from "drizzle-orm";
@@ -6846,5 +6847,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  // Setup Strava integration with OAuth endpoints
+  setupStravaIntegration(app);
+
   return httpServer;
 }
