@@ -38,8 +38,8 @@ export function Sidebar({ className, style }: SidebarProps) {
     logoutMutation.mutate();
   };
 
-  // Check if user is an admin (in a real app, this would check a proper admin role)
-  const isAdmin = user?.id === 1;
+  // Check if user is an admin
+  const isAdmin = user?.is_admin;
 
   const navItems = [
     {
@@ -131,6 +131,12 @@ export function Sidebar({ className, style }: SidebarProps) {
   ];
   
   const adminItems = [
+    {
+      title: "Admin Panel",
+      href: "/admin",
+      icon: Crown,
+      active: location === "/admin",
+    },
     {
       title: "Coach Management",
       href: "/admin/coaches",
