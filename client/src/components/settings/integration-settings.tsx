@@ -18,6 +18,7 @@ import {
   initiateGarminAuth,
   initiatePolarAuth
 } from '@/lib/integration-service';
+import { StravaIntegration } from '@/components/integrations/strava-integration';
 
 interface Integration {
   id: number;
@@ -378,7 +379,11 @@ export function IntegrationSettings() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {platforms.map((platform) => (
+          {/* Live Strava Integration */}
+          <StravaIntegration />
+          
+          {/* Other platform integrations */}
+          {platforms.filter(p => p.id !== 'strava').map((platform) => (
             <Card key={platform.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center">
