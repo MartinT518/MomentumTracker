@@ -1558,62 +1558,36 @@ async function processGarminSync(connection: any, userId: number) {
   }
 }
 
-// Polar data sync function
+
+
+// Legacy function for compatibility  
 async function processPolarSync(connection: any, userId: number) {
-  console.log(`Syncing Polar data for user ${userId}`);
+  return syncPolarData({
+    userId,
+    access_token: connection.access_token,
+    forceSync: false
+  });
+}
+
+function mapPolarActivityType(polarType: string): string {
+  // Map Polar activity types to our standard activity types
+  const mapping: { [key: string]: string } = {
+    'RUNNING': 'run',
+    'CYCLING': 'cycle', 
+    'WALKING': 'walk',
+    'SWIMMING': 'swim',
+    'YOGA': 'yoga',
+    'STRENGTH_TRAINING': 'strength',
+    'CROSS_TRAINING': 'cross_training',
+    'CARDIO': 'cardio',
+    'OUTDOOR_CYCLING': 'cycle',
+    'INDOOR_CYCLING': 'cycle',
+    'TRAIL_RUNNING': 'run',
+    'TREADMILL_RUNNING': 'run',
+    'OTHER': 'other'
+  };
   
-  // In a real implementation, you would:
-  // 1. Use the Polar Flow API to fetch recent activities
-  // 2. Use the Polar Flow API to fetch health metrics
-  // 3. Store this data in your database
-  
-  // Mock implementation that simulates a successful sync
-  try {
-    // Simulate fetching recent activities (last 30 days)
-    const activities = [
-      {
-        id: "polar_345678",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        activity_type: "run",
-        distance: 7.5, // km
-        duration: 2100, // seconds (35 minutes)
-        pace: "7:45", // min/mile
-        heart_rate: 159,
-        effort_level: "moderate",
-        notes: "Afternoon run through the park",
-        source: "polar"
-      }
-    ];
-    
-    // Simulate fetching health metrics from Polar
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        hrv_score: 59,
-        resting_heart_rate: 53,
-        sleep_quality: 7,
-        sleep_duration: 450, // 7.5 hours in minutes
-        energy_level: 8,
-        stress_level: 4,
-        source: "polar",
-        notes: "Auto-imported from Polar Flow"
-      }
-    ];
-    
-    // In a real implementation, store this data in the database
-    // For now, just log and return success
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Polar`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing Polar data:", error);
-    throw new Error(`Failed to sync Polar data: ${error.message}`);
-  }
+  return mapping[polarType?.toUpperCase()] || 'other';
 }
 
 // Google Fit data sync function
