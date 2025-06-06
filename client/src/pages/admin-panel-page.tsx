@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, Users, UserCog, Settings, Shield, Plus, Edit, Trash2, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { AppLayout } from '@/components/layout/app-layout';
+import { AppLayout } from '@/components/common/app-layout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 

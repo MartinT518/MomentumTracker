@@ -1821,6 +1821,16 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ error: "Authentication required" });
 }
 
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  if (!req.user?.is_admin) {
+    return res.status(403).json({ error: 'Admin privileges required' });
+  }
+  next();
+}
+
 function isSubscribed(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Authentication required" });
@@ -2419,6 +2429,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin API Routes
+  // Get all users (admin only)
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      const allUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        role: users.role,
+        is_admin: users.is_admin,
+        permissions: users.permissions,
+        subscription_status: users.subscription_status,
+        created_at: users.created_at
+      }).from(users);
+      
+      res.json(allUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Update user role (admin only)
+  app.put("/api/admin/users/:userId/role", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { role, is_admin } = req.body;
+      
+      if (!['user', 'coach', 'admin'].includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+
+      await db.update(users)
+        .set({ 
+          role,
+          is_admin: is_admin || false,
+          updated_at: new Date()
+        })
+        .where(eq(users.id, parseInt(userId)));
+
+      res.json({ message: "User role updated successfully" });
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ error: "Failed to update user role" });
+    }
+  });
+
+  // Get all coaches (admin only)
+  app.get("/api/admin/coaches", requireAdmin, async (req, res) => {
+    try {
+      const allCoaches = await db.select({
+        id: coaches.id,
+        name: coaches.name,
+        email: coaches.email,
+        specialties: coaches.specialties,
+        experience_years: coaches.experience_years,
+        bio: coaches.bio,
+        rating: coaches.rating,
+        is_active: coaches.is_active,
+        user_count: coaches.user_count
+      }).from(coaches);
+      
+      res.json(allCoaches);
+    } catch (error) {
+      console.error("Error fetching coaches:", error);
+      res.status(500).json({ error: "Failed to fetch coaches" });
+    }
+  });
+
+  // Create new coach (admin only)
+  app.post("/api/admin/coaches", requireAdmin, async (req, res) => {
+    try {
+      const coachData = insertCoachSchema.parse(req.body);
+      
+      const [newCoach] = await db.insert(coaches)
+        .values({
+          ...coachData,
+          is_active: true,
+          user_count: 0,
+          rating: 5.0
+        })
+        .returning();
+
+      res.status(201).json(newCoach);
+    } catch (error) {
+      console.error("Error creating coach:", error);
+      res.status(500).json({ error: "Failed to create coach" });
+    }
+  });
+
+  // Toggle coach status (admin only)
+  app.put("/api/admin/coaches/:coachId/status", requireAdmin, async (req, res) => {
+    try {
+      const { coachId } = req.params;
+      const { is_active } = req.body;
+
+      await db.update(coaches)
+        .set({ 
+          is_active,
+          updated_at: new Date()
+        })
+        .where(eq(coaches.id, parseInt(coachId)));
+
+      res.json({ message: "Coach status updated successfully" });
+    } catch (error) {
+      console.error("Error updating coach status:", error);
+      res.status(500).json({ error: "Failed to update coach status" });
+    }
+  });
+
   // Initialize Stripe
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('Missing STRIPE_SECRET_KEY environment variable. Stripe integration will not work.');
