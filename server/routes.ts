@@ -893,6 +893,10 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 const STRAVA_CLIENT_ID = '163144';
 const STRAVA_CLIENT_SECRET = '5be57be12ea469a544bcc2a7e8c0bbdfe3b3665f';
 
+// Polar OAuth configuration
+const POLAR_CLIENT_ID = process.env.POLAR_CLIENT_ID;
+const POLAR_CLIENT_SECRET = process.env.POLAR_CLIENT_SECRET;
+
 function setupIntegrationRoutes(app: Express) {
   // Strava OAuth authentication initiation
   app.get('/api/auth/strava', requireAuth, (req, res) => {
@@ -1019,6 +1023,174 @@ function setupIntegrationRoutes(app: Express) {
     } catch (error) {
       console.error('Error syncing Strava data:', error);
       res.status(500).json({ error: 'Failed to sync Strava data' });
+    }
+  });
+
+  // Polar OAuth authentication initiation
+  app.get('/api/integrations/polar/auth', requireAuth, (req, res) => {
+    if (!POLAR_CLIENT_ID || !POLAR_CLIENT_SECRET) {
+      return res.status(500).json({ error: 'Polar API credentials not configured' });
+    }
+
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/integrations/polar/callback`;
+    
+    const authUrl = `https://flow.polar.com/oauth2/authorization?` +
+      `response_type=code&` +
+      `client_id=${POLAR_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `state=${req.user!.id}`;
+    
+    res.json({ authUrl });
+  });
+
+  // Polar OAuth callback handler
+  app.get('/api/integrations/polar/callback', requireAuth, async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      const userId = parseInt(state as string);
+      
+      if (userId !== req.user!.id) {
+        return res.status(400).json({ error: 'Invalid state parameter' });
+      }
+      
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/integrations/polar/callback`;
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await axios.post('https://polarremote.com/v2/oauth2/token', {
+        grant_type: 'authorization_code',
+        client_id: POLAR_CLIENT_ID,
+        client_secret: POLAR_CLIENT_SECRET,
+        code,
+        redirect_uri: redirectUri
+      });
+      
+      const { access_token, x_user_id } = tokenResponse.data;
+      
+      // Store the integration connection
+      await db.insert(integration_connections)
+        .values({
+          user_id: userId,
+          platform: 'polar',
+          access_token,
+          external_user_id: x_user_id.toString(),
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .onConflictDoUpdate({
+          target: [integration_connections.user_id, integration_connections.platform],
+          set: {
+            access_token,
+            external_user_id: x_user_id.toString(),
+            is_active: true,
+            updated_at: new Date()
+          }
+        });
+      
+      // Trigger initial data sync
+      await syncPolarData({
+        userId,
+        access_token,
+        forceSync: true
+      });
+      
+      res.redirect('/settings?polar=connected');
+    } catch (error) {
+      console.error('Polar OAuth error:', error);
+      res.redirect('/settings?polar=error');
+    }
+  });
+
+  // Get Polar connection status
+  app.get('/api/integrations/polar/status', requireAuth, async (req, res) => {
+    try {
+      const connection = await db.query.integration_connections.findFirst({
+        where: and(
+          eq(integration_connections.user_id, req.user!.id),
+          eq(integration_connections.platform, 'polar'),
+          eq(integration_connections.is_active, true)
+        )
+      });
+
+      const syncLogs = await db.select()
+        .from(sync_logs)
+        .where(and(
+          eq(sync_logs.user_id, req.user!.id),
+          eq(sync_logs.platform, 'polar')
+        ))
+        .orderBy(desc(sync_logs.sync_start_time))
+        .limit(5);
+
+      res.json({
+        connection: connection ? {
+          id: connection.id,
+          user_id: connection.user_id,
+          platform: connection.platform,
+          status: 'connected',
+          last_sync: connection.last_synced_at,
+          created_at: connection.created_at
+        } : null,
+        syncLogs: syncLogs.map(log => ({
+          id: log.id,
+          user_id: log.user_id,
+          platform: log.platform,
+          status: log.status,
+          activities_synced: log.activities_synced || 0,
+          error: log.error,
+          created_at: log.sync_start_time
+        }))
+      });
+    } catch (error) {
+      console.error('Error getting Polar status:', error);
+      res.status(500).json({ error: 'Failed to get Polar status' });
+    }
+  });
+
+  // Manual sync trigger for Polar
+  app.post('/api/integrations/polar/sync', requireAuth, async (req, res) => {
+    try {
+      const connection = await db.query.integration_connections.findFirst({
+        where: and(
+          eq(integration_connections.user_id, req.user!.id),
+          eq(integration_connections.platform, 'polar'),
+          eq(integration_connections.is_active, true)
+        )
+      });
+
+      if (!connection) {
+        return res.status(404).json({ error: 'No active Polar connection found' });
+      }
+
+      await syncPolarData({
+        userId: req.user!.id,
+        access_token: connection.access_token,
+        forceSync: true
+      });
+
+      res.json({ message: 'Polar sync completed successfully' });
+    } catch (error) {
+      console.error('Error syncing Polar data:', error);
+      res.status(500).json({ error: 'Failed to sync Polar data' });
+    }
+  });
+
+  // Disconnect Polar integration
+  app.delete('/api/integrations/polar/disconnect', requireAuth, async (req, res) => {
+    try {
+      await db.update(integration_connections)
+        .set({ 
+          is_active: false,
+          updated_at: new Date()
+        })
+        .where(and(
+          eq(integration_connections.user_id, req.user!.id),
+          eq(integration_connections.platform, 'polar')
+        ));
+      
+      res.json({ message: 'Polar integration disconnected successfully' });
+    } catch (error) {
+      console.error('Error disconnecting Polar:', error);
+      res.status(500).json({ error: 'Failed to disconnect Polar integration' });
     }
   });
   // Initiate sync for a specific platform

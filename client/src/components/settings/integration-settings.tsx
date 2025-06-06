@@ -19,6 +19,7 @@ import {
   initiatePolarAuth
 } from '@/lib/integration-service';
 import { StravaIntegration } from '@/components/integrations/strava-integration';
+import { PolarIntegration } from '@/components/integrations/polar-integration';
 
 interface Integration {
   id: number;
@@ -382,8 +383,11 @@ export function IntegrationSettings() {
           {/* Live Strava Integration */}
           <StravaIntegration />
           
+          {/* Live Polar Integration */}
+          <PolarIntegration />
+          
           {/* Other platform integrations */}
-          {platforms.filter(p => p.id !== 'strava').map((platform) => (
+          {platforms.filter(p => p.id !== 'strava' && p.id !== 'polar').map((platform) => (
             <Card key={platform.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center">
