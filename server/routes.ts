@@ -69,8 +69,8 @@ async function syncStravaData(options: SyncOptions): Promise<void> {
       
       // Token has expired, refresh it
       const refreshResponse = await axios.post('https://www.strava.com/oauth/token', {
-        client_id: process.env.STRAVA_CLIENT_ID,
-        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        client_id: '163144',
+        client_secret: '5be57be12ea469a544bcc2a7e8c0bbdfe3b3665f',
         refresh_token,
         grant_type: 'refresh_token'
       });
@@ -888,7 +888,138 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // Integration sync routes
+// Strava OAuth configuration
+const STRAVA_CLIENT_ID = '163144';
+const STRAVA_CLIENT_SECRET = '5be57be12ea469a544bcc2a7e8c0bbdfe3b3665f';
+
 function setupIntegrationRoutes(app: Express) {
+  // Strava OAuth authentication initiation
+  app.get('/api/auth/strava', requireAuth, (req, res) => {
+    const scope = 'read,activity:read_all,profile:read_all';
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/strava/callback`;
+    
+    const authUrl = `https://www.strava.com/oauth/authorize?` +
+      `client_id=${STRAVA_CLIENT_ID}&` +
+      `response_type=code&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `approval_prompt=force&` +
+      `scope=${scope}&` +
+      `state=${req.user!.id}`;
+    
+    res.redirect(authUrl);
+  });
+
+  // Strava OAuth callback handler
+  app.get('/api/auth/strava/callback', requireAuth, async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      const userId = parseInt(state as string);
+      
+      // Verify the state parameter matches the current user
+      if (userId !== req.user!.id) {
+        return res.status(400).json({ error: 'Invalid state parameter' });
+      }
+      
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/strava/callback`;
+      
+      // Exchange authorization code for access token
+      const tokenResponse = await axios.post('https://www.strava.com/oauth/token', {
+        client_id: STRAVA_CLIENT_ID,
+        client_secret: STRAVA_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri
+      });
+      
+      const { access_token, refresh_token, expires_at, athlete } = tokenResponse.data;
+      
+      // Store the integration connection
+      await db.insert(integration_connections)
+        .values({
+          user_id: userId,
+          platform: 'strava',
+          access_token,
+          refresh_token,
+          expires_at: new Date(expires_at * 1000),
+          external_user_id: athlete.id.toString(),
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .onConflictDoUpdate({
+          target: [integration_connections.user_id, integration_connections.platform],
+          set: {
+            access_token,
+            refresh_token,
+            expires_at: new Date(expires_at * 1000),
+            external_user_id: athlete.id.toString(),
+            is_active: true,
+            updated_at: new Date()
+          }
+        });
+      
+      // Trigger initial data sync
+      await syncStravaData({
+        userId,
+        access_token,
+        refresh_token,
+        expires_at,
+        forceSync: true
+      });
+      
+      res.redirect('/settings?strava=connected');
+    } catch (error) {
+      console.error('Strava OAuth error:', error);
+      res.redirect('/settings?strava=error');
+    }
+  });
+
+  // Disconnect Strava integration
+  app.delete('/api/auth/strava', requireAuth, async (req, res) => {
+    try {
+      await db.update(integration_connections)
+        .set({ is_active: false, updated_at: new Date() })
+        .where(and(
+          eq(integration_connections.user_id, req.user!.id),
+          eq(integration_connections.platform, 'strava')
+        ));
+      
+      res.json({ message: 'Strava integration disconnected successfully' });
+    } catch (error) {
+      console.error('Error disconnecting Strava:', error);
+      res.status(500).json({ error: 'Failed to disconnect Strava integration' });
+    }
+  });
+
+  // Manual sync trigger for Strava
+  app.post('/api/integrations/strava/sync', requireAuth, async (req, res) => {
+    try {
+      const connection = await db.query.integration_connections.findFirst({
+        where: and(
+          eq(integration_connections.user_id, req.user!.id),
+          eq(integration_connections.platform, 'strava'),
+          eq(integration_connections.is_active, true)
+        )
+      });
+
+      if (!connection) {
+        return res.status(404).json({ error: 'No active Strava connection found' });
+      }
+
+      await syncStravaData({
+        userId: req.user!.id,
+        access_token: connection.access_token,
+        refresh_token: connection.refresh_token,
+        expires_at: Math.floor(connection.expires_at!.getTime() / 1000),
+        forceSync: true
+      });
+
+      res.json({ message: 'Strava sync completed successfully' });
+    } catch (error) {
+      console.error('Error syncing Strava data:', error);
+      res.status(500).json({ error: 'Failed to sync Strava data' });
+    }
+  });
   // Initiate sync for a specific platform
   app.post("/api/integrations/:platform/sync", requireAuth, async (req, res) => {
     const { platform } = req.params;
