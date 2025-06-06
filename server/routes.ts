@@ -765,6 +765,26 @@ function mapStravaActivityType(stravaType: string): string {
   return typeMap[stravaType] || 'other';
 }
 
+function mapPolarActivityType(polarType: string): string {
+  const typeMap: Record<string, string> = {
+    'RUNNING': 'run',
+    'CYCLING': 'bike', 
+    'WALKING': 'walk',
+    'SWIMMING': 'swim',
+    'YOGA': 'yoga',
+    'STRENGTH_TRAINING': 'strength',
+    'CROSS_TRAINING': 'cross_training',
+    'CARDIO': 'cardio',
+    'OUTDOOR_CYCLING': 'bike',
+    'INDOOR_CYCLING': 'bike',
+    'TRAIL_RUNNING': 'run',
+    'TREADMILL_RUNNING': 'run',
+    'OTHER': 'other'
+  };
+  
+  return typeMap[polarType?.toUpperCase()] || 'other';
+}
+
 function mapGarminActivityType(garminType: string): string {
   const typeMap: Record<string, string> = {
     'RUNNING': 'run',

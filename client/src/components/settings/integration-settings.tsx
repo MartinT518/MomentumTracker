@@ -20,6 +20,7 @@ import {
 } from '@/lib/integration-service';
 import { StravaIntegration } from '@/components/integrations/strava-integration';
 import { PolarIntegration } from '@/components/integrations/polar-integration';
+import { AppleHealthIntegration } from '@/components/integrations/apple-health-integration';
 
 interface Integration {
   id: number;
