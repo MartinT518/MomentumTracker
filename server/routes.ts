@@ -1252,19 +1252,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
 
-      const userAchievements = await db.select({
-        id: user_achievements.id,
-        user_id: user_achievements.user_id,
-        achievement_id: user_achievements.achievement_id,
-        earned_at: user_achievements.earned_at,
-        times_earned: user_achievements.times_earned,
-        title: achievements.title,
-        description: achievements.description,
-        badge_icon: achievements.badge_icon,
-        points: achievements.points,
-        achievement_type: achievements.achievement_type
-      }).from(user_achievements)
-        .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
+      // Fetch user achievements with proper error handling
+      const userAchievements = await db
+        .select({
+          id: user_achievements.id,
+          user_id: user_achievements.user_id,
+          achievement_id: user_achievements.achievement_id,
+          earned_at: user_achievements.earned_at,
+          times_earned: user_achievements.times_earned,
+          achievement_name: achievements.name,
+          achievement_description: achievements.description,
+          achievement_icon: achievements.icon,
+          achievement_type: achievements.type
+        })
+        .from(user_achievements)
+        .leftJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
         .where(eq(user_achievements.user_id, userId))
         .orderBy(desc(user_achievements.earned_at));
 
@@ -1316,10 +1318,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             return res.json({
               newAchievements: [{
-                title: firstRunAchievement.title,
+                name: firstRunAchievement.name,
                 description: firstRunAchievement.description,
-                badge_icon: firstRunAchievement.badge_icon,
-                points: firstRunAchievement.points
+                icon: firstRunAchievement.icon,
+                type: firstRunAchievement.type
               }]
             });
           }

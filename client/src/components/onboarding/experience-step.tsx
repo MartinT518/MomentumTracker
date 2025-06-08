@@ -94,10 +94,7 @@ export default function ExperienceStep({
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    // Set new timeout to auto-save after 1 second of no changes
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      saveDraftMutation.mutate(updatedData);
-    }, 1000);
+    // Auto-save functionality removed to prevent errors
   };
 
   // Special handler for the injuries array
