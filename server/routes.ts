@@ -1,39 +1,32 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth } from "./auth";
-import { setupStravaIntegration } from "./strava-integration";
-import OpenAI from "openai";
-import axios from "axios";
-import { and, eq, desc, asc, gte, lte, or, sql } from "drizzle-orm";
 import { db } from "./db";
-import {
-  users,
-  goals,
-  activities,
-  workouts,
-  health_metrics,
-  training_plans,
-  nutrition_logs,
-  food_items,
-  meal_plans,
-  meals,
-  meal_food_items,
-  coaches,
-  coaching_sessions,
-  nutrition_preferences,
-  integration_connections,
-  sync_logs,
-  subscription_plans,
-  onboarding_status,
-  fitness_goals,
-  experience_levels,
-  training_preferences,
-  achievements,
-  user_achievements,
+import { setupAuth } from "./auth";
+import { setupDevSubscription } from "./dev-subscription";
+import { 
+  and, eq, desc, gte, lte, sql, count, sum, avg, or, ne, isNotNull, asc, isNull, inArray
+} from "drizzle-orm";
+import { 
+  users, activities, health_metrics, goals, achievements, user_achievements, 
+  coaches, coaching_sessions, nutrition_logs, food_items, meal_plans, meals, 
+  meal_food_items, training_plans, workouts, nutrition_preferences, 
+  integration_connections, sync_logs, subscription_plans, challenges, 
+  challenge_participants
 } from "@shared/schema";
+import Stripe from "stripe";
+import axios from "axios";
+import { Request, Response, NextFunction } from "express";
+import { selectMealPlan } from "./predefined-meal-plans";
+import { generateSimpleMealPlan } from "./simple-meal-plan";
 
-// Functions for synchronizing data from third-party platforms
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
+
 interface SyncOptions {
   userId: number;
   access_token: string;
@@ -43,826 +36,575 @@ interface SyncOptions {
   syncLogId?: number;
 }
 
-// Sync activities from Strava
+// Integration sync functions
 async function syncStravaData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, refresh_token, expires_at, forceSync = false, syncLogId } = options;
-  let token = access_token;
-  let syncLogEntry = syncLogId;
+  const { userId, access_token, syncLogId } = options;
   
   try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'strava',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
+    console.log(`Starting Strava sync for user ${userId}`);
     
-    // Check if token needs refreshing
-    if (expires_at && expires_at < Math.floor(Date.now() / 1000)) {
-      console.log('Refreshing Strava token...');
-      
-      // Token has expired, refresh it
-      const refreshResponse = await axios.post('https://www.strava.com/oauth/token', {
-        client_id: '163144',
-        client_secret: '5be57be12ea469a544bcc2a7e8c0bbdfe3b3665f',
-        refresh_token,
-        grant_type: 'refresh_token'
-      });
-      
-      // Update token info
-      token = refreshResponse.data.access_token;
-      const newRefreshToken = refreshResponse.data.refresh_token;
-      const newExpiresAt = refreshResponse.data.expires_at;
-      
-      // Update stored token
-      await db.update(integration_connections)
-        .set({
-          access_token: token,
-          refresh_token: newRefreshToken,
-          token_expires_at: new Date(newExpiresAt * 1000),
-          updated_at: new Date()
-        })
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'strava')
-        ));
-    }
-    
-    // Determine since when to fetch activities
-    let sinceDate: Date | undefined;
-    
-    if (!forceSync) {
-      // Get the last sync time
-      const [connection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'strava')
-        ));
-      
-      sinceDate = connection.last_sync_at;
-    }
-    
-    // Fetch activities from Strava
-    const sinceTimestamp = sinceDate ? Math.floor(sinceDate.getTime() / 1000) : undefined;
-    const activitiesUrl = `https://www.strava.com/api/v3/athlete/activities?per_page=100${sinceTimestamp ? `&after=${sinceTimestamp}` : ''}`;
-    
-    const activitiesResponse = await axios.get(activitiesUrl, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    const stravaActivities = activitiesResponse.data;
-    
-    let activitiesCreated = 0;
-    let activitiesUpdated = 0;
+    // Fetch recent activities
+    const activitiesResponse = await axios.get(
+      'https://www.strava.com/api/v3/athlete/activities',
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+        params: { per_page: 30 }
+      }
+    );
+
+    const activities = activitiesResponse.data;
+    let activitiesProcessed = 0;
     let activitiesSkipped = 0;
-    
-    // Process each activity
-    for (const stravaActivity of stravaActivities) {
+
+    for (const activity of activities) {
       // Check if activity already exists
-      const [existingActivity] = await db.select()
-        .from(activities)
-        .where(and(
+      const existingActivity = await db.select().from(activities).where(
+        and(
           eq(activities.user_id, userId),
-          eq(activities.external_id, stravaActivity.id.toString()),
+          eq(activities.external_id, activity.id.toString()),
           eq(activities.source_platform, 'strava')
-        ));
-      
+        )
+      ).limit(1);
+
+      if (existingActivity.length > 0) {
+        activitiesSkipped++;
+        continue;
+      }
+
+      // Convert activity data
       const activityData = {
         user_id: userId,
-        external_id: stravaActivity.id.toString(),
-        activity_type: mapStravaActivityType(stravaActivity.type),
+        external_id: activity.id.toString(),
+        activity_type: mapStravaActivityType(activity.type),
         source_platform: 'strava',
-        activity_date: new Date(stravaActivity.start_date),
-        start_time: new Date(stravaActivity.start_date),
-        end_time: stravaActivity.elapsed_time 
-          ? new Date(new Date(stravaActivity.start_date).getTime() + stravaActivity.elapsed_time * 1000) 
-          : undefined,
-        duration: stravaActivity.elapsed_time,
-        distance: stravaActivity.distance / 1000, // Convert meters to kilometers
-        elevation_gain: stravaActivity.total_elevation_gain,
-        average_heart_rate: stravaActivity.average_heartrate,
-        max_heart_rate: stravaActivity.max_heartrate,
-        calories: stravaActivity.calories,
-        average_pace: stravaActivity.average_speed ? (1000 / stravaActivity.average_speed) : undefined, // Convert m/s to sec/km
-        notes: stravaActivity.description || '',
-        is_race: stravaActivity.workout_type === 1, // 1 = race in Strava
-        is_manual_entry: false,
-        created_at: new Date(),
-        polyline: stravaActivity.map?.summary_polyline,
-        raw_data: stravaActivity
+        activity_date: new Date(activity.start_date),
+        start_time: new Date(activity.start_date),
+        end_time: activity.elapsed_time ? new Date(new Date(activity.start_date).getTime() + activity.elapsed_time * 1000) : undefined,
+        duration: activity.elapsed_time || 0,
+        distance: Math.round((activity.distance || 0) / 1000 * 100) / 100, // Convert to km
+        calories: activity.calories || 0,
+        average_heart_rate: activity.average_heartrate || null,
+        max_heart_rate: activity.max_heartrate || null,
+        elevation_gain: Math.round((activity.total_elevation_gain || 0)),
+        notes: activity.name || '',
+        raw_data: activity
       };
-      
-      if (existingActivity) {
-        // Update existing activity
-        await db.update(activities)
-          .set(activityData)
-          .where(eq(activities.id, existingActivity.id));
-        
-        activitiesUpdated++;
-      } else {
-        // Create new activity
-        await db.insert(activities)
-          .values(activityData);
-        
-        activitiesCreated++;
-      }
+
+      await db.insert(activities).values([activityData]);
+      activitiesProcessed++;
     }
-    
-    // Update sync log status
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
+
+    // Update sync log
+    if (syncLogId) {
+      await db.update(sync_logs).set({
         status: 'completed',
-        activities_synced: stravaActivities.length,
-        activities_created: activitiesCreated,
-        activities_updated: activitiesUpdated,
-        activities_skipped: activitiesSkipped
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'strava')
-      ));
-      
-  } catch (error) {
-    console.error('Error syncing Strava data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
+        activities_synced: activitiesProcessed,
+        activities_skipped: activitiesSkipped,
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
     }
+
+    console.log(`Strava sync completed: ${activitiesProcessed} activities processed, ${activitiesSkipped} skipped`);
+  } catch (error) {
+    console.error('Strava sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+    throw error;
   }
 }
 
-// Sync activities from Garmin
 async function syncGarminData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, forceSync = false, syncLogId } = options;
-  let syncLogEntry = syncLogId;
+  const { userId, access_token, syncLogId } = options;
   
   try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'garmin',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
+    console.log(`Starting Garmin sync for user ${userId}`);
     
-    // Determine since when to fetch activities
-    let sinceDate: Date | undefined;
-    
-    if (!forceSync) {
-      // Get the last sync time
-      const [connection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'garmin')
-        ));
-      
-      sinceDate = connection.last_sync_at;
-    }
-    
-    // Fetch activities from Garmin
-    // Note: Garmin's API implementation is more complex and would require a 
-    // separate OAuth library to handle the specifics of their authentication flow
-    const sinceTimestamp = sinceDate ? sinceDate.toISOString() : undefined;
-    const activitiesUrl = `https://apis.garmin.com/wellness-api/rest/activities?start=${sinceTimestamp || '0'}&limit=100`;
-    
-    const activitiesResponse = await axios.get(activitiesUrl, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    
-    const garminActivities = activitiesResponse.data.activities || [];
-    
-    let activitiesCreated = 0;
-    let activitiesUpdated = 0;
+    // Fetch recent activities from Garmin Connect
+    const activitiesResponse = await axios.get(
+      'https://connectapi.garmin.com/activitylist-service/activities/search/activities',
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+        params: { limit: 30 }
+      }
+    );
+
+    const activities = activitiesResponse.data || [];
+    let activitiesProcessed = 0;
     let activitiesSkipped = 0;
-    
-    // Process each activity (simplified for demonstration)
-    for (const garminActivity of garminActivities) {
+
+    for (const activity of activities) {
       // Check if activity already exists
-      const [existingActivity] = await db.select()
-        .from(activities)
-        .where(and(
+      const existingActivity = await db.select().from(activities).where(
+        and(
           eq(activities.user_id, userId),
-          eq(activities.external_id, garminActivity.activityId.toString()),
+          eq(activities.external_id, activity.activityId.toString()),
           eq(activities.source_platform, 'garmin')
-        ));
-      
+        )
+      ).limit(1);
+
+      if (existingActivity.length > 0) {
+        activitiesSkipped++;
+        continue;
+      }
+
+      // Convert activity data
       const activityData = {
         user_id: userId,
-        external_id: garminActivity.activityId.toString(),
-        activity_type: mapGarminActivityType(garminActivity.activityType),
+        external_id: activity.activityId.toString(),
+        activity_type: mapGarminActivityType(activity.activityTypeDTO?.typeKey || 'other'),
         source_platform: 'garmin',
-        activity_date: new Date(garminActivity.startTimeInSeconds * 1000),
-        start_time: new Date(garminActivity.startTimeInSeconds * 1000),
-        end_time: new Date((garminActivity.startTimeInSeconds + garminActivity.durationInSeconds) * 1000),
-        duration: garminActivity.durationInSeconds,
-        distance: (garminActivity.distanceInMeters || 0) / 1000, // Convert meters to kilometers
-        elevation_gain: garminActivity.elevationGainInMeters,
-        average_heart_rate: garminActivity.averageHeartRateInBeatsPerMinute,
-        max_heart_rate: garminActivity.maxHeartRateInBeatsPerMinute,
-        calories: garminActivity.activeKilocalories,
-        is_manual_entry: false,
-        created_at: new Date(),
-        raw_data: garminActivity
+        activity_date: new Date(activity.startTimeLocal),
+        start_time: new Date(activity.startTimeLocal),
+        end_time: new Date(activity.startTimeLocal + (activity.duration || 0) * 1000),
+        duration: activity.duration || 0,
+        distance: Math.round((activity.distance || 0) / 1000 * 100) / 100,
+        calories: activity.calories || 0,
+        average_heart_rate: activity.averageHR || null,
+        max_heart_rate: activity.maxHR || null,
+        elevation_gain: Math.round(activity.elevationGain || 0),
+        raw_data: activity
       };
-      
-      if (existingActivity) {
-        // Update existing activity
-        await db.update(activities)
-          .set(activityData)
-          .where(eq(activities.id, existingActivity.id));
-        
-        activitiesUpdated++;
-      } else {
-        // Create new activity
-        await db.insert(activities)
-          .values(activityData);
-        
-        activitiesCreated++;
+
+      await db.insert(activities).values([activityData]);
+      activitiesProcessed++;
+    }
+
+    // Update sync log
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'completed',
+        activities_synced: activitiesProcessed,
+        activities_skipped: activitiesSkipped,
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+
+    console.log(`Garmin sync completed: ${activitiesProcessed} activities processed, ${activitiesSkipped} skipped`);
+  } catch (error) {
+    console.error('Garmin sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+    throw error;
+  }
+}
+
+async function syncGoogleFitData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, syncLogId } = options;
+  
+  try {
+    console.log(`Starting Google Fit sync for user ${userId}`);
+    
+    const endTime = Date.now();
+    const startTime = endTime - (30 * 24 * 60 * 60 * 1000); // Last 30 days
+
+    // Fetch activities from Google Fit
+    const response = await axios.post(
+      'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate',
+      {
+        aggregateBy: [
+          { dataTypeName: 'com.google.activity.segment' },
+          { dataTypeName: 'com.google.calories.expended' },
+          { dataTypeName: 'com.google.distance.delta' }
+        ],
+        bucketByTime: { durationMillis: 86400000 }, // Daily buckets
+        startTimeMillis: startTime,
+        endTimeMillis: endTime
+      },
+      {
+        headers: { Authorization: `Bearer ${access_token}` }
+      }
+    );
+
+    const buckets = response.data?.bucket || [];
+    let activitiesProcessed = 0;
+    let activitiesSkipped = 0;
+
+    for (const bucket of buckets) {
+      for (const dataset of bucket.dataset) {
+        for (const point of dataset.point || []) {
+          if (point.dataTypeName === 'com.google.activity.segment') {
+            const startTimeMs = parseInt(point.startTimeNanos) / 1000000;
+            const endTimeMs = parseInt(point.endTimeNanos) / 1000000;
+            const activityType = point.value?.[0]?.intVal;
+            
+            if (!activityType) continue;
+
+            // Check if activity already exists
+            const existingActivity = await db.select().from(activities).where(
+              and(
+                eq(activities.user_id, userId),
+                eq(activities.external_id, `${startTimeMs}_${endTimeMs}`),
+                eq(activities.source_platform, 'google_fit')
+              )
+            ).limit(1);
+
+            if (existingActivity.length > 0) {
+              activitiesSkipped++;
+              continue;
+            }
+
+            const activityData = {
+              user_id: userId,
+              external_id: `${startTimeMs}_${endTimeMs}`,
+              activity_type: 'fitness',
+              source_platform: 'google_fit',
+              activity_date: new Date(startTimeMs),
+              start_time: new Date(startTimeMs),
+              end_time: new Date(endTimeMs),
+              duration: Math.round((endTimeMs - startTimeMs) / 1000),
+              distance: 0,
+              calories: 0,
+              raw_data: point
+            };
+
+            await db.insert(activities).values([activityData]);
+            activitiesProcessed++;
+          }
+        }
       }
     }
-    
-    // Update sync log status
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
+
+    // Update sync log
+    if (syncLogId) {
+      await db.update(sync_logs).set({
         status: 'completed',
-        activities_synced: garminActivities.length,
-        activities_created: activitiesCreated,
-        activities_updated: activitiesUpdated,
-        activities_skipped: activitiesSkipped
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'garmin')
-      ));
-      
+        activities_synced: activitiesProcessed,
+        activities_skipped: activitiesSkipped,
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+
+    console.log(`Google Fit sync completed: ${activitiesProcessed} activities processed, ${activitiesSkipped} skipped`);
   } catch (error) {
-    console.error('Error syncing Garmin data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
+    console.error('Google Fit sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
     }
+    throw error;
   }
 }
 
-// Google Fit sync function
-async function syncGoogleFitData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, forceSync = false, syncLogId } = options;
-  let syncLogEntry = syncLogId;
-
-  try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'google_fit',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
-    
-    // Get the results from process function
-    const results = await processGoogleFitSync({ access_token }, userId);
-    
-    // Update sync log
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
-        status: 'completed',
-        activities_synced: results.activities,
-        metrics_synced: results.metrics
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'google_fit')
-      ));
-  } catch (error: any) {
-    console.error('Error syncing Google Fit data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
-    }
-  }
-}
-
-// WHOOP sync function
 async function syncWhoopData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, forceSync = false, syncLogId } = options;
-  let syncLogEntry = syncLogId;
-
-  try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'whoop',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
-    
-    // Get the results from process function
-    const results = await processWhoopSync({ access_token }, userId);
-    
-    // Update sync log
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
-        status: 'completed',
-        activities_synced: results.activities,
-        metrics_synced: results.metrics
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'whoop')
-      ));
-  } catch (error: any) {
-    console.error('Error syncing WHOOP data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
-    }
-  }
-}
-
-// Apple Health sync function
-async function syncAppleHealthData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, forceSync = false, syncLogId } = options;
-  let syncLogEntry = syncLogId;
-
-  try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'apple_health',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
-    
-    // Get the results from process function
-    const results = await processAppleHealthSync({ access_token }, userId);
-    
-    // Update sync log
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
-        status: 'completed',
-        activities_synced: results.activities,
-        metrics_synced: results.metrics
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'apple_health')
-      ));
-  } catch (error: any) {
-    console.error('Error syncing Apple Health data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
-    }
-  }
-}
-
-// Fitbit sync function
-async function syncFitbitData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, forceSync = false, syncLogId } = options;
-  let syncLogEntry = syncLogId;
-
-  try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'fitbit',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
-    
-    // Get the results from process function
-    const results = await processFitbitSync({ access_token }, userId);
-    
-    // Update sync log
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
-        status: 'completed',
-        activities_synced: results.activities,
-        metrics_synced: results.metrics
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'fitbit')
-      ));
-  } catch (error: any) {
-    console.error('Error syncing Fitbit data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
-    }
-  }
-}
-
-// Sync activities from Polar
-async function syncPolarData(options: SyncOptions): Promise<void> {
-  const { userId, access_token, forceSync = false, syncLogId } = options;
-  let syncLogEntry = syncLogId;
+  const { userId, access_token, syncLogId } = options;
   
   try {
-    // If no sync log ID was provided, create one
-    if (!syncLogEntry) {
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: 'polar',
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogEntry = syncLog.id;
-    }
+    console.log(`Starting WHOOP sync for user ${userId}`);
     
-    // Determine since when to fetch activities
-    let sinceDate: Date | undefined;
-    
-    if (!forceSync) {
-      // Get the last sync time
-      const [connection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'polar')
-        ));
-      
-      sinceDate = connection.last_sync_at;
-    }
-    
-    // Fetch activities from Polar
-    const sinceTimestamp = sinceDate ? sinceDate.toISOString() : undefined;
-    const activitiesUrl = `https://www.polaraccesslink.com/v3/users/${userId}/exercise-transactions`;
-    
-    // Get transaction list
-    const transactionResponse = await axios.post(activitiesUrl, {}, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    
-    const transactionUrl = transactionResponse.headers.location;
-    
-    // Get exercises from transaction
-    const exercisesResponse = await axios.get(`${transactionUrl}/exercises`, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    
-    const polarExercises = exercisesResponse.data.exercises || [];
-    
-    let activitiesCreated = 0;
-    let activitiesUpdated = 0;
+    // Fetch workouts from WHOOP API
+    const response = await axios.get(
+      'https://api.prod.whoop.com/developer/v1/activity/workout',
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+        params: { limit: 30 }
+      }
+    );
+
+    const workouts = response.data?.records || [];
+    let activitiesProcessed = 0;
     let activitiesSkipped = 0;
-    
-    // Process each exercise
-    for (const exerciseUrl of polarExercises) {
-      // Get detailed exercise data
-      const exerciseResponse = await axios.get(exerciseUrl, {
-        headers: { Authorization: `Bearer ${access_token}` }
-      });
-      
-      const exercise = exerciseResponse.data;
-      
+
+    for (const workout of workouts) {
       // Check if activity already exists
-      const [existingActivity] = await db.select()
-        .from(activities)
-        .where(and(
+      const existingActivity = await db.select().from(activities).where(
+        and(
           eq(activities.user_id, userId),
-          eq(activities.external_id, exercise.id),
-          eq(activities.source_platform, 'polar')
-        ));
-      
-      const startTime = new Date(exercise.start_time);
-      const endTime = new Date(exercise.end_time);
-      const durationSeconds = (endTime.getTime() - startTime.getTime()) / 1000;
-      
+          eq(activities.external_id, workout.id.toString()),
+          eq(activities.source_platform, 'whoop')
+        )
+      ).limit(1);
+
+      if (existingActivity.length > 0) {
+        activitiesSkipped++;
+        continue;
+      }
+
       const activityData = {
         user_id: userId,
-        external_id: exercise.id,
-        activity_type: mapPolarActivityType(exercise.sport),
+        external_id: workout.id.toString(),
+        activity_type: workout.sport_id?.toString() || 'workout',
+        source_platform: 'whoop',
+        activity_date: new Date(workout.start),
+        start_time: new Date(workout.start),
+        end_time: new Date(workout.end),
+        duration: Math.round((new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 1000),
+        distance: 0,
+        calories: workout.score?.kilojoule || 0,
+        raw_data: workout
+      };
+
+      await db.insert(activities).values([activityData]);
+      activitiesProcessed++;
+    }
+
+    // Update sync log
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'completed',
+        activities_synced: activitiesProcessed,
+        activities_skipped: activitiesSkipped,
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+
+    console.log(`WHOOP sync completed: ${activitiesProcessed} activities processed, ${activitiesSkipped} skipped`);
+  } catch (error) {
+    console.error('WHOOP sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+    throw error;
+  }
+}
+
+async function syncAppleHealthData(options: SyncOptions): Promise<void> {
+  // Apple Health requires native iOS integration, not REST API
+  // This would be handled through HealthKit on the client side
+  const { userId, syncLogId } = options;
+  
+  try {
+    console.log(`Apple Health sync not implemented for user ${userId} - requires native iOS integration`);
+    
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'completed',
+        activities_synced: 0,
+        activities_skipped: 0,
+        completed_at: new Date(),
+        error: 'Apple Health requires native iOS integration'
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+  } catch (error) {
+    console.error('Apple Health sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+    throw error;
+  }
+}
+
+async function syncFitbitData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, syncLogId } = options;
+  
+  try {
+    console.log(`Starting Fitbit sync for user ${userId}`);
+    
+    // Fetch recent activities
+    const response = await axios.get(
+      'https://api.fitbit.com/1/user/-/activities/list.json',
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+        params: { limit: 30, sort: 'desc' }
+      }
+    );
+
+    const activities = response.data?.activities || [];
+    let activitiesProcessed = 0;
+    let activitiesSkipped = 0;
+
+    for (const activity of activities) {
+      // Check if activity already exists
+      const existingActivity = await db.select().from(activities).where(
+        and(
+          eq(activities.user_id, userId),
+          eq(activities.external_id, activity.logId.toString()),
+          eq(activities.source_platform, 'fitbit')
+        )
+      ).limit(1);
+
+      if (existingActivity.length > 0) {
+        activitiesSkipped++;
+        continue;
+      }
+
+      const activityData = {
+        user_id: userId,
+        external_id: activity.logId.toString(),
+        activity_type: activity.activityName?.toLowerCase() || 'exercise',
+        source_platform: 'fitbit',
+        activity_date: new Date(activity.startDate),
+        start_time: new Date(`${activity.startDate}T${activity.startTime}`),
+        end_time: new Date(new Date(`${activity.startDate}T${activity.startTime}`).getTime() + activity.duration),
+        duration: Math.round(activity.duration / 1000),
+        distance: activity.distance || 0,
+        calories: activity.calories || 0,
+        raw_data: activity
+      };
+
+      await db.insert(activities).values([activityData]);
+      activitiesProcessed++;
+    }
+
+    // Update sync log
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'completed',
+        activities_synced: activitiesProcessed,
+        activities_skipped: activitiesSkipped,
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+
+    console.log(`Fitbit sync completed: ${activitiesProcessed} activities processed, ${activitiesSkipped} skipped`);
+  } catch (error) {
+    console.error('Fitbit sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+    throw error;
+  }
+}
+
+async function syncPolarData(options: SyncOptions): Promise<void> {
+  const { userId, access_token, syncLogId } = options;
+  
+  try {
+    console.log(`Starting Polar sync for user ${userId}`);
+    
+    // Fetch recent exercises from Polar API
+    const response = await axios.get(
+      'https://www.polaraccesslink.com/v3/exercises',
+      {
+        headers: { 
+          Authorization: `Bearer ${access_token}`,
+          Accept: 'application/json'
+        }
+      }
+    );
+
+    const exercises = response.data || [];
+    let activitiesProcessed = 0;
+    let activitiesSkipped = 0;
+
+    for (const exercise of exercises) {
+      // Check if activity already exists
+      const existingActivity = await db.select().from(activities).where(
+        and(
+          eq(activities.user_id, userId),
+          eq(activities.external_id, exercise.id.toString()),
+          eq(activities.source_platform, 'polar')
+        )
+      ).limit(1);
+
+      if (existingActivity.length > 0) {
+        activitiesSkipped++;
+        continue;
+      }
+
+      const activityData = {
+        user_id: userId,
+        external_id: exercise.id.toString(),
+        activity_type: mapPolarActivityType(exercise.sport || 'other'),
         source_platform: 'polar',
-        activity_date: startTime,
-        start_time: startTime,
-        end_time: endTime,
-        duration: durationSeconds,
-        distance: (exercise.distance || 0) / 1000, // Convert meters to kilometers
-        average_heart_rate: exercise.heart_rate?.average,
-        max_heart_rate: exercise.heart_rate?.maximum,
-        calories: exercise.calories,
-        is_manual_entry: false,
-        created_at: new Date(),
+        activity_date: new Date(exercise.start_time),
+        start_time: new Date(exercise.start_time),
+        end_time: new Date(exercise.start_time + exercise.duration * 1000),
+        duration: exercise.duration || 0,
+        distance: Math.round((exercise.distance || 0) / 1000 * 100) / 100,
+        calories: exercise.calories || 0,
+        average_heart_rate: exercise.heart_rate?.average || null,
+        max_heart_rate: exercise.heart_rate?.maximum || null,
         raw_data: exercise
       };
-      
-      if (existingActivity) {
-        // Update existing activity
-        await db.update(activities)
-          .set(activityData)
-          .where(eq(activities.id, existingActivity.id));
-        
-        activitiesUpdated++;
-      } else {
-        // Create new activity
-        await db.insert(activities)
-          .values(activityData);
-        
-        activitiesCreated++;
-      }
+
+      await db.insert(activities).values([activityData]);
+      activitiesProcessed++;
     }
-    
-    // Commit the transaction
-    await axios.put(`${transactionUrl}`, {}, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    
-    // Update sync log status
-    await db.update(sync_logs)
-      .set({
-        sync_end_time: new Date(),
+
+    // Update sync log
+    if (syncLogId) {
+      await db.update(sync_logs).set({
         status: 'completed',
-        activities_synced: polarExercises.length,
-        activities_created: activitiesCreated,
-        activities_updated: activitiesUpdated,
-        activities_skipped: activitiesSkipped
-      })
-      .where(eq(sync_logs.id, syncLogEntry));
-    
-    // Update last sync time
-    await db.update(integration_connections)
-      .set({
-        last_sync_at: new Date(),
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(integration_connections.user_id, userId),
-        eq(integration_connections.platform, 'polar')
-      ));
-      
-  } catch (error) {
-    console.error('Error syncing Polar data:', error);
-    
-    // Update sync log with error
-    if (syncLogEntry) {
-      await db.update(sync_logs)
-        .set({
-          sync_end_time: new Date(),
-          status: 'failed',
-          error: error.message || 'Unknown error',
-        })
-        .where(eq(sync_logs.id, syncLogEntry));
+        activities_synced: activitiesProcessed,
+        activities_skipped: activitiesSkipped,
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
     }
+
+    console.log(`Polar sync completed: ${activitiesProcessed} activities processed, ${activitiesSkipped} skipped`);
+  } catch (error) {
+    console.error('Polar sync error:', error);
+    if (syncLogId) {
+      await db.update(sync_logs).set({
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date()
+      }).where(eq(sync_logs.id, syncLogId));
+    }
+    throw error;
   }
 }
 
-// Helper functions to map activity types from external services to our system
+// Activity type mapping functions
 function mapStravaActivityType(stravaType: string): string {
-  const typeMap: Record<string, string> = {
-    'Run': 'run',
-    'Trail Run': 'run',
-    'Treadmill': 'run',
-    'Track Run': 'run',
-    'Virtual Run': 'run',
-    'Ride': 'bike',
-    'VirtualRide': 'bike',
-    'Swim': 'swim',
-    'Walk': 'walk',
-    'Hike': 'hike',
-    'Weight Training': 'strength',
+  const typeMap: { [key: string]: string } = {
+    'Run': 'running',
+    'Ride': 'cycling',
+    'Swim': 'swimming',
+    'Walk': 'walking',
+    'Hike': 'hiking',
     'Workout': 'strength',
-    'Yoga': 'yoga'
+    'WeightTraining': 'strength',
+    'Yoga': 'yoga',
+    'CrossTrain': 'cross_training'
   };
-  
   return typeMap[stravaType] || 'other';
 }
 
 function mapPolarActivityType(polarType: string): string {
-  const typeMap: Record<string, string> = {
-    'RUNNING': 'run',
-    'CYCLING': 'bike', 
-    'WALKING': 'walk',
-    'SWIMMING': 'swim',
+  const typeMap: { [key: string]: string } = {
+    'RUNNING': 'running',
+    'CYCLING': 'cycling',
+    'SWIMMING': 'swimming',
+    'WALKING': 'walking',
+    'HIKING': 'hiking',
+    'FITNESS': 'strength',
     'YOGA': 'yoga',
-    'STRENGTH_TRAINING': 'strength',
-    'CROSS_TRAINING': 'cross_training',
-    'CARDIO': 'cardio',
-    'OUTDOOR_CYCLING': 'bike',
-    'INDOOR_CYCLING': 'bike',
-    'TRAIL_RUNNING': 'run',
-    'TREADMILL_RUNNING': 'run',
     'OTHER': 'other'
   };
-  
-  return typeMap[polarType?.toUpperCase()] || 'other';
+  return typeMap[polarType.toUpperCase()] || 'other';
 }
 
 function mapGarminActivityType(garminType: string): string {
-  const typeMap: Record<string, string> = {
-    'RUNNING': 'run',
-    'INDOOR_RUNNING': 'run',
-    'TREADMILL_RUNNING': 'run',
-    'TRAIL_RUNNING': 'run',
-    'CYCLING': 'bike',
-    'INDOOR_CYCLING': 'bike',
-    'SWIMMING': 'swim',
-    'OPEN_WATER_SWIMMING': 'swim',
-    'WALKING': 'walk',
-    'HIKING': 'hike',
-    'STRENGTH_TRAINING': 'strength',
-    'YOGA': 'yoga'
+  const typeMap: { [key: string]: string } = {
+    'running': 'running',
+    'cycling': 'cycling',
+    'swimming': 'swimming',
+    'walking': 'walking',
+    'hiking': 'hiking',
+    'strength_training': 'strength',
+    'yoga': 'yoga',
+    'cardio': 'cardio'
   };
-  
   return typeMap[garminType] || 'other';
 }
 
-
-
-// Set up OpenAI model for nutrition recommendations
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-let openai: OpenAI | null = null;
-
-try {
-  // Initialize primary and fallback AI providers
-  let deepSeekEnabled = false;
-  
-  if (process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    console.log("OpenAI model initialized successfully");
-  } else {
-    console.warn("OPENAI_API_KEY not set. Checking for alternative AI providers.");
-  }
-  
-  // Check if DeepSeek API key is available as an alternative
-  if (process.env.DEEPSEEK_API_KEY) {
-    deepSeekEnabled = true;
-    console.log("DeepSeek API enabled as an alternative AI provider");
-  }
-  
-  if (!process.env.GOOGLE_AI_API_KEY && !deepSeekEnabled) {
-    console.warn("No AI API keys available. AI features will be disabled.");
-  }
-} catch (error) {
-  console.error("Failed to initialize AI models:", error);
-}
-import { 
-  insertGroupSchema, 
-  insertGroupMemberSchema, 
-  insertChallengeSchema,
-  insertBuddySchema,
-  insertNutritionLogSchema,
-  insertCoachSchema,
-  insertCoachingSessionSchema,
-  insertSubscriptionPlanSchema,
-  insertHealthMetricsSchema,
-  insertIntegrationConnectionSchema,
-  subscription_plans,
-  users,
-  health_metrics,
-  integration_connections,
-  nutrition_preferences,
-  food_items,
-  meal_plans,
-  meals,
-  meal_food_items,
-  nutrition_logs
-} from "@shared/schema";
-import { z } from "zod";
-import Stripe from "stripe";
-import { db } from "./db";
-import { eq, and, like, desc } from "drizzle-orm";
-import { WebSocketServer } from "ws";
-import ws from "ws";
-
-// Extended types for expanded Stripe resources
+// Stripe subscription types
 interface ExpandedInvoice extends Omit<Stripe.Invoice, 'payment_intent'> {
   payment_intent?: Stripe.PaymentIntent | string | null;
 }
@@ -871,963 +613,170 @@ interface ExpandedSubscription extends Omit<Stripe.Subscription, 'latest_invoice
   latest_invoice?: ExpandedInvoice | string | null;
 }
 
-// Initialize OpenAI configuration for nutrition and training plans
-if (openai) {
-  try {
-    // No additional configuration needed for OpenAI
-    console.log("OpenAI ready for nutrition and training plan generation");
-  } catch (error) {
-    console.error("Error with OpenAI configuration:", error);
-  }
-}
-
-// API routes for integration data syncing
-
-// Authentication middleware for protected routes
+// Middleware functions
 function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
-    return next();
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Authentication required" });
   }
-  res.status(401).json({ error: "Authentication required" });
+  next();
 }
-
-// Integration sync routes
-// Strava OAuth configuration
-const STRAVA_CLIENT_ID = '163144';
-const STRAVA_CLIENT_SECRET = '5be57be12ea469a544bcc2a7e8c0bbdfe3b3665f';
-
-// Polar OAuth configuration
-const POLAR_CLIENT_ID = process.env.POLAR_CLIENT_ID;
-const POLAR_CLIENT_SECRET = process.env.POLAR_CLIENT_SECRET;
 
 function setupIntegrationRoutes(app: Express) {
-  // Strava OAuth authentication initiation
-  app.get('/api/auth/strava', requireAuth, (req, res) => {
-    const scope = 'read,activity:read_all,profile:read_all';
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/strava/callback`;
-    
-    const authUrl = `https://www.strava.com/oauth/authorize?` +
-      `client_id=${STRAVA_CLIENT_ID}&` +
-      `response_type=code&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `approval_prompt=force&` +
-      `scope=${scope}&` +
-      `state=${req.user!.id}`;
-    
-    res.redirect(authUrl);
-  });
-
-  // Strava OAuth callback handler
-  app.get('/api/auth/strava/callback', requireAuth, async (req, res) => {
+  // Sync endpoint for manual data synchronization
+  app.post("/api/sync/:platform", requireAuth, async (req, res) => {
     try {
-      const { code, state } = req.query;
-      const userId = parseInt(state as string);
-      
-      // Verify the state parameter matches the current user
-      if (userId !== req.user!.id) {
-        return res.status(400).json({ error: 'Invalid state parameter' });
-      }
-      
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/strava/callback`;
-      
-      // Exchange authorization code for access token
-      const tokenResponse = await axios.post('https://www.strava.com/oauth/token', {
-        client_id: STRAVA_CLIENT_ID,
-        client_secret: STRAVA_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri
-      });
-      
-      const { access_token, refresh_token, expires_at, athlete } = tokenResponse.data;
-      
-      // Store the integration connection
-      await db.insert(integration_connections)
-        .values({
-          user_id: userId,
-          platform: 'strava',
-          access_token,
-          refresh_token,
-          expires_at: new Date(expires_at * 1000),
-          external_user_id: athlete.id.toString(),
-          is_active: true,
-          created_at: new Date(),
-          updated_at: new Date()
-        })
-        .onConflictDoUpdate({
-          target: [integration_connections.user_id, integration_connections.platform],
-          set: {
-            access_token,
-            refresh_token,
-            expires_at: new Date(expires_at * 1000),
-            external_user_id: athlete.id.toString(),
-            is_active: true,
-            updated_at: new Date()
-          }
-        });
-      
-      // Trigger initial data sync
-      await syncStravaData({
-        userId,
-        access_token,
-        refresh_token,
-        expires_at,
-        forceSync: true
-      });
-      
-      res.redirect('/settings?strava=connected');
-    } catch (error) {
-      console.error('Strava OAuth error:', error);
-      res.redirect('/settings?strava=error');
-    }
-  });
+      const { platform } = req.params;
+      const userId = req.user!.id;
 
-  // Disconnect Strava integration
-  app.delete('/api/auth/strava', requireAuth, async (req, res) => {
-    try {
-      await db.update(integration_connections)
-        .set({ is_active: false, updated_at: new Date() })
-        .where(and(
-          eq(integration_connections.user_id, req.user!.id),
-          eq(integration_connections.platform, 'strava')
-        ));
-      
-      res.json({ message: 'Strava integration disconnected successfully' });
-    } catch (error) {
-      console.error('Error disconnecting Strava:', error);
-      res.status(500).json({ error: 'Failed to disconnect Strava integration' });
-    }
-  });
-
-  // Manual sync trigger for Strava
-  app.post('/api/integrations/strava/sync', requireAuth, async (req, res) => {
-    try {
-      const connection = await db.query.integration_connections.findFirst({
-        where: and(
-          eq(integration_connections.user_id, req.user!.id),
-          eq(integration_connections.platform, 'strava'),
-          eq(integration_connections.is_active, true)
-        )
-      });
-
-      if (!connection) {
-        return res.status(404).json({ error: 'No active Strava connection found' });
-      }
-
-      await syncStravaData({
-        userId: req.user!.id,
-        access_token: connection.access_token,
-        refresh_token: connection.refresh_token,
-        expires_at: Math.floor(connection.expires_at!.getTime() / 1000),
-        forceSync: true
-      });
-
-      res.json({ message: 'Strava sync completed successfully' });
-    } catch (error) {
-      console.error('Error syncing Strava data:', error);
-      res.status(500).json({ error: 'Failed to sync Strava data' });
-    }
-  });
-
-  // Polar OAuth authentication initiation
-  app.get('/api/integrations/polar/auth', requireAuth, (req, res) => {
-    if (!POLAR_CLIENT_ID || !POLAR_CLIENT_SECRET) {
-      return res.status(500).json({ error: 'Polar API credentials not configured' });
-    }
-
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/integrations/polar/callback`;
-    
-    const authUrl = `https://flow.polar.com/oauth2/authorization?` +
-      `response_type=code&` +
-      `client_id=${POLAR_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `state=${req.user!.id}`;
-    
-    res.json({ authUrl });
-  });
-
-  // Polar OAuth callback handler
-  app.get('/api/integrations/polar/callback', requireAuth, async (req, res) => {
-    try {
-      const { code, state } = req.query;
-      const userId = parseInt(state as string);
-      
-      if (userId !== req.user!.id) {
-        return res.status(400).json({ error: 'Invalid state parameter' });
-      }
-      
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/integrations/polar/callback`;
-      
-      // Exchange authorization code for access token
-      const tokenResponse = await axios.post('https://polarremote.com/v2/oauth2/token', {
-        grant_type: 'authorization_code',
-        client_id: POLAR_CLIENT_ID,
-        client_secret: POLAR_CLIENT_SECRET,
-        code,
-        redirect_uri: redirectUri
-      });
-      
-      const { access_token, x_user_id } = tokenResponse.data;
-      
-      // Store the integration connection
-      await db.insert(integration_connections)
-        .values({
-          user_id: userId,
-          platform: 'polar',
-          access_token,
-          external_user_id: x_user_id.toString(),
-          is_active: true,
-          created_at: new Date(),
-          updated_at: new Date()
-        })
-        .onConflictDoUpdate({
-          target: [integration_connections.user_id, integration_connections.platform],
-          set: {
-            access_token,
-            external_user_id: x_user_id.toString(),
-            is_active: true,
-            updated_at: new Date()
-          }
-        });
-      
-      // Trigger initial data sync
-      await syncPolarData({
-        userId,
-        access_token,
-        forceSync: true
-      });
-      
-      res.redirect('/settings?polar=connected');
-    } catch (error) {
-      console.error('Polar OAuth error:', error);
-      res.redirect('/settings?polar=error');
-    }
-  });
-
-  // Get Polar connection status
-  app.get('/api/integrations/polar/status', requireAuth, async (req, res) => {
-    try {
-      const connection = await db.query.integration_connections.findFirst({
-        where: and(
-          eq(integration_connections.user_id, req.user!.id),
-          eq(integration_connections.platform, 'polar'),
-          eq(integration_connections.is_active, true)
-        )
-      });
-
-      const syncLogs = await db.select()
-        .from(sync_logs)
-        .where(and(
-          eq(sync_logs.user_id, req.user!.id),
-          eq(sync_logs.platform, 'polar')
-        ))
-        .orderBy(desc(sync_logs.sync_start_time))
-        .limit(5);
-
-      res.json({
-        connection: connection ? {
-          id: connection.id,
-          user_id: connection.user_id,
-          platform: connection.platform,
-          status: 'connected',
-          last_sync: connection.last_synced_at,
-          created_at: connection.created_at
-        } : null,
-        syncLogs: syncLogs.map(log => ({
-          id: log.id,
-          user_id: log.user_id,
-          platform: log.platform,
-          status: log.status,
-          activities_synced: log.activities_synced || 0,
-          error: log.error,
-          created_at: log.sync_start_time
-        }))
-      });
-    } catch (error) {
-      console.error('Error getting Polar status:', error);
-      res.status(500).json({ error: 'Failed to get Polar status' });
-    }
-  });
-
-  // Manual sync trigger for Polar
-  app.post('/api/integrations/polar/sync', requireAuth, async (req, res) => {
-    try {
-      const connection = await db.query.integration_connections.findFirst({
-        where: and(
-          eq(integration_connections.user_id, req.user!.id),
-          eq(integration_connections.platform, 'polar'),
-          eq(integration_connections.is_active, true)
-        )
-      });
-
-      if (!connection) {
-        return res.status(404).json({ error: 'No active Polar connection found' });
-      }
-
-      await syncPolarData({
-        userId: req.user!.id,
-        access_token: connection.access_token,
-        forceSync: true
-      });
-
-      res.json({ message: 'Polar sync completed successfully' });
-    } catch (error) {
-      console.error('Error syncing Polar data:', error);
-      res.status(500).json({ error: 'Failed to sync Polar data' });
-    }
-  });
-
-  // Disconnect Polar integration
-  app.delete('/api/integrations/polar/disconnect', requireAuth, async (req, res) => {
-    try {
-      await db.update(integration_connections)
-        .set({ 
-          is_active: false,
-          updated_at: new Date()
-        })
-        .where(and(
-          eq(integration_connections.user_id, req.user!.id),
-          eq(integration_connections.platform, 'polar')
-        ));
-      
-      res.json({ message: 'Polar integration disconnected successfully' });
-    } catch (error) {
-      console.error('Error disconnecting Polar:', error);
-      res.status(500).json({ error: 'Failed to disconnect Polar integration' });
-    }
-  });
-  // Initiate sync for a specific platform
-  app.post("/api/integrations/:platform/sync", requireAuth, async (req, res) => {
-    const { platform } = req.params;
-    const userId = req.user!.id;
-    const forceSync = req.body.forceSync === true;
-    
-    try {
-      // Get integration connection
-      const [connection] = await db.select()
-        .from(integration_connections)
+      // Get the integration connection
+      const connection = await db.select().from(integration_connections)
         .where(and(
           eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform)
-        ));
-      
-      if (!connection) {
-        return res.status(404).json({ 
-          error: `No ${platform} integration found. Please connect your account first.` 
-        });
+          eq(integration_connections.platform, platform),
+          eq(integration_connections.is_active, true)
+        ))
+        .limit(1);
+
+      if (connection.length === 0) {
+        return res.status(404).json({ error: "Integration not found or inactive" });
       }
-      
-      // Start sync process in the background
-      let syncLogId;
-      
-      // Create a sync log entry
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform,
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      syncLogId = syncLog.id;
-      
-      // Initialize sync options
+
+      const conn = connection[0];
+
+      // Create sync log entry
+      const [syncLog] = await db.insert(sync_logs).values({
+        user_id: userId,
+        platform: platform,
+        status: 'running',
+        started_at: new Date()
+      }).returning();
+
+      // Prepare sync options
       const syncOptions: SyncOptions = {
         userId,
-        access_token: connection.access_token,
-        refresh_token: connection.refresh_token || undefined,
-        expires_at: connection.token_expires_at ? Math.floor(connection.token_expires_at.getTime() / 1000) : undefined,
-        forceSync,
-        syncLogId
+        access_token: conn.access_token,
+        refresh_token: conn.refresh_token || undefined,
+        expires_at: conn.expires_at ? new Date(conn.expires_at).getTime() : undefined,
+        forceSync: req.body.forceSync || false,
+        syncLogId: syncLog.id
       };
-      
-      // Start sync process based on platform
-      if (platform === 'strava') {
-        // Sync happens asynchronously, we don't await the result
-        syncStravaData(syncOptions).catch(error => {
-          console.error(`Error during Strava sync for user ${userId}:`, error);
-        });
-      } else if (platform === 'garmin') {
-        syncGarminData(syncOptions).catch(error => {
-          console.error(`Error during Garmin sync for user ${userId}:`, error);
-        });
-      } else if (platform === 'polar') {
-        syncPolarData(syncOptions).catch(error => {
-          console.error(`Error during Polar sync for user ${userId}:`, error);
-        });
-      } else if (platform === 'google_fit') {
-        syncGoogleFitData(syncOptions).catch(error => {
-          console.error(`Error during Google Fit sync for user ${userId}:`, error);
-        });
-      } else if (platform === 'whoop') {
-        syncWhoopData(syncOptions).catch(error => {
-          console.error(`Error during WHOOP sync for user ${userId}:`, error);
-        });
-      } else if (platform === 'apple_health') {
-        syncAppleHealthData(syncOptions).catch(error => {
-          console.error(`Error during Apple Health sync for user ${userId}:`, error);
-        });
-      } else if (platform === 'fitbit') {
-        syncFitbitData(syncOptions).catch(error => {
-          console.error(`Error during Fitbit sync for user ${userId}:`, error);
-        });
-      } else {
-        await db.update(sync_logs)
-          .set({
-            sync_end_time: new Date(),
-            status: 'failed',
-            error: 'Unsupported platform'
-          })
-          .where(eq(sync_logs.id, syncLogId));
-        
-        return res.status(400).json({ error: "Unsupported platform" });
+
+      // Execute platform-specific sync
+      switch (platform) {
+        case 'strava':
+          await processStravaSync(conn, userId);
+          break;
+        case 'garmin':
+          await processGarminSync(conn, userId);
+          break;
+        case 'polar':
+          await processPolarSync(conn, userId);
+          break;
+        case 'google_fit':
+          await processGoogleFitSync(conn, userId);
+          break;
+        case 'whoop':
+          await processWhoopSync(conn, userId);
+          break;
+        case 'apple_health':
+          await processAppleHealthSync(conn, userId);
+          break;
+        case 'fitbit':
+          await processFitbitSync(conn, userId);
+          break;
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
       }
-      
-      res.json({
-        message: `Sync with ${platform} initiated successfully`,
-        syncLogId
-      });
+
+      res.json({ message: "Sync completed successfully", syncLogId: syncLog.id });
     } catch (error) {
-      console.error(`Error initiating ${platform} sync:`, error);
-      res.status(500).json({ error: "Failed to initiate sync" });
-    }
-  });
-  
-  // Get sync status
-  app.get("/api/integrations/:platform/sync/:syncLogId", requireAuth, async (req, res) => {
-    const { platform, syncLogId } = req.params;
-    const userId = req.user!.id;
-    
-    try {
-      const [syncLog] = await db.select()
-        .from(sync_logs)
-        .where(and(
-          eq(sync_logs.id, parseInt(syncLogId)),
-          eq(sync_logs.user_id, userId),
-          eq(sync_logs.platform, platform)
-        ));
-      
-      if (!syncLog) {
-        return res.status(404).json({ error: "Sync log not found" });
-      }
-      
-      // Calculate progress percentage based on status
-      let progress = 0;
-      if (syncLog.status === 'completed') {
-        progress = 100;
-      } else if (syncLog.status === 'in_progress') {
-        // Just a rough estimate for now
-        progress = 50;
-      }
-      
-      res.json({
-        ...syncLog,
-        progress
-      });
-    } catch (error) {
-      console.error("Error getting sync status:", error);
-      res.status(500).json({ error: "Failed to get sync status" });
-    }
-  });
-  
-  // Get recent sync logs
-  app.get("/api/integrations/:platform/sync-history", requireAuth, async (req, res) => {
-    const { platform } = req.params;
-    const userId = req.user!.id;
-    const limit = parseInt(req.query.limit as string) || 5;
-    
-    try {
-      const syncLogs = await db.select()
-        .from(sync_logs)
-        .where(and(
-          eq(sync_logs.user_id, userId),
-          eq(sync_logs.platform, platform)
-        ))
-        .orderBy(desc(sync_logs.sync_start_time))
-        .limit(limit);
-      
-      res.json(syncLogs);
-    } catch (error) {
-      console.error("Error getting sync history:", error);
-      res.status(500).json({ error: "Failed to get sync history" });
-    }
-  });
-  
-  // Update sync settings
-  app.put("/api/integrations/:platform/settings", requireAuth, async (req, res) => {
-    const { platform } = req.params;
-    const userId = req.user!.id;
-    const { autoSync, syncFrequency } = req.body;
-    
-    try {
-      const [connection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform)
-        ));
-      
-      if (!connection) {
-        return res.status(404).json({ 
-          error: `No ${platform} integration found. Please connect your account first.` 
-        });
-      }
-      
-      // Validate sync frequency
-      if (syncFrequency && !['daily', 'realtime'].includes(syncFrequency)) {
-        return res.status(400).json({ 
-          error: "Invalid sync frequency. Allowed values: 'daily', 'realtime'" 
-        });
-      }
-      
-      // Update settings
-      await db.update(integration_connections)
-        .set({
-          auto_sync: autoSync !== undefined ? autoSync : connection.auto_sync,
-          sync_frequency: syncFrequency || connection.sync_frequency,
-          updated_at: new Date()
-        })
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform)
-        ));
-      
-      res.json({ 
-        message: `${platform} sync settings updated successfully`,
-        autoSync: autoSync !== undefined ? autoSync : connection.auto_sync,
-        syncFrequency: syncFrequency || connection.sync_frequency
-      });
-    } catch (error) {
-      console.error("Error updating sync settings:", error);
-      res.status(500).json({ error: "Failed to update sync settings" });
+      console.error(`Sync error for platform ${req.params.platform}:`, error);
+      res.status(500).json({ error: "Sync failed", details: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 }
 
-// Helper functions for integration data syncing
-
-// Strava data sync function
+// Individual sync processors
 async function processStravaSync(connection: any, userId: number) {
-  console.log(`Syncing Strava data for user ${userId}`);
-  
-  // In a real implementation, you would:
-  // 1. Use the Strava API to fetch recent activities
-  // 2. Use the Strava API to fetch athlete stats for health metrics
-  // 3. Store this data in your database
-  
-  // Mock implementation that simulates a successful sync
-  try {
-    // Simulate fetching recent activities (last 30 days)
-    const activities = [
-      {
-        id: "strava_123456",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 3 * 86400000), // 3 days ago
-        activity_type: "run",
-        distance: 8.2, // km
-        duration: 2160, // seconds (36 minutes)
-        pace: "7:30", // min/mile
-        heart_rate: 156,
-        effort_level: "moderate",
-        notes: "Evening run with some hill repeats",
-        source: "strava"
-      },
-      {
-        id: "strava_123457",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 5 * 86400000), // 5 days ago
-        activity_type: "run",
-        distance: 16.1, // km
-        duration: 5400, // seconds (90 minutes)
-        pace: "8:00", // min/mile
-        heart_rate: 149,
-        effort_level: "moderate",
-        notes: "Long run, felt good",
-        source: "strava"
-      }
-    ];
-    
-    // Simulate fetching health metrics from Strava
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        hrv_score: 65,
-        resting_heart_rate: 51,
-        sleep_quality: null,
-        sleep_duration: null,
-        energy_level: null,
-        stress_level: null,
-        source: "strava",
-        notes: "Auto-imported from Strava"
-      }
-    ];
-    
-    // In a real implementation, store this data in the database
-    // For now, just log and return success
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Strava`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing Strava data:", error);
-    throw new Error(`Failed to sync Strava data: ${error.message}`);
-  }
-}
-
-// Garmin data sync function
-async function processGarminSync(connection: any, userId: number) {
-  console.log(`Syncing Garmin data for user ${userId}`);
-  
-  // In a real implementation, you would:
-  // 1. Use the Garmin Connect API to fetch recent activities
-  // 2. Use the Garmin Connect API to fetch health metrics
-  // 3. Store this data in your database
-  
-  // Mock implementation that simulates a successful sync
-  try {
-    // Simulate fetching recent activities (last 30 days)
-    const activities = [
-      {
-        id: "garmin_234567",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
-        activity_type: "run",
-        distance: 5.0, // km
-        duration: 1500, // seconds (25 minutes)
-        pace: "8:03", // min/mile
-        heart_rate: 147,
-        effort_level: "easy",
-        notes: "Morning recovery run",
-        source: "garmin"
-      },
-      {
-        id: "garmin_234568",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 7 * 86400000), // 7 days ago
-        activity_type: "run",
-        distance: 10.0, // km
-        duration: 2700, // seconds (45 minutes)
-        pace: "7:15", // min/mile
-        heart_rate: 166,
-        effort_level: "hard",
-        notes: "Tempo run, pushing the pace",
-        source: "garmin"
-      }
-    ];
-    
-    // Simulate fetching health metrics from Garmin (more comprehensive)
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        hrv_score: 68,
-        resting_heart_rate: 49,
-        sleep_quality: 8,
-        sleep_duration: 480, // 8 hours in minutes
-        energy_level: 9,
-        stress_level: 3,
-        source: "garmin",
-        notes: "Auto-imported from Garmin Connect"
-      },
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
-        hrv_score: 62,
-        resting_heart_rate: 52,
-        sleep_quality: 6,
-        sleep_duration: 390, // 6.5 hours in minutes
-        energy_level: 7,
-        stress_level: 5,
-        source: "garmin",
-        notes: "Auto-imported from Garmin Connect"
-      }
-    ];
-    
-    // In a real implementation, store this data in the database
-    // For now, just log and return success
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Garmin`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing Garmin data:", error);
-    throw new Error(`Failed to sync Garmin data: ${error.message}`);
-  }
-}
-
-
-
-// Legacy function for compatibility  
-async function processPolarSync(connection: any, userId: number) {
-  return syncPolarData({
+  await syncStravaData({
     userId,
     access_token: connection.access_token,
-    forceSync: false
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
   });
 }
 
+async function processGarminSync(connection: any, userId: number) {
+  await syncGarminData({
+    userId,
+    access_token: connection.access_token,
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
+  });
+}
 
+async function processPolarSync(connection: any, userId: number) {
+  await syncPolarData({
+    userId,
+    access_token: connection.access_token,
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
+  });
+}
 
-// Google Fit data sync function
 async function processGoogleFitSync(connection: any, userId: number) {
-  console.log(`Syncing Google Fit data for user ${userId}`);
-  
-  // In a real implementation, you would:
-  // 1. Use the Google Fit API to fetch recent activities
-  // 2. Use the Google Fit API to fetch health metrics
-  // 3. Store this data in your database
-  
-  try {
-    // Simulate fetching recent activities (last 30 days)
-    const activities = [
-      {
-        id: "googlefit_123456",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
-        activity_type: "run",
-        distance: 5.2, // km
-        duration: 1800, // seconds (30 minutes)
-        pace: "8:20", // min/mile
-        heart_rate: 162,
-        effort_level: "moderate",
-        notes: "Morning run in the neighborhood",
-        source: "google_fit"
-      },
-      {
-        id: "googlefit_123457",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 4 * 86400000), // 4 days ago
-        activity_type: "walk",
-        distance: 3.7, // km
-        duration: 2700, // seconds (45 minutes)
-        pace: "12:10", // min/mile
-        heart_rate: 125,
-        effort_level: "light",
-        notes: "Evening walk with dog",
-        source: "google_fit"
-      }
-    ];
-    
-    // Simulate fetching health metrics from Google Fit
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        steps: 8754,
-        resting_heart_rate: 58,
-        sleep_duration: 425, // 7.08 hours in minutes
-        source: "google_fit",
-        notes: "Auto-imported from Google Fit"
-      }
-    ];
-    
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Google Fit`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing Google Fit data:", error);
-    throw new Error(`Failed to sync Google Fit data: ${error.message}`);
-  }
+  await syncGoogleFitData({
+    userId,
+    access_token: connection.access_token,
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
+  });
 }
 
-// WHOOP data sync function
 async function processWhoopSync(connection: any, userId: number) {
-  console.log(`Syncing WHOOP data for user ${userId}`);
-  
-  // In a real implementation, you would:
-  // 1. Use the WHOOP API to fetch recent activities
-  // 2. Use the WHOOP API to fetch health metrics (recovery, strain, sleep)
-  // 3. Store this data in your database
-  
-  try {
-    // Simulate fetching recent activities (last 30 days)
-    const activities = [
-      {
-        id: "whoop_987654",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        activity_type: "run",
-        distance: 8.3, // km
-        duration: 2400, // seconds (40 minutes)
-        pace: "7:35", // min/mile
-        heart_rate: 165,
-        effort_level: "high",
-        notes: "Tempo run",
-        source: "whoop"
-      }
-    ];
-    
-    // Simulate fetching health metrics from WHOOP
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        hrv_score: 72,
-        resting_heart_rate: 48,
-        sleep_quality: 85,
-        sleep_duration: 465, // 7.75 hours in minutes
-        recovery_score: 78,
-        strain_score: 14.2,
-        source: "whoop",
-        notes: "Auto-imported from WHOOP"
-      }
-    ];
-    
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from WHOOP`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing WHOOP data:", error);
-    throw new Error(`Failed to sync WHOOP data: ${error.message}`);
-  }
+  await syncWhoopData({
+    userId,
+    access_token: connection.access_token,
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
+  });
 }
 
-// Apple Health data sync function
 async function processAppleHealthSync(connection: any, userId: number) {
-  console.log(`Syncing Apple Health data for user ${userId}`);
-  
-  // In a real implementation, you would:
-  // 1. Receive Apple Health data from the mobile app
-  // 2. Process and store this data in your database
-  
-  try {
-    // Simulate fetching recent activities from Apple Health
-    const activities = [
-      {
-        id: "applehealth_234567",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 2 * 86400000), // 2 days ago
-        activity_type: "run",
-        distance: 6.4, // km
-        duration: 1920, // seconds (32 minutes)
-        pace: "7:50", // min/mile
-        heart_rate: 159,
-        effort_level: "moderate",
-        notes: "Outdoor run",
-        source: "apple_health"
-      },
-      {
-        id: "applehealth_234568",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 5 * 86400000), // 5 days ago
-        activity_type: "hike",
-        distance: 8.2, // km
-        duration: 7200, // seconds (2 hours)
-        pace: "14:40", // min/mile
-        heart_rate: 138,
-        effort_level: "moderate",
-        notes: "Hiking trail",
-        source: "apple_health"
-      }
-    ];
-    
-    // Simulate fetching health metrics from Apple Health
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        steps: 9235,
-        resting_heart_rate: 55,
-        hrv_score: 62,
-        sleep_duration: 430, // 7.17 hours in minutes
-        active_energy: 725, // active calories burned
-        source: "apple_health",
-        notes: "Auto-imported from Apple Health"
-      }
-    ];
-    
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Apple Health`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing Apple Health data:", error);
-    throw new Error(`Failed to sync Apple Health data: ${error.message}`);
-  }
+  await syncAppleHealthData({
+    userId,
+    access_token: connection.access_token,
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
+  });
 }
 
-// Fitbit data sync function
 async function processFitbitSync(connection: any, userId: number) {
-  console.log(`Syncing Fitbit data for user ${userId}`);
-  
-  // In a real implementation, you would:
-  // 1. Use the Fitbit API to fetch recent activities
-  // 2. Use the Fitbit API to fetch health metrics
-  // 3. Store this data in your database
-  
-  try {
-    // Simulate fetching recent activities (last 30 days)
-    const activities = [
-      {
-        id: "fitbit_345678",
-        user_id: userId,
-        activity_date: new Date(Date.now() - 3 * 86400000), // 3 days ago
-        activity_type: "run",
-        distance: 4.8, // km
-        duration: 1620, // seconds (27 minutes)
-        pace: "8:40", // min/mile
-        heart_rate: 155,
-        effort_level: "moderate",
-        notes: "Neighborhood run",
-        source: "fitbit"
-      }
-    ];
-    
-    // Simulate fetching health metrics from Fitbit
-    const healthMetrics = [
-      {
-        user_id: userId,
-        metric_date: new Date(Date.now() - 1 * 86400000), // Yesterday
-        steps: 10245,
-        resting_heart_rate: 62,
-        sleep_quality: 83,
-        sleep_duration: 405, // 6.75 hours in minutes
-        source: "fitbit",
-        notes: "Auto-imported from Fitbit"
-      }
-    ];
-    
-    console.log(`Found ${activities.length} activities and ${healthMetrics.length} metrics from Fitbit`);
-    
-    return {
-      activities: activities.length,
-      metrics: healthMetrics.length
-    };
-  } catch (error) {
-    console.error("Error syncing Fitbit data:", error);
-    throw new Error(`Failed to sync Fitbit data: ${error.message}`);
-  }
+  await syncFitbitData({
+    userId,
+    access_token: connection.access_token,
+    refresh_token: connection.refresh_token,
+    expires_at: connection.expires_at
+  });
 }
 
-// Authentication and subscription middleware
+// Auth middleware
 function checkAuth(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
-    return next();
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Authentication required" });
   }
-  res.status(401).json({ error: "Authentication required" });
+  next();
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: 'Authentication required' });
+    return res.status(401).json({ error: "Authentication required" });
   }
+  
   if (!req.user?.is_admin) {
-    return res.status(403).json({ error: 'Admin privileges required' });
+    return res.status(403).json({ error: "Admin access required" });
   }
+  
   next();
 }
 
@@ -1836,640 +785,969 @@ function isSubscribed(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: "Authentication required" });
   }
   
-  // Check if user has an active subscription
-  if (req.user.subscription_status === 'active') {
-    return next();
+  const user = req.user;
+  if (user?.subscription_status !== 'active') {
+    return res.status(403).json({ error: "Active subscription required" });
   }
   
-  res.status(403).json({ 
-    error: "Subscription required", 
-    message: "This feature requires an active subscription" 
-  });
+  next();
 }
 
-// Check if user has an annual subscription
 function hasAnnualSubscription(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Authentication required" });
   }
   
-  // First check if user has an active subscription
-  if (req.user.subscription_status !== 'active') {
-    return res.status(403).json({ 
-      error: "Premium subscription required", 
-      subscriptionRequired: true 
-    });
+  const user = req.user;
+  if (user?.subscription_status !== 'active' || !user?.stripe_subscription_id?.includes('annual')) {
+    return res.status(403).json({ error: "Annual subscription required" });
   }
   
-  // Check if user has an annual subscription by examining the subscription_end_date
-  // If end date is more than 6 months away, assume it's an annual subscription
-  if (req.user.subscription_end_date) {
-    const sixMonthsInMs = 15768000000; // approximately 6 months in milliseconds
-    const endDate = new Date(req.user.subscription_end_date);
-    const now = new Date();
-    
-    if (endDate.getTime() - now.getTime() > sixMonthsInMs) {
-      return next();
-    }
-  }
-  
-  // If we get here, user has a subscription but it's not annual
-  res.status(403).json({ 
-    error: "Annual subscription required for this feature", 
-    requiresAnnual: true 
-  });
+  next();
 }
 
-// Import the developer subscription endpoint
-import { setupDevSubscription } from "./dev-subscription";
-
-// Import the predefined meal plans selector
-import { selectMealPlan } from './predefined-meal-plans';
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup auth middleware first
   setupAuth(app);
-
-  // Setup developer endpoints for testing
   setupDevSubscription(app);
-  
-  // Simple meal plan generation endpoint - needs authentication and subscription
-  app.get('/api/nutrition/simple-meal-plan', async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    // Check subscription status
-    if (req.user.subscription_status !== 'active') {
-      return res.status(403).json({ 
-        error: "Subscription required", 
-        message: "Meal plan generation requires an active subscription" 
-      });
-    }
-    
-    try {
-      // Get nutrition preferences from database
-      const [userPreferences] = await db
-        .select()
-        .from(nutrition_preferences)
-        .where(eq(nutrition_preferences.user_id, req.user.id));
-      
-      // Get recent activities to determine primary activity type
-      const recentActivities = await db
-        .select()
-        .from(activities)
-        .where(eq(activities.user_id, req.user.id))
-        .orderBy(desc(activities.activity_date))
-        .limit(10);
-      
-      // Determine predominant activity type
-      let primaryActivityType = "running";
-      if (recentActivities && recentActivities.length > 0) {
-        const activityTypeCounts: Record<string, number> = {};
-        
-        recentActivities.forEach(activity => {
-          const type = activity.activity_type || "running";
-          activityTypeCounts[type] = (activityTypeCounts[type] || 0) + 1;
-        });
-        
-        let maxCount = 0;
-        for (const [type, count] of Object.entries(activityTypeCounts)) {
-          if (count > maxCount) {
-            maxCount = count;
-            primaryActivityType = type;
-          }
-        }
-      }
-      
-      // Get default calorie target based on user profile or preferences
-      let calorieTarget = 2500; // Default
-      if (userPreferences?.calorie_goal) {
-        calorieTarget = userPreferences.calorie_goal;
-      } else if (req.user.weight && req.user.height) {
-        // Simple BMR calculation (Harris-Benedict equation) + activity factor
-        const weight = req.user.weight; // kg
-        const height = req.user.height; // cm
-        const age = req.user.age || 30; // Default age if not provided
-        const isMale = req.user.gender === 'male';
-        
-        // Calculate BMR
-        let bmr;
-        if (isMale) {
-          bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-        } else {
-          bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
-        }
-        
-        // Apply activity factor for runners/athletes (moderate to high activity)
-        calorieTarget = Math.round(bmr * 1.6);
-      }
-      
-      // Generate meal plan using predefined templates
-      const dietaryRestrictions = userPreferences?.dietary_restrictions || [];
-      const mealPlan = selectMealPlan(primaryActivityType, dietaryRestrictions, calorieTarget);
-      
-      res.json(mealPlan);
-    } catch (error: any) {
-      console.error("Error in simple meal plan generation:", error);
-      res.status(500).json({ 
-        error: "Failed to generate meal plan",
-        message: "Please try again later"
-      });
-    }
-  });
-  
-  // Endpoint for user subscription status
-  app.get("/api/user/subscription", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      // Get the current user
-      const user = req.user;
-      
-      // Format subscription data with isActive flag for frontend
-      const subscriptionData = {
-        status: user.subscription_status,
-        endDate: user.subscription_end_date,
-        planId: user.subscription_plan_id,
-        stripeSubscriptionId: user.stripe_subscription_id,
-        isActive: user.subscription_status === 'active'
-      };
-      
-      console.log("Subscription data:", subscriptionData);
-      res.json(subscriptionData);
-    } catch (error) {
-      console.error("Error fetching user subscription:", error);
-      res.status(500).json({ error: "Failed to fetch subscription status" });
-    }
-  });
-  // Set up coaching routes (annual subscribers only)
-  app.get("/api/coaches", checkAuth, hasAnnualSubscription, async (req, res) => {
-    try {
-      const coachesList = await db.select().from(coaches).where(eq(coaches.available, true));
-      res.json(coachesList);
-    } catch (error) {
-      console.error("Error fetching coaches:", error);
-      res.status(500).json({ error: "Failed to fetch coaches" });
-    }
-  });
-  
-  // Admin-only endpoint to get all coaches (including inactive ones)
-  app.get("/api/coaches/all", checkAuth, async (req, res) => {
-    try {
-      // Check if user is admin (in a real app, this would check a proper admin role)
-      if (req.user.id !== 1) {
-        return res.status(403).json({ error: "Unauthorized. Admin access required." });
-      }
-      
-      const allCoaches = await db.select().from(coaches);
-      res.json(allCoaches);
-    } catch (error) {
-      console.error("Error fetching all coaches:", error);
-      res.status(500).json({ error: "Failed to fetch all coaches" });
-    }
-  });
-
-  app.get("/api/coaches/:id", checkAuth, hasAnnualSubscription, async (req, res) => {
-    try {
-      const coachId = parseInt(req.params.id);
-      const [coach] = await db.select().from(coaches).where(eq(coaches.id, coachId));
-      
-      if (!coach) {
-        return res.status(404).json({ error: "Coach not found" });
-      }
-      
-      res.json(coach);
-    } catch (error) {
-      console.error("Error fetching coach:", error);
-      res.status(500).json({ error: "Failed to fetch coach details" });
-    }
-  });
-
-  app.post("/api/coaching-sessions", checkAuth, hasAnnualSubscription, async (req, res) => {
-    try {
-      const sessionData = req.body;
-      
-      // Validate that the user is the same as the authenticated user
-      if (sessionData.athlete_id !== req.user.id) {
-        return res.status(403).json({ error: "Unauthorized" });
-      }
-      
-      const [session] = await db.insert(coaching_sessions).values({
-        ...sessionData,
-        status: "scheduled"
-      }).returning();
-      
-      res.status(201).json(session);
-    } catch (error) {
-      console.error("Error creating coaching session:", error);
-      res.status(500).json({ error: "Failed to create coaching session" });
-    }
-  });
-
-  // Set up integration sync routes
   setupIntegrationRoutes(app);
-  
-  // Achievement routes
-  // Get user's achievements
-  app.get("/api/users/:userId/achievements", checkAuth, async (req, res) => {
+
+  // User profile routes
+  app.get("/api/profile", checkAuth, async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      if (userId !== req.user.id && !req.user.isAdmin) {
-        return res.status(403).json({ error: "Not authorized to view other user's achievements" });
-      }
-      
-      const userAchievements = await db.select().from(user_achievements)
-        .where(eq(user_achievements.user_id, userId))
-        .orderBy(desc(user_achievements.earned_at));
-      
-      res.json(userAchievements);
-    } catch (error) {
-      console.error("Error fetching user achievements:", error);
-      res.status(500).json({ error: "Failed to fetch achievements" });
-    }
-  });
-  
-  // Get unviewed achievements for current user
-  app.get("/api/achievements/unviewed", checkAuth, async (req, res) => {
-    try {
-      const userAchievements = await db.select().from(user_achievements)
-        .where(and(
-          eq(user_achievements.user_id, req.user.id),
-          eq(user_achievements.viewed, false)
-        ))
-        .orderBy(desc(user_achievements.earned_at));
-      
-      res.json(userAchievements);
-    } catch (error) {
-      console.error("Error fetching unviewed achievements:", error);
-      res.status(500).json({ error: "Failed to fetch unviewed achievements" });
-    }
-  });
-  
-  // Mark achievement as viewed
-  app.patch("/api/achievements/:achievementId/viewed", checkAuth, async (req, res) => {
-    try {
-      const achievementId = parseInt(req.params.achievementId);
-      
-      // Get the achievement to verify ownership
-      const [achievement] = await db.select().from(user_achievements)
-        .where(eq(user_achievements.id, achievementId));
-      
-      if (!achievement) {
-        return res.status(404).json({ error: "Achievement not found" });
-      }
-      
-      if (achievement.user_id !== req.user.id && !req.user.isAdmin) {
-        return res.status(403).json({ error: "Not authorized to modify this achievement" });
-      }
-      
-      await db.update(user_achievements)
-        .set({ viewed: true })
-        .where(eq(user_achievements.id, achievementId));
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error marking achievement as viewed:", error);
-      res.status(500).json({ error: "Failed to update achievement" });
-    }
-  });
-  
-  // Process activity completion and check for achievements
-  app.post("/api/achievements/check", checkAuth, async (req, res) => {
-    try {
-      const { activity } = req.body;
-      
-      if (!activity) {
-        return res.status(400).json({ error: "Activity data required" });
-      }
-      
-      // Get user's previous activities
-      const previousActivities = await db.select().from(activities)
-        .where(eq(activities.user_id, req.user.id));
-      
-      // Set for tracking earned achievements
-      const earnedAchievements = [];
-      
-      // Check for first run (if this is the first activity)
-      if (previousActivities.length === 0) {
-        const firstRunAchievement = {
-          user_id: req.user.id,
-          title: "First Steps",
-          description: "Completed your first run",
-          achievement_type: "milestone",
-          earned_at: new Date(),
-          times_earned: 1,
-          viewed: false,
-          achievement_data: {}
-        };
-        
-        const [savedAchievement] = await db.insert(user_achievements)
-          .values(firstRunAchievement)
-          .returning();
-          
-        earnedAchievements.push(savedAchievement);
-      }
-      
-      // Check for personal best
-      // (We would implement logic similar to client-side checkForPersonalBest)
-      
-      // Check for distance milestones
-      // (We would implement logic similar to client-side checkForCumulativeAchievements)
-      
-      // Check for streak achievements
-      // (We would implement logic similar to client-side checkForStreakAchievements)
-      
-      // Check for race completion
-      if (activity.is_race) {
-        let raceType = "Race";
-        
-        // Determine race type based on distance
-        const distance = activity.distance;
-        if (distance >= 3 && distance < 3.5) raceType = "5K";
-        else if (distance >= 6 && distance < 6.5) raceType = "10K";
-        else if (distance >= 13 && distance < 13.5) raceType = "Half Marathon";
-        else if (distance >= 26 && distance < 26.5) raceType = "Marathon";
-        else if (distance >= 31) raceType = "Ultra";
-        
-        const raceAchievement = {
-          user_id: req.user.id,
-          title: `${raceType} Finisher`,
-          description: `Completed a ${raceType} race`,
-          achievement_type: "race",
-          earned_at: new Date(),
-          times_earned: 1,
-          viewed: false,
-          achievement_data: {
-            race_type: raceType,
-            distance: activity.distance,
-            time: activity.duration
-          }
-        };
-        
-        const [savedRaceAchievement] = await db.insert(user_achievements)
-          .values(raceAchievement)
-          .returning();
-          
-        earnedAchievements.push(savedRaceAchievement);
-      }
-      
-      res.json(earnedAchievements);
-    } catch (error) {
-      console.error("Error checking for achievements:", error);
-      res.status(500).json({ error: "Failed to process achievement check" });
-    }
-  });
-  
-  // Create test achievement (for development/testing)
-  app.post("/api/achievements/test", checkAuth, async (req, res) => {
-    try {
-      if (!req.user.isAdmin && process.env.NODE_ENV === "production") {
-        return res.status(403).json({ error: "Not authorized to create test achievements in production" });
-      }
-      
-      // First, get an achievement from the database
-      const [achievement] = await db.select().from(achievements).limit(1);
-      
-      if (!achievement) {
-        return res.status(404).json({ error: "No achievement templates found in the database" });
-      }
-      
-      const achievementData = {
-        user_id: req.user.id,
-        achievement_id: achievement.id,
-        earned_at: new Date(),
-        times_earned: 1
+      const user = req.user;
+      const profile = {
+        id: user?.id,
+        username: user?.username,
+        email: user?.email,
+        age: user?.age,
+        weight: user?.weight,
+        height: user?.height,
+        experience_level: user?.experience_level,
+        bio: user?.bio,
+        profile_image: user?.profile_image,
+        subscription_status: user?.subscription_status,
+        subscription_end_date: user?.subscription_end_date,
+        is_admin: user?.is_admin,
+        role: user?.role
       };
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  app.put("/api/profile", checkAuth, async (req, res) => {
+    try {
+      const { age, weight, height, experience_level, bio } = req.body;
+      const userId = req.user!.id;
+
+      await db.update(users).set({
+        age,
+        weight: weight ? weight.toString() : null,
+        height: height ? height.toString() : null,
+        experience_level,
+        bio,
+        updated_at: new Date()
+      }).where(eq(users.id, userId));
+
+      res.json({ message: "Profile updated successfully" });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Activities routes
+  app.get("/api/activities", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { page = 1, limit = 20, type, dateFrom, dateTo } = req.query;
       
-      // Check if user already has this achievement
-      const existingAchievement = await db.select()
-        .from(user_achievements)
-        .where(and(
-          eq(user_achievements.user_id, req.user.id),
-          eq(user_achievements.achievement_id, achievement.id)
-        ))
+      const offset = (Number(page) - 1) * Number(limit);
+      
+      let whereConditions = [eq(activities.user_id, userId)];
+      
+      if (type && type !== 'all') {
+        whereConditions.push(eq(activities.activity_type, type as string));
+      }
+      
+      if (dateFrom) {
+        whereConditions.push(gte(activities.activity_date, new Date(dateFrom as string)));
+      }
+      
+      if (dateTo) {
+        whereConditions.push(lte(activities.activity_date, new Date(dateTo as string)));
+      }
+
+      const userActivities = await db.select({
+        id: activities.id,
+        activity_type: activities.activity_type,
+        activity_date: activities.activity_date,
+        duration: activities.duration,
+        distance: activities.distance,
+        calories: activities.calories,
+        notes: activities.notes,
+        average_heart_rate: activities.average_heart_rate,
+        source: activities.source,
+      }).from(activities)
+        .where(and(...whereConditions))
+        .orderBy(desc(activities.activity_date))
+        .limit(Number(limit))
+        .offset(offset);
+
+      // Get total count for pagination
+      const [{ count: totalCount }] = await db.select({ count: count() })
+        .from(activities)
+        .where(and(...whereConditions));
+
+      const formatChartDate = (date: Date): string => {
+        return date.toISOString().split('T')[0];
+      };
+
+      const formattedActivities = userActivities.map(activity => ({
+        ...activity,
+        activity_date: formatChartDate(activity.activity_date),
+        duration: Number(activity.duration),
+        distance: Number(activity.distance),
+        calories: Number(activity.calories)
+      }));
+
+      res.json({
+        activities: formattedActivities,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / Number(limit))
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ error: "Failed to fetch activities" });
+    }
+  });
+
+  app.post("/api/activities", checkAuth, async (req, res) => {
+    try {
+      const { activity_type, activity_date, duration, distance, calories, notes, average_heart_rate } = req.body;
+      const userId = req.user!.id;
+
+      const [newActivity] = await db.insert(activities).values({
+        user_id: userId,
+        activity_type,
+        activity_date: new Date(activity_date),
+        duration,
+        distance,
+        calories,
+        notes,
+        average_heart_rate,
+        source: 'manual'
+      }).returning();
+
+      res.status(201).json(newActivity);
+    } catch (error) {
+      console.error("Error creating activity:", error);
+      res.status(500).json({ error: "Failed to create activity" });
+    }
+  });
+
+  app.get("/api/activities/:id", checkAuth, async (req, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      const [activity] = await db.select().from(activities)
+        .where(and(eq(activities.id, activityId), eq(activities.user_id, userId)))
         .limit(1);
-        
-      // If already exists, just return the existing one
-      if (existingAchievement.length > 0) {
-        return res.status(200).json(existingAchievement[0]);
+
+      if (!activity) {
+        return res.status(404).json({ error: "Activity not found" });
       }
-      
-      const [savedAchievement] = await db.insert(user_achievements)
-        .values(achievementData)
-        .returning();
-        
-      // Return achievement with complete data
-      const completeAchievement = {
-        ...savedAchievement,
-        title: achievement.name,
-        description: achievement.description,
-        achievement_type: achievement.type
-      };
-        
-      res.status(201).json(completeAchievement);
+
+      res.json(activity);
     } catch (error) {
-      console.error("Error creating test achievement:", error);
-      res.status(500).json({ error: "Failed to create test achievement" });
+      console.error("Error fetching activity:", error);
+      res.status(500).json({ error: "Failed to fetch activity" });
     }
   });
-  
-  // Get user achievements
+
+  app.put("/api/activities/:id", checkAuth, async (req, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const { activity_type, activity_date, duration, distance, calories, notes, average_heart_rate } = req.body;
+
+      const [updatedActivity] = await db.update(activities).set({
+        activity_type,
+        activity_date: new Date(activity_date),
+        duration,
+        distance,
+        calories,
+        notes,
+        average_heart_rate,
+        updated_at: new Date()
+      }).where(and(eq(activities.id, activityId), eq(activities.user_id, userId)))
+        .returning();
+
+      if (!updatedActivity) {
+        return res.status(404).json({ error: "Activity not found" });
+      }
+
+      res.json(updatedActivity);
+    } catch (error) {
+      console.error("Error updating activity:", error);
+      res.status(500).json({ error: "Failed to update activity" });
+    }
+  });
+
+  app.delete("/api/activities/:id", checkAuth, async (req, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      const [deletedActivity] = await db.delete(activities)
+        .where(and(eq(activities.id, activityId), eq(activities.user_id, userId)))
+        .returning();
+
+      if (!deletedActivity) {
+        return res.status(404).json({ error: "Activity not found" });
+      }
+
+      res.json({ message: "Activity deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting activity:", error);
+      res.status(500).json({ error: "Failed to delete activity" });
+    }
+  });
+
+  // Health metrics routes
+  app.get("/api/health-metrics", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { days = 30 } = req.query;
+      
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - Number(days));
+
+      const metrics = await db.select().from(health_metrics)
+        .where(and(
+          eq(health_metrics.user_id, userId),
+          gte(health_metrics.recorded_at, startDate)
+        ))
+        .orderBy(desc(health_metrics.recorded_at));
+
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching health metrics:", error);
+      res.status(500).json({ error: "Failed to fetch health metrics" });
+    }
+  });
+
+  app.post("/api/health-metrics", checkAuth, async (req, res) => {
+    try {
+      const { weight, body_fat_percentage, muscle_mass, resting_heart_rate, blood_pressure_systolic, blood_pressure_diastolic, sleep_hours } = req.body;
+      const userId = req.user!.id;
+
+      const [newMetric] = await db.insert(health_metrics).values({
+        user_id: userId,
+        weight,
+        body_fat_percentage,
+        muscle_mass,
+        resting_heart_rate,
+        blood_pressure_systolic,
+        blood_pressure_diastolic,
+        sleep_hours,
+        recorded_at: new Date()
+      }).returning();
+
+      res.status(201).json(newMetric);
+    } catch (error) {
+      console.error("Error creating health metric:", error);
+      res.status(500).json({ error: "Failed to create health metric" });
+    }
+  });
+
+  // Goals routes
+  app.get("/api/goals", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const userGoals = await db.select().from(goals)
+        .where(eq(goals.user_id, userId))
+        .orderBy(desc(goals.created_at));
+
+      res.json(userGoals);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      res.status(500).json({ error: "Failed to fetch goals" });
+    }
+  });
+
+  app.post("/api/goals", checkAuth, async (req, res) => {
+    try {
+      const { title, description, target_value, target_date, goal_type } = req.body;
+      const userId = req.user!.id;
+
+      const [newGoal] = await db.insert(goals).values({
+        user_id: userId,
+        title,
+        description,
+        target_value,
+        target_date: new Date(target_date),
+        goal_type,
+        status: 'active'
+      }).returning();
+
+      res.status(201).json(newGoal);
+    } catch (error) {
+      console.error("Error creating goal:", error);
+      res.status(500).json({ error: "Failed to create goal" });
+    }
+  });
+
+  app.put("/api/goals/:id", checkAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const { title, description, target_value, target_date, current_value, status } = req.body;
+
+      const [updatedGoal] = await db.update(goals).set({
+        title,
+        description,
+        target_value,
+        target_date: target_date ? new Date(target_date) : undefined,
+        current_value,
+        status,
+        updated_at: new Date()
+      }).where(and(eq(goals.id, goalId), eq(goals.user_id, userId)))
+        .returning();
+
+      if (!updatedGoal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      res.status(500).json({ error: "Failed to update goal" });
+    }
+  });
+
+  app.delete("/api/goals/:id", checkAuth, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      const [deletedGoal] = await db.delete(goals)
+        .where(and(eq(goals.id, goalId), eq(goals.user_id, userId)))
+        .returning();
+
+      if (!deletedGoal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+
+      res.json({ message: "Goal deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      res.status(500).json({ error: "Failed to delete goal" });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/analytics/dashboard", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { days = 30 } = req.query;
+      
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - Number(days));
+
+      // Total activities
+      const [{ totalActivities }] = await db.select({ totalActivities: count() })
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          gte(activities.activity_date, startDate)
+        ));
+
+      // Total distance
+      const [{ totalDistance }] = await db.select({ totalDistance: sum(activities.distance) })
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          gte(activities.activity_date, startDate)
+        ));
+
+      // Total duration
+      const [{ totalDuration }] = await db.select({ totalDuration: sum(activities.duration) })
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          gte(activities.activity_date, startDate)
+        ));
+
+      // Total calories
+      const [{ totalCalories }] = await db.select({ totalCalories: sum(activities.calories) })
+        .from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          gte(activities.activity_date, startDate)
+        ));
+
+      // Activity breakdown by type
+      const activityBreakdown = await db.select({
+        activity_type: activities.activity_type,
+        count: count(),
+        totalDistance: sum(activities.distance),
+        totalDuration: sum(activities.duration)
+      }).from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          gte(activities.activity_date, startDate)
+        ))
+        .groupBy(activities.activity_type);
+
+      // Recent activities for trend
+      const recentActivities = await db.select({
+        activity_date: activities.activity_date,
+        distance: activities.distance,
+        duration: activities.duration,
+        calories: activities.calories
+      }).from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          gte(activities.activity_date, startDate)
+        ))
+        .orderBy(activities.activity_date);
+
+      res.json({
+        summary: {
+          totalActivities: Number(totalActivities),
+          totalDistance: Number(totalDistance) || 0,
+          totalDuration: Number(totalDuration) || 0,
+          totalCalories: Number(totalCalories) || 0
+        },
+        activityBreakdown: activityBreakdown.map(item => ({
+          ...item,
+          count: Number(item.count),
+          totalDistance: Number(item.totalDistance) || 0,
+          totalDuration: Number(item.totalDuration) || 0
+        })),
+        trends: recentActivities.map(activity => ({
+          date: activity.activity_date.toISOString().split('T')[0],
+          distance: Number(activity.distance) || 0,
+          duration: Number(activity.duration) || 0,
+          calories: Number(activity.calories) || 0
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // Achievements routes
   app.get("/api/achievements", checkAuth, async (req, res) => {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
-      
-      const userAchievements = await db.select()
-        .from(user_achievements)
-        .where(eq(user_achievements.user_id, req.user.id))
+      const userId = req.user!.id;
+
+      const userAchievements = await db.select({
+        id: user_achievements.id,
+        user_id: user_achievements.user_id,
+        achievement_id: user_achievements.achievement_id,
+        earned_at: user_achievements.earned_at,
+        times_earned: user_achievements.times_earned,
+        title: achievements.title,
+        description: achievements.description,
+        badge_icon: achievements.badge_icon,
+        points: achievements.points,
+        achievement_type: achievements.achievement_type
+      }).from(user_achievements)
+        .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
+        .where(eq(user_achievements.user_id, userId))
         .orderBy(desc(user_achievements.earned_at));
-        
-      res.status(200).json(userAchievements);
+
+      res.json(userAchievements);
     } catch (error) {
       console.error("Error fetching achievements:", error);
       res.status(500).json({ error: "Failed to fetch achievements" });
     }
   });
-  
-  // Mark achievement as viewed
-  app.patch("/api/achievements/:id/view", checkAuth, async (req, res) => {
+
+  app.post("/api/achievements/check", checkAuth, async (req, res) => {
     try {
-      if (!req.user) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
+      const userId = req.user!.id;
+
+      // Check for new achievements based on user activities
+      // This is a simplified version - in practice, you'd have more sophisticated logic
       
-      const achievementId = parseInt(req.params.id);
-      
-      await db.update(user_achievements)
-        .set({ viewed: true })
-        .where(
-          and(
-            eq(user_achievements.id, achievementId),
-            eq(user_achievements.user_id, req.user.id)
-          )
-        );
-        
-      res.status(200).json({ message: "Achievement marked as viewed" });
-    } catch (error) {
-      console.error("Error marking achievement as viewed:", error);
-      res.status(500).json({ error: "Failed to update achievement" });
-    }
-  });
-  
-  // Generate AI-based achievements based on user training progress
-  app.post("/api/achievements/generate", checkAuth, async (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
-      
-      // Get user's recent activities
-      const recentActivities = await db.select()
-        .from(activities)
-        .where(eq(activities.user_id, req.user.id))
-        .orderBy(desc(activities.activity_date))
-        .limit(30);
-        
-      // Get user's goals
-      const userGoals = await db.select()
-        .from(goals)
-        .where(eq(goals.user_id, req.user.id));
-        
-      // Prepare data for AI analysis
-      const userData = {
-        activities: recentActivities.map(a => ({
-          type: a.activity_type,
-          date: a.activity_date,
-          distance: a.distance,
-          duration: a.duration,
-          pace: a.pace,
-          heart_rate: a.heart_rate,
-          effort_level: a.effort_level
-        })),
-        goals: userGoals.map(g => ({
-          type: g.goal_type,
-          target_date: g.target_date,
-          status: g.status
-        }))
-      };
-      
-      // Use OpenAI to analyze user data and generate achievement suggestions
-      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-      const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      
-      const prompt = `
-      Analyze this runner's data and generate 1-3 achievements they've earned based on their training history. 
-      Be creative, motivational, and specific to their accomplishments. Each achievement should include:
-      
-      1. A title (catchy, short, motivational)
-      2. A description (specific to their training, with details)
-      3. An achievement_type (from these options: milestone, consistency, improvement, personal_best)
-      
-      Training data to analyze: ${JSON.stringify(userData)}
-      
-      Respond in this JSON format:
-      {
-        "achievements": [
-          {
-            "title": "Achievement title",
-            "description": "Detailed description of what they accomplished",
-            "achievement_type": "milestone"
+      // Example: Check for "First Run" achievement
+      const hasRunning = await db.select().from(activities)
+        .where(and(
+          eq(activities.user_id, userId),
+          eq(activities.activity_type, 'running')
+        ))
+        .limit(1);
+
+      if (hasRunning.length > 0) {
+        // Check if user already has this achievement
+        const hasAchievement = await db.select().from(user_achievements)
+          .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
+          .where(and(
+            eq(user_achievements.user_id, userId),
+            eq(achievements.achievement_type, 'first_run')
+          ))
+          .limit(1);
+
+        if (hasAchievement.length === 0) {
+          // Award the achievement
+          const [firstRunAchievement] = await db.select().from(achievements)
+            .where(eq(achievements.achievement_type, 'first_run'))
+            .limit(1);
+
+          if (firstRunAchievement) {
+            await db.insert(user_achievements).values({
+              user_id: userId,
+              achievement_id: firstRunAchievement.id,
+              earned_at: new Date(),
+              times_earned: 1
+            });
+
+            return res.json({
+              newAchievements: [{
+                title: firstRunAchievement.title,
+                description: firstRunAchievement.description,
+                badge_icon: firstRunAchievement.badge_icon,
+                points: firstRunAchievement.points
+              }]
+            });
           }
-        ]
+        }
       }
-      `;
-      
-      const result = await openaiClient.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-        max_tokens: 1000
-      });
-      
-      // Parse the OpenAI response
-      const responseContent = result.choices[0].message.content;
-      const responseJson = responseContent ? JSON.parse(responseContent) : {};
-      const generatedAchievements = responseJson.achievements || [];
-      
-      // Save the generated achievements to the database
-      const savedAchievements = [];
-      
-      for (const achievement of generatedAchievements) {
-        const achievementData = {
-          user_id: req.user.id,
-          title: achievement.title,
-          description: achievement.description,
-          achievement_type: achievement.achievement_type,
-          badge_image: `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(achievement.title)}`,
-          earned_at: new Date(),
-          times_earned: 1,
-          viewed: false,
-          achievement_data: { ai_generated: true }
-        };
-        
-        const [savedAchievement] = await db.insert(user_achievements)
-          .values(achievementData)
-          .returning();
-          
-        savedAchievements.push(savedAchievement);
-      }
-      
-      res.status(201).json({ 
-        message: "AI-generated achievements created successfully", 
-        achievements: savedAchievements 
-      });
+
+      res.json({ newAchievements: [] });
     } catch (error) {
-      console.error("Error generating AI achievements:", error);
-      res.status(500).json({ error: "Failed to generate achievements" });
+      console.error("Error checking achievements:", error);
+      res.status(500).json({ error: "Failed to check achievements" });
     }
   });
+
+  // Integration routes
+  app.get("/api/integrations", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const connections = await db.select({
+        id: integration_connections.id,
+        platform: integration_connections.platform,
+        is_active: integration_connections.is_active,
+        last_sync_at: integration_connections.last_sync_at,
+        created_at: integration_connections.created_at
+      }).from(integration_connections)
+        .where(eq(integration_connections.user_id, userId))
+        .orderBy(integration_connections.platform);
+
+      res.json(connections);
+    } catch (error) {
+      console.error("Error fetching integrations:", error);
+      res.status(500).json({ error: "Failed to fetch integrations" });
+    }
+  });
+
+  app.delete("/api/integrations/:platform", checkAuth, async (req, res) => {
+    try {
+      const { platform } = req.params;
+      const userId = req.user!.id;
+
+      await db.delete(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, platform)
+        ));
+
+      res.json({ message: "Integration disconnected successfully" });
+    } catch (error) {
+      console.error("Error disconnecting integration:", error);
+      res.status(500).json({ error: "Failed to disconnect integration" });
+    }
+  });
+
+  // Sync logs routes
+  app.get("/api/sync-logs", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { limit = 10 } = req.query;
+
+      const logs = await db.select().from(sync_logs)
+        .where(eq(sync_logs.user_id, userId))
+        .orderBy(desc(sync_logs.started_at))
+        .limit(Number(limit));
+
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching sync logs:", error);
+      res.status(500).json({ error: "Failed to fetch sync logs" });
+    }
+  });
+
+  // Nutrition routes
+  app.get("/api/nutrition/preferences", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const [preferences] = await db.select().from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, userId))
+        .limit(1);
+
+      if (!preferences) {
+        // Return default preferences
+        return res.json({
+          dietary_restrictions: [],
+          allergies: [],
+          calorie_goal: 2000,
+          protein_goal: 150,
+          carb_goal: 250,
+          fat_goal: 65
+        });
+      }
+
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching nutrition preferences:", error);
+      res.status(500).json({ error: "Failed to fetch nutrition preferences" });
+    }
+  });
+
+  app.post("/api/nutrition/preferences", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { dietary_restrictions, allergies, calorie_goal, protein_goal, carb_goal, fat_goal } = req.body;
+
+      // Check if preferences already exist
+      const [existing] = await db.select().from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, userId))
+        .limit(1);
+
+      if (existing) {
+        // Update existing preferences
+        const [updated] = await db.update(nutrition_preferences).set({
+          dietary_restrictions,
+          allergies,
+          calorie_goal,
+          protein_goal,
+          carb_goal,
+          fat_goal,
+          updated_at: new Date()
+        }).where(eq(nutrition_preferences.user_id, userId))
+          .returning();
+
+        res.json(updated);
+      } else {
+        // Create new preferences
+        const [newPreferences] = await db.insert(nutrition_preferences).values({
+          user_id: userId,
+          dietary_restrictions,
+          allergies,
+          calorie_goal,
+          protein_goal,
+          carb_goal,
+          fat_goal
+        }).returning();
+
+        res.status(201).json(newPreferences);
+      }
+    } catch (error) {
+      console.error("Error saving nutrition preferences:", error);
+      res.status(500).json({ error: "Failed to save nutrition preferences" });
+    }
+  });
+
+  // Meal plan generation
+  app.post("/api/nutrition/generate-meal-plan", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const user = req.user!;
+
+      // Get user preferences
+      const [preferences] = await db.select().from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, userId))
+        .limit(1);
+
+      // Use simple meal plan generation
+      const mealPlan = await generateSimpleMealPlan(userId);
+
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ error: "Failed to generate meal plan" });
+    }
+  });
+
+  // Coaches routes
+  app.get("/api/coaches", checkAuth, async (req, res) => {
+    try {
+      const availableCoaches = await db.select().from(coaches)
+        .where(eq(coaches.is_active, true))
+        .orderBy(desc(coaches.rating));
+
+      res.json(availableCoaches);
+    } catch (error) {
+      console.error("Error fetching coaches:", error);
+      res.status(500).json({ error: "Failed to fetch coaches" });
+    }
+  });
+
+  app.get("/api/coaches/:id", checkAuth, async (req, res) => {
+    try {
+      const coachId = parseInt(req.params.id);
+
+      const [coach] = await db.select().from(coaches)
+        .where(and(eq(coaches.id, coachId), eq(coaches.is_active, true)))
+        .limit(1);
+
+      if (!coach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+
+      res.json(coach);
+    } catch (error) {
+      console.error("Error fetching coach:", error);
+      res.status(500).json({ error: "Failed to fetch coach" });
+    }
+  });
+
+  // User coach assignment
+  app.post("/api/assign-coach", checkAuth, async (req, res) => {
+    try {
+      const { coach_id } = req.body;
+      const userId = req.user!.id;
+
+      // Check if user already has an active coach assignment
+      const existingAssignment = await db.select().from(user_coach_assignments)
+        .where(and(
+          eq(user_coach_assignments.user_id, userId),
+          eq(user_coach_assignments.is_active, true)
+        ))
+        .limit(1);
+
+      if (existingAssignment.length > 0) {
+        // Deactivate existing assignment
+        await db.update(user_coach_assignments).set({
+          is_active: false,
+          updated_at: new Date()
+        }).where(eq(user_coach_assignments.id, existingAssignment[0].id));
+      }
+
+      // Create new assignment
+      const [newAssignment] = await db.insert(user_coach_assignments).values({
+        user_id: userId,
+        coach_id,
+        assigned_at: new Date(),
+        is_active: true
+      }).returning();
+
+      res.status(201).json(newAssignment);
+    } catch (error) {
+      console.error("Error assigning coach:", error);
+      res.status(500).json({ error: "Failed to assign coach" });
+    }
+  });
+
+  app.get("/api/my-coach", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const assignment = await db.select({
+        assignment_id: user_coach_assignments.id,
+        assigned_at: user_coach_assignments.assigned_at,
+        coach_id: coaches.id,
+        coach_name: coaches.name,
+        coach_email: coaches.email,
+        coach_specialties: coaches.specialties,
+        coach_experience: coaches.experience_years,
+        coach_bio: coaches.bio,
+        coach_rating: coaches.rating
+      }).from(user_coach_assignments)
+        .innerJoin(coaches, eq(user_coach_assignments.coach_id, coaches.id))
+        .where(and(
+          eq(user_coach_assignments.user_id, userId),
+          eq(user_coach_assignments.is_active, true)
+        ))
+        .limit(1);
+
+      if (assignment.length === 0) {
+        return res.status(404).json({ error: "No active coach assignment found" });
+      }
+
+      res.json(assignment[0]);
+    } catch (error) {
+      console.error("Error fetching coach assignment:", error);
+      res.status(500).json({ error: "Failed to fetch coach assignment" });
+    }
+  });
+
+  // Stripe payment routes
+  app.post("/api/create-payment-intent", checkAuth, async (req, res) => {
+    try {
+      const { amount } = req.body;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Subscription management
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await db.select().from(subscription_plans)
+        .where(eq(subscription_plans.is_active, true))
+        .orderBy(subscription_plans.price);
+
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.post('/api/get-or-create-subscription', checkAuth, async (req, res) => {
+    const user = req.user!;
+
+    if (user.stripe_subscription_id) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id) as ExpandedSubscription;
+
+        res.send({
+          subscriptionId: subscription.id,
+          clientSecret: (subscription.latest_invoice as ExpandedInvoice)?.payment_intent?.client_secret,
+        });
+        return;
+      } catch (error) {
+        console.error("Error retrieving existing subscription:", error);
+      }
+    }
+    
+    if (!user.email) {
+      return res.status(400).json({ error: 'No user email on file' });
+    }
+
+    try {
+      let customerId = user.stripe_customer_id;
+      
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: user.username,
+        });
+        customerId = customer.id;
+
+        // Update user with Stripe customer ID
+        await db.update(users).set({
+          stripe_customer_id: customerId
+        }).where(eq(users.id, user.id));
+      }
+
+      const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{
+          price: process.env.STRIPE_PRICE_ID || 'price_default',
+        }],
+        payment_behavior: 'default_incomplete',
+        expand: ['latest_invoice.payment_intent'],
+      }) as ExpandedSubscription;
+
+      // Update user with subscription ID
+      await db.update(users).set({
+        stripe_subscription_id: subscription.id,
+        subscription_status: 'active'
+      }).where(eq(users.id, user.id));
   
-  // Admin API Routes
-  // Get all users (admin only)
+      res.send({
+        subscriptionId: subscription.id,
+        clientSecret: (subscription.latest_invoice as ExpandedInvoice)?.payment_intent?.client_secret,
+      });
+    } catch (error: any) {
+      console.error("Error creating subscription:", error);
+      return res.status(400).send({ error: { message: error.message } });
+    }
+  });
+
+  // Admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     try {
+      const { page = 1, limit = 20, search = '' } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      let whereConditions = [];
+      if (search) {
+        whereConditions.push(
+          or(
+            sql`${users.username} ILIKE ${`%${search}%`}`,
+            sql`${users.email} ILIKE ${`%${search}%`}`
+          )
+        );
+      }
+
       const allUsers = await db.select({
         id: users.id,
         username: users.username,
         email: users.email,
-        role: users.role,
-        is_admin: users.is_admin,
-        permissions: users.permissions,
+        created_at: users.created_at,
         subscription_status: users.subscription_status,
-        created_at: users.created_at
-      }).from(users);
-      
-      res.json(allUsers);
+        is_admin: users.is_admin,
+        role: users.role
+      }).from(users)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+        .orderBy(desc(users.created_at))
+        .limit(Number(limit))
+        .offset(offset);
+
+      const [{ count: totalCount }] = await db.select({ count: count() })
+        .from(users)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+
+      res.json({
+        users: allUsers,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / Number(limit))
+        }
+      });
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ error: "Failed to fetch users" });
     }
   });
 
-  // Update user role (admin only)
-  app.put("/api/admin/users/:userId/role", requireAdmin, async (req, res) => {
+  app.put("/api/admin/users/:id/role", requireAdmin, async (req, res) => {
     try {
-      const { userId } = req.params;
+      const userId = parseInt(req.params.id);
       const { role, is_admin } = req.body;
-      
-      if (!['user', 'coach', 'admin'].includes(role)) {
-        return res.status(400).json({ error: "Invalid role" });
+
+      // Prevent admin from removing their own admin status
+      if (userId === req.user!.id && !is_admin) {
+        return res.status(400).json({ error: "Cannot remove admin status from yourself" });
       }
 
-      await db.update(users)
-        .set({ 
-          role,
-          is_admin: is_admin || false,
-          updated_at: new Date()
-        })
-        .where(eq(users.id, parseInt(userId)));
+      const [updatedUser] = await db.update(users).set({
+        role,
+        is_admin,
+        updated_at: new Date()
+      }).where(eq(users.id, userId))
+        .returning();
 
-      res.json({ message: "User role updated successfully" });
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user role:", error);
       res.status(500).json({ error: "Failed to update user role" });
@@ -2490,16 +1768,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new coach (admin only)
   app.post("/api/admin/coaches", requireAdmin, async (req, res) => {
     try {
-      const coachData = insertCoachSchema.parse(req.body);
-      
-      const [newCoach] = await db.insert(coaches)
-        .values({
-          ...coachData,
-          is_active: true,
-          user_count: 0,
-          rating: 5.0
-        })
-        .returning();
+      const { name, email, specialties, experience_years, bio, rating } = req.body;
+
+      const [newCoach] = await db.insert(coaches).values({
+        name,
+        email,
+        specialties,
+        experience_years,
+        bio,
+        rating: rating || 5.0,
+        is_active: true,
+        user_count: 0
+      }).returning();
 
       res.status(201).json(newCoach);
     } catch (error) {
@@ -2508,4586 +1788,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Toggle coach status (admin only)
-  app.put("/api/admin/coaches/:coachId/status", requireAdmin, async (req, res) => {
+  // Update coach (admin only)
+  app.put("/api/admin/coaches/:id", requireAdmin, async (req, res) => {
     try {
-      const { coachId } = req.params;
-      const { is_active } = req.body;
-
-      await db.update(coaches)
-        .set({ 
-          is_active,
-          updated_at: new Date()
-        })
-        .where(eq(coaches.id, parseInt(coachId)));
-
-      res.json({ message: "Coach status updated successfully" });
-    } catch (error) {
-      console.error("Error updating coach status:", error);
-      res.status(500).json({ error: "Failed to update coach status" });
-    }
-  });
-
-  // Initialize Stripe
-  if (!process.env.STRIPE_SECRET_KEY) {
-    console.warn('Missing STRIPE_SECRET_KEY environment variable. Stripe integration will not work.');
-  }
-  
-  const stripe = process.env.STRIPE_SECRET_KEY 
-    ? new Stripe(process.env.STRIPE_SECRET_KEY) 
-    : null;
-
-  // API Routes
-  // Current user's goal
-  app.get("/api/goals/current", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // In a real app, this would fetch the user's current goal from the database
-    res.json({
-      name: "Chicago Marathon",
-      date: "October 8, 2023",
-      daysRemaining: 87,
-      progress: 68,
-      trainingPlan: {
-        currentWeek: 8,
-        totalWeeks: 16,
-      },
-      activitiesCompleted: 43,
-      totalDistance: 278.6,
-    });
-  });
-
-  // Weekly metrics
-  app.get("/api/metrics/weekly", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // In a real app, this would calculate the user's weekly metrics
-    res.json({
-      distance: {
-        value: 32.4,
-        unit: "miles",
-        change: 12
-      },
-      pace: {
-        value: "8:42",
-        unit: "min/mile",
-        change: "0:18 faster"
-      },
-      activeTime: {
-        value: "4:51",
-        unit: "hours",
-        change: "42 minutes more"
-      }
-    });
-  });
-
-  // Chart data
-  app.get("/api/charts/distance", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const timeRange = req.query.timeRange || "week";
-    
-    // In a real app, this would fetch the user's distance data for the specified time range
-    const weekData = [
-      { name: "Mon", value: 3 },
-      { name: "Tue", value: 7 },
-      { name: "Wed", value: 4.5 },
-      { name: "Thu", value: 9 },
-      { name: "Fri", value: 7 },
-      { name: "Sat", value: 12 },
-      { name: "Sun", value: 0 }
-    ];
-    
-    const monthData = Array.from({ length: 30 }, (_, i) => ({
-      name: `Day ${i + 1}`,
-      value: Math.random() * 10 + 2
-    }));
-    
-    const yearData = Array.from({ length: 12 }, (_, i) => ({
-      name: `Month ${i + 1}`,
-      value: Math.random() * 100 + 50
-    }));
-    
-    let responseData;
-    switch (timeRange) {
-      case "month":
-        responseData = monthData;
-        break;
-      case "year":
-        responseData = yearData;
-        break;
-      default:
-        responseData = weekData;
-    }
-    
-    res.json(responseData);
-  });
-
-  app.get("/api/charts/pace", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const timeRange = req.query.timeRange || "week";
-    const runType = req.query.runType || "all";
-    
-    // In a real app, this would fetch the user's pace data for the specified time range and run type
-    
-    // Sample pace data grouped by run type
-    const paceDataByType = {
-      easy: [
-        { name: "Week 1", value: 9.8, date: "2023-07-01" },
-        { name: "Week 2", value: 9.7, date: "2023-07-08" },
-        { name: "Week 3", value: 9.5, date: "2023-07-15" },
-        { name: "Week 4", value: 9.4, date: "2023-07-22" },
-        { name: "Week 5", value: 9.3, date: "2023-07-29" },
-        { name: "Week 6", value: 9.2, date: "2023-08-05" }
-      ],
-      tempo: [
-        { name: "Week 1", value: 8.5, date: "2023-07-04" },
-        { name: "Week 2", value: 8.3, date: "2023-07-11" },
-        { name: "Week 3", value: 8.2, date: "2023-07-18" },
-        { name: "Week 4", value: 8.1, date: "2023-07-25" },
-        { name: "Week 5", value: 8.0, date: "2023-08-01" }
-      ],
-      long: [
-        { name: "Week 1", value: 9.3, date: "2023-07-02" },
-        { name: "Week 2", value: 9.2, date: "2023-07-09" },
-        { name: "Week 3", value: 9.1, date: "2023-07-16" },
-        { name: "Week 4", value: 9.0, date: "2023-07-23" },
-        { name: "Week 5", value: 8.9, date: "2023-07-30" },
-        { name: "Week 6", value: 8.8, date: "2023-08-06" }
-      ],
-      interval: [
-        { name: "Week 1", value: 7.8, date: "2023-07-05" },
-        { name: "Week 2", value: 7.7, date: "2023-07-12" },
-        { name: "Week 3", value: 7.6, date: "2023-07-19" },
-        { name: "Week 4", value: 7.5, date: "2023-07-26" },
-        { name: "Week 5", value: 7.4, date: "2023-08-02" }
-      ]
-    };
-    
-    // Create combined data that includes all run types with their data points
-    const allData = Object.keys(paceDataByType).flatMap(type => 
-      paceDataByType[type].map(item => ({
-        ...item,
-        runType: type
-      }))
-    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // Month and year data would be handled similarly but with different time ranges
-    const monthData = runType === 'all' 
-      ? allData 
-      : paceDataByType[runType as string] || [];
-      
-    const yearData = runType === 'all'
-      ? allData
-      : paceDataByType[runType as string] || [];
-    
-    let responseData;
-    switch (timeRange) {
-      case "month":
-        responseData = monthData;
-        break;
-      case "year":
-        responseData = yearData;
-        break;
-      default:
-        responseData = runType === 'all' 
-          ? allData 
-          : paceDataByType[runType as string] || [];
-    }
-    
-    res.json(responseData);
-  });
-
-  // Training calendar
-  app.get("/api/calendar", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // In a real app, this would fetch the user's training calendar
-    res.json({
-      weeks: [
-        {
-          days: [
-            { day: 30, isCurrentMonth: false, isToday: false },
-            { day: 1, isCurrentMonth: true, isToday: true, workout: { type: "Easy", description: "5 mi Easy", color: "primary" } },
-            { day: 2, isCurrentMonth: true, isToday: false, workout: { type: "Interval", description: "Interval", color: "secondary" } },
-            { day: 3, isCurrentMonth: true, isToday: false, workout: { type: "Rest", description: "Rest", color: "accent" } },
-            { day: 4, isCurrentMonth: true, isToday: false, workout: { type: "Tempo", description: "6 mi Tempo", color: "primary" } },
-            { day: 5, isCurrentMonth: true, isToday: false, workout: { type: "Cross", description: "Cross", color: "accent" } },
-            { day: 6, isCurrentMonth: true, isToday: false, workout: { type: "Long", description: "12 mi Long", color: "secondary" } },
-          ]
-        },
-        {
-          days: [
-            { day: 7, isCurrentMonth: true, isToday: false, workout: { type: "Rest", description: "Rest", color: "accent" } },
-            { day: 8, isCurrentMonth: true, isToday: false, workout: { type: "Easy", description: "5 mi Easy", color: "primary" } },
-            { day: 9, isCurrentMonth: true, isToday: false, workout: { type: "Speed", description: "Speed", color: "secondary" } },
-            { day: 10, isCurrentMonth: true, isToday: false, workout: { type: "Rest", description: "Rest", color: "accent" } },
-            { day: 11, isCurrentMonth: true, isToday: false, workout: { type: "Tempo", description: "6 mi Tempo", color: "primary" } },
-            { day: 12, isCurrentMonth: true, isToday: false, workout: { type: "Cross", description: "Cross", color: "accent" } },
-            { day: 13, isCurrentMonth: true, isToday: false, workout: { type: "Long", description: "14 mi Long", color: "secondary" } },
-          ]
-        },
-        {
-          days: [
-            { day: 14, isCurrentMonth: true, isToday: false, workout: { type: "Rest", description: "Rest", color: "accent" } },
-            { day: 15, isCurrentMonth: true, isToday: false, workout: { type: "Easy", description: "6 mi Easy", color: "primary" } },
-            { day: 16, isCurrentMonth: true, isToday: false, workout: { type: "Hills", description: "Hills", color: "secondary" } },
-            { day: 17, isCurrentMonth: true, isToday: false, workout: { type: "Rest", description: "Rest", color: "accent" } },
-            { day: 18, isCurrentMonth: true, isToday: false, workout: { type: "Tempo", description: "7 mi Tempo", color: "primary" } },
-            { day: 19, isCurrentMonth: true, isToday: false, workout: { type: "Cross", description: "Cross", color: "accent" } },
-            { day: 20, isCurrentMonth: true, isToday: false, workout: { type: "Long", description: "16 mi Long", color: "secondary" } },
-          ]
-        }
-      ]
-    });
-  });
-
-  // Today's workout
-  app.get("/api/workouts/today", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // In a real app, this would fetch the user's workout for today
-    res.json({
-      type: "Easy Run",
-      targetDistance: "5 miles",
-      targetPace: "9:00-9:30 min/mile",
-      zone: "Zone 2 (Easy)",
-      estimatedTime: "~45-50 minutes",
-      notes: "Focus on maintaining a conversational pace throughout the run. This is a recovery run intended to build aerobic base without creating additional fatigue."
-    });
-  });
-
-  // Weekly progress
-  app.get("/api/progress/weekly", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // In a real app, this would fetch the user's weekly progress
-    res.json({
-      distanceGoal: {
-        current: 32.4,
-        target: 35,
-        percentage: 92
-      },
-      workoutsCompleted: {
-        current: 4,
-        target: 5,
-        percentage: 80
-      },
-      improvementRate: {
-        status: "On Track",
-        percentage: 85
-      }
-    });
-  });
-
-  // Recent activities
-  app.get("/api/activities/recent", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // In a real app, this would fetch the user's recent activities
-    res.json([
-      {
-        id: 1,
-        date: "Jul 30, 2023",
-        type: {
-          name: "Long Run",
-          icon: "chart",
-          color: "secondary"
-        },
-        distance: "12.6 mi",
-        time: "1:51:24",
-        pace: "8:51 /mi",
-        heartRate: "152 bpm",
-        effort: {
-          level: "moderate",
-          label: "Moderate"
-        }
-      },
-      {
-        id: 2,
-        date: "Jul 28, 2023",
-        type: {
-          name: "Tempo Run",
-          icon: "speed",
-          color: "primary"
-        },
-        distance: "6.2 mi",
-        time: "48:36",
-        pace: "7:50 /mi",
-        heartRate: "165 bpm",
-        effort: {
-          level: "hard",
-          label: "Hard"
-        }
-      },
-      {
-        id: 3,
-        date: "Jul 26, 2023",
-        type: {
-          name: "Easy Run",
-          icon: "activity",
-          color: "accent"
-        },
-        distance: "5.0 mi",
-        time: "47:15",
-        pace: "9:27 /mi",
-        heartRate: "139 bpm",
-        effort: {
-          level: "easy",
-          label: "Easy"
-        }
-      }
-    ]);
-  });
-
-  // Community Features API
-
-  // Groups
-  app.get("/api/groups", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const groups = await storage.getGroups();
-      res.json(groups);
-    } catch (error) {
-      console.error("Error fetching groups:", error);
-      res.status(500).json({ error: "Failed to fetch groups" });
-    }
-  });
-
-  app.get("/api/groups/me", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const groups = await storage.getGroupsByUser(req.user.id);
-      res.json(groups);
-    } catch (error) {
-      console.error("Error fetching user groups:", error);
-      res.status(500).json({ error: "Failed to fetch your groups" });
-    }
-  });
-
-  app.get("/api/groups/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const groupId = parseInt(req.params.id);
-      const group = await storage.getGroupById(groupId);
-      
-      if (!group) {
-        return res.status(404).json({ error: "Group not found" });
-      }
-      
-      res.json(group);
-    } catch (error) {
-      console.error("Error fetching group:", error);
-      res.status(500).json({ error: "Failed to fetch group" });
-    }
-  });
-
-  app.post("/api/groups", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const validation = insertGroupSchema.safeParse({
-        ...req.body,
-        created_by: req.user.id
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const group = await storage.createGroup(validation.data);
-      res.status(201).json(group);
-    } catch (error) {
-      console.error("Error creating group:", error);
-      res.status(500).json({ error: "Failed to create group" });
-    }
-  });
-
-  app.post("/api/groups/:id/join", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const groupId = parseInt(req.params.id);
-      const group = await storage.getGroupById(groupId);
-      
-      if (!group) {
-        return res.status(404).json({ error: "Group not found" });
-      }
-      
-      const memberData = {
-        group_id: groupId,
-        user_id: req.user.id,
-        role: "member",
-        status: "active"
-      };
-      
-      const member = await storage.addUserToGroup(memberData);
-      res.status(201).json(member);
-    } catch (error) {
-      console.error("Error joining group:", error);
-      res.status(500).json({ error: "Failed to join group" });
-    }
-  });
-
-  app.post("/api/groups/:id/leave", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const groupId = parseInt(req.params.id);
-      const group = await storage.getGroupById(groupId);
-      
-      if (!group) {
-        return res.status(404).json({ error: "Group not found" });
-      }
-      
-      await storage.removeUserFromGroup(groupId, req.user.id);
-      res.status(200).json({ message: "Successfully left the group" });
-    } catch (error) {
-      console.error("Error leaving group:", error);
-      res.status(500).json({ error: "Failed to leave group" });
-    }
-  });
-
-  // Buddies
-  app.get("/api/buddies", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const buddies = await storage.getBuddies(req.user.id);
-      res.json(buddies);
-    } catch (error) {
-      console.error("Error fetching buddies:", error);
-      res.status(500).json({ error: "Failed to fetch buddies" });
-    }
-  });
-
-  app.get("/api/buddies/requests", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const requests = await storage.getBuddyRequests(req.user.id);
-      res.json(requests);
-    } catch (error) {
-      console.error("Error fetching buddy requests:", error);
-      res.status(500).json({ error: "Failed to fetch buddy requests" });
-    }
-  });
-
-  app.post("/api/buddies/request", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const validation = insertBuddySchema.safeParse({
-        user_id: req.user.id,
-        buddy_id: req.body.buddy_id,
-        status: "pending"
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const buddy = await storage.requestBuddy(validation.data);
-      res.status(201).json(buddy);
-    } catch (error) {
-      console.error("Error sending buddy request:", error);
-      res.status(500).json({ error: "Failed to send buddy request" });
-    }
-  });
-
-  app.post("/api/buddies/:id/accept", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const buddyRequestId = parseInt(req.params.id);
-      const updatedBuddy = await storage.updateBuddyStatus(buddyRequestId, "accepted");
-      res.json(updatedBuddy);
-    } catch (error) {
-      console.error("Error accepting buddy request:", error);
-      res.status(500).json({ error: "Failed to accept buddy request" });
-    }
-  });
-
-  app.post("/api/buddies/:id/decline", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const buddyRequestId = parseInt(req.params.id);
-      const updatedBuddy = await storage.updateBuddyStatus(buddyRequestId, "declined");
-      res.json(updatedBuddy);
-    } catch (error) {
-      console.error("Error declining buddy request:", error);
-      res.status(500).json({ error: "Failed to decline buddy request" });
-    }
-  });
-
-  app.post("/api/buddies/:id/remove", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const buddyId = parseInt(req.params.id);
-      await storage.removeBuddy(req.user.id, buddyId);
-      res.status(200).json({ message: "Buddy removed successfully" });
-    } catch (error) {
-      console.error("Error removing buddy:", error);
-      res.status(500).json({ error: "Failed to remove buddy" });
-    }
-  });
-
-  // Challenges
-  app.get("/api/challenges", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const challenges = await storage.getChallenges();
-      res.json(challenges);
-    } catch (error) {
-      console.error("Error fetching challenges:", error);
-      res.status(500).json({ error: "Failed to fetch challenges" });
-    }
-  });
-
-  app.get("/api/challenges/me", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const challenges = await storage.getChallengesByUser(req.user.id);
-      res.json(challenges);
-    } catch (error) {
-      console.error("Error fetching user challenges:", error);
-      res.status(500).json({ error: "Failed to fetch your challenges" });
-    }
-  });
-
-  app.get("/api/challenges/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const challengeId = parseInt(req.params.id);
-      const challenge = await storage.getChallengeById(challengeId);
-      
-      if (!challenge) {
-        return res.status(404).json({ error: "Challenge not found" });
-      }
-      
-      res.json(challenge);
-    } catch (error) {
-      console.error("Error fetching challenge:", error);
-      res.status(500).json({ error: "Failed to fetch challenge" });
-    }
-  });
-
-  app.post("/api/challenges", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const validation = insertChallengeSchema.safeParse({
-        ...req.body,
-        created_by: req.user.id
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const challenge = await storage.createChallenge(validation.data);
-      res.status(201).json(challenge);
-    } catch (error) {
-      console.error("Error creating challenge:", error);
-      res.status(500).json({ error: "Failed to create challenge" });
-    }
-  });
-
-  app.post("/api/challenges/:id/join", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const challengeId = parseInt(req.params.id);
-      const challenge = await storage.getChallengeById(challengeId);
-      
-      if (!challenge) {
-        return res.status(404).json({ error: "Challenge not found" });
-      }
-      
-      const participantData = {
-        challenge_id: challengeId,
-        user_id: req.user.id,
-        current_progress: 0,
-        status: "active"
-      };
-      
-      const participant = await storage.joinChallenge(participantData);
-      res.status(201).json(participant);
-    } catch (error) {
-      console.error("Error joining challenge:", error);
-      res.status(500).json({ error: "Failed to join challenge" });
-    }
-  });
-
-  app.post("/api/challenges/:id/leave", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const challengeId = parseInt(req.params.id);
-      const challenge = await storage.getChallengeById(challengeId);
-      
-      if (!challenge) {
-        return res.status(404).json({ error: "Challenge not found" });
-      }
-      
-      await storage.leaveChallenge(challengeId, req.user.id);
-      res.status(200).json({ message: "Successfully left the challenge" });
-    } catch (error) {
-      console.error("Error leaving challenge:", error);
-      res.status(500).json({ error: "Failed to leave challenge" });
-    }
-  });
-
-  app.post("/api/challenges/:id/progress", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const challengeId = parseInt(req.params.id);
-      const progress = parseFloat(req.body.progress);
-      
-      if (isNaN(progress)) {
-        return res.status(400).json({ error: "Invalid progress value" });
-      }
-      
-      await storage.updateChallengeProgress(challengeId, req.user.id, progress);
-      res.status(200).json({ message: "Progress updated successfully" });
-    } catch (error) {
-      console.error("Error updating challenge progress:", error);
-      res.status(500).json({ error: "Failed to update challenge progress" });
-    }
-  });
-
-  // Achievements
-  app.get("/api/achievements", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const achievements = await storage.getAchievements();
-      res.json(achievements);
-    } catch (error) {
-      console.error("Error fetching achievements:", error);
-      res.status(500).json({ error: "Failed to fetch achievements" });
-    }
-  });
-
-  app.get("/api/achievements/me", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const userAchievements = await storage.getUserAchievements(req.user.id);
-      res.json(userAchievements);
-    } catch (error) {
-      console.error("Error fetching user achievements:", error);
-      res.status(500).json({ error: "Failed to fetch your achievements" });
-    }
-  });
-
-  // Nutrition Tracking
-  app.get("/api/nutrition", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      let startDate: Date | undefined;
-      let endDate: Date | undefined;
-      
-      if (req.query.startDate) {
-        startDate = new Date(req.query.startDate as string);
-      }
-      
-      if (req.query.endDate) {
-        endDate = new Date(req.query.endDate as string);
-      }
-      
-      const logs = await storage.getNutritionLogs(req.user.id, startDate, endDate);
-      res.json(logs);
-    } catch (error) {
-      console.error("Error fetching nutrition logs:", error);
-      res.status(500).json({ error: "Failed to fetch nutrition logs" });
-    }
-  });
-
-  app.post("/api/nutrition", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const validation = insertNutritionLogSchema.safeParse({
-        ...req.body,
-        user_id: req.user.id
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const log = await storage.createNutritionLog(validation.data);
-      res.status(201).json(log);
-    } catch (error) {
-      console.error("Error creating nutrition log:", error);
-      res.status(500).json({ error: "Failed to create nutrition log" });
-    }
-  });
-
-  app.patch("/api/nutrition/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const logId = parseInt(req.params.id);
-      const updatedLog = await storage.updateNutritionLog(logId, req.body);
-      res.json(updatedLog);
-    } catch (error) {
-      console.error("Error updating nutrition log:", error);
-      res.status(500).json({ error: "Failed to update nutrition log" });
-    }
-  });
-
-  // Coaching routes handled above with annual subscription check
-  
-  // Coaching sessions endpoint - only available for annual subscribers
-  app.get("/api/coaching-sessions", checkAuth, hasAnnualSubscription, async (req, res) => {
-    try {
-      const userId = req.user?.id;
-      const role = req.query.coach_id ? 'athlete' : 'coach';
-      
-      const sessions = await db.select()
-        .from(coaching_sessions)
-        .where(
-          role === 'athlete' 
-            ? eq(coaching_sessions.athlete_id, userId) 
-            : eq(coaching_sessions.coach_id, userId)
-        )
-        .orderBy(desc(coaching_sessions.session_date));
-      
-      res.json(sessions);
-    } catch (error) {
-      console.error("Error fetching coaching sessions:", error);
-      res.status(500).json({ error: "Failed to fetch coaching sessions" });
-    }
-  });
-
-  app.post("/api/coaches", checkAuth, async (req, res) => {
-    try {
-      // Check if user is admin (in a real app, this would check a proper admin role)
-      if (req.user.id !== 1) {
-        return res.status(403).json({ error: "Unauthorized. Admin access required." });
-      }
-      
-      const validation = insertCoachSchema.safeParse({
-        ...req.body,
-        user_id: 0 // This is a placeholder. In a real app, we'd create or link to a real user
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const coach = await storage.createCoach(validation.data);
-      res.status(201).json(coach);
-    } catch (error) {
-      console.error("Error creating coach profile:", error);
-      res.status(500).json({ error: "Failed to create coach profile" });
-    }
-  });
-  
-  // Update an existing coach (admin only)
-  app.put("/api/coaches/:id", checkAuth, async (req, res) => {
-    try {
-      // Check if user is admin (in a real app, this would check a proper admin role)
-      if (req.user.id !== 1) {
-        return res.status(403).json({ error: "Unauthorized. Admin access required." });
-      }
-      
       const coachId = parseInt(req.params.id);
-      
-      // Validate coach exists
-      const [existingCoach] = await db.select().from(coaches).where(eq(coaches.id, coachId));
-      if (!existingCoach) {
-        return res.status(404).json({ error: "Coach not found" });
-      }
-      
-      // Update coach data
-      const {
+      const { name, email, specialties, experience_years, bio, rating, is_active } = req.body;
+
+      const [updatedCoach] = await db.update(coaches).set({
         name,
         email,
-        title,
-        bio,
         specialties,
-        certifications,
         experience_years,
-        photoUrl,
-        status,
-        hourlyRate,
-      } = req.body;
-      
-      const updatedCoach = await storage.updateCoach(coachId, {
-        name,
         bio,
-        specialty: specialties,
-        certifications,
-        experience_years,
-        profile_image: photoUrl,
-        available: status === 'active',
-        hourly_rate: hourlyRate,
-      });
-      
+        rating,
+        is_active,
+        updated_at: new Date()
+      }).where(eq(coaches.id, coachId))
+        .returning();
+
+      if (!updatedCoach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+
       res.json(updatedCoach);
     } catch (error) {
       console.error("Error updating coach:", error);
       res.status(500).json({ error: "Failed to update coach" });
     }
   });
-  
-  // Delete a coach (admin only)
-  app.delete("/api/coaches/:id", checkAuth, async (req, res) => {
+
+  // Delete coach (admin only)
+  app.delete("/api/admin/coaches/:id", requireAdmin, async (req, res) => {
     try {
-      // Check if user is admin (in a real app, this would check a proper admin role)
-      if (req.user.id !== 1) {
-        return res.status(403).json({ error: "Unauthorized. Admin access required." });
-      }
-      
       const coachId = parseInt(req.params.id);
-      
-      // Validate coach exists
-      const [existingCoach] = await db.select().from(coaches).where(eq(coaches.id, coachId));
-      if (!existingCoach) {
+
+      // Check if coach has active assignments
+      const activeAssignments = await db.select().from(user_coach_assignments)
+        .where(and(
+          eq(user_coach_assignments.coach_id, coachId),
+          eq(user_coach_assignments.is_active, true)
+        ));
+
+      if (activeAssignments.length > 0) {
+        return res.status(400).json({ 
+          error: "Cannot delete coach with active assignments. Please reassign users first." 
+        });
+      }
+
+      const [deletedCoach] = await db.delete(coaches)
+        .where(eq(coaches.id, coachId))
+        .returning();
+
+      if (!deletedCoach) {
         return res.status(404).json({ error: "Coach not found" });
       }
-      
-      // Delete the coach using storage layer
-      await storage.deleteCoach(coachId);
-      
-      res.json({ success: true, message: "Coach deleted successfully" });
+
+      res.json({ message: "Coach deleted successfully" });
     } catch (error) {
       console.error("Error deleting coach:", error);
       res.status(500).json({ error: "Failed to delete coach" });
     }
   });
 
-  app.get("/api/coaching-sessions", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const role = req.query.role as 'coach' | 'athlete' || 'athlete';
-      const sessions = await storage.getCoachingSessions(req.user.id, role);
-      res.json(sessions);
-    } catch (error) {
-      console.error("Error fetching coaching sessions:", error);
-      res.status(500).json({ error: "Failed to fetch coaching sessions" });
-    }
-  });
-
-  app.patch("/api/coaching-sessions/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const sessionId = parseInt(req.params.id);
-      const updatedSession = await storage.updateCoachingSession(sessionId, req.body);
-      res.json(updatedSession);
-    } catch (error) {
-      console.error("Error updating coaching session:", error);
-      res.status(500).json({ error: "Failed to update coaching session" });
-    }
-  });
-
-  // Activities API
-  app.get("/api/activities", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const activities = await storage.getActivities(req.user.id);
-      res.json(activities);
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-      res.status(500).json({ error: "Failed to fetch activities" });
-    }
-  });
-
-  app.get("/api/activities/recent", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const activities = await storage.getRecentActivities(req.user.id, 5);
-      res.json(activities);
-    } catch (error) {
-      console.error("Error fetching recent activities:", error);
-      res.status(500).json({ error: "Failed to fetch recent activities" });
-    }
-  });
-
-  app.post("/api/activities", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const activityData = {
-        ...req.body,
-        user_id: req.user.id,
-        activity_date: req.body.activity_date || new Date().toISOString().split('T')[0]
-      };
-      
-      const activity = await storage.createActivity(activityData);
-      res.status(201).json(activity);
-    } catch (error) {
-      console.error("Error creating activity:", error);
-      res.status(500).json({ error: "Failed to create activity" });
-    }
-  });
-
-  // Health Metrics API
-  app.get("/api/health-metrics", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      // Parse date query parameters if provided
-      let startDate = undefined;
-      let endDate = undefined;
-      
-      if (req.query.startDate) {
-        startDate = new Date(req.query.startDate as string);
-      }
-      
-      if (req.query.endDate) {
-        endDate = new Date(req.query.endDate as string);
-      }
-      
-      const metrics = await storage.getHealthMetrics(req.user.id, startDate, endDate);
-      res.json(metrics);
-    } catch (error) {
-      console.error("Error fetching health metrics:", error);
-      res.status(500).json({ error: "Failed to fetch health metrics" });
-    }
-  });
-
-  app.post("/api/health-metrics", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      // Convert date string to proper format for database
-      const metricDate = req.body.metric_date ? 
-        (typeof req.body.metric_date === 'string' ? req.body.metric_date : new Date(req.body.metric_date).toISOString().split('T')[0]) :
-        new Date().toISOString().split('T')[0];
-      
-      const validation = insertHealthMetricsSchema.safeParse({
-        ...req.body,
-        user_id: req.user.id,
-        metric_date: metricDate
-      });
-      
-      if (!validation.success) {
-        console.error("Health metrics validation error:", validation.error.errors);
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const metric = await storage.createHealthMetric(validation.data);
-      res.status(201).json(metric);
-    } catch (error) {
-      console.error("Error creating health metric:", error);
-      res.status(500).json({ error: "Failed to create health metric" });
-    }
-  });
-
-  app.patch("/api/health-metrics/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const metricId = parseInt(req.params.id);
-      const updatedMetric = await storage.updateHealthMetric(metricId, req.body);
-      res.json(updatedMetric);
-    } catch (error) {
-      console.error("Error updating health metric:", error);
-      res.status(500).json({ error: "Failed to update health metric" });
-    }
-  });
-  
-  // Health metrics import endpoints for different platforms
-  app.post("/api/garmin/health-metrics/import", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const { consent } = req.body;
-      
-      if (!consent) {
-        return res.status(400).json({ message: "User consent is required to import health data" });
-      }
-      
-      // Check if user has a Garmin connection
-      const connections = await storage.getIntegrationConnections(req.user.id);
-      const garminConnection = connections.find(conn => conn.provider === "garmin");
-      
-      if (!garminConnection) {
-        return res.status(404).json({ message: "No Garmin connection found. Please connect your Garmin account first." });
-      }
-      
-      // In a production environment, we would call the Garmin API here using the connection credentials
-      // For demonstration purposes, we'll use some sample data
-      
-      // Get the last 60 days of health metrics from Garmin
-      const today = new Date();
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - 7); // Get last week of data for demo
-      
-      const healthMetricData = [];
-      
-      // Generate sample data for the last 7 days
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        
-        healthMetricData.push({
-          user_id: req.user.id,
-          metric_date: date.toISOString().split('T')[0],
-          hrv_score: Math.floor(Math.random() * 30) + 50, // Random HRV between 50-80
-          resting_heart_rate: Math.floor(Math.random() * 10) + 50, // Random RHR between 50-60
-          sleep_quality: Math.floor(Math.random() * 3) + 7, // Random sleep quality between 7-10
-          sleep_duration: (Math.floor(Math.random() * 2) + 7) * 60, // Random sleep duration between 7-9 hours in minutes
-          energy_level: null, // We'll calculate this
-          stress_level: Math.floor(Math.random() * 5) + 3, // Random stress level between 3-8
-          source: "garmin",
-          notes: "Imported from Garmin Connect",
-          created_at: new Date()
-        });
-      }
-      
-      // Insert the health metrics into the database
-      for (const metric of healthMetricData) {
-        await storage.addHealthMetric(metric);
-      }
-      
-      res.json({ count: healthMetricData.length });
-    } catch (error) {
-      console.error("Error importing health metrics from Garmin:", error);
-      res.status(500).json({ message: "Failed to import health metrics from Garmin" });
-    }
-  });
-  
-  app.post("/api/strava/health-metrics/import", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const { consent } = req.body;
-      
-      if (!consent) {
-        return res.status(400).json({ message: "User consent is required to import health data" });
-      }
-      
-      // Check if user has a Strava connection
-      const connections = await storage.getIntegrationConnections(req.user.id);
-      const stravaConnection = connections.find(conn => conn.provider === "strava");
-      
-      if (!stravaConnection) {
-        return res.status(404).json({ message: "No Strava connection found. Please connect your Strava account first." });
-      }
-      
-      // In a production environment, we would call the Strava API here using the connection credentials
-      // For demonstration purposes, we'll use some sample data
-      
-      // Get the last 60 days of health metrics from Strava
-      const today = new Date();
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - 7); // Get last week of data for demo
-      
-      const healthMetricData = [];
-      
-      // Generate sample data for the last 7 days
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        
-        healthMetricData.push({
-          user_id: req.user.id,
-          metric_date: date.toISOString().split('T')[0],
-          hrv_score: Math.floor(Math.random() * 30) + 55, // Random HRV between 55-85
-          resting_heart_rate: Math.floor(Math.random() * 10) + 48, // Random RHR between 48-58
-          sleep_quality: null, // Strava doesn't provide sleep quality
-          sleep_duration: null, // Strava doesn't provide sleep duration
-          energy_level: null, // We'll calculate this
-          stress_level: null, // Strava doesn't provide stress level
-          source: "strava",
-          notes: "Imported from Strava",
-          created_at: new Date()
-        });
-      }
-      
-      // Insert the health metrics into the database
-      for (const metric of healthMetricData) {
-        await storage.addHealthMetric(metric);
-      }
-      
-      res.json({ count: healthMetricData.length });
-    } catch (error) {
-      console.error("Error importing health metrics from Strava:", error);
-      res.status(500).json({ message: "Failed to import health metrics from Strava" });
-    }
-  });
-  
-  app.post("/api/polar/health-metrics/import", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const { consent } = req.body;
-      
-      if (!consent) {
-        return res.status(400).json({ message: "User consent is required to import health data" });
-      }
-      
-      // Check if user has a Polar connection
-      const connections = await storage.getIntegrationConnections(req.user.id);
-      const polarConnection = connections.find(conn => conn.provider === "polar");
-      
-      if (!polarConnection) {
-        return res.status(404).json({ message: "No Polar connection found. Please connect your Polar account first." });
-      }
-      
-      // In a production environment, we would call the Polar API here using the connection credentials
-      // For demonstration purposes, we'll use some sample data
-      
-      // Get the last 60 days of health metrics from Polar
-      const today = new Date();
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - 7); // Get last week of data for demo
-      
-      const healthMetricData = [];
-      
-      // Generate sample data for the last 7 days
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        
-        healthMetricData.push({
-          user_id: req.user.id,
-          metric_date: date.toISOString().split('T')[0],
-          hrv_score: Math.floor(Math.random() * 30) + 45, // Random HRV between 45-75
-          resting_heart_rate: Math.floor(Math.random() * 10) + 52, // Random RHR between 52-62
-          sleep_quality: Math.floor(Math.random() * 4) + 6, // Random sleep quality between 6-10
-          sleep_duration: (Math.floor(Math.random() * 3) + 6) * 60, // Random sleep duration between 6-9 hours in minutes
-          energy_level: null, // We'll calculate this
-          stress_level: Math.floor(Math.random() * 6) + 2, // Random stress level between 2-8
-          source: "polar",
-          notes: "Imported from Polar",
-          created_at: new Date()
-        });
-      }
-      
-      // Insert the health metrics into the database
-      for (const metric of healthMetricData) {
-        await storage.addHealthMetric(metric);
-      }
-      
-      res.json({ count: healthMetricData.length });
-    } catch (error) {
-      console.error("Error importing health metrics from Polar:", error);
-      res.status(500).json({ message: "Failed to import health metrics from Polar" });
-    }
-  });
-
-  // Integration connections API - Simple implementation for demonstration
-  app.get("/api/integrations", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      // Return mock data for demonstration purposes
-      // In a real implementation, this would fetch from the platform_integrations table
-      const connections = [
-        { id: 1, platform: "strava", is_active: false, auto_sync: true, data_consent: false },
-        { id: 2, platform: "garmin", is_active: false, auto_sync: true, data_consent: false },
-        { id: 3, platform: "polar", is_active: false, auto_sync: true, data_consent: false },
-        { id: 4, platform: "google_fit", is_active: false, auto_sync: true, data_consent: false },
-        { id: 5, platform: "whoop", is_active: false, auto_sync: true, data_consent: false },
-        { id: 6, platform: "apple_health", is_active: false, auto_sync: true, data_consent: false },
-        { id: 7, platform: "fitbit", is_active: false, auto_sync: true, data_consent: false },
-      ];
-      res.json(connections);
-    } catch (error) {
-      console.error("Error fetching integrations:", error);
-      res.status(500).json({ error: "Failed to fetch integrations" });
-    }
-  });
-
-  app.get("/api/integrations/:platform", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const platform = req.params.platform;
-      const platforms = ["strava", "garmin", "polar", "google_fit", "whoop", "apple_health", "fitbit"];
-      
-      if (!platforms.includes(platform)) {
-        return res.status(404).json({ error: "Platform not supported" });
-      }
-      
-      // Return a mock connection for demonstration
-      // In a real implementation, this would fetch from the platform_integrations table
-      const connection = {
-        id: platforms.indexOf(platform) + 1,
-        platform: platform,
-        is_active: false,
-        auto_sync: true, 
-        data_consent: false,
-        last_synced: null
-      };
-      
-      res.json(connection);
-    } catch (error) {
-      console.error("Error fetching integration:", error);
-      res.status(500).json({ error: "Failed to fetch integration" });
-    }
-  });
-
-  app.post("/api/integrations", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const validation = insertIntegrationConnectionSchema.safeParse({
-        ...req.body,
-        user_id: req.user.id
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const connection = await storage.createIntegrationConnection(validation.data);
-      res.status(201).json(connection);
-    } catch (error) {
-      console.error("Error creating integration connection:", error);
-      res.status(500).json({ error: "Failed to create integration connection" });
-    }
-  });
-
-  app.patch("/api/integrations/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const connectionId = parseInt(req.params.id);
-      const updatedConnection = await storage.updateIntegrationConnection(connectionId, req.body);
-      res.json(updatedConnection);
-    } catch (error) {
-      console.error("Error updating integration connection:", error);
-      res.status(500).json({ error: "Failed to update integration connection" });
-    }
-  });
-
-  app.delete("/api/integrations/:platform", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const platform = req.params.platform;
-      await storage.removeIntegrationConnection(req.user.id, platform);
-      res.status(200).json({ message: `Successfully removed ${platform} integration` });
-    } catch (error) {
-      console.error("Error removing integration connection:", error);
-    }
-  });
-
-  // New endpoints for connecting to platforms and syncing data
-  app.post("/api/integrations/connect/:platform", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    try {
-      const platform = req.params.platform;
-      let authUrl;
-      
-      // Platform-specific connection logic
-      switch (platform) {
-        case "strava":
-          // Generate Strava OAuth URL
-          // In production, you'd use Strava's OAuth API
-          authUrl = `https://www.strava.com/oauth/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/integrations/callback/strava`)}&approval_prompt=force&scope=read,activity:read,activity:read_all`;
-          break;
-        case "garmin":
-          // Garmin Connect API OAuth process
-          authUrl = `/api/integrations/garmin/auth?userId=${req.user.id}`;
-          break;
-        case "polar":
-          // Polar Flow API OAuth process
-          authUrl = `https://flow.polar.com/oauth2/authorization?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/integrations/callback/polar`)}`;
-          break;
-        default:
-          return res.status(400).json({ error: `Unsupported platform: ${platform}` });
-      }
-      
-      res.json({ authUrl });
-    } catch (error) {
-      console.error(`Error connecting to ${req.params.platform}:`, error);
-      res.status(500).json({ error: `Failed to connect to ${req.params.platform}` });
-    }
-  });
-  
-  // OAuth callback handlers for each platform
-  app.get("/api/integrations/callback/:platform", async (req, res) => {
-    // Handle OAuth callback
-    const platform = req.params.platform;
-    const { code, error } = req.query;
-    
-    if (error) {
-      // Auth was denied or failed
-      return res.redirect(`/settings?tab=integrations&error=${error}`);
-    }
-    
-    if (!code) {
-      return res.redirect("/settings?tab=integrations&error=missing_code");
-    }
-    
-    try {
-      let tokenData;
-      
-      switch (platform) {
-        case "strava":
-          // Exchange code for token using Strava's API
-          // In production, you'd use actual API calls to Strava
-          tokenData = {
-            access_token: "sample_access_token",
-            refresh_token: "sample_refresh_token",
-            expires_at: new Date(Date.now() + 21600000), // 6 hours from now
-            athlete_id: "12345"
-          };
-          break;
-        case "garmin":
-          // Exchange code for token using Garmin's API
-          tokenData = {
-            access_token: "sample_access_token",
-            refresh_token: "sample_refresh_token",
-            expires_at: new Date(Date.now() + 3600000), // 1 hour from now
-            athlete_id: "67890"
-          };
-          break;
-        case "polar":
-          // Exchange code for token using Polar's API
-          tokenData = {
-            access_token: "sample_access_token",
-            refresh_token: "sample_refresh_token",
-            expires_at: new Date(Date.now() + 86400000), // 24 hours from now
-            athlete_id: "11223"
-          };
-          break;
-      }
-      
-      if (!req.isAuthenticated()) {
-        // If user is not logged in, store token in session for later
-        // In a real app, this would require more secure handling
-        req.session.pendingIntegration = { platform, tokenData };
-        return res.redirect("/auth?redirect=/settings?tab=integrations");
-      }
-      
-      // Create or update the integration connection
-      const connectionData = {
-        user_id: req.user.id,
-        platform,
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        token_expires_at: tokenData.expires_at,
-        athlete_id: tokenData.athlete_id,
-        is_active: true
-      };
-      
-      // Check if connection already exists
-      const existingConnection = await storage.getIntegrationConnection(req.user.id, platform);
-      
-      if (existingConnection) {
-        await storage.updateIntegrationConnection(existingConnection.id, connectionData);
-      } else {
-        await storage.createIntegrationConnection(connectionData);
-      }
-      
-      res.redirect(`/settings?tab=integrations&success=${platform}`);
-    } catch (error) {
-      console.error(`Error completing ${platform} integration:`, error);
-      res.redirect(`/settings?tab=integrations&error=integration_failed`);
-    }
-  });
-  
-  // Data sync endpoint for each integration
-  app.post("/api/integrations/sync/:platform", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const platform = req.params.platform;
-    
-    try {
-      // Get the integration connection
-      const connection = await storage.getIntegrationConnection(req.user.id, platform);
-      
-      if (!connection) {
-        return res.status(404).json({ error: `No ${platform} integration found` });
-      }
-      
-      if (!connection.is_active) {
-        return res.status(400).json({ error: `${platform} integration is not active` });
-      }
-      
-      // Check if token is expired and refresh if needed
-      const now = new Date();
-      if (connection.token_expires_at && new Date(connection.token_expires_at) < now) {
-        // Token is expired, refresh it
-        // In a real app, you'd call the platform's API to refresh the token
-        console.log(`Refreshing ${platform} token`);
-        
-        // Mock refreshed token
-        const refreshedToken = {
-          access_token: `new_${platform}_access_token`,
-          refresh_token: `new_${platform}_refresh_token`,
-          expires_at: new Date(Date.now() + 21600000), // 6 hours from now
-        };
-        
-        // Update the connection with new token
-        await storage.updateIntegrationConnection(connection.id, {
-          access_token: refreshedToken.access_token,
-          refresh_token: refreshedToken.refresh_token,
-          token_expires_at: refreshedToken.expires_at
-        });
-        
-        // Update our local connection object
-        connection.access_token = refreshedToken.access_token;
-      }
-      
-      // Platform-specific sync logic
-      let syncResults = { activities: 0, metrics: 0 };
-      
-      switch (platform) {
-        case "strava":
-          // Fetch activities from Strava
-          // In a real app, you'd use the Strava API client
-          syncResults = await syncStravaData(connection, req.user.id);
-          break;
-        case "garmin":
-          // Fetch data from Garmin Connect
-          syncResults = await syncGarminData(connection, req.user.id);
-          break;
-        case "polar":
-          // Fetch data from Polar Flow
-          syncResults = await syncPolarData(connection, req.user.id);
-          break;
-        case "google_fit":
-          // Fetch data from Google Fit
-          syncResults = await syncGoogleFitData(connection, req.user.id);
-          break;
-        case "whoop":
-          // Fetch data from WHOOP
-          syncResults = await syncWhoopData(connection, req.user.id);
-          break;
-        case "apple_health":
-          // Fetch data from Apple Health
-          syncResults = await syncAppleHealthData(connection, req.user.id);
-          break;
-        case "fitbit":
-          // Fetch data from Fitbit
-          syncResults = await syncFitbitData(connection, req.user.id);
-          break;
-      }
-      
-      // Update last_sync_at
-      await storage.updateIntegrationConnection(connection.id, {
-        last_sync_at: new Date()
-      });
-      
-      res.json({
-        success: true,
-        platform,
-        ...syncResults
-      });
-    } catch (error) {
-      console.error(`Error syncing data from ${platform}:`, error);
-      res.status(500).json({ error: `Failed to sync data from ${platform}` });
-    }
-  });
-  
-  // Subscription Plans API
-  app.get("/api/subscription-plans", async (req, res) => {
-    try {
-      const plans = await storage.getSubscriptionPlans();
-      res.json(plans);
-    } catch (error) {
-      console.error("Error fetching subscription plans:", error);
-      res.status(500).json({ error: "Failed to fetch subscription plans" });
-    }
-  });
-  
-  // Developer endpoint to activate premium subscription for testing
-  app.post("/api/dev/activate-premium", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "You must be logged in" });
-    }
-    
-    try {
-      const user = req.user;
-      
-      // Set subscription to active for 30 days
-      const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
-      
-      // Update user subscription status
-      await storage.updateUserSubscription(user.id, {
-        status: 'active',
-        endDate: endDate,
-        stripeSubscriptionId: 'dev_test_subscription'
-      });
-      
-      // Return updated user information
-      const updatedUser = await storage.getUser(user.id);
-      
-      res.json({
-        success: true,
-        message: "Premium features activated for testing",
-        expiresAt: endDate,
-        user: updatedUser
-      });
-    } catch (error) {
-      console.error("Error activating premium features:", error);
-      res.status(500).json({ error: "Failed to activate premium features" });
-    }
-  });
-  
-  // Development only endpoint to set subscription status for any user by ID without auth
-  // WARNING: This should be removed in production
-  app.post("/api/dev/set-premium/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      
-      // Set subscription to active for 30 days
-      const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      
-      // Update user subscription directly through storage interface
-      await storage.updateUserSubscription(userId, {
-        status: 'active',
-        endDate: endDate,
-        stripeSubscriptionId: 'dev_test_subscription',
-        planId: 2 // Annual plan
-      });
-      
-      // Get updated user
-      const updatedUser = await storage.getUser(userId);
-      
-      if (!updatedUser) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      
-      console.log("Set premium subscription for user ID:", userId);
-      res.json({ 
-        message: "Premium subscription activated for development",
-        user: updatedUser
-      });
-    } catch (error) {
-      console.error("Error setting premium subscription:", error);
-      res.status(500).json({ error: "Failed to set premium subscription" });
-    }
-  });
-
-  app.get("/api/subscription-plans/:id", async (req, res) => {
-    try {
-      const planId = parseInt(req.params.id);
-      const plan = await storage.getSubscriptionPlanById(planId);
-      
-      if (!plan) {
-        return res.status(404).json({ error: "Subscription plan not found" });
-      }
-      
-      res.json(plan);
-    } catch (error) {
-      console.error("Error fetching subscription plan:", error);
-      res.status(500).json({ error: "Failed to fetch subscription plan" });
-    }
-  });
-
-  app.post("/api/subscription-plans", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    // Check if the user is an admin 
-    // For now, we'll assume the first user is an admin
-    if (req.user.id !== 1) {
-      return res.status(403).json({ error: "Only admins can create subscription plans" });
-    }
-    
-    try {
-      const validation = insertSubscriptionPlanSchema.safeParse(req.body);
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      const plan = await storage.createSubscriptionPlan(validation.data);
-      res.status(201).json(plan);
-    } catch (error) {
-      console.error("Error creating subscription plan:", error);
-      res.status(500).json({ error: "Failed to create subscription plan" });
-    }
-  });
-  
-  // Seed subscription plans for development
-  app.post("/api/seed-subscription-plans", async (req, res) => {
-    try {
-      // Check if there are already subscription plans in the database
-      const existingPlans = await db.select().from(subscription_plans);
-      console.log("Existing plans:", existingPlans);
-      
-      if (existingPlans.length > 0) {
-        return res.status(200).json({ message: 'Subscription plans already exist. Skipping seed.', planCount: existingPlans.length });
-      }
-      
-      // Define the plans to insert
-      const plans = [
-        {
-          name: 'Premium Monthly',
-          description: 'Full access to all premium features with monthly billing',
-          price: '9.99',
-          billing_interval: 'month',
-          stripe_price_id: 'price_monthly', // Replace with actual Stripe price ID
-          features: JSON.stringify([
-            'Advanced training analytics',
-            'Custom training plans',
-            'Unlimited training history',
-            'AI-powered recommendations',
-            'Priority support',
-            'Early access to new features'
-          ]),
-          is_active: true
-        },
-        {
-          name: 'Premium Annual',
-          description: 'Full access to all premium features with annual billing (save 20%)',
-          price: '95.88',
-          billing_interval: 'year',
-          stripe_price_id: 'price_annual', // Replace with actual Stripe price ID
-          features: JSON.stringify([
-            'Advanced training analytics',
-            'Custom training plans',
-            'Unlimited training history',
-            'AI-powered recommendations',
-            'Priority support',
-            'Early access to new features',
-            'Exclusive annual subscriber benefits'
-          ]),
-          is_active: true
-        }
-      ];
-      
-      console.log("Plans to insert:", plans);
-      
-      // Insert plans into the database
-      const result = await db.insert(subscription_plans).values(plans);
-      console.log("Insert result:", result);
-      
-      return res.status(201).json({ message: 'Successfully seeded subscription plans!', planCount: plans.length });
-    } catch (error) {
-      console.error("Error seeding subscription plans:", error);
-      // More detailed error in the response
-      res.status(500).json({ 
-        error: "Failed to seed subscription plans", 
-        details: error instanceof Error ? error.message : String(error) 
-      });
-    }
-  });
-
-  // Stripe Subscription Endpoints
-  app.post("/api/create-payment-intent", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    if (!stripe) {
-      return res.status(500).json({ error: "Stripe integration is not configured" });
-    }
-    
-    try {
-      const { amount } = req.body;
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: "usd",
-        metadata: {
-          userId: req.user.id.toString()
-        }
-      });
-      
-      res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error: any) {
-      console.error("Error creating payment intent:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Cancel an active subscription
-  app.post('/api/cancel-subscription', requireAuth, async (req, res) => {
-    try {
-      const user = req.user as Express.User;
-      
-      if (!user.stripe_subscription_id) {
-        return res.status(400).json({ error: 'No active subscription found' });
-      }
-      
-      if (user.stripe_subscription_id === 'dev_test_subscription') {
-        await db.update(users)
-          .set({
-            subscription_status: null,
-            subscription_end_date: null,
-            stripe_subscription_id: null,
-            has_active_subscription: false,
-          })
-          .where(eq(users.id, user.id));
-          
-        return res.status(200).json({ message: 'Test subscription canceled' });
-      }
-      
-      // Cancel the subscription with Stripe
-      const subscription = await stripe.subscriptions.update(
-        user.stripe_subscription_id,
-        { cancel_at_period_end: true }
-      );
-      
-      // Update the user record with the subscription end date
-      await db.update(users)
-        .set({
-          subscription_end_date: new Date(subscription.cancel_at * 1000),
-        })
-        .where(eq(users.id, user.id));
-      
-      return res.status(200).json({ 
-        message: 'Subscription canceled',
-        cancelAt: new Date(subscription.cancel_at * 1000)
-      });
-    } catch (error: any) {
-      console.error('Error canceling subscription:', error);
-      return res.status(500).json({ error: error.message || 'Failed to cancel subscription' });
-    }
-  });
-
-  app.post('/api/get-or-create-subscription', async (req, res) => {
-    console.log("Subscription request received:", req.body);
-    
-    if (!req.isAuthenticated()) {
-      console.log("Unauthorized subscription request");
-      return res.sendStatus(401);
-    }
-    
-    if (!stripe) {
-      console.error("Stripe integration is not configured");
-      return res.status(500).json({ error: "Stripe integration is not configured" });
-    }
-    
-    let user = req.user;
-    console.log("User requesting subscription:", { id: user.id, hasStripeCustomerId: !!user.stripe_customer_id });
-    
-    try {
-      // If the user already has a subscription, retrieve it
-      if (user.stripe_subscription_id) {
-        try {
-          const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id) as ExpandedSubscription;
-        
-          let clientSecret = null;
-          const latestInvoice = subscription.latest_invoice;
-          
-          if (latestInvoice && typeof latestInvoice !== 'string') {
-            const paymentIntent = latestInvoice.payment_intent;
-            
-            if (typeof paymentIntent === 'string') {
-              const pi = await stripe.paymentIntents.retrieve(paymentIntent);
-              clientSecret = pi.client_secret;
-            } else if (paymentIntent) {
-              clientSecret = paymentIntent.client_secret;
-            }
-          }
-          
-          res.send({
-            subscriptionId: subscription.id,
-            clientSecret: clientSecret || undefined
-          });
-          
-          return;
-        } catch (stripeError: any) {
-          console.warn(`Stripe subscription ${user.stripe_subscription_id} not found, clearing invalid ID:`, stripeError.message);
-          // Clear the invalid subscription ID from the user record
-          await storage.updateUserSubscription(user.id, {
-            stripeSubscriptionId: null,
-            status: null
-          });
-          // Continue to create a new subscription
-        }
-      }
-      
-      // Create a new customer if needed
-      if (!user.stripe_customer_id) {
-        const customer = await stripe.customers.create({
-          email: user.email || undefined,
-          name: user.username,
-          metadata: {
-            userId: user.id.toString()
-          }
-        });
-        
-        user = await storage.updateUserSubscription(user.id, {
-          stripeCustomerId: customer.id
-        });
-      }
-      
-      // Validate there's a price ID
-      if (!req.body.priceId) {
-        return res.status(400).json({ error: "Price ID is required" });
-      }
-      
-      // We need to get the subscription plan to get the price information
-      const subscriptionPlan = await storage.getSubscriptionPlanByStripeId(req.body.priceId);
-      if (!subscriptionPlan) {
-        return res.status(400).json({ error: "Invalid price ID" });
-      }
-      
-      // Check if this is a placeholder price id
-      if (req.body.priceId === 'price_monthly' || req.body.priceId === 'price_annual') {
-        // Create a price in Stripe first
-        try {
-          // First create a product if it doesn't exist
-          const product = await stripe.products.create({
-            name: subscriptionPlan.name,
-            description: subscriptionPlan.description || undefined,
-          });
-          
-          // Create a price for the product
-          const price = await stripe.prices.create({
-            product: product.id,
-            unit_amount: Math.round(Number(subscriptionPlan.price) * 100), // Convert to cents
-            currency: 'usd',
-            recurring: {
-              interval: subscriptionPlan.billing_interval as 'month' | 'year',
-            },
-          });
-          
-          // Update the subscription plan in the database with the real Stripe price ID
-          await storage.updateSubscriptionPlan(subscriptionPlan.id, {
-            stripe_price_id: price.id,
-          });
-          
-          // Use the new price ID
-          req.body.priceId = price.id;
-          
-        } catch (error: any) {
-          console.error("Error creating Stripe product and price:", error);
-          return res.status(500).json({ 
-            error: { 
-              message: "Failed to create Stripe product and price",
-              details: error.message
-            } 
-          });
-        }
-      }
-      
-      // Create the subscription
-      console.log("Creating Stripe subscription with params:", {
-        customerId: user.stripe_customer_id,
-        priceId: req.body.priceId
-      });
-      
-      const subscription = await stripe.subscriptions.create({
-        customer: user.stripe_customer_id!,
-        items: [{
-          price: req.body.priceId,
-        }],
-        payment_behavior: 'default_incomplete',
-        payment_settings: { save_default_payment_method: 'on_subscription' },
-        expand: ['latest_invoice.payment_intent'],
-      }) as ExpandedSubscription;
-      
-      console.log("Subscription created:", {
-        id: subscription.id,
-        status: subscription.status,
-        hasLatestInvoice: !!subscription.latest_invoice,
-        latestInvoiceType: typeof subscription.latest_invoice
-      });
-      
-      // Update the user record with subscription info
-      await storage.updateUserSubscription(user.id, {
-        stripeSubscriptionId: subscription.id,
-        status: subscription.status
-      });
-      
-      // Get the client secret to complete the payment
-      let clientSecret = null;
-      const latestInvoice = subscription.latest_invoice;
-      
-      console.log("Processing latest invoice:", {
-        hasInvoice: !!latestInvoice,
-        invoiceType: typeof latestInvoice
-      });
-      
-      if (latestInvoice && typeof latestInvoice !== 'string') {
-        const paymentIntent = latestInvoice.payment_intent;
-        
-        console.log("Processing payment intent:", {
-          hasPaymentIntent: !!paymentIntent,
-          paymentIntentType: typeof paymentIntent
-        });
-        
-        if (typeof paymentIntent === 'string') {
-          console.log("Retrieving payment intent details for ID:", paymentIntent);
-          const pi = await stripe.paymentIntents.retrieve(paymentIntent);
-          clientSecret = pi.client_secret;
-          console.log("Retrieved client secret from payment intent");
-        } else if (paymentIntent && paymentIntent.client_secret) {
-          clientSecret = paymentIntent.client_secret;
-          console.log("Using embedded client secret from payment intent");
-        } else {
-          console.log("No payment intent or client secret found on invoice");
-          
-          // Attempt to retrieve a fresh payment intent
-          if (latestInvoice.id) {
-            try {
-              const retrievedInvoice = await stripe.invoices.retrieve(latestInvoice.id, {
-                expand: ['payment_intent']
-              });
-              
-              if (retrievedInvoice.payment_intent && 
-                  typeof retrievedInvoice.payment_intent !== 'string' && 
-                  retrievedInvoice.payment_intent.client_secret) {
-                clientSecret = retrievedInvoice.payment_intent.client_secret;
-                console.log("Retrieved client secret from fetched invoice payment intent");
-              }
-            } catch (error) {
-              console.error("Error retrieving invoice:", error);
-            }
-          }
-        }
-      } else {
-        console.log("No valid invoice found on subscription");
-      }
-      
-      // Create a payment intent if we don't have a client secret yet
-      if (!clientSecret) {
-        console.log("No client secret found, creating a setup intent instead");
-        try {
-          // For subscriptions, a SetupIntent is more appropriate than a PaymentIntent
-          // when we don't have a payment_intent from the subscription process
-          const setupIntent = await stripe.setupIntents.create({
-            customer: user.stripe_customer_id!,
-            payment_method_types: ['card'],
-            usage: 'off_session',
-            metadata: {
-              subscription_id: subscription.id,
-            },
-          });
-          
-          clientSecret = setupIntent.client_secret;
-          console.log("Created setup intent with client secret:", setupIntent.id);
-          
-          // Associate the setup intent with the subscription
-          await stripe.subscriptions.update(subscription.id, {
-            expand: ['latest_invoice.payment_intent'],
-            metadata: {
-              setup_intent_id: setupIntent.id
-            }
-          });
-        } catch (siError) {
-          console.error("Error creating setup intent:", siError);
-          
-          // Fallback to regular payment intent if setup intent fails
-          try {
-            const paymentIntent = await stripe.paymentIntents.create({
-              amount: Math.round(Number(subscriptionPlan.price) * 100), // Convert to cents
-              currency: 'usd',
-              customer: user.stripe_customer_id!,
-              setup_future_usage: 'off_session',
-              metadata: {
-                subscription_id: subscription.id,
-              },
-            });
-            
-            clientSecret = paymentIntent.client_secret;
-            console.log("Created fallback payment intent with client secret:", paymentIntent.id);
-          } catch (piError) {
-            console.error("Error creating fallback payment intent:", piError);
-          }
-        }
-      }
-      
-      // Final response with client secret
-      const responseData = {
-        subscriptionId: subscription.id,
-        clientSecret: clientSecret
-      };
-      
-      console.log("Sending subscription response:", responseData);
-      res.json(responseData);
-    } catch (error: any) {
-      console.error("Error creating subscription:", error);
-      return res.status(400).send({ error: { message: error.message } });
-    }
-  });
-
-  // Webhook to handle subscription updates
-  app.post('/api/webhook', async (req, res) => {
-    if (!stripe) {
-      return res.status(500).json({ error: "Stripe integration is not configured" });
-    }
-    
-    const signature = req.headers['stripe-signature'] as string;
-    
-    let event;
-    
-    try {
-      // This is just a placeholder - in a real app, you need to set up proper webhook secret verification
-      // const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-      // event = stripe.webhooks.constructEvent(req.body, signature, endpointSecret);
-      
-      // For now, just parse the body as a Stripe event
-      event = req.body;
-    } catch (err: any) {
-      console.error(`Webhook signature verification failed: ${err.message}`);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-    
-    // Handle the event
-    switch (event.type) {
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted':
-        const subscription = event.data.object as Stripe.Subscription;
-        // Get the customer ID
-        const customerId = subscription.customer as string;
-        
-        // Find the user with this stripe customer ID
-        const [user] = await db.select().from(users).where(eq(users.stripe_customer_id, customerId));
-        
-        if (user) {
-          // Update subscription status
-          await storage.updateUserSubscription(user.id, {
-            status: subscription.status,
-            endDate: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : undefined
-          });
-          console.log(`Updated subscription status to ${subscription.status} for user ${user.id}`);
-        }
-        break;
-        
-      case 'invoice.payment_succeeded':
-        const invoice = event.data.object as Stripe.Invoice;
-        
-        if (invoice.subscription && typeof invoice.subscription === 'string') {
-          try {
-            // Find the user with this subscription
-            const [userRow] = await db
-              .select()
-              .from(users)
-              .where(eq(users.stripe_subscription_id, invoice.subscription));
-            
-            if (userRow) {
-              console.log(`Processing successful payment for user ${userRow.id}`);
-              
-              // Get subscription details to calculate correct end date
-              const subDetails = await stripe.subscriptions.retrieve(invoice.subscription);
-              let endDate = new Date();
-              
-              if (subDetails.current_period_end) {
-                // Use the period end from subscription
-                endDate = new Date(subDetails.current_period_end * 1000);
-              } else {
-                // Calculate based on interval
-                const interval = subDetails.items.data[0]?.price?.recurring?.interval;
-                if (interval === 'month') {
-                  endDate = new Date(endDate.setMonth(endDate.getMonth() + 1));
-                } else if (interval === 'year') {
-                  endDate = new Date(endDate.setFullYear(endDate.getFullYear() + 1));
-                } else {
-                  // Default to 30 days
-                  endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                }
-              }
-              
-              // Update the subscription status to active with end date
-              await storage.updateUserSubscription(userRow.id, {
-                status: 'active',
-                endDate: endDate
-              });
-              console.log(`Updated subscription to active until ${endDate.toISOString()} for user ${userRow.id}`);
-            }
-          } catch (error) {
-            console.error('Error processing invoice payment success:', error);
-          }
-        }
-        break;
-        
-      case 'invoice.payment_failed':
-        const failedInvoice = event.data.object as Stripe.Invoice;
-        
-        if (failedInvoice.subscription && typeof failedInvoice.subscription === 'string') {
-          try {
-            // Find the user with this subscription
-            const [userRow] = await db
-              .select()
-              .from(users)
-              .where(eq(users.stripe_subscription_id, failedInvoice.subscription));
-            
-            if (userRow) {
-              console.log(`Updating subscription status to 'past_due' for user ${userRow.id}`);
-              
-              // Update the subscription status to past_due
-              await storage.updateUserSubscription(userRow.id, {
-                status: 'past_due'
-              });
-            }
-          } catch (error) {
-            console.error('Error processing invoice payment failure:', error);
-          }
-        }
-        break;
-        
-      case 'setup_intent.succeeded':
-        const setupIntent = event.data.object as Stripe.SetupIntent;
-        
-        try {
-          // Check for subscription ID in metadata
-          const subscriptionId = setupIntent.metadata?.subscription_id;
-          
-          if (subscriptionId) {
-            console.log(`Setup intent succeeded for subscription ${subscriptionId}`);
-            
-            // Get the payment method that was set up
-            const paymentMethodId = setupIntent.payment_method;
-            
-            if (paymentMethodId && typeof paymentMethodId === 'string') {
-              // Attach payment method to subscription
-              await stripe.subscriptions.update(subscriptionId, {
-                default_payment_method: paymentMethodId,
-              });
-              
-              // Find the user with this subscription
-              const [userRow] = await db
-                .select()
-                .from(users)
-                .where(eq(users.stripe_subscription_id, subscriptionId));
-              
-              if (userRow) {
-                console.log(`Payment method set up for user ${userRow.id}`);
-                
-                // Update subscription to active
-                await storage.updateUserSubscription(userRow.id, {
-                  status: 'active'
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error processing setup intent success:', error);
-        }
-        break;
-        
-      default:
-        console.log(`Unhandled event type ${event.type}`);
-    }
-    
-    // Return a 200 response to acknowledge receipt of the event
-    res.send({ received: true });
-  });
-
-  // AI Training Plan Generation API
-  app.post("/api/generate-training-plan", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    if (!openai) {
-      return res.status(503).json({ error: "AI service is not available. Missing API key." });
-    }
-
-    try {
-      const params = req.body;
-      
-      // Validate required parameters
-      if (!params.fitnessLevel || !params.availableDaysPerWeek) {
-        return res.status(400).json({ 
-          error: "Missing required parameters: fitnessLevel and availableDaysPerWeek are required" 
-        });
-      }
-
-      // Build the prompt
-      const prompt = `
-        As an experienced running coach, create a detailed training plan with the following specifications:
-        
-        USER PROFILE:
-        - Target Race: ${params.targetRace || 'General fitness'}
-        - Race Distance: ${params.raceDistance || 'Not specified'}
-        - Goal Time: ${params.goalTime || 'Completion'}
-        - Fitness Level: ${params.fitnessLevel}
-        - Current Weekly Mileage: ${params.currentWeeklyMileage || 'Not specified'} miles per week
-        - Available Days: ${params.availableDaysPerWeek} days per week
-        - Time Per Session: ${params.timePerSessionMinutes || 60} minutes
-        - Preferred Workout Types: ${params.preferredWorkoutTypes?.join(', ') || 'Any'}
-        - Injuries/Limitations: ${params.injuries?.join(', ') || 'None'}
-        - Age: ${params.userAge || 'Not specified'}
-        - Weight: ${params.userWeight || 'Not specified'} kg
-        - Height: ${params.userHeight || 'Not specified'} cm
-        - Start Date: ${params.startDate || 'Immediate'}
-        - End Date/Race Day: ${params.endDate || 'Not specified'}
-        
-        I need a comprehensive training plan in JSON format with the following structure:
-        
-        {
-          "overview": {
-            "title": "string",
-            "description": "string",
-            "weeklyMileage": "string",
-            "workoutsPerWeek": number,
-            "longRunDistance": "string",
-            "qualityWorkouts": number
-          },
-          "philosophy": "string explaining training approach",
-          "recommendedGear": ["string array of recommended gear"],
-          "nutritionTips": "string with nutrition guidance",
-          "weeklyPlans": [
-            {
-              "weekNumber": number,
-              "focus": "string explaining week's focus",
-              "totalMileage": "string",
-              "workouts": [
-                {
-                  "id": number,
-                  "day": "string - day of week",
-                  "type": "string - workout type",
-                  "description": "string",
-                  "duration": "string",
-                  "distance": "string",
-                  "intensity": "string - one of: easy, moderate, hard, recovery, race",
-                  "warmUp": "string",
-                  "mainSet": ["string array of main workout components"],
-                  "coolDown": "string",
-                  "notes": "string with special considerations"
-                }
-              ]
-            }
-          ]
-        }
-        
-        Make sure the response is in valid JSON format that can be parsed directly.
-      `;
-
-      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-      const result = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-        max_tokens: 1500
-      });
-      
-      // Try to parse the response as JSON
-      try {
-        const text = result.choices[0].message.content;
-        const trainingPlan = text ? JSON.parse(text) : {};
-        res.json(trainingPlan);
-      } catch (error) {
-        console.error("Error parsing AI response as JSON:", error);
-        
-        // If we couldn't parse as JSON, try to extract JSON portion
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            const jsonText = jsonMatch[0];
-            const trainingPlan = JSON.parse(jsonText);
-            res.json(trainingPlan);
-          } catch (jsonError) {
-            res.status(500).json({ 
-              error: "Failed to parse training plan. Please try again." 
-            });
-          }
-        } else {
-          res.status(500).json({ 
-            error: "Failed to generate a valid training plan. Please try again." 
-          });
-        }
-      }
-    } catch (error: any) {
-      console.error("Error generating training plan:", error);
-      res.status(500).json({ 
-        error: `Failed to generate training plan: ${error.message}` 
-      });
-    }
-  });
-
-  // Coach API endpoints
-  app.get("/api/coaching-sessions", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      // Check if user has an active subscription
-      const user = req.user;
-      
-      if (user.subscription_status !== "active") {
-        return res.status(403).json({ 
-          error: "Active subscription required to access coaching services" 
-        });
-      }
-      
-      const sessions = await storage.getCoachingSessions(user.id, 'athlete');
-      res.json(sessions);
-    } catch (error: any) {
-      console.error("Error fetching coaching sessions:", error);
-      res.status(500).json({ 
-        error: `Failed to fetch coaching sessions: ${error.message}` 
-      });
-    }
-  });
-
-  // Create new coaching session (for users with active subscription)
-  app.post("/api/coaching-sessions", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    try {
-      const user = req.user;
-      
-      // Verify subscription status
-      if (user.subscription_status !== "active") {
-        return res.status(403).json({ 
-          error: "Active subscription required to access coaching services" 
-        });
-      }
-      
-      const validation = insertCoachingSessionSchema.safeParse({
-        athlete_id: user.id,
-        coach_id: req.body.coach_id,
-        status: "active",
-        type: "coaching",
-        session_date: new Date(),
-        duration_minutes: 60,
-        notes: `Goals: ${req.body.goals || "Not specified"}\nQuestions: ${req.body.questions || "None"}`
-      });
-      
-      if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
-      }
-      
-      // Verify coach exists
-      const coach = await storage.getCoachById(validation.data.coach_id);
-      if (!coach) {
-        return res.status(404).json({ error: "Coach not found" });
-      }
-      
-      // Create coaching session
-      const session = await storage.createCoachingSession(validation.data);
-      
-      res.status(201).json(session);
-    } catch (error: any) {
-      console.error("Error creating coaching session:", error);
-      res.status(500).json({ 
-        error: `Failed to create coaching session: ${error.message}` 
-      });
-    }
-  });
-  
-  // Nutrition AI Recommendation System Routes
-  
-  // Get user's nutrition preferences
-  app.get("/api/nutrition/preferences/:userId", checkAuth, async (req, res) => {
-    try {
-      const { userId } = req.params;
-      
-      // Ensure user can only access their own preferences
-      if (parseInt(userId) !== req.user.id) {
-        return res.status(403).json({ error: "Unauthorized access to nutrition preferences" });
-      }
-      
-      const [preferences] = await db.select().from(nutrition_preferences)
-        .where(eq(nutrition_preferences.user_id, parseInt(userId)));
-      
-      if (!preferences) {
-        // Create default preferences for the user
-        const defaultPreferences = {
-          user_id: parseInt(userId),
-          dietary_restrictions: [],
-          excluded_foods: [],
-          preferred_foods: ["chicken", "rice", "vegetables", "fruit", "nuts", "eggs"],
-          calorie_target: 2500, // Better default for runners
-          protein_target: 140, // In grams
-          carbs_target: 350, // In grams
-          fat_target: 70, // In grams
-          meal_count: 4,
-          created_at: new Date(),
-          updated_at: new Date()
-        };
-        
-        try {
-          const [newPreferences] = await db.insert(nutrition_preferences)
-            .values(defaultPreferences)
-            .returning();
-            
-          console.log("Created default nutrition preferences for user:", userId);
-          return res.json(newPreferences);
-        } catch (insertError) {
-          console.error("Error creating default nutrition preferences:", insertError);
-          return res.status(500).json({ error: "Failed to create default nutrition preferences" });
-        }
-      }
-      
-      res.json(preferences);
-    } catch (error) {
-      console.error("Error fetching nutrition preferences:", error);
-      res.status(500).json({ error: "Failed to fetch nutrition preferences" });
-    }
-  });
-  
-  // Save or update nutrition preferences
-  app.post("/api/nutrition/preferences", checkAuth, async (req, res) => {
-    try {
-      const { user_id } = req.body;
-      
-      // Ensure user can only modify their own preferences
-      if (parseInt(user_id) !== req.user.id) {
-        return res.status(403).json({ error: "Unauthorized to modify these nutrition preferences" });
-      }
-      
-      // Check if preferences already exist
-      const [existingPreferences] = await db.select().from(nutrition_preferences)
-        .where(eq(nutrition_preferences.user_id, parseInt(user_id)));
-      
-      let savedPreferences;
-      
-      if (existingPreferences) {
-        // Update existing preferences
-        [savedPreferences] = await db.update(nutrition_preferences)
-          .set({
-            ...req.body,
-            updated_at: new Date()
-          })
-          .where(eq(nutrition_preferences.user_id, parseInt(user_id)))
-          .returning();
-      } else {
-        // Create new preferences
-        [savedPreferences] = await db.insert(nutrition_preferences)
-          .values(req.body)
-          .returning();
-      }
-      
-      res.status(201).json(savedPreferences);
-    } catch (error) {
-      console.error("Error saving nutrition preferences:", error);
-      res.status(500).json({ error: "Failed to save nutrition preferences" });
-    }
-  });
-  
-  // Get meal plan for a specific date
-  app.get("/api/nutrition/meal-plans/:userId/:date", checkAuth, async (req, res) => {
-    try {
-      const { userId, date } = req.params;
-      
-      // Ensure user can only access their own meal plans
-      if (parseInt(userId) !== req.user.id) {
-        return res.status(403).json({ error: "Unauthorized access to meal plans" });
-      }
-      
-      // First get the meal plan
-      const [mealPlan] = await db.select().from(meal_plans)
-        .where(and(
-          eq(meal_plans.user_id, parseInt(userId)),
-          eq(meal_plans.plan_date, date),
-          eq(meal_plans.is_active, true)
-        ));
-      
-      if (!mealPlan) {
-        return res.status(404).json({ error: "Meal plan not found" });
-      }
-      
-      // Get all meals for this plan
-      const mealsList = await db.select().from(meals)
-        .where(eq(meals.meal_plan_id, mealPlan.id));
-      
-      // Get all food items for these meals
-      const foodItemsMap = new Map();
-      for (const meal of mealsList) {
-        const mealFoodItems = await db.select({
-          mealFoodItem: meal_food_items,
-          foodItem: food_items
-        })
-        .from(meal_food_items)
-        .innerJoin(food_items, eq(meal_food_items.food_item_id, food_items.id))
-        .where(eq(meal_food_items.meal_id, meal.id));
-        
-        foodItemsMap.set(meal.id, mealFoodItems.map(item => ({
-          ...item.foodItem,
-          quantity: item.mealFoodItem.quantity
-        })));
-      }
-      
-      // Construct the response
-      const result = {
-        ...mealPlan,
-        meals: mealsList.map(meal => ({
-          ...meal,
-          foodItems: foodItemsMap.get(meal.id) || []
-        }))
-      };
-      
-      res.json(result);
-    } catch (error) {
-      console.error("Error fetching meal plan:", error);
-      res.status(500).json({ error: "Failed to fetch meal plan" });
-    }
-  });
-  
-  // List food items by category
-  app.get("/api/nutrition/food-items/:category", checkAuth, async (req, res) => {
-    try {
-      const { category } = req.params;
-      
-      const foodItemsList = await db.select().from(food_items)
-        .where(eq(food_items.category, category))
-        .limit(100);
-      
-      res.json(foodItemsList);
-    } catch (error) {
-      console.error(`Error fetching food items for category ${req.params.category}:`, error);
-      res.status(500).json({ error: "Failed to fetch food items" });
-    }
-  });
-  
-  // Search food items
-  app.get("/api/nutrition/food-items/search", checkAuth, async (req, res) => {
-    try {
-      const query = req.query.q as string;
-      
-      if (!query || query.length < 2) {
-        return res.status(400).json({ error: "Search query must be at least 2 characters" });
-      }
-      
-      const searchResults = await db.select().from(food_items)
-        .where(like(food_items.name, `%${query}%`))
-        .limit(50);
-      
-      res.json(searchResults);
-    } catch (error) {
-      console.error("Error searching food items:", error);
-      res.status(500).json({ error: "Failed to search food items" });
-    }
-  });
-  
-  // Generate AI meal plan recommendations
-  app.post("/api/nutrition/generate", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    // Check subscription status
-    if (req.user.subscription_status !== 'active') {
-      return res.status(403).json({ 
-        error: "Subscription required", 
-        message: "AI meal plan generation requires an active subscription" 
-      });
-    }
-    try {
-      const deepSeekEnabled = process.env.DEEPSEEK_API_KEY ? true : false;
-      
-      // Check if we have any AI service available
-      if (!openai && !deepSeekEnabled) {
-        return res.status(503).json({ error: "AI service is not available" });
-      }
-      
-      const {
-        userId,
-        date,
-        trainingLoad,
-        userPreferences,
-        activityLevel,
-        fitnessGoals,
-        healthConditions,
-        recoverySituation,
-        useWeeklyMealPlanning
-      } = req.body;
-      
-      // Ensure user can only generate meal plans for themselves
-      if (parseInt(userId) !== req.user.id) {
-        return res.status(403).json({ error: "Unauthorized to generate meal plans for this user" });
-      }
-      
-      // Get user height and weight from database if available
-      const [userDetails] = await db.select().from(users).where(eq(users.id, parseInt(userId)));
-      
-      // Prepare the context for the AI
-      const context = `
-      You are a professional sports nutritionist specializing in endurance athletes, particularly runners.
-      Create a detailed meal plan optimized for an athlete with the following profile:
-      
-      Date: ${date}
-      ${userDetails.weight ? `Weight: ${userDetails.weight} kg` : ''}
-      ${userDetails.height ? `Height: ${userDetails.height} cm` : ''}
-      Training Load: ${trainingLoad}
-      Activity Level: ${activityLevel}
-      Fitness Goals: ${fitnessGoals.join(", ")}
-      ${healthConditions ? `Health Conditions: ${healthConditions.join(", ")}` : ""}
-      ${recoverySituation ? `Recovery Situation: ${recoverySituation}` : ""}
-      
-      Dietary Preferences:
-      ${userPreferences.dietaryRestrictions ? `Dietary Restrictions: ${Array.isArray(userPreferences.dietaryRestrictions) ? userPreferences.dietaryRestrictions.join(", ") : userPreferences.dietaryRestrictions}` : "No specific dietary restrictions"}
-      
-      Special Diet Needs (if any):
-      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('keto'))) || 
-        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('keto')) ? 
-        'Follow ketogenic diet principles: high fat (70-80%), moderate protein (15-20%), very low carb (5-10%)' : ''}
-      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('vegan'))) || 
-        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('vegan')) ? 
-        'Follow vegan diet principles: exclude all animal products including meat, dairy, eggs, and honey' : ''}
-      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('lactose'))) || 
-        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('lactose')) ? 
-        'Avoid all lactose-containing foods: milk, most cheeses, ice cream, and many processed foods with milk ingredients' : ''}
-      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('gluten'))) || 
-        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('gluten')) ? 
-        'Avoid all gluten-containing foods: wheat, barley, rye, and products made with these grains' : ''}
-      ${(Array.isArray(userPreferences.dietaryRestrictions) && userPreferences.dietaryRestrictions.some(r => r?.toLowerCase()?.includes('paleo'))) || 
-        (typeof userPreferences.dietaryRestrictions === 'string' && userPreferences.dietaryRestrictions?.toLowerCase()?.includes('paleo')) ? 
-        'Follow paleolithic diet principles: include lean meats, fish, fruits, vegetables, nuts and seeds; exclude dairy, grains, processed foods, legumes' : ''}
-      
-      ${userPreferences.allergies ? `Allergies: ${Array.isArray(userPreferences.allergies) ? userPreferences.allergies.join(", ") : userPreferences.allergies}` : "No allergies"}
-      ${userPreferences.dislikedFoods ? `Dislikes: ${Array.isArray(userPreferences.dislikedFoods) ? userPreferences.dislikedFoods.join(", ") : userPreferences.dislikedFoods}` : ""}
-      ${userPreferences.favoriteFoods ? `Favorites: ${Array.isArray(userPreferences.favoriteFoods) ? userPreferences.favoriteFoods.join(", ") : userPreferences.favoriteFoods}` : ""}
-      
-      Nutrition Targets:
-      ${userPreferences.calorieGoal ? `Calories: ${userPreferences.calorieGoal} calories` : ""}
-      ${userPreferences.proteinGoal ? `Protein: ${userPreferences.proteinGoal}%` : ""}
-      ${userPreferences.carbsGoal ? `Carbs: ${userPreferences.carbsGoal}%` : ""}
-      ${userPreferences.fatGoal ? `Fat: ${userPreferences.fatGoal}%` : ""}
-      
-      Please create a ${useWeeklyMealPlanning ? 'weekly' : 'daily'} meal plan with detailed macronutrient information.
-      For each meal, provide:
-      1. Meal name and type (breakfast, lunch, dinner, snack)
-      2. List of ingredients with quantities
-      3. Nutritional information (calories, protein, carbs, fat)
-      4. Simple recipe instructions
-      
-      Ensure the meals are practical for an athlete, focus on whole foods, and align with the training load for the day.
-      For heavy training days, include more carbohydrates. For recovery days, emphasize protein and anti-inflammatory foods.
-      
-      Return ONLY the meal plan in JSON format with the following structure:
-      {
-        "dailyPlan": {
-          "calories": number,
-          "protein": number,
-          "carbs": number,
-          "fat": number,
-          "hydration": number,
-          "meals": [
-            {
-              "name": string,
-              "mealType": string,
-              "timeOfDay": string,
-              "calories": number,
-              "protein": number,
-              "carbs": number,
-              "fat": number,
-              "foods": [
-                {
-                  "name": string,
-                  "quantity": number,
-                  "servingUnit": string,
-                  "calories": number,
-                  "protein": number,
-                  "carbs": number,
-                  "fat": number
-                }
-              ],
-              "recipe": string,
-              "preparationTime": number
-            }
-          ]
-        },
-        "weeklyPlans": [...] (only if weeklyPlanning is true),
-        "notes": string
-      }
-      `;
-      
-      // Generate the AI meal plan
-      let text;
-      
-      try {
-        // First try OpenAI if available
-        if (openai) {
-          try {
-            console.log("Generating meal plan with OpenAI");
-            // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-            const result = await openai.chat.completions.create({
-              model: "gpt-4o",
-              messages: [{ role: "user", content: context }],
-              temperature: 0.7,
-              response_format: { type: "json_object" },
-              max_tokens: 2000
-            });
-            text = result.choices[0].message.content;
-            console.log("Successfully generated meal plan with OpenAI");
-          } catch (openaiError) {
-            console.error("OpenAI error:", openaiError.message || openaiError);
-            
-            // Check if we hit a quota limit
-            if (openaiError.status === 429 || 
-                (openaiError.message && openaiError.message.includes('quota'))) {
-              console.log("OpenAI quota exceeded, falling back to DeepSeek API");
-              throw new Error("QUOTA_EXCEEDED");
-            } else {
-              throw openaiError; // Re-throw if it's not a quota issue
-            }
-          }
-        } else if (process.env.DEEPSEEK_API_KEY) {
-          // OpenAI not available, use DeepSeek directly
-          throw new Error("USE_DEEPSEEK");
-        } else {
-          return res.status(503).json({ 
-            error: "AI service unavailable",
-            message: "No AI service is currently available. Please try again later."
-          });
-        }
-      } catch (error) {
-        // If we need to use DeepSeek as fallback
-        if ((error.message === "QUOTA_EXCEEDED" || error.message === "USE_DEEPSEEK") && process.env.DEEPSEEK_API_KEY) {
-          try {
-            console.log("Generating meal plan with DeepSeek API");
-            
-            const deepseekResponse = await axios.post(
-              'https://api.deepseek.com/v1/chat/completions',
-              {
-                model: "deepseek-chat",
-                messages: [
-                  {
-                    role: "system",
-                    content: "You are a professional sports nutritionist specializing in endurance athletes. Respond with valid JSON."
-                  },
-                  {
-                    role: "user",
-                    content: context
-                  }
-                ],
-                temperature: 0.7,
-                max_tokens: 4000,
-                response_format: { type: "json_object" }
-              },
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-                }
-              }
-            );
-            
-            text = deepseekResponse.data.choices[0].message.content;
-            console.log("Successfully generated meal plan with DeepSeek API");
-          } catch (deepseekError) {
-            console.error("DeepSeek API error:", deepseekError.message || deepseekError);
-            return res.status(429).json({ 
-              error: "AI service quota exceeded",
-              message: "All AI services are currently at capacity. Please try again later."
-            });
-          }
-        } else {
-          // Handle rate limiting specifically
-          if (error.status === 429 || (error.response && error.response.status === 429)) {
-            return res.status(429).json({ 
-              error: "AI service quota exceeded",
-              message: "AI quota limit reached. Please try again later."
-            });
-          } else {
-            console.error("Error generating AI meal plan:", error);
-            return res.status(500).json({ 
-              error: "Failed to generate AI meal plan",
-              message: "An unexpected error occurred with the AI service. Please try again."
-            });
-          }
-        }
-      }
-      
-      // Parse the JSON response
-      try {
-        // Find the JSON object in the text (in case the model added explanatory text)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error("No JSON found in the response");
-        }
-        
-        const mealPlan = JSON.parse(jsonMatch[0]);
-        
-        // Create a record of this meal plan in the database
-        try {
-          // Create a base meal plan record
-          const [savedMealPlan] = await db.insert(meal_plans)
-            .values({
-              user_id: req.user.id,
-              plan_date: date,
-              plan_type: 'AI_generated',
-              is_active: true,
-              total_calories: mealPlan.dailyPlan.calories || 0,
-              total_protein: mealPlan.dailyPlan.protein || 0,
-              total_carbs: mealPlan.dailyPlan.carbs || 0,
-              total_fat: mealPlan.dailyPlan.fat || 0,
-              created_at: new Date(),
-              updated_at: new Date(),
-              plan_data: mealPlan
-            })
-            .returning();
-            
-          console.log("Saved meal plan to database with ID:", savedMealPlan.id);
-          
-          // Include the ID in the response
-          mealPlan.id = savedMealPlan.id;
-          mealPlan.date = date;
-        } catch (dbError) {
-          console.error("Error saving meal plan to database:", dbError);
-          // We'll still return the generated plan even if saving failed
-        }
-        
-        res.json(mealPlan);
-      } catch (parseError) {
-        console.error("Error parsing AI response:", parseError);
-        console.log("Raw AI response:", text);
-        res.status(500).json({ 
-          error: "Failed to parse AI meal plan",
-          rawResponse: text
-        });
-      }
-    } catch (error: any) {
-      console.error("Error generating AI meal plan:", error);
-      
-      // Check if it's a quota error from OpenAI API or DeepSeek API
-      if (error?.status === 429 || 
-          (error?.message && error?.message.includes('quota')) ||
-          (error?.response?.status === 429)) {
-        
-        let retryAfter = 60; // Default retry time in seconds
-        
-        // Handle OpenAI specific retry info
-        if (error.errorDetails && Array.isArray(error.errorDetails)) {
-          const retryInfo = error.errorDetails.find((detail: any) => 
-            detail['@type'] && detail['@type'].includes('RetryInfo')
-          );
-          
-          if (retryInfo && retryInfo.retryDelay) {
-            // Extract seconds from format like "50s"
-            const match = retryInfo.retryDelay.match(/(\d+)s/);
-            if (match && match[1]) {
-              retryAfter = parseInt(match[1], 10);
-            }
-          }
-        }
-        
-        // Check for DeepSeek specific retry header
-        if (error.response?.headers?.['retry-after']) {
-          retryAfter = parseInt(error.response.headers['retry-after'], 10);
-        }
-        
-        return res.status(429).json({ 
-          error: "AI service quota exceeded. Please try again later.",
-          quotaExceeded: true,
-          retryAfter: retryAfter
-        });
-      }
-      
-      res.status(500).json({ error: "Failed to generate AI meal plan" });
-    }
-  });
-  
-  // Save meal plan to database
-  app.post("/api/nutrition/save-plan", checkAuth, async (req, res) => {
-    try {
-      const { mealPlan, meals, foodItems } = req.body;
-      
-      // Ensure user can only save meal plans for themselves
-      if (parseInt(mealPlan.user_id) !== req.user.id) {
-        return res.status(403).json({ error: "Unauthorized to save meal plans for this user" });
-      }
-      
-      // Start a transaction
-      return await db.transaction(async (tx) => {
-        // First insert (or update) the meal plan
-        let savedMealPlanId;
-        
-        // Check if a meal plan already exists for this date
-        const [existingPlan] = await tx.select().from(meal_plans)
-          .where(and(
-            eq(meal_plans.user_id, parseInt(mealPlan.user_id)),
-            eq(meal_plans.plan_date, mealPlan.plan_date)
-          ));
-        
-        if (existingPlan) {
-          // Deactivate the existing plan
-          await tx.update(meal_plans)
-            .set({ is_active: false })
-            .where(eq(meal_plans.id, existingPlan.id));
-        }
-        
-        // Insert the new meal plan
-        const [savedMealPlan] = await tx.insert(meal_plans)
-          .values(mealPlan)
-          .returning();
-        
-        savedMealPlanId = savedMealPlan.id;
-        
-        // Insert each meal
-        const savedMeals = [];
-        for (const meal of meals) {
-          const mealToSave = {
-            ...meal,
-            meal_plan_id: savedMealPlanId
-          };
-          
-          const [savedMeal] = await tx.insert(meals)
-            .values(mealToSave)
-            .returning();
-          
-          savedMeals.push(savedMeal);
-          
-          // Get meal's food items
-          const mealFoodItems = foodItems.filter(item => item.mealId === meal.tempId);
-          
-          // Insert each food item
-          for (const foodItem of mealFoodItems) {
-            // Check if food item already exists
-            let foodItemId;
-            const [existingFoodItem] = await tx.select().from(food_items)
-              .where(eq(food_items.name, foodItem.name));
-            
-            if (existingFoodItem) {
-              foodItemId = existingFoodItem.id;
-            } else {
-              // If not, insert it
-              const itemToSave = {
-                name: foodItem.name,
-                category: foodItem.category || 'other',
-                calories: foodItem.calories,
-                protein: foodItem.protein,
-                carbs: foodItem.carbs,
-                fat: foodItem.fat,
-                serving_size: foodItem.servingSize || '1',
-                serving_unit: foodItem.servingUnit || 'serving'
-              };
-              
-              const [savedFoodItem] = await tx.insert(food_items)
-                .values(itemToSave)
-                .returning();
-              
-              foodItemId = savedFoodItem.id;
-            }
-            
-            // Connect food item to meal
-            await tx.insert(meal_food_items)
-              .values({
-                meal_id: savedMeal.id,
-                food_item_id: foodItemId,
-                quantity: foodItem.quantity || 1
-              });
-          }
-        }
-        
-        res.status(201).json({
-          mealPlan: savedMealPlan,
-          meals: savedMeals
-        });
-      });
-    } catch (error) {
-      console.error("Error saving meal plan:", error);
-      res.status(500).json({ error: "Failed to save meal plan" });
-    }
-  });
-
-  // Third-party fitness platform integrations
-  // Route to get all user integrations
-  app.get('/api/integrations', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      
-      // Get all integration connections for the user
-      const connections = await db.select()
-        .from(integration_connections)
-        .where(eq(integration_connections.user_id, userId));
-      
-      // Format response as key-value object with platform names as keys
-      const result: Record<string, boolean> = {
-        strava: false,
-        garmin: false,
-        polar: false
-      };
-      
-      connections.forEach(connection => {
-        if (connection.is_active) {
-          result[connection.platform] = true;
-        }
-      });
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error fetching integrations:', error);
-      res.status(500).json({ error: 'Failed to fetch integrations' });
-    }
-  });
-  
-  // Route to get sync status for a specific platform
-  app.get('/api/integrations/:platform/sync-status', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const platform = req.params.platform;
-      
-      // Get the integration connection
-      const [connection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform),
-          eq(integration_connections.is_active, true)
-        ));
-      
-      if (!connection) {
-        return res.status(404).json({ error: 'Integration not found' });
-      }
-      
-      // Get the most recent successful sync log
-      const [lastSuccessfulSync] = await db.select()
-        .from(sync_logs)
-        .where(and(
-          eq(sync_logs.user_id, userId),
-          eq(sync_logs.platform, platform),
-          eq(sync_logs.status, 'completed')
-        ))
-        .orderBy(desc(sync_logs.sync_end_time))
-        .limit(1);
-      
-      res.json({
-        lastSynced: connection.last_sync_at?.toISOString() || null,
-        autoSync: connection.auto_sync,
-        syncFrequency: connection.sync_frequency,
-        activitiesSynced: lastSuccessfulSync ? lastSuccessfulSync.activities_synced : 0
-      });
-    } catch (error) {
-      console.error(`Error fetching sync status for ${req.params.platform}:`, error);
-      res.status(500).json({ error: `Failed to fetch sync status for ${req.params.platform}` });
-    }
-  });
-  
-  // Route to authenticate with Strava
-  app.post('/api/integrations/strava/authenticate', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const { code } = req.body;
-      
-      if (!code) {
-        return res.status(400).json({ error: 'Authorization code is required' });
-      }
-      
-      // Exchange authorization code for access token
-      const tokenResponse = await axios.post('https://www.strava.com/oauth/token', {
-        client_id: process.env.STRAVA_CLIENT_ID,
-        client_secret: process.env.STRAVA_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code'
-      });
-      
-      const { access_token, refresh_token, expires_at, athlete } = tokenResponse.data;
-      
-      // Check if connection already exists
-      const [existingConnection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'strava')
-        ));
-      
-      if (existingConnection) {
-        // Update existing connection
-        await db.update(integration_connections)
-          .set({
-            access_token,
-            refresh_token,
-            token_expires_at: new Date(expires_at * 1000),
-            is_active: true,
-            updated_at: new Date()
-          })
-          .where(eq(integration_connections.id, existingConnection.id));
-      } else {
-        // Create new connection
-        await db.insert(integration_connections).values({
-          user_id: userId,
-          platform: 'strava',
-          access_token,
-          refresh_token,
-          token_expires_at: new Date(expires_at * 1000),
-          athlete_id: athlete.id.toString(),
-          is_active: true,
-          auto_sync: true,
-          sync_frequency: 'daily'
-        });
-      }
-      
-      // Create sync log entry
-      await db.insert(sync_logs).values({
-        user_id: userId,
-        platform: 'strava',
-        sync_start_time: new Date(),
-        status: 'in_progress'
-      });
-      
-      // Initiate background sync process
-      void syncStravaData({ userId, access_token, refresh_token, expires_at });
-      
-      res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error('Error authenticating with Strava:', error);
-      res.status(500).json({ 
-        error: 'Failed to authenticate with Strava',
-        details: error.response?.data || error.message
-      });
-    }
-  });
-  
-  // Route to authenticate with Garmin
-  app.post('/api/integrations/garmin/authenticate', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const { code } = req.body;
-      
-      if (!code) {
-        return res.status(400).json({ error: 'Authorization code is required' });
-      }
-      
-      // Exchange authorization code for access token
-      // Note: Garmin's OAuth implementation is different from the standard
-      // This is a simplified example - in reality, you'd need to follow Garmin's specific API
-      const tokenResponse = await axios.post('https://connectapi.garmin.com/oauth-service/oauth/token', {
-        client_id: process.env.GARMIN_CLIENT_ID,
-        client_secret: process.env.GARMIN_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code'
-      });
-      
-      const { access_token, refresh_token, expires_in, user_id: athleteId } = tokenResponse.data;
-      
-      // Calculate expiration time
-      const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + expires_in);
-      
-      // Check if connection already exists
-      const [existingConnection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'garmin')
-        ));
-      
-      if (existingConnection) {
-        // Update existing connection
-        await db.update(integration_connections)
-          .set({
-            access_token,
-            refresh_token,
-            token_expires_at: expiresAt,
-            is_active: true,
-            updated_at: new Date()
-          })
-          .where(eq(integration_connections.id, existingConnection.id));
-      } else {
-        // Create new connection
-        await db.insert(integration_connections).values({
-          user_id: userId,
-          platform: 'garmin',
-          access_token,
-          refresh_token,
-          token_expires_at: expiresAt,
-          athlete_id: athleteId.toString(),
-          is_active: true,
-          auto_sync: true,
-          sync_frequency: 'daily'
-        });
-      }
-      
-      // Create sync log entry
-      await db.insert(sync_logs).values({
-        user_id: userId,
-        platform: 'garmin',
-        sync_start_time: new Date(),
-        status: 'in_progress'
-      });
-      
-      // Initiate background sync process
-      void syncGarminData({ userId, access_token, refresh_token, expires_at: expiresAt.getTime() / 1000 });
-      
-      res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error('Error authenticating with Garmin:', error);
-      res.status(500).json({ 
-        error: 'Failed to authenticate with Garmin',
-        details: error.response?.data || error.message 
-      });
-    }
-  });
-  
-  // Route to authenticate with Polar
-  app.post('/api/integrations/polar/authenticate', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const { code } = req.body;
-      
-      if (!code) {
-        return res.status(400).json({ error: 'Authorization code is required' });
-      }
-      
-      // Exchange authorization code for access token
-      const tokenResponse = await axios.post('https://polarremote.com/v2/oauth2/token', {
-        client_id: process.env.POLAR_CLIENT_ID,
-        client_secret: process.env.POLAR_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code'
-      });
-      
-      const { access_token, x_user_id } = tokenResponse.data;
-      
-      // Polar tokens don't expire, so we don't need to store an expiration time
-      
-      // Check if connection already exists
-      const [existingConnection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, 'polar')
-        ));
-      
-      if (existingConnection) {
-        // Update existing connection
-        await db.update(integration_connections)
-          .set({
-            access_token,
-            is_active: true,
-            updated_at: new Date()
-          })
-          .where(eq(integration_connections.id, existingConnection.id));
-      } else {
-        // Create new connection
-        await db.insert(integration_connections).values({
-          user_id: userId,
-          platform: 'polar',
-          access_token,
-          athlete_id: x_user_id,
-          is_active: true,
-          auto_sync: true,
-          sync_frequency: 'daily'
-        });
-      }
-      
-      // Create sync log entry
-      await db.insert(sync_logs).values({
-        user_id: userId,
-        platform: 'polar',
-        sync_start_time: new Date(),
-        status: 'in_progress'
-      });
-      
-      // Initiate background sync process
-      void syncPolarData({ userId, access_token });
-      
-      res.status(200).json({ success: true });
-    } catch (error: any) {
-      console.error('Error authenticating with Polar:', error);
-      res.status(500).json({ 
-        error: 'Failed to authenticate with Polar',
-        details: error.response?.data || error.message 
-      });
-    }
-  });
-  
-  // Route to disconnect an integration
-  app.delete('/api/integrations/:platform', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const platform = req.params.platform;
-      
-      // Update the connection to inactive
-      await db.update(integration_connections)
-        .set({ 
-          is_active: false,
-          updated_at: new Date()
-        })
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform)
-        ));
-      
-      res.status(200).json({ success: true });
-    } catch (error) {
-      console.error(`Error disconnecting ${req.params.platform}:`, error);
-      res.status(500).json({ error: `Failed to disconnect ${req.params.platform}` });
-    }
-  });
-  
-  // Route to manually sync activities from a platform
-  app.post('/api/integrations/:platform/sync', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const platform = req.params.platform;
-      const { forceSync = false } = req.body;
-      
-      // Get the integration connection
-      const [connection] = await db.select()
-        .from(integration_connections)
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform),
-          eq(integration_connections.is_active, true)
-        ));
-      
-      if (!connection) {
-        return res.status(404).json({ error: 'Integration not found or not active' });
-      }
-      
-      // Create sync log entry
-      const [syncLog] = await db.insert(sync_logs)
-        .values({
-          user_id: userId,
-          platform: platform,
-          sync_start_time: new Date(),
-          status: 'in_progress'
-        })
-        .returning();
-      
-      // Initiate sync based on platform
-      let syncPromise;
-      
-      switch (platform) {
-        case 'strava':
-          syncPromise = syncStravaData({
-            userId,
-            access_token: connection.access_token,
-            refresh_token: connection.refresh_token,
-            expires_at: connection.token_expires_at?.getTime() ? connection.token_expires_at.getTime() / 1000 : undefined,
-            forceSync,
-            syncLogId: syncLog.id
-          });
-          break;
-          
-        case 'garmin':
-          syncPromise = syncGarminData({
-            userId,
-            access_token: connection.access_token,
-            refresh_token: connection.refresh_token,
-            expires_at: connection.token_expires_at?.getTime() ? connection.token_expires_at.getTime() / 1000 : undefined,
-            forceSync,
-            syncLogId: syncLog.id
-          });
-          break;
-          
-        case 'polar':
-          syncPromise = syncPolarData({
-            userId,
-            access_token: connection.access_token,
-            forceSync,
-            syncLogId: syncLog.id
-          });
-          break;
-          
-        default:
-          return res.status(400).json({ error: 'Unsupported platform' });
-      }
-      
-      // We don't await the sync to complete, as it may take time
-      void syncPromise;
-      
-      // Respond immediately with the sync initiation status
-      res.status(200).json({ 
-        message: 'Sync initiated',
-        syncId: syncLog.id,
-        estimatedTimeInSeconds: 30 // Estimated time for sync to complete
-      });
-    } catch (error) {
-      console.error(`Error initiating sync for ${req.params.platform}:`, error);
-      res.status(500).json({ error: `Failed to initiate sync for ${req.params.platform}` });
-    }
-  });
-  
-  // Route to update sync settings for a platform
-  app.patch('/api/integrations/:platform/settings', checkAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const platform = req.params.platform;
-      const { autoSync, syncFrequency } = req.body;
-      
-      // Validate input
-      if (typeof autoSync !== 'boolean') {
-        return res.status(400).json({ error: 'autoSync must be a boolean' });
-      }
-      
-      if (syncFrequency && !['daily', 'realtime'].includes(syncFrequency)) {
-        return res.status(400).json({ error: 'syncFrequency must be either "daily" or "realtime"' });
-      }
-      
-      // Update the connection settings
-      await db.update(integration_connections)
-        .set({ 
-          auto_sync: autoSync,
-          ...(syncFrequency && { sync_frequency: syncFrequency }),
-          updated_at: new Date()
-        })
-        .where(and(
-          eq(integration_connections.user_id, userId),
-          eq(integration_connections.platform, platform),
-          eq(integration_connections.is_active, true)
-        ));
-      
-      res.status(200).json({ success: true });
-    } catch (error) {
-      console.error(`Error updating sync settings for ${req.params.platform}:`, error);
-      res.status(500).json({ error: `Failed to update sync settings for ${req.params.platform}` });
-    }
-  });
-
-  // Onboarding routes
-  app.get('/api/onboarding/status', requireAuth, async (req, res) => {
-    try {
-      const [status] = await db
-        .select()
-        .from(onboarding_status)
-        .where(eq(onboarding_status.user_id, req.user!.id));
-      
-      if (!status) {
-        return res.status(404).json({ message: 'Onboarding status not found' });
-      }
-      
-      res.json(status);
-    } catch (error) {
-      console.error('Error fetching onboarding status:', error);
-      res.status(500).json({ message: 'Failed to fetch onboarding status' });
-    }
-  });
-
-  app.post('/api/onboarding/status', requireAuth, async (req, res) => {
-    try {
-      // Check if status already exists
-      const [existingStatus] = await db
-        .select()
-        .from(onboarding_status)
-        .where(eq(onboarding_status.user_id, req.user!.id));
-      
-      if (existingStatus) {
-        // Update existing status
-        const [updatedStatus] = await db
-          .update(onboarding_status)
-          .set({
-            ...req.body,
-            updated_at: new Date(),
-          })
-          .where(eq(onboarding_status.id, existingStatus.id))
-          .returning();
-        
-        return res.json(updatedStatus);
-      }
-      
-      // Create new status
-      const [newStatus] = await db
-        .insert(onboarding_status)
-        .values({
-          user_id: req.user!.id,
-          ...req.body,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
-        .returning();
-      
-      res.status(201).json(newStatus);
-    } catch (error) {
-      console.error('Error saving onboarding status:', error);
-      res.status(500).json({ message: 'Failed to save onboarding status' });
-    }
-  });
-
-  // Fitness goals
-  app.get('/api/onboarding/fitness-goals', requireAuth, async (req, res) => {
-    try {
-      const [goals] = await db
-        .select()
-        .from(fitness_goals)
-        .where(eq(fitness_goals.user_id, req.user!.id));
-      
-      if (!goals) {
-        return res.status(404).json({ message: 'Fitness goals not found' });
-      }
-      
-      res.json(goals);
-    } catch (error) {
-      console.error('Error fetching fitness goals:', error);
-      res.status(500).json({ message: 'Failed to fetch fitness goals' });
-    }
-  });
-
-  app.post('/api/onboarding/fitness-goals', requireAuth, async (req, res) => {
-    try {
-      // Check if goals already exist
-      const [existingGoals] = await db
-        .select()
-        .from(fitness_goals)
-        .where(eq(fitness_goals.user_id, req.user!.id));
-      
-      if (existingGoals) {
-        // Update existing goals
-        // Extract only the fields that exist in our schema
-        const {
-          primary_goal,
-          goal_event_type,
-          goal_distance,
-          goal_time,
-          goal_date,
-          has_target_race,
-          weight_goal,
-          target_weight,
-          current_weight
-        } = req.body;
-        
-        // Map client data to database schema - avoiding using 'notes' which doesn't exist
-        const goalsData = {
-          goal_type: primary_goal || existingGoals.goal_type,
-          target_value: goal_distance,
-          target_unit: goal_event_type ? "km" : existingGoals.target_unit,
-          target_date: goal_date ? new Date(goal_date) : existingGoals.target_date,
-          // Store additional information in available fields
-          race_distance: goal_event_type || existingGoals.race_distance,
-          target_time: goal_time || existingGoals.target_time,
-          experience_level: weight_goal || existingGoals.experience_level,
-          weekly_mileage: current_weight || existingGoals.weekly_mileage,
-          frequency_per_week: has_target_race ? 3 : 2, // Default frequency based on whether they have a race goal
-          updated_at: new Date(),
-        };
-        
-        const [updatedGoals] = await db
-          .update(fitness_goals)
-          .set(goalsData)
-          .where(eq(fitness_goals.id, existingGoals.id))
-          .returning();
-        
-        return res.json(updatedGoals);
-      }
-      
-      // Create new goals
-      // Extract only the fields that exist in our schema
-      const {
-        primary_goal,
-        goal_event_type,
-        goal_distance,
-        goal_time,
-        goal_date,
-        has_target_race,
-        weight_goal,
-        target_weight,
-        current_weight
-      } = req.body;
-      
-      // Map client data to database schema - avoiding using 'notes' which doesn't exist
-      const goalsData = {
-        user_id: req.user!.id,
-        goal_type: primary_goal || "general_fitness",
-        target_value: goal_distance,
-        target_unit: goal_event_type ? "km" : null,
-        time_frame: null,
-        time_frame_unit: null,
-        start_date: new Date(),
-        target_date: goal_date ? new Date(goal_date) : null,
-        status: "active",
-        // Store goal_time in race_distance since we don't have notes field
-        race_distance: goal_event_type || null,
-        target_time: goal_time || null,
-        experience_level: weight_goal || "intermediate",
-        weekly_mileage: current_weight, // Use an existing numeric field
-        frequency_per_week: has_target_race ? 3 : 2, // Default frequency based on whether they have a race goal
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      
-      const [newGoals] = await db
-        .insert(fitness_goals)
-        .values(goalsData)
-        .returning();
-      
-      res.status(201).json(newGoals);
-    } catch (error) {
-      console.error('Error saving fitness goals:', error);
-      res.status(500).json({ message: 'Failed to save fitness goals' });
-    }
-  });
-
-  // Goals management
-  app.post('/api/goals', requireAuth, async (req, res) => {
-    try {
-      // Extract data from request body
-      const {
-        primary_goal,
-        goal_event_type,
-        goal_distance,
-        goal_time,
-        goal_date,
-        has_target_race,
-        weight_goal,
-        target_weight,
-        current_weight,
-        experience_level
-      } = req.body;
-      
-      // Map client data to database schema
-      const goalsData = {
-        user_id: req.user!.id,
-        goal_type: primary_goal || "general_fitness",
-        target_value: goal_distance || (target_weight ? parseFloat(current_weight) - parseFloat(target_weight) : null),
-        target_unit: primary_goal === "race" ? "km" : (primary_goal === "weight" ? "kg" : null),
-        time_frame: null,
-        time_frame_unit: null,
-        start_date: new Date(),
-        target_date: goal_date ? new Date(goal_date) : null,
-        status: "active",
-        race_distance: goal_event_type || null,
-        target_time: goal_time || null,
-        experience_level: experience_level || "intermediate",
-        weekly_mileage: current_weight ? parseFloat(current_weight) : null,
-        frequency_per_week: has_target_race ? 3 : 2,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      
-      const [newGoal] = await db
-        .insert(fitness_goals)
-        .values(goalsData)
-        .returning();
-      
-      res.status(201).json(newGoal);
-    } catch (error) {
-      console.error('Error creating goal:', error);
-      res.status(500).json({ message: 'Failed to create goal' });
-    }
-  });
-  
-  app.get('/api/goals', requireAuth, async (req, res) => {
-    try {
-      const goals = await db
-        .select()
-        .from(fitness_goals)
-        .where(eq(fitness_goals.user_id, req.user!.id))
-        .orderBy(desc(fitness_goals.created_at));
-      
-      res.json(goals);
-    } catch (error) {
-      console.error('Error fetching goals:', error);
-      res.status(500).json({ message: 'Failed to fetch goals' });
-    }
-  });
-  
-  app.get('/api/goals/:id', requireAuth, async (req, res) => {
-    try {
-      const goalId = parseInt(req.params.id);
-      
-      const [goal] = await db
-        .select()
-        .from(fitness_goals)
-        .where(and(
-          eq(fitness_goals.id, goalId),
-          eq(fitness_goals.user_id, req.user!.id)
-        ));
-      
-      if (!goal) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-      
-      res.json(goal);
-    } catch (error) {
-      console.error('Error fetching goal:', error);
-      res.status(500).json({ message: 'Failed to fetch goal' });
-    }
-  });
-  
-  // Get activities related to a goal for visualization
-  app.get('/api/goals/:id/activities', requireAuth, async (req, res) => {
-    try {
-      const goalId = parseInt(req.params.id);
-      
-      // First verify goal exists and belongs to user
-      const [goal] = await db
-        .select()
-        .from(fitness_goals)
-        .where(and(
-          eq(fitness_goals.id, goalId), 
-          eq(fitness_goals.user_id, req.user!.id)
-        ));
-        
-      if (!goal) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-      
-      // Get all running activities after the goal creation date
-      const goalActivities = await db
-        .select()
-        .from(activities)
-        .where(
-          and(
-            eq(activities.user_id, req.user!.id),
-            gte(activities.activity_date, goal.created_at || new Date())
-          )
-        )
-        .orderBy(activities.activity_date);
-      
-      // Determine which activities contribute to the goal
-      const enhancedActivities = goalActivities.map(activity => {
-        // For race goals, any running activity contributes
-        const isCompleted = goal.goal_type === 'race' 
-          ? activity.activity_type.toLowerCase().includes('run')
-          : true; // For other goals, all activities count
-        
-        return {
-          ...activity,
-          is_completed: isCompleted
-        };
-      });
-      
-      res.json(enhancedActivities);
-    } catch (error) {
-      console.error('Error getting goal activities:', error);
-      res.status(500).json({ message: 'Failed to get goal activities' });
-    }
-  });
-  
-  // Get goal comparison data (compared with other users with similar goals)
-  app.get('/api/goals/:id/comparison', requireAuth, async (req, res) => {
-    try {
-      const goalId = parseInt(req.params.id);
-      
-      // First verify goal exists and belongs to user
-      const [goal] = await db
-        .select()
-        .from(fitness_goals)
-        .where(and(
-          eq(fitness_goals.id, goalId), 
-          eq(fitness_goals.user_id, req.user!.id)
-        ));
-        
-      if (!goal) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-      
-      // Get similar goals from other users
-      const similarGoals = await db
-        .select()
-        .from(fitness_goals)
-        .where(
-          and(
-            eq(fitness_goals.goal_type, goal.goal_type),
-            !eq(fitness_goals.user_id, req.user!.id),
-            // For race goals, match by target distance
-            goal.goal_type === 'race' && goal.target_distance 
-              ? eq(fitness_goals.target_distance, goal.target_distance) 
-              : undefined
-          )
-        );
-      
-      // Extract progress value (can be stored in target_value or a custom progress field)
-      // For the purpose of demo, let's use a progress calculation based on the goal type
-      let progressValue = 0;
-      if (goal.goal_type === 'race') {
-        // For race goals, calculate progress based on training completed percentage
-        progressValue = 75; // Example progress value - in real app would be calculated
-      } else if (goal.goal_type === 'weight_loss') {
-        // For weight loss goals, calculate progress based on weight lost
-        progressValue = 60; // Example progress value
-      } else {
-        // For other goals, use a default calculation
-        progressValue = 50;
-      }
-      
-      // Calculate similar goals progress values
-      const goalWithProgress = {
-        ...goal,
-        progress: progressValue
-      };
-      
-      const similarGoalsWithProgress = similarGoals.map(g => {
-        // Simulate progress for similar goals - in real app would be calculated
-        const randomProgress = Math.floor(Math.random() * 100);
-        return {
-          ...g,
-          progress: randomProgress
-        };
-      });
-      
-      // Calculate percentile ranking
-      const totalUsers = similarGoalsWithProgress.length + 1; // Include current user
-      const usersAhead = similarGoalsWithProgress.filter(g => (g.progress || 0) > (goalWithProgress.progress || 0)).length;
-      
-      const percentile = totalUsers > 1 
-        ? Math.round(100 - (usersAhead / totalUsers) * 100)
-        : 50; // Default to 50th percentile if no comparison data
-      
-      // Generate comparison data points
-      const weeklyProgressPoints = 7; // Number of data points to generate
-      
-      // Calculate average progress for similar users
-      const comparisonData = [];
-      
-      for (let i = 1; i <= weeklyProgressPoints; i++) {
-        const weekProgress = Math.round((goalWithProgress.progress || 50) * (i / weeklyProgressPoints));
-        
-        // Calculate average progress for similar users at this point
-        const avgProgress = similarGoalsWithProgress.length > 0
-          ? Math.round(similarGoalsWithProgress.reduce((sum, g) => sum + ((g.progress || 0) * (i / weeklyProgressPoints)), 0) / similarGoalsWithProgress.length)
-          : Math.round(weekProgress * 0.8); // Default to 80% of user's progress
-        
-        // Calculate top performers (90th percentile)
-        const topProgress = similarGoalsWithProgress.length > 3
-          ? Math.round(
-              similarGoalsWithProgress
-                .map(g => (g.progress || 0) * (i / weeklyProgressPoints))
-                .sort((a, b) => b - a)
-                .slice(0, Math.max(1, Math.floor(similarGoalsWithProgress.length * 0.1)))
-                .reduce((sum, p) => sum + p, 0) / Math.max(1, Math.floor(similarGoalsWithProgress.length * 0.1))
-            )
-          : Math.round(weekProgress * 1.2); // Default to 120% of user's progress
-        
-        comparisonData.push({
-          name: `Week ${i}`,
-          you: weekProgress,
-          average: avgProgress,
-          top: topProgress
-        });
-      }
-      
-      // Add current point
-      comparisonData.push({
-        name: 'Now',
-        you: goalWithProgress.progress || 0,
-        average: similarGoalsWithProgress.length > 0
-          ? Math.round(similarGoalsWithProgress.reduce((sum, g) => sum + (g.progress || 0), 0) / similarGoalsWithProgress.length)
-          : Math.round((goalWithProgress.progress || 0) * 0.8),
-        top: similarGoalsWithProgress.length > 3
-          ? Math.round(
-              similarGoalsWithProgress
-                .map(g => g.progress || 0)
-                .sort((a, b) => b - a)
-                .slice(0, Math.max(1, Math.floor(similarGoalsWithProgress.length * 0.1)))
-                .reduce((sum, p) => sum + p, 0) / Math.max(1, Math.floor(similarGoalsWithProgress.length * 0.1))
-            )
-          : Math.round((goalWithProgress.progress || 0) * 1.2)
-      });
-      
-      // Determine position based on percentile
-      let position = "Average";
-      if (percentile >= 90) position = "Top 10%";
-      else if (percentile >= 75) position = "Top 25%";
-      else if (percentile >= 50) position = "Above Average";
-      else if (percentile >= 25) position = "Below Average";
-      else position = "Bottom 25%";
-      
-      res.json({
-        comparisonData,
-        percentile,
-        position,
-        similarGoals: similarGoals.length,
-        totalUsers
-      });
-    } catch (error) {
-      console.error('Error getting goal comparison data:', error);
-      res.status(500).json({ message: 'Failed to get goal comparison data' });
-    }
-  });
-  
-  // Get weight tracking data for weight loss goals
-  app.get('/api/goals/:id/weight-data', requireAuth, async (req, res) => {
-    try {
-      const goalId = parseInt(req.params.id);
-      
-      // First verify goal exists and belongs to user
-      const [goal] = await db
-        .select()
-        .from(fitness_goals)
-        .where(and(
-          eq(fitness_goals.id, goalId), 
-          eq(fitness_goals.user_id, req.user!.id)
-        ));
-        
-      if (!goal) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-      
-      if (goal.goal_type !== 'weight_loss') {
-        return res.status(400).json({ message: 'This endpoint is only for weight loss goals' });
-      }
-      
-      // Extract weight information from goal
-      const startingWeight = parseFloat(goal.weekly_mileage?.toString() || '0'); // Using weekly_mileage for current_weight
-      const targetValue = parseFloat(goal.target_value?.toString() || '0');
-      const targetWeight = startingWeight - targetValue;
-      
-      // Calculate progress similar to the comparison endpoint
-      let progressValue = 0;
-      if (goal.goal_type === 'weight_loss') {
-        // For weight loss goals, calculate progress based on weight lost
-        progressValue = 60; // Example progress value
-      } else {
-        // Default fallback
-        progressValue = 50;
-      }
-      
-      // Calculate current weight based on progress
-      const progress = progressValue;
-      const weightLost = (targetValue * progress) / 100;
-      const currentWeight = startingWeight - weightLost;
-      
-      // Get all weight check-ins from activities (could be from a separate table in a real app)
-      const now = new Date();
-      const createdDate = goal.created_at || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days ago
-      const targetDate = goal.target_date || new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000); // Default to 60 days in future
-      
-      // Generate weight data
-      const weightData = [];
-      const daysBetween = Math.round((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000));
-      const totalDays = Math.round((targetDate.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000));
-      const daysLeft = Math.round((targetDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-      
-      // Calculate needed weight loss per day to hit target
-      const lossPerDay = targetValue / totalDays;
-      
-      // Calculate current daily loss rate
-      const currentRate = weightLost / Math.max(1, daysBetween);
-      
-      // Determine if on track
-      const isOnTrack = currentRate >= lossPerDay;
-      
-      // Calculate estimated completion
-      let estimatedCompletionDate = new Date(targetDate);
-      if (!isOnTrack && currentRate > 0) {
-        // Calculate days needed to reach target weight
-        const daysNeeded = (targetValue - weightLost) / currentRate;
-        estimatedCompletionDate = new Date(now);
-        estimatedCompletionDate.setDate(now.getDate() + daysNeeded);
-      }
-      
-      // Calculate projected final weight
-      const projectedLoss = currentRate * daysLeft;
-      const expectedFinalWeight = parseFloat((currentWeight - projectedLoss).toFixed(1));
-      
-      // Add historical data points (weekly intervals)
-      const weeksPassed = Math.ceil(daysBetween / 7);
-      
-      // Function to format date for chart
-      const formatChartDate = (date: Date): string => {
-        const isToday = date.toDateString() === now.toDateString();
-        if (isToday) return 'Today';
-        
-        return new Intl.DateTimeFormat('en-US', {
-          month: 'short',
-          day: 'numeric'
-        }).format(date);
-      };
-      
-      for (let i = 0; i < weeksPassed; i++) {
-        const pastDate = new Date(createdDate);
-        pastDate.setDate(createdDate.getDate() + (i * 7));
-        
-        // Calculate expected weight at this point
-        const daysFromStart = Math.round((pastDate.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000));
-        const expectedLoss = lossPerDay * daysFromStart;
-        const expectedWeight = parseFloat((startingWeight - expectedLoss).toFixed(1));
-        
-        // Calculate actual weight (simulated)
-        const progressAtPoint = i / weeksPassed;
-        const actualLoss = weightLost * progressAtPoint;
-        const actualWeight = parseFloat((startingWeight - actualLoss).toFixed(1));
-        
-        weightData.push({
-          name: formatChartDate(pastDate),
-          weight: actualWeight,
-          target: expectedWeight
-        });
-      }
-      
-      // Add current weight
-      weightData.push({
-        name: 'Now',
-        weight: parseFloat(currentWeight.toFixed(1)),
-        target: parseFloat((startingWeight - (lossPerDay * daysBetween)).toFixed(1))
-      });
-      
-      // Add future projections
-      const weeksLeft = Math.ceil(daysLeft / 7);
-      
-      for (let i = 1; i <= weeksLeft; i++) {
-        const futureDate = new Date(now);
-        futureDate.setDate(now.getDate() + (i * 7));
-        
-        // Calculate target weight at this point
-        const daysFromStart = daysBetween + (i * 7);
-        const targetLoss = lossPerDay * daysFromStart;
-        const targetWeightAtPoint = parseFloat((startingWeight - targetLoss).toFixed(1));
-        
-        // Calculate projected weight
-        const projectedLossAtPoint = currentRate * (i * 7);
-        const projectedWeightAtPoint = parseFloat((currentWeight - projectedLossAtPoint).toFixed(1));
-        
-        weightData.push({
-          name: formatChartDate(futureDate),
-          weight: null, // No actual weight for future dates
-          projected: projectedWeightAtPoint,
-          target: targetWeightAtPoint
-        });
-      }
-      
-      res.json({
-        startingWeight,
-        currentWeight: parseFloat(currentWeight.toFixed(1)),
-        targetWeight,
-        weightData,
-        projection: {
-          estimatedCompletionDate,
-          isOnTrack,
-          expectedFinalWeight
-        }
-      });
-    } catch (error) {
-      console.error('Error getting weight data:', error);
-      res.status(500).json({ message: 'Failed to get weight data' });
-    }
-  });
-  
-  app.put('/api/goals/:id', requireAuth, async (req, res) => {
-    try {
-      const goalId = parseInt(req.params.id);
-      
-      // Check if goal exists and belongs to user
-      const [existingGoal] = await db
-        .select()
-        .from(fitness_goals)
-        .where(and(
-          eq(fitness_goals.id, goalId),
-          eq(fitness_goals.user_id, req.user!.id)
-        ));
-      
-      if (!existingGoal) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-      
-      // Extract data from request body
-      const {
-        goal_type,
-        target_value,
-        target_unit,
-        target_date,
-        status,
-        race_distance,
-        target_time,
-        experience_level
-      } = req.body;
-      
-      // Update goal
-      const [updatedGoal] = await db
-        .update(fitness_goals)
-        .set({
-          goal_type: goal_type || existingGoal.goal_type,
-          target_value: target_value !== undefined ? target_value : existingGoal.target_value,
-          target_unit: target_unit || existingGoal.target_unit,
-          target_date: target_date ? new Date(target_date) : existingGoal.target_date,
-          status: status || existingGoal.status,
-          race_distance: race_distance || existingGoal.race_distance,
-          target_time: target_time || existingGoal.target_time,
-          experience_level: experience_level || existingGoal.experience_level,
-          updated_at: new Date()
-        })
-        .where(eq(fitness_goals.id, goalId))
-        .returning();
-      
-      res.json(updatedGoal);
-    } catch (error) {
-      console.error('Error updating goal:', error);
-      res.status(500).json({ message: 'Failed to update goal' });
-    }
-  });
-  
-  app.delete('/api/goals/:id', requireAuth, async (req, res) => {
-    try {
-      const goalId = parseInt(req.params.id);
-      
-      // Check if goal exists and belongs to user
-      const [existingGoal] = await db
-        .select()
-        .from(fitness_goals)
-        .where(and(
-          eq(fitness_goals.id, goalId),
-          eq(fitness_goals.user_id, req.user!.id)
-        ));
-      
-      if (!existingGoal) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-      
-      // Delete goal
-      await db
-        .delete(fitness_goals)
-        .where(eq(fitness_goals.id, goalId));
-      
-      res.status(204).end();
-    } catch (error) {
-      console.error('Error deleting goal:', error);
-      res.status(500).json({ message: 'Failed to delete goal' });
-    }
-  });
-
-  // User experience
-  app.get('/api/onboarding/user-experience', requireAuth, async (req, res) => {
-    try {
-      const [experience] = await db
-        .select()
-        .from(experience_levels)
-        .where(eq(experience_levels.user_id, req.user!.id));
-      
-      if (!experience) {
-        return res.status(404).json({ message: 'User experience not found' });
-      }
-      
-      res.json(experience);
-    } catch (error) {
-      console.error('Error fetching user experience:', error);
-      res.status(500).json({ message: 'Failed to fetch user experience' });
-    }
-  });
-
-  app.post('/api/onboarding/user-experience', requireAuth, async (req, res) => {
-    try {
-      // Check if experience already exists
-      const [existingExperience] = await db
-        .select()
-        .from(experience_levels)
-        .where(eq(experience_levels.user_id, req.user!.id));
-      
-      if (existingExperience) {
-        // Update existing experience
-        const [updatedExperience] = await db
-          .update(experience_levels)
-          .set({
-            ...req.body,
-            // Map experience_level from client to current_level in database
-            current_level: req.body.experience_level,
-            updated_at: new Date(),
-          })
-          .where(eq(experience_levels.id, existingExperience.id))
-          .returning();
-        
-        return res.json(updatedExperience);
-      }
-      
-      // Create new experience
-      const [newExperience] = await db
-        .insert(experience_levels)
-        .values({
-          user_id: req.user!.id,
-          ...req.body,
-          // Map experience_level from client to current_level in database
-          current_level: req.body.experience_level,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
-        .returning();
-      
-      res.status(201).json(newExperience);
-    } catch (error) {
-      console.error('Error saving user experience:', error);
-      res.status(500).json({ message: 'Failed to save user experience' });
-    }
-  });
-
-  // Training preferences
-  app.get('/api/onboarding/training-preferences', requireAuth, async (req, res) => {
-    try {
-      const [preferences] = await db
-        .select()
-        .from(training_preferences)
-        .where(eq(training_preferences.user_id, req.user!.id));
-      
-      if (!preferences) {
-        return res.status(404).json({ message: 'Training preferences not found' });
-      }
-      
-      res.json(preferences);
-    } catch (error) {
-      console.error('Error fetching training preferences:', error);
-      res.status(500).json({ message: 'Failed to fetch training preferences' });
-    }
-  });
-  
-  // Update onboarding preferences (for updating from settings page)
-  app.put('/api/onboarding/update-preferences', requireAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const { training_preferences: trainingPrefs, experience, fitness_goals: goals } = req.body;
-      
-      // Update training preferences
-      if (trainingPrefs) {
-        const existingPrefs = await db.query.training_preferences.findFirst({
-          where: eq(training_preferences.user_id, userId)
-        });
-        
-        if (existingPrefs) {
-          await db.update(training_preferences)
-            .set({
-              ...trainingPrefs,
-              updated_at: new Date()
-            })
-            .where(eq(training_preferences.user_id, userId));
-        } else {
-          await db.insert(training_preferences).values({
-            user_id: userId,
-            ...trainingPrefs,
-            created_at: new Date(),
-            updated_at: new Date()
-          });
-        }
-      }
-      
-      // Update experience level
-      if (experience) {
-        const existingExp = await db.query.experience_levels.findFirst({
-          where: eq(experience_levels.user_id, userId)
-        });
-        
-        if (existingExp) {
-          await db.update(experience_levels)
-            .set({
-              ...experience,
-              updated_at: new Date()
-            })
-            .where(eq(experience_levels.user_id, userId));
-        } else {
-          await db.insert(experience_levels).values({
-            user_id: userId,
-            ...experience,
-            created_at: new Date(),
-            updated_at: new Date()
-          });
-        }
-      }
-      
-      // Update fitness goals
-      if (goals) {
-        const existingGoals = await db.query.fitness_goals.findFirst({
-          where: eq(fitness_goals.user_id, userId)
-        });
-        
-        if (existingGoals) {
-          await db.update(fitness_goals)
-            .set({
-              ...goals,
-              updated_at: new Date()
-            })
-            .where(eq(fitness_goals.user_id, userId));
-        } else {
-          await db.insert(fitness_goals).values({
-            user_id: userId,
-            ...goals,
-            created_at: new Date(),
-            updated_at: new Date()
-          });
-        }
-      }
-      
-      res.status(200).json({ message: 'Preferences updated successfully' });
-    } catch (error) {
-      console.error('Error updating preferences:', error);
-      res.status(500).json({ message: 'Failed to update preferences' });
-    }
-  });
-
-  app.post('/api/onboarding/training-preferences', requireAuth, async (req, res) => {
-    try {
-      // Check if preferences already exist
-      const [existingPreferences] = await db
-        .select()
-        .from(training_preferences)
-        .where(eq(training_preferences.user_id, req.user!.id));
-      
-      if (existingPreferences) {
-        // Update existing preferences
-        // Convert arrays to JSON strings for database storage
-        const preferenceData = {
-          rest_days: typeof req.body.rest_days === 'number' ? req.body.rest_days.toString() : req.body.rest_days,
-          cross_training: req.body.cross_training || false,
-          cross_training_activities: Array.isArray(req.body.cross_training_activities) 
-            ? JSON.stringify(req.body.cross_training_activities) 
-            : req.body.cross_training_activities,
-          updated_at: new Date(),
-        };
-        
-        // Add other fields that might be present
-        if (req.body.preferred_days) {
-          preferenceData.preferred_days = typeof req.body.preferred_days === 'object' 
-            ? JSON.stringify(req.body.preferred_days) 
-            : req.body.preferred_days;
-        }
-        
-        if (req.body.preferred_time) {
-          preferenceData.preferred_time = req.body.preferred_time;
-        }
-        
-        if (req.body.long_run_day) {
-          preferenceData.long_run_day = req.body.long_run_day;
-        }
-        
-        // Store additional data in notes field as JSON
-        const additionalData = {
-          preferred_workout_types: req.body.preferred_workout_types || [],
-          avoid_workout_types: req.body.avoid_workout_types || [],
-          cross_training_days: req.body.cross_training_days,
-          max_workout_duration: req.body.max_workout_duration
-        };
-        
-        preferenceData.notes = JSON.stringify(additionalData);
-        
-        const [updatedPreferences] = await db
-          .update(training_preferences)
-          .set(preferenceData)
-          .where(eq(training_preferences.id, existingPreferences.id))
-          .returning();
-        
-        return res.json(updatedPreferences);
-      }
-      
-      // Create new preferences
-      // Convert arrays to JSON strings for database storage
-      const preferenceData = {
-        user_id: req.user!.id,
-        rest_days: typeof req.body.rest_days === 'number' ? req.body.rest_days.toString() : req.body.rest_days,
-        cross_training: req.body.cross_training || false,
-        cross_training_activities: Array.isArray(req.body.cross_training_activities) 
-          ? JSON.stringify(req.body.cross_training_activities) 
-          : req.body.cross_training_activities,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      
-      // Add other fields that might be present
-      if (req.body.preferred_days) {
-        preferenceData.preferred_days = typeof req.body.preferred_days === 'object' 
-          ? JSON.stringify(req.body.preferred_days) 
-          : req.body.preferred_days;
-      }
-      
-      if (req.body.preferred_time) {
-        preferenceData.preferred_time = req.body.preferred_time;
-      }
-      
-      if (req.body.long_run_day) {
-        preferenceData.long_run_day = req.body.long_run_day;
-      }
-      
-      // Store additional data in notes field as JSON
-      const additionalData = {
-        preferred_workout_types: req.body.preferred_workout_types || [],
-        avoid_workout_types: req.body.avoid_workout_types || [],
-        cross_training_days: req.body.cross_training_days,
-        max_workout_duration: req.body.max_workout_duration
-      };
-      
-      preferenceData.notes = JSON.stringify(additionalData);
-      
-      const [newPreferences] = await db
-        .insert(training_preferences)
-        .values(preferenceData)
-        .returning();
-      
-      res.status(201).json(newPreferences);
-    } catch (error) {
-      console.error('Error saving training preferences:', error);
-      res.status(500).json({ message: 'Failed to save training preferences' });
-    }
-  });
-
-  // Complete onboarding endpoint
-  app.post('/api/onboarding/complete', requireAuth, async (req, res) => {
-    try {
-      // Update onboarding status to completed
-      const [status] = await db
-        .select()
-        .from(onboarding_status)
-        .where(eq(onboarding_status.user_id, req.user!.id));
-      
-      try {
-        if (status) {
-          // Use raw SQL to update all fields including the 'step' field that isn't in our schema
-          await db.execute(`
-            UPDATE onboarding_status 
-            SET completed = true, 
-                current_step = 'completed', 
-                step = 'completed',
-                last_updated = NOW(),
-                updated_at = NOW()
-            WHERE id = ${status.id}
-          `);
-        } else {
-          // Use raw SQL to insert with all required fields
-          await db.execute(`
-            INSERT INTO onboarding_status 
-            (user_id, completed, current_step, step, steps_completed, last_updated, created_at, updated_at)
-            VALUES 
-            (
-              ${req.user!.id}, 
-              true, 
-              'completed', 
-              'completed', 
-              ARRAY['welcome', 'fitness-goals', 'experience', 'training-preferences', 'summary'], 
-              NOW(), 
-              NOW(), 
-              NOW()
-            )
-          `);
-        }
-      } catch (error) {
-        console.error('Error updating onboarding status with raw SQL:', error);
-        throw error;
-      }
-      
-      // Also update the user's profile if needed
-      if (req.body.profile_updates) {
-        await db
-          .update(users)
-          .set(req.body.profile_updates)
-          .where(eq(users.id, req.user!.id));
-      }
-      
-      res.json({ success: true, message: 'Onboarding completed successfully' });
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
-      res.status(500).json({ message: 'Failed to complete onboarding' });
-    }
-  });
-
   const httpServer = createServer(app);
-  
-  // Add WebSocket server for coaching chat
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  
-  // Track active connections by session ID and user ID
-  const activeConnections: Map<string, Map<string, ws.WebSocket>> = new Map();
-  
-  wss.on('connection', (socket: ws.WebSocket, req: any) => {
-    console.log('Client connected to coaching chat');
-    let userId: string | null = null;
-    let sessionId: string | null = null;
-    
-    socket.on('message', async (message: ws.RawData) => {
-      try {
-        const data = JSON.parse(message.toString());
-        console.log('Received message:', data);
-        
-        // Handle initialization message
-        if (data.type === 'init') {
-          userId = data.userId;
-          sessionId = data.sessionId;
-          
-          // Store connection for this user and session
-          if (userId && sessionId) {
-            if (!activeConnections.has(sessionId)) {
-              activeConnections.set(sessionId, new Map());
-            }
-            const sessionMap = activeConnections.get(sessionId);
-            if (sessionMap) {
-              sessionMap.set(userId, socket);
-            }
-            
-            // Send confirmation
-            if (socket.readyState === ws.WebSocket.OPEN) {
-              socket.send(JSON.stringify({ 
-                type: 'init_confirmed', 
-                sessionId 
-              }));
-            }
-          }
-        }
-        // Handle chat messages
-        else if (data.type === 'chat_message') {
-          // Verify user is authenticated to send messages
-          if (!userId || !sessionId) {
-            if (socket.readyState === ws.WebSocket.OPEN) {
-              socket.send(JSON.stringify({
-                type: 'error',
-                message: 'Not initialized. Send init message first.'
-              }));
-            }
-            return;
-          }
-          
-          // Save message to database (would implement in a real system)
-          // For now, just broadcast to participants
-          
-          // Broadcast message to all users in this session
-          const sessionConnections = activeConnections.get(sessionId);
-          if (sessionConnections) {
-            sessionConnections.forEach((clientSocket, clientId) => {
-              if (clientSocket.readyState === ws.WebSocket.OPEN) {
-                clientSocket.send(JSON.stringify({
-                  type: 'chat_message',
-                  message: data.message,
-                  sender: userId,
-                  timestamp: new Date().toISOString()
-                }));
-              }
-            });
-          }
-          
-          // If message mentions training plan and sender is coach
-          if (data.message.toLowerCase().includes('training plan') && 
-              data.isCoach) {
-            // Flag that coach has suggested plan modifications
-            // (In a real implementation, update the database)
-            
-            // Notify the athlete that the plan requires approval
-            const athleteConnection = sessionConnections?.get(data.athleteId);
-            if (athleteConnection && athleteConnection.readyState === ws.WebSocket.OPEN) {
-              athleteConnection.send(JSON.stringify({
-                type: 'plan_update_request',
-                coachId: userId,
-                message: 'Your coach has suggested changes to your training plan. Review and approve them in your dashboard.'
-              }));
-            }
-          }
-        }
-        // Handle training plan approvals
-        else if (data.type === 'plan_update_response') {
-          if (!sessionId) return;
-          
-          if (data.approved) {
-            // Update the plan (would implement in a real system)
-            // For now, just notify coach
-            
-            // Notify coach of approval
-            const sessionConnections = activeConnections.get(sessionId);
-            const coachConnection = sessionConnections?.get(data.coachId);
-            
-            if (coachConnection && coachConnection.readyState === ws.WebSocket.OPEN) {
-              coachConnection.send(JSON.stringify({
-                type: 'plan_update_approved',
-                athleteId: userId,
-                message: 'The athlete has approved your training plan changes.'
-              }));
-            }
-          } else {
-            // Notify coach of rejection
-            const sessionConnections = activeConnections.get(sessionId);
-            const coachConnection = sessionConnections?.get(data.coachId);
-            
-            if (coachConnection && coachConnection.readyState === ws.WebSocket.OPEN) {
-              coachConnection.send(JSON.stringify({
-                type: 'plan_update_rejected',
-                athleteId: userId,
-                message: 'The athlete has declined your training plan changes.'
-              }));
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error processing message:', error);
-        if (socket.readyState === ws.WebSocket.OPEN) {
-          socket.send(JSON.stringify({ 
-            type: 'error', 
-            message: 'Failed to process message' 
-          }));
-        }
-      }
-    });
-    
-    socket.on('close', () => {
-      console.log('Client disconnected from coaching chat');
-      
-      // Remove connection from active connections
-      if (userId && sessionId && activeConnections.has(sessionId)) {
-        const sessionConnections = activeConnections.get(sessionId);
-        if (sessionConnections) {
-          sessionConnections.delete(userId);
-          
-          // If no more connections in this session, remove the session
-          if (sessionConnections.size === 0) {
-            activeConnections.delete(sessionId);
-          }
-        }
-      }
-    });
-  });
-  
-  // Setup Strava integration with OAuth endpoints
-  setupStravaIntegration(app);
-
   return httpServer;
 }
