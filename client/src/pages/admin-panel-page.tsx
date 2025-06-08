@@ -330,14 +330,14 @@ export default function AdminPanelPage() {
                           <TableCell className="text-white/70 drop-shadow-sm">{coach.email}</TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
-                              {coach.specialties.slice(0, 2).map((specialty, index) => (
+                              {(coach.specialties || []).slice(0, 2).map((specialty, index) => (
                                 <Badge key={index} variant="outline" className="border-white/30 text-white/70 text-xs">
                                   {specialty}
                                 </Badge>
                               ))}
-                              {coach.specialties.length > 2 && (
+                              {(coach.specialties || []).length > 2 && (
                                 <Badge variant="outline" className="border-white/30 text-white/70 text-xs">
-                                  +{coach.specialties.length - 2}
+                                  +{(coach.specialties || []).length - 2}
                                 </Badge>
                               )}
                             </div>
