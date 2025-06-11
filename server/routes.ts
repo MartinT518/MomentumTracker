@@ -1904,6 +1904,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete onboarding process
+  app.post("/api/onboarding/complete", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { profile_updates } = req.body;
+
+      // Update onboarding status to completed
+      await db.insert(onboarding_status).values({
+        user_id: userId,
+        completed: true,
+        completed_at: new Date()
+      }).onConflictDoUpdate({
+        target: onboarding_status.user_id,
+        set: {
+          completed: true,
+          completed_at: new Date()
+        }
+      });
+
+      // Apply any profile updates if provided
+      if (profile_updates) {
+        await db.update(users).set(profile_updates).where(eq(users.id, userId));
+      }
+
+      // Clear onboarding drafts since onboarding is complete
+      await db.delete(onboarding_drafts).where(eq(onboarding_drafts.user_id, userId));
+
+      res.json({ 
+        success: true, 
+        message: "Onboarding completed successfully" 
+      });
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+      res.status(500).json({ error: "Failed to complete onboarding" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
