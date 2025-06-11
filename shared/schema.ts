@@ -387,6 +387,20 @@ export const onboarding_status = pgTable("onboarding_status", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Onboarding draft data for saving progress
+export const onboarding_drafts = pgTable("onboarding_drafts", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  step_name: varchar("step_name", { length: 50 }).notNull(), // fitness-goals, experience, training-preferences
+  draft_data: json("draft_data").notNull(), // Store the form data as JSON
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    unq: unique().on(table.user_id, table.step_name),
+  };
+});
+
 // User fitness goals for onboarding
 export const fitness_goals = pgTable("fitness_goals", {
   id: serial("id").primaryKey(),
@@ -585,6 +599,12 @@ export const insertOnboardingStatusSchema = createInsertSchema(onboarding_status
   created_at: true,
 });
 
+export const insertOnboardingDraftSchema = createInsertSchema(onboarding_drafts).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 export const insertFitnessGoalSchema = createInsertSchema(fitness_goals).omit({
   id: true,
   created_at: true,
@@ -656,6 +676,9 @@ export type InsertNutritionPreference = z.infer<typeof insertNutritionPreference
 // Onboarding types
 export type OnboardingStatus = typeof onboarding_status.$inferSelect;
 export type InsertOnboardingStatus = z.infer<typeof insertOnboardingStatusSchema>;
+
+export type OnboardingDraft = typeof onboarding_drafts.$inferSelect;
+export type InsertOnboardingDraft = z.infer<typeof insertOnboardingDraftSchema>;
 
 export type FitnessGoal = typeof fitness_goals.$inferSelect;
 export type InsertFitnessGoal = z.infer<typeof insertFitnessGoalSchema>;

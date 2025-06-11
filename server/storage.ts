@@ -117,6 +117,11 @@ export interface IStorage {
   createOnboardingStatus(data: InsertOnboardingStatus): Promise<OnboardingStatus>;
   updateOnboardingStatus(userId: number, data: Partial<OnboardingStatus>): Promise<OnboardingStatus>;
   
+  // Onboarding drafts
+  getOnboardingDraft(userId: number, stepName: string): Promise<OnboardingDraft | undefined>;
+  saveOnboardingDraft(userId: number, stepName: string, draftData: any): Promise<OnboardingDraft>;
+  getAllOnboardingDrafts(userId: number): Promise<OnboardingDraft[]>;
+  
   // Fitness goals
   getFitnessGoals(userId: number): Promise<FitnessGoal[]>;
   createFitnessGoal(data: InsertFitnessGoal): Promise<FitnessGoal>;
