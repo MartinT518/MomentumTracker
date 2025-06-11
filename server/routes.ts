@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "./db";
 import { setupAuth } from "./auth";
 import { setupDevSubscription } from "./dev-subscription";
+import { storage } from "./storage";
 import { 
   and, eq, desc, gte, lte, sql, count, sum, avg, or, ne, isNotNull, asc, isNull, inArray
 } from "drizzle-orm";
