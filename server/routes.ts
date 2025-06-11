@@ -930,6 +930,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/activities/recent", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string) || 5;
+
+      const recentActivities = await db.select({
+        id: activities.id,
+        activity_type: activities.activity_type,
+        activity_date: activities.activity_date,
+        duration: activities.duration,
+        distance: activities.distance,
+        pace: activities.pace,
+        notes: activities.notes,
+        heart_rate: activities.heart_rate,
+        effort_level: activities.effort_level,
+        source: activities.source,
+      }).from(activities)
+        .where(eq(activities.user_id, userId))
+        .orderBy(desc(activities.activity_date))
+        .limit(limit);
+
+      const formattedActivities = recentActivities.map(activity => ({
+        ...activity,
+        activity_date: activity.activity_date.toISOString().split('T')[0],
+        duration: Number(activity.duration),
+        distance: Number(activity.distance),
+        heart_rate: Number(activity.heart_rate)
+      }));
+
+      res.json(formattedActivities);
+    } catch (error) {
+      console.error("Error fetching recent activities:", error);
+      res.status(500).json({ error: "Failed to fetch recent activities" });
+    }
+  });
+
   app.post("/api/activities", checkAuth, async (req, res) => {
     try {
       const { activity_type, activity_date, duration, distance, pace, notes, heart_rate, effort_level } = req.body;
@@ -1097,12 +1133,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { title, description, target_value, target_date, goal_type } = req.body;
       const userId = req.user!.id;
 
+      // Validate and parse target_date
+      let parsedTargetDate = null;
+      if (target_date) {
+        const dateObj = new Date(target_date);
+        if (isNaN(dateObj.getTime())) {
+          return res.status(400).json({ error: "Invalid target date format" });
+        }
+        parsedTargetDate = dateObj;
+      }
+
       const [newGoal] = await db.insert(goals).values({
         user_id: userId,
         title,
         description,
         target_value,
-        target_date: new Date(target_date),
+        target_date: parsedTargetDate,
         goal_type,
         status: 'active'
       }).returning();
