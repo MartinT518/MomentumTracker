@@ -12,7 +12,7 @@ import {
   coaches, coaching_sessions, nutrition_logs, food_items, meal_plans, meals, 
   meal_food_items, training_plans, workouts, nutrition_preferences, 
   integration_connections, sync_logs, subscription_plans, challenges, 
-  challenge_participants
+  challenge_participants, onboarding_drafts
 } from "@shared/schema";
 import Stripe from "stripe";
 import axios from "axios";

@@ -599,6 +599,12 @@ export const insertOnboardingStatusSchema = createInsertSchema(onboarding_status
   created_at: true,
 });
 
+export const insertOnboardingDraftSchema = createInsertSchema(onboarding_drafts).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 export const insertFitnessGoalSchema = createInsertSchema(fitness_goals).omit({
   id: true,
   created_at: true,
