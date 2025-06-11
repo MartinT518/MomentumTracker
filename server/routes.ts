@@ -912,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activity_date: formatChartDate(activity.activity_date),
         duration: Number(activity.duration),
         distance: Number(activity.distance),
-        calories: Number(activity.calories)
+        heart_rate: Number(activity.heart_rate)
       }));
 
       res.json({
@@ -932,18 +932,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/activities", checkAuth, async (req, res) => {
     try {
-      const { activity_type, activity_date, duration, distance, calories, notes, average_heart_rate } = req.body;
+      const { activity_type, activity_date, duration, distance, pace, notes, heart_rate, effort_level } = req.body;
       const userId = req.user!.id;
 
       const [newActivity] = await db.insert(activities).values({
         user_id: userId,
         activity_type,
-        activity_date: new Date(activity_date),
+        activity_date: activity_date,
         duration,
         distance,
-        calories,
+        pace,
         notes,
-        average_heart_rate,
+        heart_rate,
+        effort_level,
         source: 'manual'
       }).returning();
 
@@ -982,17 +983,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activityId = parseInt(req.params.id);
       const userId = req.user!.id;
-      const { activity_type, activity_date, duration, distance, calories, notes, average_heart_rate } = req.body;
+      const { activity_type, activity_date, duration, distance, pace, notes, heart_rate, effort_level } = req.body;
 
       const [updatedActivity] = await db.update(activities).set({
         activity_type,
-        activity_date: new Date(activity_date),
+        activity_date: activity_date,
         duration,
         distance,
-        calories,
+        pace,
         notes,
-        average_heart_rate,
-        updated_at: new Date()
+        heart_rate,
+        effort_level
       }).where(and(eq(activities.id, activityId), eq(activities.user_id, userId)))
         .returning();
 
@@ -1052,19 +1053,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/health-metrics", checkAuth, async (req, res) => {
     try {
-      const { weight, body_fat_percentage, muscle_mass, resting_heart_rate, blood_pressure_systolic, blood_pressure_diastolic, sleep_hours } = req.body;
+      const { hrv_score, resting_heart_rate, sleep_quality, sleep_duration, energy_level, stress_level, notes } = req.body;
       const userId = req.user!.id;
 
       const [newMetric] = await db.insert(health_metrics).values({
         user_id: userId,
-        weight,
-        body_fat_percentage,
-        muscle_mass,
+        metric_date: new Date().toISOString().split('T')[0],
+        hrv_score,
         resting_heart_rate,
-        blood_pressure_systolic,
-        blood_pressure_diastolic,
-        sleep_hours,
-        recorded_at: new Date()
+        sleep_quality,
+        sleep_duration,
+        energy_level,
+        stress_level,
+        source: 'manual',
+        notes
       }).returning();
 
       res.status(201).json(newMetric);
@@ -1193,13 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gte(activities.activity_date, startDate)
         ));
 
-      // Total calories
-      const [{ totalCalories }] = await db.select({ totalCalories: sum(activities.calories) })
-        .from(activities)
-        .where(and(
-          eq(activities.user_id, userId),
-          gte(activities.activity_date, startDate)
-        ));
+
 
       // Activity breakdown by type
       const activityBreakdown = await db.select({
@@ -1219,7 +1215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activity_date: activities.activity_date,
         distance: activities.distance,
         duration: activities.duration,
-        calories: activities.calories
+        heart_rate: activities.heart_rate
       }).from(activities)
         .where(and(
           eq(activities.user_id, userId),
@@ -1231,8 +1227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         summary: {
           totalActivities: Number(totalActivities),
           totalDistance: Number(totalDistance) || 0,
-          totalDuration: Number(totalDuration) || 0,
-          totalCalories: Number(totalCalories) || 0
+          totalDuration: Number(totalDuration) || 0
         },
         activityBreakdown: activityBreakdown.map(item => ({
           ...item,
@@ -1244,7 +1239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           date: activity.activity_date.toISOString().split('T')[0],
           distance: Number(activity.distance) || 0,
           duration: Number(activity.duration) || 0,
-          calories: Number(activity.calories) || 0
+          heart_rate: Number(activity.heart_rate) || 0
         }))
       });
     } catch (error) {
