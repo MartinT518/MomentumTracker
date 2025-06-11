@@ -887,9 +887,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activity_date: activities.activity_date,
         duration: activities.duration,
         distance: activities.distance,
-        calories: activities.calories,
+        pace: activities.pace,
         notes: activities.notes,
-        average_heart_rate: activities.average_heart_rate,
+        heart_rate: activities.heart_rate,
+        effort_level: activities.effort_level,
         source: activities.source,
       }).from(activities)
         .where(and(...whereConditions))
@@ -956,6 +957,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities/:id", checkAuth, async (req, res) => {
     try {
       const activityId = parseInt(req.params.id);
+      if (isNaN(activityId)) {
+        return res.status(400).json({ error: "Invalid activity ID" });
+      }
+      
       const userId = req.user!.id;
 
       const [activity] = await db.select().from(activities)
@@ -1034,9 +1039,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const metrics = await db.select().from(health_metrics)
         .where(and(
           eq(health_metrics.user_id, userId),
-          gte(health_metrics.recorded_at, startDate)
+          gte(health_metrics.metric_date, startDate.toISOString().split('T')[0])
         ))
-        .orderBy(desc(health_metrics.recorded_at));
+        .orderBy(desc(health_metrics.metric_date));
 
       res.json(metrics);
     } catch (error) {
