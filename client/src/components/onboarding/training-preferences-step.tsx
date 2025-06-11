@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -83,21 +83,11 @@ export default function TrainingPreferencesStep({
     }
   );
 
-  // Auto-save timeout ref
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Event handlers for form updates with auto-save
+  // Event handlers for form updates
   const handleChange = (field: keyof TrainingPreferencesData, value: any) => {
     const updatedData = { ...formData, [field]: value };
     setFormData(updatedData);
     onUpdateData(updatedData);
-
-    // Clear existing timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    // Auto-save functionality removed to prevent errors
   };
 
   // Toggle workout type in preferred list
