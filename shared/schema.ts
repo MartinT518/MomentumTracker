@@ -387,19 +387,7 @@ export const onboarding_status = pgTable("onboarding_status", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-// Onboarding draft data for saving progress
-export const onboarding_drafts = pgTable("onboarding_drafts", {
-  id: serial("id").primaryKey(),
-  user_id: integer("user_id").references(() => users.id).notNull(),
-  step_name: varchar("step_name", { length: 50 }).notNull(), // fitness-goals, experience, training-preferences
-  draft_data: json("draft_data").notNull(), // Store the form data as JSON
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-}, (table) => {
-  return {
-    unq: unique().on(table.user_id, table.step_name),
-  };
-});
+// Removed duplicate onboarding_drafts table - defined later in file
 
 // User fitness goals for onboarding
 export const fitness_goals = pgTable("fitness_goals", {
@@ -453,6 +441,18 @@ export const training_preferences = pgTable("training_preferences", {
 // that matches the actual database structure
 
 
+
+// Onboarding drafts for saving step progress
+export const onboarding_drafts = pgTable("onboarding_drafts", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  step_name: varchar("step_name", { length: 50 }).notNull(),
+  draft_data: json("draft_data").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueUserStep: unique().on(table.user_id, table.step_name),
+}));
 
 // Subscription plans
 export const subscription_plans = pgTable("subscription_plans", {
@@ -597,12 +597,6 @@ export const insertNutritionPreferenceSchema = createInsertSchema(nutrition_pref
 export const insertOnboardingStatusSchema = createInsertSchema(onboarding_status).omit({
   id: true,
   created_at: true,
-});
-
-export const insertOnboardingDraftSchema = createInsertSchema(onboarding_drafts).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
 });
 
 export const insertFitnessGoalSchema = createInsertSchema(fitness_goals).omit({
