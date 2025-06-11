@@ -3,9 +3,24 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     try {
-      const text = (await res.text()) || res.statusText;
-      throw new Error(`${res.status}: ${text}`);
+      const text = await res.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(text);
+      } catch {
+        errorData = { message: text || res.statusText };
+      }
+      
+      // Create error with additional data for username suggestions
+      const error = new Error(errorData.message || `${res.status}: ${res.statusText}`);
+      if (errorData.suggestions) {
+        (error as any).suggestions = errorData.suggestions;
+      }
+      throw error;
     } catch (parseError) {
+      if (parseError instanceof Error && (parseError as any).suggestions) {
+        throw parseError; // Re-throw if it already has suggestions
+      }
       throw new Error(`${res.status}: ${res.statusText}`);
     }
   }

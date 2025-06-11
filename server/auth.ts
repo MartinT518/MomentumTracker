@@ -96,7 +96,41 @@ export function setupAuth(app: Express) {
 
       const existingUser = await storage.getUserByUsername(username.trim());
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        // Generate suggested usernames
+        const baseUsername = username.trim();
+        const suggestions = [];
+        
+        // Try adding numbers
+        for (let i = 1; i <= 3; i++) {
+          const suggestion = `${baseUsername}${i}`;
+          const exists = await storage.getUserByUsername(suggestion);
+          if (!exists) {
+            suggestions.push(suggestion);
+          }
+        }
+        
+        // Try adding year
+        const currentYear = new Date().getFullYear();
+        const yearSuggestion = `${baseUsername}${currentYear}`;
+        const yearExists = await storage.getUserByUsername(yearSuggestion);
+        if (!yearExists && !suggestions.includes(yearSuggestion)) {
+          suggestions.push(yearSuggestion);
+        }
+        
+        // Try adding random numbers
+        for (let i = 0; i < 2 && suggestions.length < 5; i++) {
+          const randomNum = Math.floor(Math.random() * 999) + 100;
+          const suggestion = `${baseUsername}${randomNum}`;
+          const exists = await storage.getUserByUsername(suggestion);
+          if (!exists && !suggestions.includes(suggestion)) {
+            suggestions.push(suggestion);
+          }
+        }
+        
+        return res.status(400).json({ 
+          message: "Username already exists",
+          suggestions: suggestions.slice(0, 3) // Return top 3 suggestions
+        });
       }
 
       const user = await storage.createUser({
