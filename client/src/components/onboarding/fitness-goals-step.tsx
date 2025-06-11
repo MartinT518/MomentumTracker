@@ -97,8 +97,12 @@ export default function FitnessGoalsStep({
   // Separate mutation for saving draft without navigating
   const saveDraftMutation = useMutation({
     mutationFn: async (data: FitnessGoalsData) => {
-      const res = await apiRequest("POST", "/api/onboarding/fitness-goals", data);
-      return await res.json();
+      // Save both to the main API and as a draft for summary
+      const [mainRes] = await Promise.all([
+        apiRequest("POST", "/api/onboarding/fitness-goals", data),
+        apiRequest("POST", "/api/onboarding/drafts/fitness-goals", data)
+      ]);
+      return await mainRes.json();
     },
     onSuccess: (data) => {
       toast({

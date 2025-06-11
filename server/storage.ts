@@ -1485,6 +1485,44 @@ export class MemStorage implements IStorage {
     this.onboardingStatuses.set(status.id, updatedStatus);
     return updatedStatus;
   }
+
+  // Onboarding drafts
+  async getOnboardingDraft(userId: number, stepName: string): Promise<any | undefined> {
+    return Array.from(this.onboardingDrafts.values())
+      .find(draft => draft.user_id === userId && draft.step_name === stepName);
+  }
+
+  async saveOnboardingDraft(userId: number, stepName: string, draftData: any): Promise<any> {
+    const existingDraft = await this.getOnboardingDraft(userId, stepName);
+    
+    if (existingDraft) {
+      const updatedDraft = {
+        ...existingDraft,
+        draft_data: draftData,
+        updated_at: new Date()
+      };
+      this.onboardingDrafts.set(existingDraft.id, updatedDraft);
+      return updatedDraft;
+    } else {
+      const id = this.currentId++;
+      const newDraft = {
+        id,
+        user_id: userId,
+        step_name: stepName,
+        draft_data: draftData,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      this.onboardingDrafts.set(id, newDraft);
+      return newDraft;
+    }
+  }
+
+  async getAllOnboardingDrafts(userId: number): Promise<any[]> {
+    return Array.from(this.onboardingDrafts.values())
+      .filter(draft => draft.user_id === userId)
+      .sort((a, b) => a.step_name.localeCompare(b.step_name));
+  }
   
   // Fitness goals
   async getFitnessGoals(userId: number): Promise<FitnessGoal[]> {
