@@ -744,6 +744,55 @@ export class DatabaseStorage implements IStorage {
     
     return updatedStatus;
   }
+
+  // Onboarding drafts
+  async getOnboardingDraft(userId: number, stepName: string): Promise<OnboardingDraft | undefined> {
+    const [draft] = await db
+      .select()
+      .from(onboarding_drafts)
+      .where(
+        and(
+          eq(onboarding_drafts.user_id, userId),
+          eq(onboarding_drafts.step_name, stepName)
+        )
+      );
+    return draft;
+  }
+
+  async saveOnboardingDraft(userId: number, stepName: string, draftData: any): Promise<OnboardingDraft> {
+    const existingDraft = await this.getOnboardingDraft(userId, stepName);
+    
+    if (existingDraft) {
+      const [updatedDraft] = await db
+        .update(onboarding_drafts)
+        .set({ 
+          draft_data: draftData,
+          updated_at: new Date()
+        })
+        .where(eq(onboarding_drafts.id, existingDraft.id))
+        .returning();
+      return updatedDraft;
+    } else {
+      const [newDraft] = await db
+        .insert(onboarding_drafts)
+        .values({
+          user_id: userId,
+          step_name: stepName,
+          draft_data: draftData
+        })
+        .returning();
+      return newDraft;
+    }
+  }
+
+  async getAllOnboardingDrafts(userId: number): Promise<OnboardingDraft[]> {
+    const drafts = await db
+      .select()
+      .from(onboarding_drafts)
+      .where(eq(onboarding_drafts.user_id, userId))
+      .orderBy(asc(onboarding_drafts.step_name));
+    return drafts;
+  }
   
   // Fitness goals
   async getFitnessGoals(userId: number): Promise<FitnessGoal[]> {
@@ -957,6 +1006,7 @@ export class MemStorage implements IStorage {
   private healthMetrics: Map<number, HealthMetric>;
   private integrationConnections: Map<number, IntegrationConnection>;
   private onboardingStatuses: Map<number, OnboardingStatus>;
+  private onboardingDrafts: Map<number, any>;
   private fitnessGoals: Map<number, FitnessGoal>;
   private userExperiences: Map<number, ExperienceLevel>;
   private trainingPreferences: Map<number, TrainingPreference>;
@@ -980,6 +1030,7 @@ export class MemStorage implements IStorage {
     this.healthMetrics = new Map();
     this.integrationConnections = new Map();
     this.onboardingStatuses = new Map();
+    this.onboardingDrafts = new Map();
     this.fitnessGoals = new Map();
     this.userExperiences = new Map();
     this.trainingPreferences = new Map();

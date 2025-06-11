@@ -1852,6 +1852,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save onboarding draft
+  app.post("/api/onboarding/drafts/:stepName", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { stepName } = req.params;
+      const draftData = req.body;
+
+      const draft = await storage.saveOnboardingDraft(userId, stepName, draftData);
+      res.json(draft);
+    } catch (error) {
+      console.error("Error saving onboarding draft:", error);
+      res.status(500).json({ error: "Failed to save draft" });
+    }
+  });
+
+  // Get onboarding draft
+  app.get("/api/onboarding/drafts/:stepName", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { stepName } = req.params;
+
+      const draft = await storage.getOnboardingDraft(userId, stepName);
+      if (!draft) {
+        return res.status(404).json({ error: "Draft not found" });
+      }
+
+      res.json(draft.draft_data);
+    } catch (error) {
+      console.error("Error fetching onboarding draft:", error);
+      res.status(500).json({ error: "Failed to fetch draft" });
+    }
+  });
+
+  // Get all onboarding drafts
+  app.get("/api/onboarding/drafts", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const drafts = await storage.getAllOnboardingDrafts(userId);
+      const draftsByStep = drafts.reduce((acc, draft) => {
+        acc[draft.step_name] = draft.draft_data;
+        return acc;
+      }, {} as Record<string, any>);
+
+      res.json(draftsByStep);
+    } catch (error) {
+      console.error("Error fetching onboarding drafts:", error);
+      res.status(500).json({ error: "Failed to fetch drafts" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
