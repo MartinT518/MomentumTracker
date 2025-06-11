@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -50,21 +50,11 @@ export default function FitnessGoalsStep({
     }
   );
 
-  // Auto-save timeout ref
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Event handlers for form updates with auto-save
+  // Event handlers for form updates
   const handleChange = (field: keyof FitnessGoalsData, value: any) => {
     const updatedData = { ...formData, [field]: value };
     setFormData(updatedData);
     onUpdateData(updatedData);
-
-    // Clear existing timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    // Auto-save functionality removed to prevent errors
   };
 
   // Track required field status
