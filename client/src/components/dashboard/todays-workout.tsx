@@ -68,9 +68,9 @@ export function TodaysWorkout() {
       </div>
       
       <div className="mt-4 flex space-x-3">
-        <Link href="/activities/start">
+        <Link href="/activities">
           <Button className="flex-1">
-            Start Workout
+            Log Activity
           </Button>
         </Link>
         <Link href="/training-plan">
