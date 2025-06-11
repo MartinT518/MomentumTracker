@@ -39,6 +39,7 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
 
   // If user is already logged in, redirect to dashboard
   useEffect(() => {
@@ -80,14 +81,19 @@ export default function AuthPage() {
 
   const onRegisterSubmit = async (values: RegisterValues) => {
     try {
+      setUsernameSuggestions([]); // Clear previous suggestions
       const { confirmPassword, ...userData } = values;
       await registerMutation.mutateAsync({
         username: userData.username,
         email: userData.email,
         password: userData.password,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      // Check if error contains username suggestions
+      if (error.suggestions && Array.isArray(error.suggestions)) {
+        setUsernameSuggestions(error.suggestions);
+      }
     }
   };
 
@@ -209,6 +215,26 @@ export default function AuthPage() {
                                 <Input placeholder="Choose a username" {...field} className="bg-white/20 border-white/30 text-white placeholder:text-white/60" />
                               </FormControl>
                               <FormMessage />
+                              {usernameSuggestions.length > 0 && (
+                                <div className="mt-2 p-3 bg-white/10 border border-white/20 rounded-md">
+                                  <p className="text-sm text-white/80 mb-2">Username already exists. Try these suggestions:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {usernameSuggestions.map((suggestion, index) => (
+                                      <button
+                                        key={index}
+                                        type="button"
+                                        onClick={() => {
+                                          field.onChange(suggestion);
+                                          setUsernameSuggestions([]);
+                                        }}
+                                        className="px-3 py-1 bg-blue-500/30 hover:bg-blue-500/50 border border-blue-400/30 rounded-md text-sm text-white transition-colors"
+                                      >
+                                        {suggestion}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </FormItem>
                           )}
                         />
