@@ -103,45 +103,24 @@ export default function OnboardingPage() {
     enabled: !!user, // Only run if user is logged in
   });
 
-  // Fetch saved onboarding data for summary step
-  const { data: savedFitnessGoals } = useQuery({
-    queryKey: ["/api/onboarding/fitness-goals"],
+  // Fetch saved onboarding data for summary step using drafts API
+  const { data: savedOnboardingDrafts } = useQuery({
+    queryKey: ["/api/onboarding/drafts"],
     queryFn: async () => {
       try {
-        const res = await apiRequest("GET", "/api/onboarding/fitness-goals");
+        const res = await apiRequest("GET", "/api/onboarding/drafts");
         return await res.json();
       } catch (error) {
-        return null;
+        return {};
       }
     },
     enabled: !!user && currentStep === OnboardingStep.SUMMARY,
   });
 
-  const { data: savedExperience } = useQuery({
-    queryKey: ["/api/onboarding/user-experience"],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest("GET", "/api/onboarding/user-experience");
-        return await res.json();
-      } catch (error) {
-        return null;
-      }
-    },
-    enabled: !!user && currentStep === OnboardingStep.SUMMARY,
-  });
-
-  const { data: savedTrainingPreferences } = useQuery({
-    queryKey: ["/api/onboarding/training-preferences"],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest("GET", "/api/onboarding/training-preferences");
-        return await res.json();
-      } catch (error) {
-        return null;
-      }
-    },
-    enabled: !!user && currentStep === OnboardingStep.SUMMARY,
-  });
+  // Extract individual step data from drafts
+  const savedFitnessGoals = savedOnboardingDrafts?.["fitness-goals"];
+  const savedExperience = savedOnboardingDrafts?.["experience"];
+  const savedTrainingPreferences = savedOnboardingDrafts?.["training-preferences"];
 
   // Complete the onboarding process
   const completeOnboardingMutation = useMutation({
