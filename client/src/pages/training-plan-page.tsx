@@ -13,6 +13,7 @@ import PlanAdjustmentTool from "@/components/training-plan/plan-adjustment-tool"
 import { StrengthTrainingSuggestion } from "@/components/training-plan/strength-training-suggestion";
 import { CoachSelection } from "@/components/coaching/coach-selection";
 import { CoachChat } from "@/components/coaching/coach-chat";
+import { CoachBriefing } from "@/components/coaching/coach-briefing";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -203,7 +204,7 @@ export default function TrainingPlanPage() {
             </div>
           )}
           
-          {selectedTab !== "ai-plan" && !isGeneratingPlan && (
+          {selectedTab !== "ai-plan" && selectedTab !== "coach" && !isGeneratingPlan && (
             <div className="mt-4 md:mt-0">
               <Button 
                 onClick={() => setSelectedTab("ai-plan")}
@@ -491,10 +492,20 @@ export default function TrainingPlanPage() {
               )
             ) : (
               selectedCoach && coachSessionId && (
-                <CoachChat 
-                  coach={selectedCoach} 
-                  sessionId={coachSessionId} 
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Coach briefing - left sidebar */}
+                  <div className="lg:col-span-1">
+                    <CoachBriefing userId={user?.id || 1} />
+                  </div>
+                  
+                  {/* Coach chat - main area */}
+                  <div className="lg:col-span-2">
+                    <CoachChat 
+                      coach={selectedCoach} 
+                      sessionId={coachSessionId} 
+                    />
+                  </div>
+                </div>
               )
             )}
           </TabsContent>
