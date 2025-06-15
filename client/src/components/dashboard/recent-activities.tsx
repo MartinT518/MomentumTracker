@@ -17,17 +17,17 @@ import { Badge } from "@/components/ui/badge";
 
 interface ActivityData {
   id: number;
-  date: string;
-  type: {
-    name: string;
-    icon: "chart" | "speed" | "activity";
-    color: "primary" | "secondary" | "accent";
-  };
-  distance: string;
-  time: string;
-  pace: string;
-  heartRate: string;
-  effort: {
+  activity_date?: string;
+  date?: string;
+  activity_type: string;
+  distance?: number | string;
+  duration?: number | string;
+  time?: string;
+  pace?: string;
+  heart_rate?: number | string;
+  heartRate?: string;
+  calories?: number;
+  effort?: {
     level: "easy" | "moderate" | "hard";
     label: string;
   };
@@ -104,19 +104,18 @@ export function RecentActivities() {
 
   const activities = data || placeholderActivities;
 
-  const getIconComponent = (icon: string, color: string) => {
-    const colorClass = color === "primary" ? "text-blue-300" : 
-                      color === "secondary" ? "text-purple-300" : 
-                      color === "accent" ? "text-green-300" : "text-white/70";
-    switch (icon) {
-      case "chart":
-        return <BarChart3 className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
-      case "speed":
-        return <Zap className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
-      case "activity":
-        return <Activity className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
-      default:
-        return <Activity className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
+  const getActivityIcon = (activityType: string) => {
+    const type = activityType?.toLowerCase() || 'run';
+    const colorClass = "text-blue-300"; // Default color for all activities
+    
+    if (type.includes('run')) {
+      return <Activity className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
+    } else if (type.includes('bike') || type.includes('cycle')) {
+      return <Zap className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
+    } else if (type.includes('swim')) {
+      return <BarChart3 className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
+    } else {
+      return <Activity className={`h-4 w-4 ${colorClass} drop-shadow-md`} />;
     }
   };
 
@@ -163,42 +162,56 @@ export function RecentActivities() {
             </tr>
           </thead>
           <tbody className="bg-white/5 divide-y divide-white/10">
-            {activities.map((activity) => (
-              <tr key={activity.id} className="hover:bg-white/10 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md">{activity.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className={cn(
-                      "rounded-md p-1 mr-2 bg-white/20",
-                      getBackgroundClass(activity.type.color)
-                    )}>
-                      {getIconComponent(activity.type.icon, activity.type.color)}
+            {activities.map((activity) => {
+              // Handle different data structures safely
+              const isRealActivity = 'activity_type' in activity;
+              const displayDate = isRealActivity ? activity.activity_date : activity.date;
+              const displayDistance = isRealActivity ? 
+                (activity.distance ? `${activity.distance} mi` : 'N/A') : 
+                activity.distance;
+              const displayTime = isRealActivity ? 
+                (activity.duration ? `${Math.floor(Number(activity.duration) / 60)}:${String(Number(activity.duration) % 60).padStart(2, '0')}` : 'N/A') : 
+                activity.time;
+              const displayPace = isRealActivity ? (activity.pace || 'N/A') : activity.pace;
+              const displayHeartRate = isRealActivity ? 
+                (activity.heart_rate ? `${activity.heart_rate} bpm` : 'N/A') : 
+                activity.heartRate;
+              const activityType = isRealActivity ? activity.activity_type : activity.type?.name;
+              
+              return (
+                <tr key={activity.id} className="hover:bg-white/10 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md">{displayDate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="rounded-md p-1 mr-2 bg-white/20 bg-blue-400/20">
+                        {isRealActivity ? getActivityIcon(activity.activity_type) : getActivityIcon(activity.type?.name || 'run')}
+                      </div>
+                      <span className="text-sm font-medium text-white drop-shadow-md">{activityType}</span>
                     </div>
-                    <span className="text-sm font-medium text-white drop-shadow-md">{activity.type.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.distance}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.time}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.pace}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{activity.heartRate}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={cn(
-                    "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-white/20 backdrop-blur-sm",
-                    getEffortBadgeClass(activity.effort.level)
-                  )}>
-                    {activity.effort.label}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
-                    onClick={() => handleViewActivity(activity.id)}
-                    className="text-white/90 hover:text-white drop-shadow-md cursor-pointer bg-transparent border-none p-0 transition-colors"
-                  >
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{displayDistance}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{displayTime}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{displayPace}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white drop-shadow-md metric-value">{displayHeartRate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={cn(
+                      "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-white/20 backdrop-blur-sm",
+                      getEffortBadgeClass(isRealActivity ? (activity.effort?.level || 'easy') : activity.effort?.level || 'easy')
+                    )}>
+                      {isRealActivity ? (activity.effort?.label || 'Easy') : activity.effort?.label || 'Easy'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button 
+                      onClick={() => handleViewActivity(activity.id)}
+                      className="text-white/90 hover:text-white drop-shadow-md cursor-pointer bg-transparent border-none p-0 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -217,47 +230,58 @@ export function RecentActivities() {
             <div className="py-4">
               {(() => {
                 const activity = activities.find(a => a.id === viewActivityId)!;
+                const isRealActivity = 'activity_type' in activity;
+                const displayDate = isRealActivity ? activity.activity_date : activity.date;
+                const displayDistance = isRealActivity ? 
+                  (activity.distance ? `${activity.distance} mi` : 'N/A') : 
+                  activity.distance;
+                const displayTime = isRealActivity ? 
+                  (activity.duration ? `${Math.floor(Number(activity.duration) / 60)}:${String(Number(activity.duration) % 60).padStart(2, '0')}` : 'N/A') : 
+                  activity.time;
+                const displayPace = isRealActivity ? (activity.pace || 'N/A') : activity.pace;
+                const displayHeartRate = isRealActivity ? 
+                  (activity.heart_rate ? `${activity.heart_rate} bpm` : 'N/A') : 
+                  activity.heartRate;
+                const activityType = isRealActivity ? activity.activity_type : activity.type?.name;
+                
                 return (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className={cn(
-                          "rounded-md p-1.5 mr-2",
-                          getBackgroundClass(activity.type.color)
-                        )}>
-                          {getIconComponent(activity.type.icon, activity.type.color)}
+                        <div className="rounded-md p-1.5 mr-2 bg-blue-400/20">
+                          {isRealActivity ? getActivityIcon(activity.activity_type) : getActivityIcon(activity.type?.name || 'run')}
                         </div>
-                        <h3 className="text-lg font-semibold">{activity.type.name}</h3>
+                        <h3 className="text-lg font-semibold">{activityType}</h3>
                       </div>
-                      <span className="text-muted-foreground">{activity.date}</span>
+                      <span className="text-muted-foreground">{displayDate}</span>
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <Card className="bg-muted/50">
                         <CardContent className="p-4">
                           <div className="text-sm text-muted-foreground">Distance</div>
-                          <div className="text-xl font-semibold">{activity.distance}</div>
+                          <div className="text-xl font-semibold">{displayDistance}</div>
                         </CardContent>
                       </Card>
                       
                       <Card className="bg-muted/50">
                         <CardContent className="p-4">
                           <div className="text-sm text-muted-foreground">Time</div>
-                          <div className="text-xl font-semibold">{activity.time}</div>
+                          <div className="text-xl font-semibold">{displayTime}</div>
                         </CardContent>
                       </Card>
                       
                       <Card className="bg-muted/50">
                         <CardContent className="p-4">
                           <div className="text-sm text-muted-foreground">Pace</div>
-                          <div className="text-xl font-semibold">{activity.pace}</div>
+                          <div className="text-xl font-semibold">{displayPace}</div>
                         </CardContent>
                       </Card>
                       
                       <Card className="bg-muted/50">
                         <CardContent className="p-4">
                           <div className="text-sm text-muted-foreground">Heart Rate</div>
-                          <div className="text-xl font-semibold">{activity.heartRate}</div>
+                          <div className="text-xl font-semibold">{displayHeartRate}</div>
                         </CardContent>
                       </Card>
                     </div>
@@ -267,9 +291,9 @@ export function RecentActivities() {
                         <div className="text-sm text-muted-foreground">Effort Level</div>
                         <span className={cn(
                           "px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full",
-                          getEffortBadgeClass(activity.effort.level)
+                          getEffortBadgeClass(isRealActivity ? (activity.effort?.level || 'easy') : activity.effort?.level || 'easy')
                         )}>
-                          {activity.effort.label}
+                          {isRealActivity ? (activity.effort?.label || 'Easy') : activity.effort?.label || 'Easy'}
                         </span>
                       </div>
                     </div>
@@ -277,11 +301,7 @@ export function RecentActivities() {
                     <div>
                       <h4 className="text-sm font-medium mb-2">Training Notes</h4>
                       <p className="text-sm text-muted-foreground">
-                        {activity.type.name === "Long Run" ? 
-                          "This long run was designed to build endurance and practice pacing strategy. The goal was maintaining a consistent effort throughout the entire duration." :
-                          activity.type.name === "Tempo Run" ?
-                          "This tempo run was designed to improve lactate threshold and mental fortitude. The primary goal was sustaining a challenging but manageable pace." :
-                          "This easy run was designed for recovery and active rest. The goal was to keep heart rate low while maintaining good form."}
+                        Activity completed successfully. View detailed metrics above.
                       </p>
                     </div>
                   </div>
