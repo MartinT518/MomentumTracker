@@ -2038,6 +2038,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin impersonation endpoints
+  app.post("/api/admin/impersonate", requireAdmin, async (req, res) => {
+    try {
+      const { targetUserId } = req.body;
+      const adminUser = req.user!;
+
+      // Get target user
+      const [targetUser] = await db.select().from(users)
+        .where(eq(users.id, targetUserId));
+
+      if (!targetUser) {
+        return res.status(404).json({ error: "Target user not found" });
+      }
+
+      // Prevent impersonating another admin
+      if (targetUser.is_admin && targetUser.id !== adminUser.id) {
+        return res.status(403).json({ error: "Cannot impersonate another admin" });
+      }
+
+      // Store original admin in session
+      req.session.originalAdmin = {
+        id: adminUser.id,
+        username: adminUser.username,
+        role: adminUser.role,
+        is_admin: adminUser.is_admin
+      };
+
+      // Set impersonated user in session
+      req.session.impersonatedUser = {
+        id: targetUser.id,
+        username: targetUser.username,
+        role: targetUser.role,
+        is_admin: targetUser.is_admin
+      };
+
+      res.json({
+        impersonatedUser: req.session.impersonatedUser,
+        originalAdmin: req.session.originalAdmin
+      });
+    } catch (error) {
+      console.error("Error starting impersonation:", error);
+      res.status(500).json({ error: "Failed to start impersonation" });
+    }
+  });
+
+  app.post("/api/admin/stop-impersonate", async (req, res) => {
+    try {
+      if (!req.session.originalAdmin) {
+        return res.status(400).json({ error: "Not currently impersonating" });
+      }
+
+      const originalAdmin = req.session.originalAdmin;
+      
+      // Clear impersonation from session
+      delete req.session.impersonatedUser;
+      delete req.session.originalAdmin;
+
+      res.json({
+        originalAdmin
+      });
+    } catch (error) {
+      console.error("Error stopping impersonation:", error);
+      res.status(500).json({ error: "Failed to stop impersonation" });
+    }
+  });
+
   // Update coach (admin only)
   app.put("/api/admin/coaches/:id", requireAdmin, async (req, res) => {
     try {
