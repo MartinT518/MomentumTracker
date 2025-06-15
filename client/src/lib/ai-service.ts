@@ -314,6 +314,32 @@ export async function generateTrainingPlan(userData: {
     
     try {
       // Attempt to parse the training plan into structured data
+      const responseSchema = {
+        overview: {
+          weeklyMileage: "string",
+          workoutsPerWeek: "string",
+          longRunDistance: "string",
+          qualityWorkouts: "string"
+        },
+        philosophy: "string",
+        weeklyPlans: [
+          {
+            week: "number",
+            focus: "string",
+            workouts: [
+              {
+                day: "string",
+                description: "string",
+                type: "string",
+                distance: "string (optional)",
+                duration: "string (optional)",
+                intensity: "string (optional)"
+              }
+            ]
+          }
+        ]
+      };
+
       const structuredData = await generateStructuredData<{
         overview: {
           weeklyMileage: string;
@@ -334,7 +360,7 @@ export async function generateTrainingPlan(userData: {
             intensity?: string;
           }>
         }>
-      }>(structurePrompt, "Analyze the training plan and extract structured data for an interactive display. The overview should include weeklyMileage, workoutsPerWeek, longRunDistance, and qualityWorkouts as separate fields.");
+      }>(structurePrompt, responseSchema, "Analyze the training plan and extract structured data for an interactive display.");
       
       // Return the complete training plan with both text and structured data
       return {

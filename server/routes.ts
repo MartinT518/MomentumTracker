@@ -1474,7 +1474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/nutrition/preferences", checkAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const { dietary_restrictions, allergies, calorie_goal, protein_goal, carb_goal, fat_goal } = req.body;
+      const { dietary_restrictions, allergies, calorie_goal, protein_goal, carbs_goal, fat_goal } = req.body;
 
       // Check if preferences already exist
       const [existing] = await db.select().from(nutrition_preferences)
@@ -1488,7 +1488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           allergies,
           calorie_goal,
           protein_goal,
-          carb_goal,
+          carbs_goal,
           fat_goal,
           updated_at: new Date()
         }).where(eq(nutrition_preferences.user_id, userId))
@@ -1503,7 +1503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           allergies,
           calorie_goal,
           protein_goal,
-          carb_goal,
+          carbs_goal,
           fat_goal
         }).returning();
 
