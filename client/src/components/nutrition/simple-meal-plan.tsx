@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from "@/components/ui/separator";
-import { Loader2, UtensilsCrossed } from 'lucide-react';
+import { Loader2, UtensilsCrossed, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 interface SimpleMealPlanProps {
   onUpdateMealPlan?: () => void;
@@ -48,10 +49,20 @@ export function SimpleMealPlan({ onUpdateMealPlan }: SimpleMealPlanProps) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [generating, setGenerating] = useState(false);
 
-  // Query for fetching the meal plan
+  // Check for saved meal plan first
   const { 
-    data: mealPlan,
-    isLoading,
+    data: savedMealPlan,
+    isLoading: isSavedLoading 
+  } = useQuery({
+    queryKey: ['/api/nutrition/saved-meal-plan', user?.id],
+    enabled: !!user?.id,
+    retry: false,
+  });
+
+  // Query for generating a new meal plan
+  const { 
+    data: newMealPlan,
+    isLoading: isGenerating,
     isError,
     error,
     refetch
@@ -65,21 +76,72 @@ export function SimpleMealPlan({ onUpdateMealPlan }: SimpleMealPlanProps) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to generate meal plan');
         }
-        return response.json();
+        const planData = await response.json();
+        
+        // Save the generated plan
+        await saveMealPlan.mutateAsync({
+          userId: user!.id,
+          planData,
+          generationParameters: { type: 'simple', timestamp: new Date().toISOString() }
+        });
+        
+        return planData;
       } finally {
         setGenerating(false);
       }
     },
-    enabled: false, // Don't run the query automatically
+    enabled: false,
     retry: false,
-    staleTime: Infinity // Once we get a meal plan, it doesn't go stale
+    staleTime: Infinity
   });
+
+  // Mutation to save generated meal plan
+  const saveMealPlan = useMutation({
+    mutationFn: async ({ userId, planData, generationParameters }: {
+      userId: number;
+      planData: any;
+      generationParameters: any;
+    }) => {
+      const res = await apiRequest("POST", "/api/nutrition/save-generated-plan", {
+        userId,
+        planData,
+        generationParameters
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/nutrition/saved-meal-plan', user?.id] });
+    }
+  });
+
+  // Mutation to clear saved meal plan
+  const clearMealPlan = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/nutrition/saved-meal-plan/${user!.id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/nutrition/saved-meal-plan', user?.id] });
+      toast({
+        title: "Meal Plan Cleared",
+        description: "You can now generate a new meal plan.",
+      });
+    }
+  });
+
+  // Determine which meal plan to display
+  const mealPlan = savedMealPlan?.plan_data || newMealPlan;
+  const isLoading = isSavedLoading || isGenerating;
 
   const handleGenerateMealPlan = () => {
     refetch();
     if (onUpdateMealPlan) {
       onUpdateMealPlan();
     }
+  };
+
+  const handleClearMealPlan = () => {
+    clearMealPlan.mutate();
   };
 
   if (isAuthLoading) {
@@ -163,7 +225,14 @@ export function SimpleMealPlan({ onUpdateMealPlan }: SimpleMealPlanProps) {
   return (
     <Card className="w-full -ml-4 bg-white/10 backdrop-blur-sm border-white/20">
       <CardHeader>
-        <CardTitle className="text-white drop-shadow-sm">Your Daily Meal Plan</CardTitle>
+        <CardTitle className="text-white drop-shadow-sm flex items-center justify-between">
+          Your Daily Meal Plan
+          {savedMealPlan && (
+            <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30">
+              Saved Plan
+            </span>
+          )}
+        </CardTitle>
         <CardDescription className="text-white/80 drop-shadow-sm">
           Personalized for your {dailyPlan.totalCalories} calorie target with{' '}
           {Math.round(dailyPlan.totalProtein)}g protein, {Math.round(dailyPlan.totalCarbs)}g carbs, {Math.round(dailyPlan.totalFat)}g fat
@@ -216,10 +285,38 @@ export function SimpleMealPlan({ onUpdateMealPlan }: SimpleMealPlanProps) {
           </div>
         ))}
       </CardContent>
-      <CardFooter>
-        <Button onClick={handleGenerateMealPlan} className="w-full bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30">
-          Generate New Meal Plan
+      <CardFooter className="flex gap-2">
+        <Button 
+          onClick={handleGenerateMealPlan} 
+          className="flex-1 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Generate New Plan
+            </>
+          )}
         </Button>
+        {savedMealPlan && (
+          <Button 
+            onClick={handleClearMealPlan} 
+            variant="outline"
+            className="bg-red-500/10 border-red-500/20 text-red-300 hover:bg-red-500/20 hover:border-red-500/30"
+            disabled={clearMealPlan.isPending}
+          >
+            {clearMealPlan.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Clear Plan"
+            )}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
