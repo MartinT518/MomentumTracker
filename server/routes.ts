@@ -1636,6 +1636,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Coaching Sessions routes
+  app.get("/api/coaching-sessions", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get sessions where the user is the athlete
+      const sessions = await storage.getCoachingSessions(userId, 'athlete');
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching coaching sessions:", error);
+      res.status(500).json({ error: "Failed to fetch coaching sessions" });
+    }
+  });
+
+  app.post("/api/coaching-sessions", checkAuth, async (req, res) => {
+    try {
+      const { coach_id, session_date, duration_minutes, type, notes } = req.body;
+      const userId = req.user!.id;
+
+      // Get coach details for pricing
+      const [coach] = await db.select().from(coaches).where(eq(coaches.id, coach_id));
+      if (!coach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+
+      // Create the session with 'pending_payment' status
+      const newSession = await storage.createCoachingSession({
+        coach_id,
+        athlete_id: userId,
+        session_date: new Date(session_date),
+        duration_minutes,
+        type,
+        status: 'pending_payment',
+        notes
+      });
+
+      res.status(201).json(newSession);
+    } catch (error) {
+      console.error("Error creating coaching session:", error);
+      res.status(500).json({ error: "Failed to create coaching session" });
+    }
+  });
+
+  app.put("/api/coaching-sessions/:id", checkAuth, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const updateData = req.body;
+
+      // Verify the user owns this session or is the coach
+      const [session] = await db.select().from(coaching_sessions).where(eq(coaching_sessions.id, sessionId));
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Check if user is the athlete or coach for this session
+      const [coach] = await db.select().from(coaches).where(eq(coaches.id, session.coach_id));
+      if (session.athlete_id !== userId && coach?.user_id !== userId) {
+        return res.status(403).json({ error: "Unauthorized to update this session" });
+      }
+
+      const updatedSession = await storage.updateCoachingSession(sessionId, updateData);
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error updating coaching session:", error);
+      res.status(500).json({ error: "Failed to update coaching session" });
+    }
+  });
+
+  // Coach payment processing
+  app.post("/api/coaching-sessions/:id/payment-intent", checkAuth, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      // Get session details
+      const [session] = await db.select().from(coaching_sessions).where(eq(coaching_sessions.id, sessionId));
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Verify user is the athlete for this session
+      if (session.athlete_id !== userId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      // Get coach details for pricing
+      const [coach] = await db.select().from(coaches).where(eq(coaches.id, session.coach_id));
+      if (!coach) {
+        return res.status(404).json({ error: "Coach not found" });
+      }
+
+      // Calculate total amount based on duration and hourly rate
+      const hourlyRate = parseFloat(coach.hourly_rate?.toString() || '0');
+      const hours = session.duration_minutes / 60;
+      const totalAmount = hourlyRate * hours;
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(totalAmount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          coaching_session_id: sessionId.toString(),
+          coach_id: session.coach_id.toString(),
+          athlete_id: userId.toString()
+        },
+        description: `Coaching session with ${coach.name} - ${session.type}`
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        amount: totalAmount,
+        coachName: coach.name,
+        sessionType: session.type
+      });
+    } catch (error: any) {
+      console.error("Error creating payment intent for coaching session:", error);
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Confirm payment and update session status
+  app.post("/api/coaching-sessions/:id/confirm-payment", checkAuth, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const { payment_intent_id } = req.body;
+      const userId = req.user!.id;
+
+      // Verify session ownership
+      const [session] = await db.select().from(coaching_sessions).where(eq(coaching_sessions.id, sessionId));
+      if (!session || session.athlete_id !== userId) {
+        return res.status(404).json({ error: "Session not found or unauthorized" });
+      }
+
+      // Verify payment was successful
+      const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ error: "Payment not successful" });
+      }
+
+      // Update session status to 'scheduled' after successful payment
+      const updatedSession = await storage.updateCoachingSession(sessionId, {
+        status: 'scheduled',
+        updated_at: new Date()
+      });
+
+      res.json({ 
+        success: true, 
+        session: updatedSession,
+        message: "Payment confirmed and session scheduled" 
+      });
+    } catch (error: any) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ message: "Error confirming payment: " + error.message });
+    }
+  });
+
   // Stripe payment routes
   app.post("/api/create-payment-intent", checkAuth, async (req, res) => {
     try {
