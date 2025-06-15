@@ -60,13 +60,15 @@ export default function AdminPanelPage() {
   }
 
   // Fetch all users
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+  const { data: usersData, isLoading: usersLoading } = useQuery<{users: User[]}>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
       return response.json();
     },
   });
+
+  const users = usersData?.users || [];
 
   // Fetch platform statistics
   const { data: stats } = useQuery<PlatformStats>({
