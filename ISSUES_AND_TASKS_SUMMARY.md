@@ -60,7 +60,13 @@ This document summarizes all issues identified and additional tasks requested du
 **Problem**: Nutrition preferences page failing to load user preferences
 **Root Cause**: Missing GET endpoint for `/api/nutrition/preferences/:userId`
 **Solution**: Added GET endpoint for fetching user nutrition preferences
-**Status**: ✅ RESOLVED - Added missing GET endpoint: ✅ RESOLVED
+**Status**: ✅ RESOLVED - Added missing GET endpoint
+
+### 9. Recent Activities Date Formatting Error
+**Problem**: Recent activities endpoint failing with "activity.activity_date.toISOString is not a function"
+**Root Cause**: Code expected Date object but database returned string for activity_date field
+**Solution**: Added type checking to handle both string and Date formats safely
+**Status**: ✅ RESOLVED - Added safe date type checking
 
 ### 7. Activities Chart Date Formatting Error
 **Problem**: Activities endpoint failing with "date.toISOString is not a function"
