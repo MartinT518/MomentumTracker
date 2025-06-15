@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { BarChart3, Zap, Activity } from "lucide-react";
+import { BarChart3, Zap, Activity, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { 
