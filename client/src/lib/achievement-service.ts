@@ -32,5 +32,13 @@ export const AchievementService = {
   async markAchievementAsViewed(achievementId: number): Promise<void> {
     await apiRequest("PATCH", `/api/achievements/${achievementId}/view`);
     queryClient.invalidateQueries({ queryKey: ["/api/achievements"] });
+  },
+
+  triggerAchievementEvent(achievement: Achievement): void {
+    // Dispatch a custom event to trigger achievement popup
+    const event = new CustomEvent('achievement-earned', {
+      detail: achievement
+    });
+    window.dispatchEvent(event);
   }
 };
