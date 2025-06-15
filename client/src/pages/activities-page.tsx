@@ -85,9 +85,11 @@ export default function ActivitiesPage() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   // Fetch activities from API
-  const { data: activities = [], isLoading, refetch } = useQuery({
+  const { data: apiResponse, isLoading, refetch } = useQuery({
     queryKey: ["/api/activities"],
   });
+
+  const activities = apiResponse?.activities || [];
 
   // Format activities for display
   const formattedActivities = activities.map((activity: any) => ({
