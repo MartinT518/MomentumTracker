@@ -1551,15 +1551,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const coachId = parseInt(req.params.id);
 
-      const [coach] = await db.select().from(coaches)
-        .where(and(eq(coaches.id, coachId), eq(coaches.is_active, true)))
-        .limit(1);
+      const result = await db.select().from(coaches)
+        .where(eq(coaches.id, coachId));
 
-      if (!coach) {
+      if (!result || result.length === 0) {
         return res.status(404).json({ error: "Coach not found" });
       }
 
-      res.json(coach);
+      res.json(result[0]);
     } catch (error) {
       console.error("Error fetching coach:", error);
       res.status(500).json({ error: "Failed to fetch coach" });
