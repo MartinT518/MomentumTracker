@@ -103,13 +103,21 @@ This document summarizes all issues identified and additional tasks requested du
 **Priority**: Medium (affects user functionality)
 **Recommendation**: Investigate nutrition API endpoints and error handling
 
-### 3. Achievement Service Error
-**Location**: Client-side achievement system
-**Type**: JavaScript runtime error
-**Details**: `AchievementService.triggerAchievementEvent is not a function`
-**Impact**: Achievement system may not trigger properly
-**Priority**: Medium (affects gamification features)
-**Recommendation**: Fix achievement service method definitions
+### 3. Training Plan Generation Errors (FIXED ✅)
+**Location**: Client-side AI service
+**Type**: Function parameter ordering error
+**Details**: `generateStructuredData` function called with incorrect parameters
+**Impact**: Training plan generation failing
+**Priority**: High (affects core functionality)
+**Status**: RESOLVED - Fixed parameter ordering and schema structure
+
+### 4. Nutrition API Field Name Mismatches (FIXED ✅)
+**Location**: Server nutrition preferences API
+**Type**: Database schema mismatch
+**Details**: API using `carb_goal` but schema expects `carbs_goal`
+**Impact**: Nutrition preferences save/update operations failing
+**Priority**: Medium (affects nutrition features)
+**Status**: RESOLVED - Fixed field names in API routes
 
 ### Server-side TypeScript Errors (Non-blocking)
 **Location**: `server/routes.ts`, `server/auth.ts`
