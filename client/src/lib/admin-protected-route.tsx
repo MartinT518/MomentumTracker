@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, Crown } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 import { Redirect, Route } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export function AdminProtectedRoute({
   path,
@@ -30,23 +30,24 @@ export function AdminProtectedRoute({
     );
   }
 
-  if (!user.is_admin) {
+  // Check if user has admin privileges
+  if (user.role !== 'admin' && !user.is_admin) {
     return (
       <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-indigo-800">
-          <Card className="max-w-md mx-auto bg-white/10 backdrop-blur-lg border-white/20">
-            <CardContent className="p-8 text-center">
-              <Crown className="h-16 w-16 mx-auto mb-4 text-yellow-400" />
-              <h2 className="text-2xl font-bold text-white mb-2">Admin Access Required</h2>
-              <p className="text-white/80">
-                You need administrator privileges to access this page.
-              </p>
-            </CardContent>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+          <Card className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 max-w-md">
+            <CardHeader className="text-center">
+              <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <CardTitle className="text-white">Access Denied</CardTitle>
+              <CardDescription className="text-white/70">
+                Administrator privileges required to access this page
+              </CardDescription>
+            </CardHeader>
           </Card>
         </div>
       </Route>
     );
   }
 
-  return <Route path={path}><Component /></Route>;
+  return <Route path={path} component={Component} />;
 }
