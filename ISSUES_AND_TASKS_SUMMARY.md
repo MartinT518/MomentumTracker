@@ -35,6 +35,33 @@ This document summarizes all issues identified and additional tasks requested du
 - Fixed JSX closing tag errors
 **Status**: ✅ RESOLVED
 
+### 5. Health Metrics Page Form Context Error
+**Problem**: `/health-metrics` page not loading due to "useFormField must be used within a FormProvider" error
+**Root Cause**: FormLabel component used outside Form provider context in import dialog
+**Solution**: 
+- Added proper null checks in useFormField hook
+- Replaced standalone FormLabel with regular Label component
+- Health metrics page now loads and functions properly
+**Status**: ✅ RESOLVED
+
+### 6. Goals API Database Schema Mismatch
+**Problem**: Goals creation failing with "null value in column name violates not-null constraint"
+**Root Cause**: API sending `title` field but database schema requires `name` field
+**Solution**: Updated goals creation endpoint to map `title` to `name` field in database insert
+**Status**: ✅ RESOLVED
+
+### 7. Activities Chart Date Formatting Error
+**Problem**: Activities endpoint failing with "date.toISOString is not a function"
+**Root Cause**: formatChartDate function expected Date object but received string from database
+**Solution**: Updated formatChartDate function to handle both string and Date types
+**Status**: ✅ RESOLVED
+
+### 8. Achievement Service Missing Method Error
+**Problem**: "AchievementService.triggerAchievementEvent is not a function" runtime error
+**Root Cause**: Method being called but not defined in AchievementService
+**Solution**: Added triggerAchievementEvent method to dispatch custom events for achievement popups
+**Status**: ✅ RESOLVED
+
 ## Current System Status ✅
 
 ### Completed Features
@@ -56,6 +83,33 @@ This document summarizes all issues identified and additional tasks requested du
 - ✅ Impersonation API endpoints and UI components
 
 ## Outstanding Issues (If Any) ⚠️
+
+### 1. DOM Nesting Warning (HTML Validation)
+**Location**: Client-side HTML structure
+**Type**: HTML validation warning
+**Details**: `<ul>` elements appearing as descendants of `<p>` elements
+**Impact**: Functional but invalid HTML structure
+**Priority**: Medium (affects HTML standards compliance)
+**Recommendation**: Review component structure to fix nesting violations
+
+### 2. Nutrition API Errors
+**Location**: Nutrition-related API endpoints
+**Type**: API connection/data fetching errors
+**Examples**:
+- Error checking subscription status
+- Error fetching nutrition preferences
+- Error fetching meal plan data
+**Impact**: Nutrition features may not function properly
+**Priority**: Medium (affects user functionality)
+**Recommendation**: Investigate nutrition API endpoints and error handling
+
+### 3. Achievement Service Error
+**Location**: Client-side achievement system
+**Type**: JavaScript runtime error
+**Details**: `AchievementService.triggerAchievementEvent is not a function`
+**Impact**: Achievement system may not trigger properly
+**Priority**: Medium (affects gamification features)
+**Recommendation**: Fix achievement service method definitions
 
 ### Server-side TypeScript Errors (Non-blocking)
 **Location**: `server/routes.ts`, `server/auth.ts`

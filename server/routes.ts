@@ -905,7 +905,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(activities)
         .where(and(...whereConditions));
 
-      const formatChartDate = (date: Date): string => {
+      const formatChartDate = (date: string | Date): string => {
+        if (typeof date === 'string') {
+          return date;
+        }
         return date.toISOString().split('T')[0];
       };
 
@@ -1147,11 +1150,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const [newGoal] = await db.insert(goals).values({
         user_id: userId,
-        title,
-        description,
-        target_value,
-        target_date: parsedTargetDate,
+        name: title,
         goal_type,
+        target_date: parsedTargetDate,
         status: 'active'
       }).returning();
 
