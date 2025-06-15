@@ -1950,6 +1950,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get onboarding status
+  app.get("/api/onboarding/status", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const [status] = await db.select()
+        .from(onboarding_status)
+        .where(eq(onboarding_status.user_id, userId))
+        .limit(1);
+
+      if (!status) {
+        // User hasn't started onboarding yet
+        return res.json({ completed: false, current_step: null });
+      }
+
+      res.json({
+        completed: status.completed,
+        current_step: status.current_step,
+        completed_at: status.completed_at,
+        last_updated: status.last_updated
+      });
+    } catch (error) {
+      console.error("Error fetching onboarding status:", error);
+      res.status(500).json({ error: "Failed to fetch onboarding status" });
+    }
+  });
+
   // Complete onboarding process
   app.post("/api/onboarding/complete", requireAuth, async (req, res) => {
     try {
