@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { USER_ROLE_DESCRIPTIONS, UserRole } from "@shared/user-roles";
+import { ImpersonationPanel } from "@/components/admin/impersonation-panel";
 import { Users, UserCheck, Settings, BarChart3, Shield, Crown, Star } from "lucide-react";
 
 interface User {
@@ -180,6 +181,10 @@ export default function AdminPanelPage() {
             <TabsTrigger value="roles" className="data-[state=active]:bg-white/20">
               <Shield className="h-4 w-4 mr-2" />
               Role Definitions
+            </TabsTrigger>
+            <TabsTrigger value="impersonation" className="data-[state=active]:bg-white/20">
+              <UserCheck className="h-4 w-4 mr-2" />
+              User Impersonation
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-white/20">
               <Settings className="h-4 w-4 mr-2" />
@@ -376,6 +381,23 @@ export default function AdminPanelPage() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="impersonation" className="space-y-6">
+            <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <UserCheck className="h-5 w-5 mr-2" />
+                  User Impersonation
+                </CardTitle>
+                <CardDescription className="text-white/70">
+                  Switch between different user interfaces to test features and provide support
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImpersonationPanel />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
