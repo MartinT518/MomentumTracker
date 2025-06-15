@@ -78,19 +78,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AchievementsProvider>
-          <TooltipProvider>
-            <div className="flex flex-col min-h-screen">
-              <div className="flex-1">
-                <Toaster />
-                <Router />
-                <SupportChatBot />
-                <GoalAchievementPopup />
+        <AdminImpersonationProvider>
+          <AchievementsProvider>
+            <TooltipProvider>
+              <div className="flex flex-col min-h-screen">
+                <div className="flex-1">
+                  <Toaster />
+                  <Router />
+                  <SupportChatBot />
+                  <GoalAchievementPopup />
+                </div>
+                <AppFooter />
               </div>
-              <AppFooter />
-            </div>
-          </TooltipProvider>
-        </AchievementsProvider>
+            </TooltipProvider>
+          </AchievementsProvider>
+        </AdminImpersonationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
