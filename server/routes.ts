@@ -1134,7 +1134,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
 
       if (connection.length === 0) {
-        return res.status(404).json({ error: "Strava integration not found. Please connect your Strava account first." });
+        // Return informational response about missing integration
+        return res.json({ 
+          count: 0, 
+          message: "Strava integration not connected. Please connect your Strava account first to import activity data. Strava focuses on activities rather than detailed health metrics like HRV and sleep data." 
+        });
       }
 
       // For now, return a success response indicating no health metrics available
@@ -1163,7 +1167,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
 
       if (connection.length === 0) {
-        return res.status(404).json({ error: "Garmin integration not found. Please connect your Garmin Connect account first." });
+        // Return informational response about missing integration
+        return res.json({ 
+          count: 0, 
+          message: "Garmin Connect integration not connected. Please connect your Garmin account first to import health metrics like HRV, sleep quality, and resting heart rate data." 
+        });
       }
 
       // For now, return a success response indicating no health metrics available
@@ -1192,7 +1200,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
 
       if (connection.length === 0) {
-        return res.status(404).json({ error: "Polar integration not found. Please connect your Polar Flow account first." });
+        // Return informational response about missing integration
+        return res.json({ 
+          count: 0, 
+          message: "Polar Flow integration not connected. Please connect your Polar account first to import comprehensive health metrics including HRV, sleep analysis, and recovery data." 
+        });
       }
 
       // For now, return a success response indicating no health metrics available
