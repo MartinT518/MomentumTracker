@@ -3,8 +3,8 @@ import { MobileMenu } from "@/components/common/mobile-menu";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, queryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,8 +91,21 @@ export default function ActivitiesPage() {
 
   const activities = apiResponse?.activities || [];
 
+  // Add type safety for activities
+  interface Activity {
+    id: number;
+    activity_type: string;
+    activity_date: string;
+    duration: number;
+    distance: number;
+    heart_rate?: number;
+    effort_level?: string;
+    notes?: string;
+    source: string;
+  }
+
   // Format activities for display
-  const formattedActivities = activities.map((activity: any) => ({
+  const formattedActivities = activities.map((activity: Activity) => ({
     id: activity.id,
     date: new Date(activity.activity_date).toLocaleDateString('en-US', { 
       month: 'short', 
@@ -520,7 +533,7 @@ export default function ActivitiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {activities.map((activity) => (
+                  {formattedActivities.map((activity) => (
                     <TableRow key={activity.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
                       <TableCell className="text-white/80 drop-shadow-sm">{activity.date}</TableCell>
                       <TableCell>
