@@ -468,6 +468,28 @@ export const subscription_plans = pgTable("subscription_plans", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Saved AI-generated meal plans for users
+export const saved_meal_plans = pgTable("saved_meal_plans", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  plan_data: json("plan_data").notNull(), // Full meal plan JSON structure
+  generation_parameters: json("generation_parameters"), // Parameters used for generation
+  is_active: boolean("is_active").default(true), // Current active plan
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Saved AI-generated training plans for users
+export const saved_training_plans = pgTable("saved_training_plans", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  plan_data: json("plan_data").notNull(), // Full training plan JSON structure
+  generation_parameters: json("generation_parameters"), // Parameters used for generation
+  is_active: boolean("is_active").default(true), // Current active plan
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for validations
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -593,6 +615,18 @@ export const insertNutritionPreferenceSchema = createInsertSchema(nutrition_pref
   updated_at: true,
 });
 
+export const insertSavedMealPlanSchema = createInsertSchema(saved_meal_plans).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertSavedTrainingPlanSchema = createInsertSchema(saved_training_plans).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Onboarding schema inserts
 export const insertOnboardingStatusSchema = createInsertSchema(onboarding_status).omit({
   id: true,
@@ -672,6 +706,12 @@ export type InsertMealFoodItem = z.infer<typeof insertMealFoodItemSchema>;
 
 export type NutritionPreference = typeof nutrition_preferences.$inferSelect;
 export type InsertNutritionPreference = z.infer<typeof insertNutritionPreferenceSchema>;
+
+export type SavedMealPlan = typeof saved_meal_plans.$inferSelect;
+export type InsertSavedMealPlan = z.infer<typeof insertSavedMealPlanSchema>;
+
+export type SavedTrainingPlan = typeof saved_training_plans.$inferSelect;
+export type InsertSavedTrainingPlan = z.infer<typeof insertSavedTrainingPlanSchema>;
 
 // Onboarding types
 export type OnboardingStatus = typeof onboarding_status.$inferSelect;
