@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { db } from "./db";
 import { setupAuth } from "./auth";
 import { setupDevSubscription } from "./dev-subscription";
@@ -2171,5 +2172,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // WebSocket server for coach chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  // Store active connections by session ID
+  const connections = new Map<string, WebSocket[]>();
+
+  wss.on('connection', (ws: WebSocket, req) => {
+    const url = new URL(req.url!, `http://${req.headers.host}`);
+    const sessionId = url.searchParams.get('sessionId');
+
+    if (!sessionId) {
+      ws.close(1008, 'Session ID required');
+      return;
+    }
+
+    console.log(`WebSocket connection established for session: ${sessionId}`);
+
+    // Add connection to session group
+    if (!connections.has(sessionId)) {
+      connections.set(sessionId, []);
+    }
+    connections.get(sessionId)!.push(ws);
+
+    // Send initial connection confirmation
+    ws.send(JSON.stringify({
+      type: 'connected',
+      sessionId
+    }));
+
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        switch (message.type) {
+          case 'message':
+            // Broadcast message to all connections in this session
+            const sessionConnections = connections.get(sessionId) || [];
+            const messageData = {
+              type: 'message',
+              id: Date.now().toString(),
+              from: 'user',
+              text: message.text,
+              timestamp: new Date().toISOString(),
+              status: 'delivered'
+            };
+
+            sessionConnections.forEach(conn => {
+              if (conn !== ws && conn.readyState === WebSocket.OPEN) {
+                conn.send(JSON.stringify(messageData));
+              }
+            });
+
+            // Simulate coach response after a delay
+            setTimeout(() => {
+              const coachResponse = {
+                type: 'message',
+                id: (Date.now() + 1).toString(),
+                from: 'coach',
+                text: generateCoachResponse(message.text),
+                timestamp: new Date().toISOString(),
+                status: 'delivered'
+              };
+
+              sessionConnections.forEach(conn => {
+                if (conn.readyState === WebSocket.OPEN) {
+                  conn.send(JSON.stringify(coachResponse));
+                }
+              });
+            }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+            break;
+
+          case 'history':
+            // Send chat history (for now, just welcome message)
+            ws.send(JSON.stringify({
+              type: 'history',
+              messages: []
+            }));
+            break;
+
+          case 'typing':
+            // Broadcast typing status
+            const typingData = {
+              type: 'typing',
+              isTyping: message.isTyping
+            };
+
+            const sessionConns = connections.get(sessionId) || [];
+            sessionConns.forEach(conn => {
+              if (conn !== ws && conn.readyState === WebSocket.OPEN) {
+                conn.send(JSON.stringify(typingData));
+              }
+            });
+            break;
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log(`WebSocket connection closed for session: ${sessionId}`);
+      
+      // Remove connection from session group
+      const sessionConnections = connections.get(sessionId);
+      if (sessionConnections) {
+        const index = sessionConnections.indexOf(ws);
+        if (index > -1) {
+          sessionConnections.splice(index, 1);
+        }
+        
+        // Clean up empty session groups
+        if (sessionConnections.length === 0) {
+          connections.delete(sessionId);
+        }
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  });
+
+  // Helper function to generate coach responses
+  function generateCoachResponse(userMessage: string): string {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+      return "Hello! Great to hear from you. How can I help with your training today?";
+    }
+    
+    if (lowerMessage.includes('training') || lowerMessage.includes('workout')) {
+      return "I'd be happy to help with your training! Can you tell me more about your current goals and what specific areas you'd like to focus on?";
+    }
+    
+    if (lowerMessage.includes('pace') || lowerMessage.includes('speed')) {
+      return "Pacing is crucial for improvement. What's your current training pace, and what are you hoping to achieve?";
+    }
+    
+    if (lowerMessage.includes('injury') || lowerMessage.includes('pain')) {
+      return "I'm sorry to hear about your concerns. It's important to address any pain or injury properly. Have you consulted with a medical professional? I can help adjust your training plan accordingly.";
+    }
+    
+    if (lowerMessage.includes('race') || lowerMessage.includes('marathon') || lowerMessage.includes('5k') || lowerMessage.includes('10k')) {
+      return "That's exciting! Race preparation is one of my specialties. What's your target race and current fitness level?";
+    }
+    
+    if (lowerMessage.includes('thank')) {
+      return "You're very welcome! I'm here to support your running journey. Keep up the great work!";
+    }
+    
+    // Default responses
+    const defaultResponses = [
+      "That's a great question! Based on your training history, I'd recommend focusing on building a solid base first.",
+      "I understand your concern. Let's work together to find the best approach for your situation.",
+      "Every runner's journey is unique. Can you share more details so I can give you more specific advice?",
+      "That's something we can definitely work on. What's your current experience level with this?",
+      "I'm here to help you succeed! Let's break this down into manageable steps."
+    ];
+    
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  }
+
   return httpServer;
 }
