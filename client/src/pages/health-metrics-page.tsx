@@ -48,6 +48,7 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -505,7 +506,7 @@ export default function HealthMetricsPage() {
                 </DialogHeader>
                 <div className="space-y-6 py-4">
                   <div className="space-y-4">
-                    <FormLabel>Select Platform</FormLabel>
+                    <Label>Select Platform</Label>
                     <Select 
                       value={selectedPlatform} 
                       onValueChange={setSelectedPlatform}
