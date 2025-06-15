@@ -1537,8 +1537,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/coaches", checkAuth, async (req, res) => {
     try {
       const availableCoaches = await db.select().from(coaches)
-        .where(eq(coaches.is_active, true))
-        .orderBy(desc(coaches.rating));
+        .where(eq(coaches.available, true))
+        .orderBy(desc(coaches.created_at));
 
       res.json(availableCoaches);
     } catch (error) {
