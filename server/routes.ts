@@ -1135,23 +1135,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/goals", checkAuth, async (req, res) => {
     try {
-      const { title, description, target_value, target_date, goal_type } = req.body;
+      const { title, primary_goal, description, target_value, target_date, goal_type, goal_date } = req.body;
       const userId = req.user!.id;
+      
+      // Use primary_goal as title if title is not provided
+      const goalTitle = title || primary_goal;
+      const goalDate = target_date || goal_date;
 
       // Validate and parse target_date
       let parsedTargetDate = null;
-      if (target_date) {
-        const dateObj = new Date(target_date);
+      if (goalDate) {
+        const dateObj = new Date(goalDate);
         if (isNaN(dateObj.getTime())) {
           return res.status(400).json({ error: "Invalid target date format" });
         }
-        parsedTargetDate = dateObj;
+        parsedTargetDate = dateObj.toISOString().split('T')[0]; // Store as date string
       }
 
       const [newGoal] = await db.insert(goals).values({
         user_id: userId,
-        name: title,
-        goal_type,
+        name: goalTitle,
+        goal_type: goal_type || primary_goal,
         target_date: parsedTargetDate,
         status: 'active'
       }).returning();
@@ -1462,6 +1466,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           carb_goal: 250,
           fat_goal: 65
         });
+      }
+
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching nutrition preferences:", error);
+      res.status(500).json({ error: "Failed to fetch nutrition preferences" });
+    }
+  });
+
+  app.get("/api/nutrition/preferences/:userId", checkAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Verify user can access these preferences
+      if (userId !== req.user!.id && !req.user!.is_admin) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const [preferences] = await db.select().from(nutrition_preferences)
+        .where(eq(nutrition_preferences.user_id, userId))
+        .limit(1);
+
+      if (!preferences) {
+        return res.status(404).json({ error: "Nutrition preferences not found" });
       }
 
       res.json(preferences);
@@ -1820,6 +1848,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching subscription plans:", error);
       res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  // Get user's subscription status
+  app.get("/api/user/subscription", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Return subscription status based on user data
+      const subscriptionData = {
+        status: user.subscription_status || 'inactive',
+        plan_name: user.subscription_plan_id ? 'Premium' : 'Free',
+        subscription_end_date: user.subscription_end_date,
+        has_active_subscription: user.subscription_status === 'active'
+      };
+
+      res.json(subscriptionData);
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ error: "Failed to fetch subscription status" });
     }
   });
 

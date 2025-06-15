@@ -46,9 +46,21 @@ This document summarizes all issues identified and additional tasks requested du
 
 ### 6. Goals API Database Schema Mismatch
 **Problem**: Goals creation failing with "null value in column name violates not-null constraint"
-**Root Cause**: API sending `title` field but database schema requires `name` field
-**Solution**: Updated goals creation endpoint to map `title` to `name` field in database insert
-**Status**: ✅ RESOLVED
+**Root Cause**: API sending `primary_goal` field but database schema requires `name` field
+**Solution**: Updated goals creation endpoint to map `primary_goal` to `name` field in database insert
+**Status**: ✅ RESOLVED - Fixed field mapping from primary_goal to name
+
+### 7. Missing Subscription Status API Endpoint
+**Problem**: Nutrition page failing with subscription status check errors
+**Root Cause**: Missing `/api/user/subscription` endpoint
+**Solution**: Added subscription status endpoint that returns user subscription data
+**Status**: ✅ RESOLVED - Added missing API endpoint
+
+### 8. Missing Nutrition Preferences GET Endpoint  
+**Problem**: Nutrition preferences page failing to load user preferences
+**Root Cause**: Missing GET endpoint for `/api/nutrition/preferences/:userId`
+**Solution**: Added GET endpoint for fetching user nutrition preferences
+**Status**: ✅ RESOLVED - Added missing GET endpoint: ✅ RESOLVED
 
 ### 7. Activities Chart Date Formatting Error
 **Problem**: Activities endpoint failing with "date.toISOString is not a function"
