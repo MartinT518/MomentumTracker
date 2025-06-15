@@ -1645,6 +1645,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Saved meal plans routes
+  app.get("/api/nutrition/saved-meal-plan/:userId", checkAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      const savedPlan = await db.select().from(saved_meal_plans)
+        .where(and(
+          eq(saved_meal_plans.user_id, userId),
+          eq(saved_meal_plans.is_active, true)
+        ))
+        .orderBy(desc(saved_meal_plans.created_at))
+        .limit(1);
+
+      if (savedPlan.length === 0) {
+        return res.status(404).json({ error: "No saved meal plan found" });
+      }
+
+      res.json(savedPlan[0]);
+    } catch (error) {
+      console.error("Error fetching saved meal plan:", error);
+      res.status(500).json({ error: "Failed to fetch saved meal plan" });
+    }
+  });
+
+  app.post("/api/nutrition/save-generated-plan", checkAuth, async (req, res) => {
+    try {
+      const { userId, planData, generationParameters } = req.body;
+
+      // Deactivate any existing meal plans for this user
+      await db.update(saved_meal_plans)
+        .set({ is_active: false, updated_at: new Date() })
+        .where(eq(saved_meal_plans.user_id, userId));
+
+      // Save the new meal plan
+      const [savedPlan] = await db.insert(saved_meal_plans)
+        .values({
+          user_id: userId,
+          plan_data: planData,
+          generation_parameters: generationParameters,
+          is_active: true
+        })
+        .returning();
+
+      res.status(201).json(savedPlan);
+    } catch (error) {
+      console.error("Error saving meal plan:", error);
+      res.status(500).json({ error: "Failed to save meal plan" });
+    }
+  });
+
+  app.delete("/api/nutrition/saved-meal-plan/:userId", checkAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      await db.update(saved_meal_plans)
+        .set({ is_active: false, updated_at: new Date() })
+        .where(eq(saved_meal_plans.user_id, userId));
+
+      res.json({ message: "Meal plan cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing meal plan:", error);
+      res.status(500).json({ error: "Failed to clear meal plan" });
+    }
+  });
+
+  // Saved training plans routes
+  app.get("/api/training/saved-plan/:userId", checkAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      const savedPlan = await db.select().from(saved_training_plans)
+        .where(and(
+          eq(saved_training_plans.user_id, userId),
+          eq(saved_training_plans.is_active, true)
+        ))
+        .orderBy(desc(saved_training_plans.created_at))
+        .limit(1);
+
+      if (savedPlan.length === 0) {
+        return res.status(404).json({ error: "No saved training plan found" });
+      }
+
+      res.json(savedPlan[0]);
+    } catch (error) {
+      console.error("Error fetching saved training plan:", error);
+      res.status(500).json({ error: "Failed to fetch saved training plan" });
+    }
+  });
+
+  app.post("/api/training/save-generated-plan", checkAuth, async (req, res) => {
+    try {
+      const { userId, planData, generationParameters } = req.body;
+
+      // Deactivate any existing training plans for this user
+      await db.update(saved_training_plans)
+        .set({ is_active: false, updated_at: new Date() })
+        .where(eq(saved_training_plans.user_id, userId));
+
+      // Save the new training plan
+      const [savedPlan] = await db.insert(saved_training_plans)
+        .values({
+          user_id: userId,
+          plan_data: planData,
+          generation_parameters: generationParameters,
+          is_active: true
+        })
+        .returning();
+
+      res.status(201).json(savedPlan);
+    } catch (error) {
+      console.error("Error saving training plan:", error);
+      res.status(500).json({ error: "Failed to save training plan" });
+    }
+  });
+
+  app.delete("/api/training/saved-plan/:userId", checkAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      await db.update(saved_training_plans)
+        .set({ is_active: false, updated_at: new Date() })
+        .where(eq(saved_training_plans.user_id, userId));
+
+      res.json({ message: "Training plan cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing training plan:", error);
+      res.status(500).json({ error: "Failed to clear training plan" });
+    }
+  });
+
   // Meal plan generation
   app.post("/api/nutrition/generate-meal-plan", checkAuth, async (req, res) => {
     try {
