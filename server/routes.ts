@@ -20,6 +20,7 @@ import axios from "axios";
 import { Request, Response, NextFunction } from "express";
 import { selectMealPlan } from "./predefined-meal-plans";
 import { generateSimpleMealPlan } from "./simple-meal-plan";
+import { requireAuth, requireAdmin, requireCoach } from "./middleware/auth-middleware";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -1884,6 +1885,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
+  // Get platform statistics
+  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Get total users count
+      const [{ totalUsers }] = await db.select({ 
+        totalUsers: count() 
+      }).from(users);
+
+      // Get active users (users with activity in last 30 days)
+      const [{ activeUsers }] = await db.select({ 
+        activeUsers: count() 
+      }).from(users)
+        .innerJoin(activities, eq(users.id, activities.user_id))
+        .where(gte(activities.created_at, thirtyDaysAgo));
+
+      // Get coaches count
+      const [{ coachesCount }] = await db.select({ 
+        coachesCount: count() 
+      }).from(users)
+        .where(eq(users.role, 'coach'));
+
+      // Get premium users count
+      const [{ premiumUsers }] = await db.select({ 
+        premiumUsers: count() 
+      }).from(users)
+        .where(eq(users.subscription_status, 'active'));
+
+      res.json({
+        totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
+        coaches: coachesCount || 0,
+        premiumUsers: premiumUsers || 0,
+        revenue: 0 // TODO: Calculate from Stripe data
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch statistics" });
+    }
+  });
+
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     try {
       const { page = 1, limit = 20, search = '' } = req.query;
