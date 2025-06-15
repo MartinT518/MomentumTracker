@@ -1119,6 +1119,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Platform-specific health metrics import endpoints
+  app.post("/api/strava/health-metrics/import", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Check if user has Strava integration
+      const connection = await db.select().from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'strava'),
+          eq(integration_connections.is_active, true)
+        ))
+        .limit(1);
+
+      if (connection.length === 0) {
+        return res.status(404).json({ error: "Strava integration not found. Please connect your Strava account first." });
+      }
+
+      // For now, return a success response indicating no health metrics available
+      // Strava primarily focuses on activities rather than detailed health metrics
+      res.json({ 
+        count: 0, 
+        message: "Strava integration successful, but no health metrics available. Strava primarily provides activity data." 
+      });
+    } catch (error) {
+      console.error("Error importing Strava health metrics:", error);
+      res.status(500).json({ error: "Failed to import health metrics from Strava" });
+    }
+  });
+
+  app.post("/api/garmin/health-metrics/import", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Check if user has Garmin integration
+      const connection = await db.select().from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'garmin'),
+          eq(integration_connections.is_active, true)
+        ))
+        .limit(1);
+
+      if (connection.length === 0) {
+        return res.status(404).json({ error: "Garmin integration not found. Please connect your Garmin Connect account first." });
+      }
+
+      // For now, return a success response indicating no health metrics available
+      // Garmin Connect API access requires special developer permissions
+      res.json({ 
+        count: 0, 
+        message: "Garmin integration detected, but health metrics import requires additional API permissions. Please add metrics manually for now." 
+      });
+    } catch (error) {
+      console.error("Error importing Garmin health metrics:", error);
+      res.status(500).json({ error: "Failed to import health metrics from Garmin" });
+    }
+  });
+
+  app.post("/api/polar/health-metrics/import", checkAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Check if user has Polar integration
+      const connection = await db.select().from(integration_connections)
+        .where(and(
+          eq(integration_connections.user_id, userId),
+          eq(integration_connections.platform, 'polar'),
+          eq(integration_connections.is_active, true)
+        ))
+        .limit(1);
+
+      if (connection.length === 0) {
+        return res.status(404).json({ error: "Polar integration not found. Please connect your Polar Flow account first." });
+      }
+
+      // For now, return a success response indicating no health metrics available
+      // Polar API access requires proper OAuth setup and API permissions
+      res.json({ 
+        count: 0, 
+        message: "Polar integration detected, but health metrics import requires additional setup. Please add metrics manually for now." 
+      });
+    } catch (error) {
+      console.error("Error importing Polar health metrics:", error);
+      res.status(500).json({ error: "Failed to import health metrics from Polar" });
+    }
+  });
+
   // Goals routes
   app.get("/api/goals", checkAuth, async (req, res) => {
     try {
