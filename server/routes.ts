@@ -958,7 +958,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const formattedActivities = recentActivities.map(activity => ({
         ...activity,
-        activity_date: activity.activity_date.toISOString().split('T')[0],
+        activity_date: typeof activity.activity_date === 'string' 
+          ? activity.activity_date 
+          : activity.activity_date?.toISOString().split('T')[0] || '',
         duration: Number(activity.duration),
         distance: Number(activity.distance),
         heart_rate: Number(activity.heart_rate)
