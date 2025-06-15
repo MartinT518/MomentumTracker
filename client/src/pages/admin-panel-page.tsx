@@ -14,7 +14,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { USER_ROLE_DESCRIPTIONS, UserRole } from "@shared/user-roles";
 import { ImpersonationPanel } from "@/components/admin/impersonation-panel";
-import { Users, UserCheck, Settings, BarChart3, Shield, Crown, Star } from "lucide-react";
+import { Users, UserCheck, Settings, BarChart3, Shield, Crown, Star, ArrowLeft, Home } from "lucide-react";
+import { Link } from "wouter";
 
 interface User {
   id: number;
@@ -163,8 +164,40 @@ export default function AdminPanelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4">
-      <div className="container mx-auto max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      {/* Navigation Header */}
+      <div className="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-50">
+        <div className="container mx-auto max-w-7xl px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="h-6 w-px bg-white/20"></div>
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-white/70 text-sm">
+                Welcome, {user?.username}
+              </div>
+              <Badge variant="default" className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                <Crown className="h-3 w-3 mr-1" />
+                Admin
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto max-w-7xl p-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Admin Panel</h1>
           <p className="text-white/70">Manage users, roles, and platform settings</p>
