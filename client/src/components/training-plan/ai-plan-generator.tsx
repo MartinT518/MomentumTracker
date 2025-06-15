@@ -24,6 +24,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { generateTrainingPlan, TrainingPlan } from "@/lib/ai-service";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 // Form schema
 const formSchema = z.object({
@@ -55,6 +57,32 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
   
   // Check if user has active subscription
   const hasSubscription = user?.subscription_status === 'active';
+
+  // Check for saved training plan first
+  const { data: savedTrainingPlan } = useQuery({
+    queryKey: ['/api/training/saved-plan', user?.id],
+    enabled: !!user?.id,
+    retry: false,
+  });
+
+  // Mutation to save generated training plan
+  const saveTrainingPlan = useMutation({
+    mutationFn: async ({ userId, planData, generationParameters }: {
+      userId: number;
+      planData: any;
+      generationParameters: any;
+    }) => {
+      const res = await apiRequest("POST", "/api/training/save-generated-plan", {
+        userId,
+        planData,
+        generationParameters
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/training/saved-plan', user?.id] });
+    }
+  });
   
   // Initialize form
   const form = useForm<FormValues>({
@@ -108,9 +136,22 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
         userType: hasSubscription ? 'premium' : 'free'
       });
       
+      // Save the generated plan to persistent storage
+      if (user?.id) {
+        await saveTrainingPlan.mutateAsync({
+          userId: user.id,
+          planData: plan,
+          generationParameters: { 
+            ...data, 
+            userType: hasSubscription ? 'premium' : 'free',
+            timestamp: new Date().toISOString() 
+          }
+        });
+      }
+      
       toast({
         title: "Training Plan Generated",
-        description: "Your personalized training plan has been created successfully",
+        description: "Your personalized training plan has been created and saved successfully",
       });
       
       // Notify parent component that plan has been generated
