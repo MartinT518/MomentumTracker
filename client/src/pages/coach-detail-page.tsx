@@ -77,7 +77,7 @@ export default function CoachDetailPage() {
     },
   });
   
-  // Create session mutation
+  // Create session and proceed to payment
   const bookSession = async () => {
     if (!date || !sessionType || !timeSlot) {
       toast({
@@ -90,44 +90,56 @@ export default function CoachDetailPage() {
     
     try {
       // Combine date and time for the session_date
-      const [hours, minutes] = timeSlot.replace(' AM', '').replace(' PM', '').split(':').map(Number);
+      const [timeHours, minutes] = timeSlot.replace(' AM', '').replace(' PM', '').split(':').map(Number);
       let sessionDate = new Date(date);
       sessionDate.setHours(
-        timeSlot.includes('PM') && hours !== 12 ? hours + 12 : hours,
+        timeSlot.includes('PM') && timeHours !== 12 ? timeHours + 12 : timeHours,
         minutes
       );
       
       const sessionData = {
         coach_id: Number(id),
-        athlete_id: user?.id,
         session_date: sessionDate.toISOString(),
         duration_minutes: 45, // Default session length
         type: sessionType,
-        status: 'scheduled',
         notes: notes
       };
       
-      await apiRequest('POST', '/api/coaching-sessions', sessionData);
+      // Create session with pending_payment status
+      const response = await apiRequest('POST', '/api/coaching-sessions', sessionData);
+      const newSession = await response.json();
+      
+      // Calculate session cost for display
+      const hourlyRate = parseFloat(coach.hourly_rate);
+      const sessionHours = 45 / 60; // 45 minutes
+      const totalCost = (hourlyRate * sessionHours).toFixed(2);
       
       toast({
-        title: "Session Booked!",
-        description: `Your ${sessionType} session has been scheduled.`,
+        title: "Session Created",
+        description: `Session created. Total cost: $${totalCost}. Proceed to payment to confirm.`,
       });
       
-      // Reset form and close dialog
+      // Reset form and close booking dialog
       setDate(undefined);
       setSessionType(undefined);
       setTimeSlot(undefined);
       setNotes('');
       setBookingDialogOpen(false);
       
+      // Show payment dialog or redirect to payment page
+      // For now, show a toast with payment instructions
+      toast({
+        title: "Payment Required",
+        description: `Visit your coaching sessions to complete payment for $${totalCost}`,
+      });
+      
       // Invalidate sessions query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['/api/coaching-sessions'] });
       
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Booking Failed",
-        description: `There was an error booking your session: ${error.message}`,
+        description: `There was an error creating your session: ${error.message}`,
         variant: "destructive"
       });
     }
