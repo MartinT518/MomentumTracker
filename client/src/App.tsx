@@ -67,6 +67,7 @@ function Router() {
       <ProtectedRoute path="/coaches/:id" component={CoachDetailPage} />
       <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
       <AdminProtectedRoute path="/admin/coaches" component={CoachManagementPage} />
+      <AdminProtectedRoute path="/admin-panel" component={AdminPanelPage} />
       <AdminProtectedRoute path="/admin" component={AdminPanelPage} />
       <Route path="/integrations/:platform/callback" component={IntegrationCallbackPage} />
       <Route component={NotFound} />
