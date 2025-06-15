@@ -80,6 +80,18 @@ This document summarizes all issues identified and additional tasks requested du
 **Solution**: Added platform-specific health metrics import endpoints for Strava, Garmin, and Polar with proper integration checking
 **Status**: ✅ RESOLVED - Added missing import endpoints with integration validation
 
+### 12. Database Schema Mismatch - Integration Connections
+**Problem**: Health data import failing with "column auto_sync does not exist" database error
+**Root Cause**: Database missing columns defined in schema (auto_sync, sync_frequency, scope)
+**Solution**: Added missing columns directly to database via SQL ALTER TABLE commands
+**Status**: ✅ RESOLVED - Database schema synchronized with application schema
+
+### 13. Health Data Import 404 Response
+**Problem**: Health import endpoints returning 404 when no platform integration exists
+**Root Cause**: Endpoints returning error status instead of informative response about missing integrations
+**Solution**: Updated all platform import endpoints to return informative success responses explaining connection requirements
+**Status**: ✅ RESOLVED - Import endpoints now provide helpful guidance instead of errors
+
 ### 7. Activities Chart Date Formatting Error
 **Problem**: Activities endpoint failing with "date.toISOString is not a function"
 **Root Cause**: formatChartDate function expected Date object but received string from database
