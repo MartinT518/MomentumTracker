@@ -74,6 +74,12 @@ This document summarizes all issues identified and additional tasks requested du
 **Solution**: Updated component to handle both placeholder data structure and real API data structure safely
 **Status**: ✅ RESOLVED - Fixed data structure handling with type checking
 
+### 11. Missing Health Data Import Endpoints
+**Problem**: Health data import functionality failing with 404 errors for platform-specific endpoints
+**Root Cause**: Client requesting `/api/strava/health-metrics/import`, `/api/garmin/health-metrics/import`, `/api/polar/health-metrics/import` but these endpoints didn't exist
+**Solution**: Added platform-specific health metrics import endpoints for Strava, Garmin, and Polar with proper integration checking
+**Status**: ✅ RESOLVED - Added missing import endpoints with integration validation
+
 ### 7. Activities Chart Date Formatting Error
 **Problem**: Activities endpoint failing with "date.toISOString is not a function"
 **Root Cause**: formatChartDate function expected Date object but received string from database
