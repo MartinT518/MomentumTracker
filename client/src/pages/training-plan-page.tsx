@@ -441,59 +441,25 @@ export default function TrainingPlanPage() {
             )}
           </TabsContent>
 
-          {/* Human Coach Tab */}
-          <TabsContent value="coach" className="space-y-6">
-            {!hasAnnualSubscription ? (
+          <TabsContent value="coach">
+            {/* Only coaches and admins can access this tab */}
+            {isRegularUser ? (
               <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
-                <Crown className="h-12 w-12 mx-auto text-yellow-300 drop-shadow-md mb-4" />
-                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Annual Premium Required</h2>
+                <Zap className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Access Restricted</h2>
                 <p className="text-white/70 drop-shadow-md mb-6">
-                  Human coach access is available only for Annual Premium subscribers. Get personalized guidance from certified running coaches.
+                  Regular users can adjust their training plans through the Adjust Plan tab. The Human Coach tab is for certified coaches only.
                 </p>
-                <ul className="text-left mb-6 space-y-2 text-white/70 drop-shadow-md">
-                  <li className="flex items-center">
-                    <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3" />
-                    </span>
-                    Personalized adjustments based on workout completion
-                  </li>
-                  <li className="flex items-center">
-                    <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3" />
-                    </span>
-                    Analysis of your biometric data and recovery status
-                  </li>
-                  <li className="flex items-center">
-                    <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
-                      <Check className="h-3 w-3" />
-                    </span>
-                    Training load optimization and performance insights
-                  </li>
-                </ul>
-                <Button 
-                  size="lg"
-                  asChild
-                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold"
-                >
-                  <Link href="/subscription">Upgrade to Annual Premium</Link>
+                <Button variant="default" onClick={() => setSelectedTab('adjust-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
+                  Go to Adjust Plan
                 </Button>
               </div>
-            
-            ) : (
-              <PlanAdjustmentTool 
-                currentPlan={aiPlan} 
-                onApplyChanges={handlePlanAdjustment}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="coach">
-            {!hasSubscription ? (
+            ) : !hasSubscription ? (
               <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
                 <BookUser className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
                 <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Premium Feature</h2>
                 <p className="text-white/70 drop-shadow-md mb-6">
-                  Access to human coaches is available to premium subscribers only. Upgrade your plan to connect with experienced coaches who can provide personalized guidance.
+                  Access to coaching tools is available to premium subscribers only. Upgrade your plan to access advanced coaching features.
                 </p>
                 <Button 
                   size="lg"
