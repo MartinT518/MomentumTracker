@@ -88,10 +88,10 @@ export function CoachBriefing({ userId }: CoachBriefingProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full">
       {/* Athlete Overview */}
-      <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
-        <CardHeader>
+      <Card className="bg-white/10 backdrop-blur-lg border border-white/20 h-fit">
+        <CardHeader className="pb-4">
           <CardTitle className="text-white flex items-center">
             <Target className="h-5 w-5 mr-2" />
             Athlete Overview
@@ -170,8 +170,8 @@ export function CoachBriefing({ userId }: CoachBriefingProps) {
       </Card>
 
       {/* Recent Training Activity */}
-      <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
-        <CardHeader>
+      <Card className="bg-white/10 backdrop-blur-lg border border-white/20 h-fit">
+        <CardHeader className="pb-4">
           <CardTitle className="text-white flex items-center">
             <Activity className="h-5 w-5 mr-2" />
             Recent Training
