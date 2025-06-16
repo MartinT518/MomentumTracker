@@ -88,9 +88,9 @@ export function CoachBriefing({ userId }: CoachBriefingProps) {
   };
 
   return (
-    <div className="space-y-6 h-full">
+    <div className="space-y-6 h-full flex flex-col">
       {/* Athlete Overview */}
-      <Card className="bg-white/10 backdrop-blur-lg border border-white/20 h-fit">
+      <Card className="bg-white/10 backdrop-blur-lg border border-white/20 flex-1">
         <CardHeader className="pb-4">
           <CardTitle className="text-white flex items-center">
             <Target className="h-5 w-5 mr-2" />
@@ -100,7 +100,7 @@ export function CoachBriefing({ userId }: CoachBriefingProps) {
             Current training status and goals
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 flex-1 overflow-y-auto">
           {/* Training Goals */}
           <div>
             <h4 className="font-medium text-white mb-3">Active Goals</h4>
@@ -170,7 +170,7 @@ export function CoachBriefing({ userId }: CoachBriefingProps) {
       </Card>
 
       {/* Recent Training Activity */}
-      <Card className="bg-white/10 backdrop-blur-lg border border-white/20 h-fit">
+      <Card className="bg-white/10 backdrop-blur-lg border border-white/20 flex-1">
         <CardHeader className="pb-4">
           <CardTitle className="text-white flex items-center">
             <Activity className="h-5 w-5 mr-2" />
@@ -180,7 +180,7 @@ export function CoachBriefing({ userId }: CoachBriefingProps) {
             Last 7 days of activity
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-y-auto">
           {recentActivities.length > 0 ? (
             <div className="space-y-3">
               {recentActivities.slice(0, 5).map((activity) => (
