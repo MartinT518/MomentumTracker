@@ -10,6 +10,7 @@ import { TrainingPlanCalendar } from "@/components/training-plan/training-plan-c
 import { WorkoutDetailView } from "@/components/training-plan/workout-detail-view";
 import { AIPlanGenerator } from "@/components/training-plan/ai-plan-generator";
 import PlanAdjustmentTool from "@/components/training-plan/plan-adjustment-tool";
+import { TrainingPlanRestrictions } from "@/components/training-plan/training-plan-restrictions";
 import { StrengthTrainingSuggestion } from "@/components/training-plan/strength-training-suggestion";
 import { CoachSelection } from "@/components/coaching/coach-selection";
 import { CoachChat } from "@/components/coaching/coach-chat";

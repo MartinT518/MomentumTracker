@@ -57,6 +57,7 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
   
   // Check if user has active subscription
   const hasSubscription = user?.subscription_status === 'active';
+  const isPremiumUser = hasSubscription || user?.role === 'admin';
 
   // Check for saved training plan first
   const { data: savedTrainingPlan } = useQuery({
@@ -64,6 +65,9 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
     enabled: !!user?.id,
     retry: false,
   });
+
+  // Check if user already has a generated plan
+  const hasExistingPlan = savedTrainingPlan && (savedTrainingPlan as any)?.plan_data;
 
   // Mutation to save generated training plan
   const saveTrainingPlan = useMutation({
@@ -166,6 +170,64 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
       setIsGenerating(false);
     }
   };
+
+  // Don't show generator if user already has a plan (only show adjust option)
+  if (hasExistingPlan) {
+    return (
+      <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl">
+        <div className="p-6">
+          <div className="flex items-center space-x-2 mb-6">
+            <BrainCircuit className="h-6 w-6 text-blue-300 drop-shadow-md" />
+            <div>
+              <h2 className="text-xl font-semibold text-white drop-shadow-md">Training Plan Generated</h2>
+              <p className="text-white/70 drop-shadow-md">
+                You already have a personalized training plan. Use the adjust plan feature to modify it.
+              </p>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-white/80 mb-4">Your training plan is ready and saved to your profile.</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            >
+              View Training Plan
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show premium upgrade prompt for free users
+  if (!isPremiumUser) {
+    return (
+      <div className="max-w-3xl mx-auto bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl shadow-xl opacity-60">
+        <div className="p-6">
+          <div className="flex items-center space-x-2 mb-6">
+            <BrainCircuit className="h-6 w-6 text-gray-400" />
+            <div>
+              <h2 className="text-xl font-semibold text-gray-300">AI Training Plan Generator</h2>
+              <p className="text-gray-400">
+                Premium feature - Upgrade to generate personalized training plans
+              </p>
+            </div>
+          </div>
+          <div className="text-center py-8">
+            <p className="text-gray-400 mb-6">
+              AI-generated training plans are available for premium subscribers
+            </p>
+            <Button 
+              disabled
+              className="bg-gray-600 text-gray-400 cursor-not-allowed"
+            >
+              Upgrade to Premium Required
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
