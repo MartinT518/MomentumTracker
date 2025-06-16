@@ -343,21 +343,21 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
           </div>
         </CardContent>
         
-        <div className="p-3 border-t">
+        <div className="p-4 border-t border-white/20 bg-white/5">
           <div className="flex space-x-2">
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="min-h-[42px] resize-none"
+              className="min-h-[42px] resize-none bg-white/10 border-white/20 text-white placeholder:text-white/60"
               disabled={!isConnected}
             />
             <div className="flex space-x-2">
-              <Button variant="outline" size="icon" disabled={!isConnected}>
+              <Button variant="outline" size="icon" disabled={!isConnected} className="border-white/20 bg-white/10 text-white hover:bg-white/20">
                 <Paperclip className="h-4 w-4" />
               </Button>
-              <Button size="icon" onClick={sendMessage} disabled={!isConnected || !message.trim()}>
+              <Button size="icon" onClick={sendMessage} disabled={!isConnected || !message.trim()} className="bg-blue-500 hover:bg-blue-400 text-white">
                 <SendHorizontal className="h-4 w-4" />
               </Button>
             </div>
