@@ -430,7 +430,7 @@ export default function GoalsPage() {
           <div className="mt-4 md:mt-0">
             <Dialog open={createGoalOpen} onOpenChange={setCreateGoalOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center">
+                <Button className="flex items-center mt-[8px] mb-[8px]">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Goal
                 </Button>
@@ -1176,7 +1176,7 @@ export default function GoalsPage() {
               {isEditMode ? (
                 <>
                   <Button variant="outline" onClick={() => setIsEditMode(false)}>Cancel</Button>
-                  <Button onClick={handleUpdateGoal}>Save Changes</Button>
+                  <Button onClick={handleUpdateGoal} className="mt-[8px] mb-[8px]">Save Changes</Button>
                 </>
               ) : (
                 selectedGoal && !selectedGoal.completedDate && (
