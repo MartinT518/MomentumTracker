@@ -18,8 +18,8 @@ import { CoachBriefing } from "@/components/coaching/coach-briefing";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Coach, TrainingPlan } from '@shared/schema';
 import { TrainingPlan as AITrainingPlan, PlanAdjustment } from '@/lib/ai-service';
 
@@ -59,6 +59,41 @@ export default function TrainingPlanPage() {
   
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Check if user has premium access
+  const isPremiumUser = hasSubscription || user?.role === 'admin';
+  
+  // Fetch saved training plan
+  const { data: savedTrainingPlan } = useQuery({
+    queryKey: ['/api/training/saved-plan', user?.id],
+    enabled: !!user?.id,
+    retry: false,
+  });
+  
+  // Check if user already has a generated plan
+  const hasExistingPlan = savedTrainingPlan && (savedTrainingPlan as any)?.plan_data;
+  
+  // Mutation to clear saved training plan
+  const clearTrainingPlan = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/training/saved-plan/${user?.id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/training/saved-plan', user?.id] });
+      toast({
+        title: "Training plan cleared",
+        description: "You can now generate a new training plan.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to clear training plan. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Fetch available coaches
   const { 
@@ -324,47 +359,22 @@ export default function TrainingPlanPage() {
           </TabsContent>
           
           <TabsContent value="ai-plan">
-            {!hasSubscription ? (
-              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
-                <Sparkles className="h-12 w-12 mx-auto text-blue-300 mb-4 drop-shadow-md" />
-                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Premium Feature</h2>
-                <p className="text-white/80 mb-6 drop-shadow-md">
-                  Free users can see one week of AI-generated training plans. Upgrade to premium for full access to:
-                  <ul className="mt-3 space-y-1 text-left max-w-md mx-auto">
-                    <li className="flex items-center">
-                      <span className="bg-blue-400/30 text-blue-200 p-1 rounded-full mr-2 flex-shrink-0">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      <span className="text-white/80">Complete multi-week training plans</span>
-                    </li>
-                    <li className="flex items-center">
-                      <span className="bg-blue-400/30 text-blue-200 p-1 rounded-full mr-2 flex-shrink-0">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      <span className="text-white/80">Detailed workouts with warm-up and cool-down routines</span>
-                    </li>
-                    <li className="flex items-center">
-                      <span className="bg-blue-400/30 text-blue-200 p-1 rounded-full mr-2 flex-shrink-0">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      <span className="text-white/80">Nutritional guidance and recovery strategies</span>
-                    </li>
-                  </ul>
-                </p>
-                <Button 
-                  size="lg"
-                  asChild
-                >
-                  <Link href="/subscription">Upgrade to Premium</Link>
-                </Button>
+            <TrainingPlanRestrictions 
+              hasExistingPlan={hasExistingPlan}
+              isPremiumUser={isPremiumUser}
+              onClearPlan={() => clearTrainingPlan.mutate()}
+            />
+            
+            {/* Only show generator if user has premium access and no existing plan */}
+            {isPremiumUser && !hasExistingPlan && (
+              <div className="mt-6">
+                <AIPlanGenerator 
+                  onPlanGenerated={(plan) => {
+                    handlePlanGenerated(plan);
+                    setIsGeneratingPlan(true);
+                  }} 
+                />
               </div>
-            ) : (
-              <AIPlanGenerator 
-                onPlanGenerated={(plan) => {
-                  handlePlanGenerated(plan);
-                  setIsGeneratingPlan(true);
-                }} 
-              />
             )}
           </TabsContent>
           
