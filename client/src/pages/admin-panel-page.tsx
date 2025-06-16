@@ -8,14 +8,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { USER_ROLE_DESCRIPTIONS, UserRole } from "@shared/user-roles";
 import { ImpersonationPanel } from "@/components/admin/impersonation-panel";
-import { Users, UserCheck, Settings, BarChart3, Shield, Crown, Star, ArrowLeft, Home } from "lucide-react";
+import { Users, UserCheck, Settings, BarChart3, Shield, Crown, Star, ArrowLeft, Home, UserPlus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 interface User {
   id: number;
@@ -35,6 +41,36 @@ interface PlatformStats {
   revenue: number;
 }
 
+interface Coach {
+  id: number;
+  name: string;
+  email?: string;
+  title: string;
+  bio: string;
+  specialties: string;
+  certifications: string;
+  experience_years: string;
+  photo_url?: string;
+  status: string;
+  hourly_rate: string;
+}
+
+// Zod schema for coach form validation
+const coachFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  title: z.string().min(2, { message: "Title must be at least 2 characters." }),
+  bio: z.string().min(10, { message: "Bio must be at least 10 characters." }),
+  specialties: z.string().min(5, { message: "Specialties must be at least 5 characters." }),
+  certifications: z.string().min(5, { message: "Certifications must be at least 5 characters." }),
+  experience_years: z.string().regex(/^\d+$/, { message: "Must be a number." }),
+  photoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal("")),
+  isActive: z.boolean().default(true),
+  hourlyRate: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Please enter a valid price." }),
+});
+
+type CoachFormValues = z.infer<typeof coachFormSchema>;
+
 export default function AdminPanelPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -42,6 +78,24 @@ export default function AdminPanelPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [editingCoachId, setEditingCoachId] = useState<number | null>(null);
+
+  // Coach form initialization
+  const coachForm = useForm<CoachFormValues>({
+    resolver: zodResolver(coachFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      title: "",
+      bio: "",
+      specialties: "",
+      certifications: "",
+      experience_years: "",
+      photoUrl: "",
+      isActive: true,
+      hourlyRate: "",
+    },
+  });
 
   // Check if user has admin access
   if (!user || (user.role !== 'admin' && !user.is_admin)) {
@@ -76,6 +130,15 @@ export default function AdminPanelPage() {
     queryKey: ['/api/admin/stats'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/stats');
+      return response.json();
+    },
+  });
+
+  // Fetch all coaches
+  const { data: coaches = [], isLoading: coachesLoading } = useQuery<Coach[]>({
+    queryKey: ['/api/coaches/all'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/coaches/all');
       return response.json();
     },
   });
@@ -124,6 +187,91 @@ export default function AdminPanelPage() {
       toast({
         title: "Error", 
         description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Coach management mutations
+  const createCoachMutation = useMutation({
+    mutationFn: async (data: CoachFormValues) => {
+      const res = await apiRequest('POST', '/api/coaches', {
+        ...data,
+        experience_years: data.experience_years,
+        hourlyRate: data.hourlyRate,
+        status: data.isActive ? 'active' : 'inactive',
+        specialties: data.specialties,
+        photo_url: data.photoUrl,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Coach created successfully!",
+      });
+      coachForm.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create coach",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateCoachMutation = useMutation({
+    mutationFn: async (data: CoachFormValues & { id: number }) => {
+      const { id, ...rest } = data;
+      const res = await apiRequest('PUT', `/api/coaches/${id}`, {
+        ...rest,
+        experience_years: rest.experience_years,
+        hourlyRate: rest.hourlyRate,
+        status: rest.isActive ? 'active' : 'inactive',
+        specialties: rest.specialties,
+        photo_url: rest.photoUrl,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Coach updated successfully!",
+      });
+      coachForm.reset();
+      setEditingCoachId(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update coach",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCoachMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('DELETE', `/api/coaches/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Coach deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete coach",
         variant: "destructive",
       });
     },
@@ -216,6 +364,10 @@ export default function AdminPanelPage() {
             <TabsTrigger value="roles" className="data-[state=active]:bg-white/20">
               <Shield className="h-4 w-4 mr-2" />
               Role Definitions
+            </TabsTrigger>
+            <TabsTrigger value="coaches" className="data-[state=active]:bg-white/20">
+              <Star className="h-4 w-4 mr-2" />
+              Coach Management
             </TabsTrigger>
             <TabsTrigger value="impersonation" className="data-[state=active]:bg-white/20">
               <UserCheck className="h-4 w-4 mr-2" />
