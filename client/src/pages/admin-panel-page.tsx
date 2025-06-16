@@ -102,11 +102,13 @@ export default function AdminPanelPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <Card className="bg-white/10 backdrop-blur-lg border border-white/20 p-8">
-          <CardHeader className="text-center">
-            <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <CardTitle className="text-white">Access Denied</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Shield className="h-6 w-6 mr-2" />
+              Access Denied
+            </CardTitle>
             <CardDescription className="text-white/70">
-              Admin privileges required to access this page
+              You need administrator privileges to access this panel.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -154,12 +156,12 @@ export default function AdminPanelPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
-      setIsEditDialogOpen(false);
-      setSelectedUser(null);
       toast({
         title: "Success",
         description: "User role updated successfully",
       });
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
     },
     onError: (error: any) => {
       toast({
@@ -344,38 +346,6 @@ export default function AdminPanelPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      {/* Navigation Header */}
-      <div className="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-50">
-        <div className="container mx-auto max-w-7xl px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div className="h-6 w-px bg-white/20"></div>
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
-                </Button>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-white/70 text-sm">
-                Welcome, {user?.username}
-              </div>
-              <Badge variant="default" className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
-                <Crown className="h-3 w-3 mr-1" />
-                Admin
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="container mx-auto max-w-7xl p-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Admin Panel</h1>
@@ -471,9 +441,11 @@ export default function AdminPanelPage() {
               <CardHeader>
                 <CardTitle className="text-white">User Management</CardTitle>
                 <CardDescription className="text-white/70">
-                  Manage user accounts and permissions
+                  Manage user accounts, roles, and permissions
                 </CardDescription>
-                <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <Input
                     placeholder="Search users..."
                     value={searchTerm}
@@ -481,19 +453,18 @@ export default function AdminPanelPage() {
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                   />
                   <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white w-full sm:w-48">
-                      <SelectValue placeholder="Filter by role" />
+                    <SelectTrigger className="w-full sm:w-48 bg-white/10 border-white/20 text-white">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
-                      <SelectItem value="user">Regular Users</SelectItem>
+                      <SelectItem value="user">Users</SelectItem>
                       <SelectItem value="coach">Coaches</SelectItem>
                       <SelectItem value="admin">Admins</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </CardHeader>
-              <CardContent>
+
                 <Table>
                   <TableHeader>
                     <TableRow className="border-white/20">
@@ -568,10 +539,10 @@ export default function AdminPanelPage() {
                   <CardHeader>
                     <CardTitle className="text-white flex items-center">
                       {getRoleIcon(role as UserRole, role === 'admin')}
-                      <span className="ml-2">{description.name}</span>
+                      <span className="ml-2 capitalize">{role}</span>
                     </CardTitle>
                     <CardDescription className="text-white/70">
-                      {description.description}
+                      {description.name}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -969,309 +940,6 @@ export default function AdminPanelPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-    </div>
-  );
-}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Coach Form */}
-              <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white">
-                    {editingCoachId ? 'Edit Coach' : 'Add New Coach'}
-                  </CardTitle>
-                  <CardDescription className="text-white/70">
-                    {editingCoachId ? 'Update coach information' : 'Create a new coach profile'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...coachForm}>
-                    <form onSubmit={coachForm.handleSubmit(onCoachSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={coachForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-white">Full Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="bg-white/10 border-white/20 text-white" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={coachForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-white">Email</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" className="bg-white/10 border-white/20 text-white" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={coachForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-white">Professional Title</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="bg-white/10 border-white/20 text-white" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={coachForm.control}
-                        name="bio"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-white">Biography</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} className="bg-white/10 border-white/20 text-white" rows={3} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={coachForm.control}
-                          name="specialties"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-white">Specialties</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="bg-white/10 border-white/20 text-white" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={coachForm.control}
-                          name="experience_years"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-white">Years of Experience</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="number" className="bg-white/10 border-white/20 text-white" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={coachForm.control}
-                        name="certifications"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-white">Certifications</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} className="bg-white/10 border-white/20 text-white" rows={2} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={coachForm.control}
-                          name="hourlyRate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-white">Hourly Rate ($)</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="number" step="0.01" className="bg-white/10 border-white/20 text-white" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={coachForm.control}
-                          name="photoUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-white">Photo URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="bg-white/10 border-white/20 text-white" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={coachForm.control}
-                        name="isActive"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/20 p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base text-white">Active Status</FormLabel>
-                              <div className="text-sm text-white/70">
-                                Active coaches are visible to users
-                              </div>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex gap-2">
-                        <Button
-                          type="submit"
-                          disabled={createCoachMutation.isPending || updateCoachMutation.isPending}
-                          className="bg-blue-500 hover:bg-blue-400 text-white"
-                        >
-                          {createCoachMutation.isPending || updateCoachMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : null}
-                          {editingCoachId ? 'Update Coach' : 'Create Coach'}
-                        </Button>
-                        {editingCoachId && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleCancelCoachEdit}
-                            className="border-white/20 text-white hover:bg-white/10"
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                      </div>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-
-              {/* Coaches List */}
-              <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white">Existing Coaches</CardTitle>
-                  <CardDescription className="text-white/70">
-                    Manage all registered coaches
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {coachesLoading ? (
-                    <div className="flex items-center justify-center p-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-white" />
-                    </div>
-                  ) : coaches.length === 0 ? (
-                    <div className="text-center p-8 text-white/70">
-                      No coaches registered yet
-                    </div>
-                  ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {coaches.map((coach) => (
-                        <div
-                          key={coach.id}
-                          className="flex items-start justify-between p-4 border border-white/20 rounded-lg bg-white/5"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-medium text-white">{coach.name}</h4>
-                              <Badge variant={coach.status === 'active' ? 'default' : 'secondary'}>
-                                {coach.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-white/70 mb-1">{coach.title}</p>
-                            <p className="text-sm text-white/60">${coach.hourly_rate}/hour</p>
-                            <p className="text-xs text-white/50 mt-1">
-                              {coach.experience_years} years experience
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditCoach(coach)}
-                              className="border-white/20 text-white hover:bg-white/10"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => deleteCoachMutation.mutate(coach.id)}
-                              disabled={deleteCoachMutation.isPending}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="roles" className="space-y-6">
-            <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Role Definitions</CardTitle>
-                <CardDescription className="text-white/70">
-                  Understanding different user roles and their permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {Object.entries(USER_ROLE_DESCRIPTIONS).map(([role, description]) => (
-                  <div key={role} className="p-4 border border-white/20 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      {getRoleIcon(role as UserRole, false)}
-                      <h3 className="font-medium text-white capitalize">{role}</h3>
-                    </div>
-                    <p className="text-white/70 text-sm">{description}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="impersonation" className="space-y-6">
-            <ImpersonationPanel />
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card className="bg-white/10 backdrop-blur-lg border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Platform Settings</CardTitle>
-                <CardDescription className="text-white/70">
-                  Configure platform-wide settings and preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-white/70">
-                  Platform settings panel coming soon...
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-        </Tabs>
       </div>
     </div>
   );
