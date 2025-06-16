@@ -214,23 +214,23 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
   
   return (
     <div className="flex flex-col h-[calc(100vh-14rem)]">
-      <Card className="flex flex-col flex-1 overflow-hidden">
-        <CardHeader className="border-b pb-3">
+      <Card className="flex flex-col flex-1 overflow-hidden bg-white/10 backdrop-blur-lg border border-white/20">
+        <CardHeader className="border-b border-white/20 pb-4">
           <div className="flex items-center space-x-3">
             <Avatar>
               <AvatarImage src={coach.profile_image || ''} />
-              <AvatarFallback>{coach.name?.[0]?.toUpperCase() || 'C'}</AvatarFallback>
+              <AvatarFallback className="bg-white/20 text-white">{coach.name?.[0]?.toUpperCase() || 'C'}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-lg">{coach.name}</CardTitle>
-              <CardDescription>{coach.specialty || 'Running Coach'}</CardDescription>
+              <CardTitle className="text-lg text-white">{coach.name}</CardTitle>
+              <CardDescription className="text-white/70">{coach.specialty || 'Running Coach'}</CardDescription>
             </div>
             <div className="ml-auto flex items-center">
               <span className={cn(
                 "h-2.5 w-2.5 rounded-full mr-2",
-                isConnected ? "bg-green-500" : "bg-gray-400"
+                isConnected ? "bg-green-400" : "bg-gray-400"
               )}></span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-white/70">
                 {isConnected ? "Online" : "Offline"}
               </span>
             </div>
@@ -250,26 +250,26 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
                 <div className={cn(
                   "max-w-[80%] rounded-lg p-3",
                   msg.from === 'user' 
-                    ? "bg-primary/10 text-foreground" 
-                    : "bg-muted"
+                    ? "bg-blue-500/20 text-white border border-blue-400/30" 
+                    : "bg-white/10 text-white border border-white/20"
                 )}>
                   <div className="text-sm">{msg.text}</div>
                   <div className="flex justify-end items-center mt-1">
-                    <span className="text-xs text-muted-foreground mr-1">
+                    <span className="text-xs text-white/60 mr-1">
                       {formatTime(msg.timestamp)}
                     </span>
                     {msg.from === 'user' && (
                       <span>
                         {msg.status === 'sent' && (
-                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <Clock className="h-3 w-3 text-white/60" />
                         )}
                         {msg.status === 'delivered' && (
-                          <Check className="h-3 w-3 text-muted-foreground" />
+                          <Check className="h-3 w-3 text-white/60" />
                         )}
                         {msg.status === 'read' && (
                           <div className="flex">
-                            <Check className="h-3 w-3 text-blue-500 -mr-1" />
-                            <Check className="h-3 w-3 text-blue-500" />
+                            <Check className="h-3 w-3 text-blue-400 -mr-1" />
+                            <Check className="h-3 w-3 text-blue-400" />
                           </div>
                         )}
                       </span>
