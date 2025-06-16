@@ -361,7 +361,7 @@ export default function TrainingPlanPage() {
               onClearPlan={() => clearTrainingPlan.mutate()}
             />
             
-            {/* Only show generator if user has premium access and no existing plan */}
+            {/* Show generator only if user has premium access and no existing plan */}
             {isPremiumUser && !hasExistingPlan && (
               <div className="mt-6">
                 <AIPlanGenerator 
@@ -370,6 +370,20 @@ export default function TrainingPlanPage() {
                     setIsGeneratingPlan(true);
                   }} 
                 />
+              </div>
+            )}
+            
+            {/* If user has existing plan, redirect to adjust plan tab for new generation */}
+            {hasExistingPlan && (
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto mt-6">
+                <Sparkles className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Plan Already Generated</h2>
+                <p className="text-white/70 drop-shadow-md mb-6">
+                  You already have a training plan. To generate a new plan or make adjustments, please use the Adjust Plan tab.
+                </p>
+                <Button variant="default" onClick={() => setSelectedTab('adjust-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
+                  Go to Adjust Plan
+                </Button>
               </div>
             )}
           </TabsContent>
@@ -423,20 +437,39 @@ export default function TrainingPlanPage() {
                 </Button>
               </div>
             ) : aiPlan ? (
-              <PlanAdjustmentTool 
-                currentPlan={aiPlan} 
-                onApplyChanges={handlePlanAdjustment}
-              />
+              <div className="space-y-6">
+                <PlanAdjustmentTool 
+                  currentPlan={aiPlan} 
+                  onApplyChanges={handlePlanAdjustment}
+                />
+                
+                {/* Option to generate new plan */}
+                <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-6">
+                  <h3 className="text-lg font-semibold mb-3 text-white drop-shadow-md">Generate New Plan</h3>
+                  <p className="text-white/70 drop-shadow-md mb-4">
+                    Want to start fresh? Generate a completely new training plan based on updated goals and preferences.
+                  </p>
+                  <AIPlanGenerator 
+                    onPlanGenerated={(plan) => {
+                      handlePlanGenerated(plan);
+                      setIsGeneratingPlan(true);
+                    }} 
+                  />
+                </div>
+              </div>
             ) : (
               <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
                 <Zap className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
                 <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">No Training Plan Found</h2>
                 <p className="text-white/70 drop-shadow-md mb-6">
-                  You need to generate a training plan first before you can get AI adjustments to it.
+                  Generate your first training plan to start making adjustments and tracking progress.
                 </p>
-                <Button variant="default" onClick={() => setSelectedTab('ai-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
-                  Generate a Training Plan
-                </Button>
+                <AIPlanGenerator 
+                  onPlanGenerated={(plan) => {
+                    handlePlanGenerated(plan);
+                    setIsGeneratingPlan(true);
+                  }} 
+                />
               </div>
             )}
           </TabsContent>
