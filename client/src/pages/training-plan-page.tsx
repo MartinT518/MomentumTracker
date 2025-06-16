@@ -240,26 +240,7 @@ export default function TrainingPlanPage() {
             </div>
           )}
           
-          {selectedTab !== "ai-plan" && selectedTab !== "coach" && !isGeneratingPlan && (
-            <div className="mt-4 md:mt-0">
-              <Button 
-                onClick={() => setSelectedTab("ai-plan")}
-                className="flex items-center"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate AI Plan
-              </Button>
-            </div>
-          )}
-          
-          {isGeneratingPlan && (
-            <div className="mt-4 md:mt-0">
-              <Button disabled className="flex items-center">
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating Plan...
-              </Button>
-            </div>
-          )}
+
         </div>
 
         {/* Training Plan Content */}
