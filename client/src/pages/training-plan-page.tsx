@@ -63,6 +63,11 @@ export default function TrainingPlanPage() {
   // Check if user has premium access
   const isPremiumUser = hasSubscription || user?.role === 'admin';
   
+  // Role-based permissions
+  const isCoach = user?.role === 'coach';
+  const isRegularUser = user?.role === 'user' || !user?.role;
+  const isAdmin = user?.role === 'admin';
+  
   // Fetch saved training plan
   const { data: savedTrainingPlan } = useQuery({
     queryKey: ['/api/training/saved-plan', user?.id],
@@ -248,15 +253,25 @@ export default function TrainingPlanPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            
+            {/* AI Plan tab - available to all users */}
             <TabsTrigger value="ai-plan">AI Plan</TabsTrigger>
-            <TabsTrigger value="adjust-plan" className="flex items-center">
-              <Zap className="w-4 h-4 mr-2" />
-              Adjust Plan
-            </TabsTrigger>
-            <TabsTrigger value="coach" className="flex items-center">
-              <BookUser className="w-4 h-4 mr-2" />
-              Human Coach
-            </TabsTrigger>
+            
+            {/* Adjust Plan tab - only for regular users and admins, NOT coaches */}
+            {(isRegularUser || isAdmin) && (
+              <TabsTrigger value="adjust-plan" className="flex items-center">
+                <Zap className="w-4 h-4 mr-2" />
+                Adjust Plan
+              </TabsTrigger>
+            )}
+            
+            {/* Human Coach tab - only for coaches and admins, NOT regular users */}
+            {(isCoach || isAdmin) && (
+              <TabsTrigger value="coach" className="flex items-center">
+                <BookUser className="w-4 h-4 mr-2" />
+                Human Coach
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="overview">
@@ -360,12 +375,24 @@ export default function TrainingPlanPage() {
           </TabsContent>
           
           <TabsContent value="adjust-plan">
-            {!hasSubscription ? (
+            {/* Only regular users and admins can access this tab */}
+            {isCoach ? (
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <BookUser className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Coach Access Restricted</h2>
+                <p className="text-white/70 drop-shadow-md mb-6">
+                  Coaches can adjust training plans through the Human Coach tab where they can work directly with athletes.
+                </p>
+                <Button variant="default" onClick={() => setSelectedTab('coach')} className="bg-blue-500 hover:bg-blue-400 text-white">
+                  Go to Human Coach
+                </Button>
+              </div>
+            ) : !hasSubscription ? (
               <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
                 <Zap className="h-12 w-12 mx-auto text-yellow-300 mb-4 drop-shadow-md" />
                 <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Premium Feature</h2>
-                <p className="text-white/80 mb-6 drop-shadow-md">
-                  Get smart adjustments to your training plan based on your performance data, biometrics, and feedback.
+                <div className="text-white/80 mb-6 drop-shadow-md">
+                  <p className="mb-3">Get smart adjustments to your training plan based on your performance data, biometrics, and feedback.</p>
                   <ul className="mt-3 space-y-1 text-left max-w-md mx-auto">
                     <li className="flex items-center">
                       <span className="bg-yellow-400/30 text-yellow-200 p-1 rounded-full mr-2 flex-shrink-0">
@@ -386,16 +413,31 @@ export default function TrainingPlanPage() {
                       <span className="text-white/80">Personalized recommendations</span>
                     </li>
                   </ul>
-                </p>
+                </div>
                 <Button 
                   size="lg"
                   asChild
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black"
                 >
                   <Link href="/subscription">Upgrade to Premium</Link>
                 </Button>
               </div>
+            ) : aiPlan ? (
+              <PlanAdjustmentTool 
+                currentPlan={aiPlan} 
+                onApplyChanges={handlePlanAdjustment}
+              />
             ) : (
-              <PlanAdjustmentTool onAdjustmentComplete={handlePlanAdjustment} />
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
+                <Zap className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
+                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">No Training Plan Found</h2>
+                <p className="text-white/70 drop-shadow-md mb-6">
+                  You need to generate a training plan first before you can get AI adjustments to it.
+                </p>
+                <Button variant="default" onClick={() => setSelectedTab('ai-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
+                  Generate a Training Plan
+                </Button>
+              </div>
             )}
           </TabsContent>
 
@@ -436,17 +478,7 @@ export default function TrainingPlanPage() {
                   <Link href="/subscription">Upgrade to Annual Premium</Link>
                 </Button>
               </div>
-            ) : !aiPlan ? (
-              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto">
-                <Zap className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
-                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">No Training Plan Found</h2>
-                <p className="text-white/70 drop-shadow-md mb-6">
-                  You need to generate a training plan first before you can get AI adjustments to it.
-                </p>
-                <Button variant="default" onClick={() => setSelectedTab('ai-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
-                  Generate a Training Plan
-                </Button>
-              </div>
+            
             ) : (
               <PlanAdjustmentTool 
                 currentPlan={aiPlan} 
