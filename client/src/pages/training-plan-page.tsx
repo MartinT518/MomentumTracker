@@ -484,16 +484,16 @@ export default function TrainingPlanPage() {
               )
             ) : (
               selectedCoach && coachSessionId && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-12rem)]">
                   {/* Coach briefing - left sidebar */}
-                  <div className="lg:col-span-1 h-full">
-                    <div className="sticky top-6">
+                  <div className="lg:w-1/3 flex-shrink-0">
+                    <div className="h-full overflow-y-auto">
                       <CoachBriefing userId={user?.id || 1} />
                     </div>
                   </div>
                   
                   {/* Coach chat - main area */}
-                  <div className="lg:col-span-2 h-full">
+                  <div className="lg:w-2/3 flex-1">
                     <CoachChat 
                       coach={selectedCoach} 
                       sessionId={coachSessionId} 

@@ -213,8 +213,8 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
   };
   
   return (
-    <div className="flex flex-col h-[calc(100vh-14rem)]">
-      <Card className="flex flex-col flex-1 overflow-hidden bg-white/10 backdrop-blur-lg border border-white/20">
+    <div className="h-full flex flex-col">
+      <Card className="flex flex-col h-full overflow-hidden bg-white/10 backdrop-blur-lg border border-white/20">
         <CardHeader className="border-b border-white/20 pb-4">
           <div className="flex items-center space-x-3">
             <Avatar>
