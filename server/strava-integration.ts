@@ -5,8 +5,12 @@ import { integration_connections, activities, health_metrics, sync_logs } from "
 import { and, eq } from "drizzle-orm";
 
 // Strava OAuth configuration with your credentials
-const STRAVA_CLIENT_ID = '163144';
-const STRAVA_CLIENT_SECRET = '5be57be12ea469a544bcc2a7e8c0bbdfe3b3665f';
+const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID || '163144';
+const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
+
+if (!STRAVA_CLIENT_SECRET) {
+  throw new Error('STRAVA_CLIENT_SECRET environment variable is required');
+}
 
 interface StravaActivity {
   id: number;
