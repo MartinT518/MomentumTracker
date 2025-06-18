@@ -31,7 +31,7 @@ export function AdminProtectedRoute({
   }
 
   // Check if user has admin privileges
-  if (user.role !== 'admin' && !user.is_admin) {
+  if (user.role !== 'admin') {
     return (
       <Route path={path}>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">

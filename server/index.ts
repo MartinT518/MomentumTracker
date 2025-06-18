@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { setupModularRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedCoaches } from "./seed-coaches";
 
@@ -41,34 +41,35 @@ app.use((req, res, next) => {
   // Seed initial data
   await seedCoaches();
   
-  const server = await registerRoutes(app);
+  setupModularRoutes(app); // Call the function to set up routes
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Error handling middleware
+  app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    // Log the error for debugging purposes (e.g., using a dedicated logger)
+    log(`Error: ${status} - ${message}`, err);
+
+    // Send the error response
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
+  const port = 5000;
+  const server = app.listen({
+    port,
+    host: "0.0.0.0",
+    // reusePort: true, // reusePort is not a standard option for app.listen
+  }, () => {
+    log(`serving on port ${port}`);
+  });
+
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();
