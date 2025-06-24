@@ -81,9 +81,9 @@ export default function FAQPage() {
           </AccordionItem>
           
           <AccordionItem value="item-3" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What fitness trackers can I connect to AetherRun?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What fitness trackers can I connect to CatholicRun?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              AetherRun integrates with multiple fitness platforms including Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit. You can connect these platforms in your profile settings to automatically import your activities and health metrics.
+              CatholicRun integrates with multiple fitness platforms including Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit. You can connect these platforms in your profile settings to automatically import your activities and health metrics.
             </AccordionContent>
           </AccordionItem>
           
@@ -109,9 +109,9 @@ export default function FAQPage() {
           </AccordionItem>
           
           <AccordionItem value="item-7" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does AetherRun handle my health and fitness data?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does CatholicRun handle my health and fitness data?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              AetherRun takes your privacy seriously. We only collect the data necessary to provide our services, and we never share your personal data with third parties without your explicit consent. You can revoke access to connected fitness platforms at any time in your profile settings.
+              CatholicRun takes your privacy seriously. We only collect the data necessary to provide our services, and we never share your personal data with third parties without your explicit consent. You can revoke access to connected fitness platforms at any time in your profile settings.
             </AccordionContent>
           </AccordionItem>
           
