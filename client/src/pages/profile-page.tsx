@@ -105,7 +105,7 @@ export default function ProfilePage() {
     // In a real implementation, direct user to download the companion iOS app
     toast({
       title: "Apple Health",
-      description: "Download our iOS app to connect Apple Health data. Search 'CatholicRun' on the App Store.",
+      description: "Download our iOS app to connect Apple Health data. Search 'AetherRun' on the App Store.",
     });
   };
 
@@ -601,7 +601,7 @@ export default function ProfilePage() {
                 <div className="mt-6 p-4 bg-amber-50 rounded-md border border-amber-200">
                   <h4 className="text-sm font-medium text-amber-800 mb-2">Data Privacy & Usage Consent</h4>
                   <p className="text-xs text-amber-700 mb-2">
-                    By connecting fitness platforms, you consent to CatholicRun accessing your activity and health data to:
+                    By connecting fitness platforms, you consent to AetherRun accessing your activity and health data to:
                   </p>
                   <ul className="text-xs text-amber-700 list-disc pl-5 space-y-1">
                     <li>Generate personalized training plans tailored to your fitness level</li>
