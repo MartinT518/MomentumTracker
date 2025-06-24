@@ -29,7 +29,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Information */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">AetherRun</h4>
+            <h4 className="text-lg font-semibold mb-4">CatholicRun</h4>
             <p className="text-sm text-muted-foreground mb-4">
               An AI-powered training platform for runners and athletes, 
               providing personalized training plans and data-driven insights.
@@ -122,7 +122,7 @@ export function Footer() {
 
         <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground mb-4 md:mb-0">
-            © {currentYear} AetherRun. All rights reserved.
+            © {currentYear} CatholicRun. All rights reserved.
           </p>
           <div className="flex space-x-6">
             <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary">

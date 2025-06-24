@@ -23,7 +23,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
-import aetherRunLogo from "@assets/Latesttest.png";
+import catholicRunLogo from "@assets/688bcfbe-f276-4711-8a45-55f25a921b52_20250624_231034_0000_1750795883864.png";
 
 interface SidebarProps {
   className?: string;
@@ -151,8 +151,8 @@ export function Sidebar({ className, style }: SidebarProps) {
         <Link href="/dashboard">
           <div className="flex items-center">
             <img 
-              src={aetherRunLogo} 
-              alt="AetherRun Logo" 
+              src={catholicRunLogo} 
+              alt="CatholicRun Logo" 
               className="w-full h-40 object-contain"
             />
           </div>
