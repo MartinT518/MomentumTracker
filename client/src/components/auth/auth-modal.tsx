@@ -174,7 +174,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModa
       });
       onClose();
       toast({
-        title: "Welcome to AetherRun!",
+        title: "Welcome to CatholicRun!",
         description: "Your account has been created successfully.",
       });
     } catch (error: any) {
