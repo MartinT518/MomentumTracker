@@ -22,7 +22,7 @@ const initialMessages: Message[] = [
   {
     id: '1',
     sender: 'bot',
-    text: 'Hi there! 👋 I\'m your AetherRun assistant. How can I help you today with your training or app questions?',
+    text: 'Hi there! 👋 I\'m your CatholicRun assistant. How can I help you today with your training or app questions?',
     timestamp: new Date(),
     links: [
       { title: 'Training Plans', url: '/training-plan' },
@@ -143,11 +143,11 @@ export function SupportChatBot() {
         botResponse = 'You\'re welcome! Is there anything else I can help you with?';
       }
       else if (lcMessage.includes('hello') || lcMessage.includes('hi') || lcMessage.includes('hey')) {
-        botResponse = `Hello${user ? ' ' + user.username : ''}! How can I help you with AetherRun today?`;
+        botResponse = `Hello${user ? ' ' + user.username : ''}! How can I help you with CatholicRun today?`;
         links = supportTopics;
       }
       else if (lcMessage.includes('features') || lcMessage.includes('what can')) {
-        botResponse = 'AetherRun offers training plans, activity tracking, health metrics, nutrition guidance, and goal setting. Premium features include AI-generated plans, while annual subscribers get exclusive access to human coaches and video analysis.';
+        botResponse = 'CatholicRun offers training plans, activity tracking, health metrics, nutrition guidance, and goal setting. Premium features include AI-generated plans, while annual subscribers get exclusive access to human coaches and video analysis.';
         links = supportTopics;
       }
       else {
