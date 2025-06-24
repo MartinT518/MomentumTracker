@@ -62,28 +62,28 @@ export default function FAQPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 text-white drop-shadow-lg">Frequently Asked Questions</h1>
-          <p className="text-xl text-white/80 drop-shadow-md">Find answers to common questions about CatholicRun</p>
+          <p className="text-xl text-white/80 drop-shadow-md">Find answers to common questions about AetherRun</p>
         </div>
         
         <Accordion type="single" collapsible className="w-full mb-12 space-y-4">
           <AccordionItem value="item-1" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What is CatholicRun?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What is AetherRun?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              CatholicRun is an AI-powered fitness platform that provides personalized training plans, nutrition advice, and health analytics for runners and athletes. Our platform integrates with various fitness trackers and uses advanced AI to help you achieve your fitness goals.
+              AetherRun is an AI-powered fitness platform that provides personalized training plans, nutrition advice, and health analytics for runners and athletes. Our platform integrates with various fitness trackers and uses advanced AI to help you achieve your fitness goals.
             </AccordionContent>
           </AccordionItem>
           
           <AccordionItem value="item-2" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does CatholicRun generate training plans?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does AetherRun generate training plans?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              CatholicRun uses advanced AI technology powered by OpenAI to create personalized training plans based on your fitness level, goals, available time, and health metrics. The system analyzes your recent activities, recovery status, and adapts plans as you progress.
+              AetherRun uses advanced AI technology powered by OpenAI to create personalized training plans based on your fitness level, goals, available time, and health metrics. The system analyzes your recent activities, recovery status, and adapts plans as you progress.
             </AccordionContent>
           </AccordionItem>
           
           <AccordionItem value="item-3" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What fitness trackers can I connect to CatholicRun?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What fitness trackers can I connect to AetherRun?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              CatholicRun integrates with multiple fitness platforms including Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit. You can connect these platforms in your profile settings to automatically import your activities and health metrics.
+              AetherRun integrates with multiple fitness platforms including Strava, Garmin Connect, Polar, Google Fit, WHOOP, Apple Health, and Fitbit. You can connect these platforms in your profile settings to automatically import your activities and health metrics.
             </AccordionContent>
           </AccordionItem>
           
@@ -109,9 +109,9 @@ export default function FAQPage() {
           </AccordionItem>
           
           <AccordionItem value="item-7" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does CatholicRun handle my health and fitness data?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does AetherRun handle my health and fitness data?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              CatholicRun takes your privacy seriously. We only collect the data necessary to provide our services, and we never share your personal data with third parties without your explicit consent. You can revoke access to connected fitness platforms at any time in your profile settings.
+              AetherRun takes your privacy seriously. We only collect the data necessary to provide our services, and we never share your personal data with third parties without your explicit consent. You can revoke access to connected fitness platforms at any time in your profile settings.
             </AccordionContent>
           </AccordionItem>
           
