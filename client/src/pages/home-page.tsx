@@ -418,7 +418,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center relative">
               <div className="text-3xl font-bold relative bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
-                <span className="text-orange-400">Catholic</span>
+                <span className="text-orange-400">Aether</span>
                 <span className="text-white drop-shadow-lg">Run</span>
               </div>
             </div>
@@ -460,7 +460,7 @@ export default function HomePage() {
                 <span className="gradient-text block">Running Journey</span>
               </h1>
               <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
-                CatholicRun combines cutting-edge AI training plans, seamless platform integration, 
+                AetherRun combines cutting-edge AI training plans, seamless platform integration, 
                 and intelligent health insights to push your limits and achieve peak performance.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">

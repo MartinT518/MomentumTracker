@@ -152,8 +152,8 @@ export function Sidebar({ className, style }: SidebarProps) {
           <div className="flex items-center">
             <img 
               src={catholicRunLogo} 
-              alt="CatholicRun Logo" 
-              className="w-full h-40 object-contain"
+              alt="AetherRun Logo" 
+              className="w-full h-96 object-contain"
             />
           </div>
         </Link>

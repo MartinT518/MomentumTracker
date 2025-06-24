@@ -75,7 +75,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalPr
       <DialogContent className="sm:max-w-md bg-white/12 backdrop-blur-xl border-white/20 text-white">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
-            <span className="text-orange-400">Catholic</span>Run
+            <span className="text-orange-400">Aether</span>Run
           </DialogTitle>
           <DialogDescription className="text-center text-white/80">
             Sign in to your account to continue your training journey
@@ -174,7 +174,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModa
       });
       onClose();
       toast({
-        title: "Welcome to CatholicRun!",
+        title: "Welcome to AetherRun!",
         description: "Your account has been created successfully.",
       });
     } catch (error: any) {
@@ -191,7 +191,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModa
       <DialogContent className="sm:max-w-md bg-white/12 backdrop-blur-xl border-white/20 text-white">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
-            <span className="text-orange-400">Catholic</span>Run
+            <span className="text-orange-400">Aether</span>Run
           </DialogTitle>
           <DialogDescription className="text-center text-white/80">
             Create your account and start your AI-powered training journey
