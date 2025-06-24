@@ -146,7 +146,7 @@ export function MobileMenu() {
           <div className="flex items-center">
             <img 
               src={aetherRunLogo} 
-              alt="AetherRun Logo" 
+              alt="CatholicRun Logo" 
               className="w-full h-12 object-contain max-w-48"
             />
           </div>
