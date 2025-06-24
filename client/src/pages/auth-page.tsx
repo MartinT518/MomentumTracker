@@ -116,7 +116,7 @@ export default function AuthPage() {
             <div className="mb-6">
               <h1 className="text-5xl font-bold mb-4 text-white">Welcome Back</h1>
               <p className="text-lg text-blue-100 mb-8 leading-relaxed">
-                Sign in to your CatholicRun account and continue your training journey.
+                Sign in to your AetherRun account and continue your training journey.
               </p>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function AuthPage() {
               <CardContent className="pt-6">
                 <div className="mb-6 text-center">
                   <h1 className="text-3xl font-bold mb-2 text-white">
-                    <span className="text-blue-300">Catholic</span>Run
+                    <span className="text-blue-300">Aether</span>Run
                   </h1>
                   <p className="text-blue-200">Your AI-powered running companion</p>
                 </div>

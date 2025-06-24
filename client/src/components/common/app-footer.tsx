@@ -26,7 +26,7 @@ export function AppFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Information */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-white drop-shadow-lg">CatholicRun</h4>
+            <h4 className="text-lg font-semibold mb-4 text-white drop-shadow-lg">AetherRun</h4>
             <p className="text-sm text-white/80 mb-4 drop-shadow-md">
               An AI-powered training platform for runners and athletes, 
               providing personalized training plans and data-driven insights.
