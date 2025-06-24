@@ -62,21 +62,21 @@ export default function FAQPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 text-white drop-shadow-lg">Frequently Asked Questions</h1>
-          <p className="text-xl text-white/80 drop-shadow-md">Find answers to common questions about AetherRun</p>
+          <p className="text-xl text-white/80 drop-shadow-md">Find answers to common questions about CatholicRun</p>
         </div>
         
         <Accordion type="single" collapsible className="w-full mb-12 space-y-4">
           <AccordionItem value="item-1" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What is AetherRun?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">What is CatholicRun?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              AetherRun is an AI-powered fitness platform that provides personalized training plans, nutrition advice, and health analytics for runners and athletes. Our platform integrates with various fitness trackers and uses advanced AI to help you achieve your fitness goals.
+              CatholicRun is an AI-powered fitness platform that provides personalized training plans, nutrition advice, and health analytics for runners and athletes. Our platform integrates with various fitness trackers and uses advanced AI to help you achieve your fitness goals.
             </AccordionContent>
           </AccordionItem>
           
           <AccordionItem value="item-2" className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg px-6 py-2">
-            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does AetherRun generate training plans?</AccordionTrigger>
+            <AccordionTrigger className="text-white hover:text-cyan-300 transition-colors">How does CatholicRun generate training plans?</AccordionTrigger>
             <AccordionContent className="text-white/80 pt-4">
-              AetherRun uses advanced AI technology powered by OpenAI to create personalized training plans based on your fitness level, goals, available time, and health metrics. The system analyzes your recent activities, recovery status, and adapts plans as you progress.
+              CatholicRun uses advanced AI technology powered by OpenAI to create personalized training plans based on your fitness level, goals, available time, and health metrics. The system analyzes your recent activities, recovery status, and adapts plans as you progress.
             </AccordionContent>
           </AccordionItem>
           
