@@ -34,8 +34,8 @@ export function MobileMenu() {
   const { logoutMutation, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   
-  // Check if user is an admin (in a real app, this would check a proper admin role)
-  const isAdmin = user?.id === 1;
+  // Check if user is an admin
+  const isAdmin = user?.is_admin;
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -55,6 +55,12 @@ export function MobileMenu() {
   };
   
   const adminItems = [
+    {
+      title: "Admin Panel",
+      href: "/admin",
+      icon: Crown,
+      active: location === "/admin",
+    },
     {
       title: "Coach Management",
       href: "/admin/coaches",
@@ -112,8 +118,9 @@ export function MobileMenu() {
       icon: Users,
       active: location === "/coaches",
     },
+  ];
 
-
+  const accountItems = [
     {
       title: "Profile",
       href: "/profile",
@@ -126,17 +133,20 @@ export function MobileMenu() {
       icon: Settings,
       active: location === "/settings",
     },
-    {
-      title: "Subscription",
-      href: "/subscription",
-      icon: CreditCard,
-      active: location === "/subscription",
-    },
+  ];
+
+  const infoItems = [
     {
       title: "FAQ & Support",
       href: "/faq",
       icon: HelpCircle,
       active: location === "/faq",
+    },
+    {
+      title: "Pricing",
+      href: "/pricing",
+      icon: DollarSign,
+      active: location === "/pricing",
     },
   ];
 
@@ -193,11 +203,26 @@ export function MobileMenu() {
         <div className="px-4 py-3 border-b border-white/20">
           <SearchButton />
         </div>
+        
+        {/* Admin quick access for admin users */}
+        {isAdmin && (
+          <div className="px-4 py-3 border-b border-white/20">
+            <Link href="/admin" onClick={closeMenu}>
+              <div className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-purple-500/20 to-pink-600/20 border border-purple-500/30 rounded-lg text-purple-300 hover:from-purple-500/30 hover:to-pink-600/30 hover:text-purple-200 transition-all">
+                <Crown className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">Admin Panel</span>
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* Scrollable Navigation Section */}
         <div className="flex-1 overflow-hidden flex flex-col">
           <nav className="overflow-y-auto flex-1 pb-4">
-            <ul className="mt-2">
+            <div className="px-4 pt-6 pb-2">
+              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Main</p>
+            </div>
+            <ul>
               {navItems.map((item) => (
                 <li key={item.title}>
                   <Link 
@@ -205,12 +230,12 @@ export function MobileMenu() {
                     onClick={closeMenu}
                     className={cn(
                       "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors rounded-lg mx-2",
-                      item.active && "bg-white/20 border-r-4 border-blue-300 font-medium text-white"
+                      item.active && "bg-white/20 border-r-4 border-cyan-300 font-medium text-white"
                     )}
                   >
                     <item.icon className={cn(
                       "h-5 w-5 mr-3 text-white/60 drop-shadow-md",
-                      item.active && "text-blue-300"
+                      item.active && "text-cyan-300"
                     )} />
                     {item.title}
                   </Link>
@@ -218,34 +243,53 @@ export function MobileMenu() {
               ))}
             </ul>
             
-            {/* Admin Section */}
-            {isAdmin && (
-              <>
-                <div className="px-4 pt-6 pb-2">
-                  <p className="text-xs font-medium text-white/60 tracking-wider uppercase drop-shadow-md">Admin</p>
-                </div>
-                <ul>
-                  {adminItems.map((item) => (
-                    <li key={item.title}>
-                      <Link
-                        href={item.href}
-                        onClick={closeMenu}
-                        className={cn(
-                          "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors rounded-lg mx-2",
-                          item.active && "bg-white/20 border-r-4 border-blue-300 font-medium text-white"
-                        )}
-                      >
-                        <item.icon className={cn(
-                          "h-5 w-5 mr-3 text-white/60 drop-shadow-md",
-                          item.active && "text-blue-300"
-                        )} />
-                        {item.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+            <div className="px-4 pt-6 pb-2">
+              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Account</p>
+            </div>
+            <ul>
+              {accountItems.map((item) => (
+                <li key={item.title}>
+                  <Link 
+                    href={item.href}
+                    onClick={closeMenu}
+                    className={cn(
+                      "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors rounded-lg mx-2",
+                      item.active && "bg-white/20 border-r-4 border-cyan-300 font-medium text-white"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-5 w-5 mr-3 text-white/60 drop-shadow-md",
+                      item.active && "text-cyan-300"
+                    )} />
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            
+            <div className="px-4 pt-6 pb-2">
+              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Information</p>
+            </div>
+            <ul>
+              {infoItems.map((item) => (
+                <li key={item.title}>
+                  <Link 
+                    href={item.href}
+                    onClick={closeMenu}
+                    className={cn(
+                      "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors rounded-lg mx-2",
+                      item.active && "bg-white/20 border-r-4 border-cyan-300 font-medium text-white"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-5 w-5 mr-3 text-white/60 drop-shadow-md",
+                      item.active && "text-cyan-300"
+                    )} />
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
         </div>
 
