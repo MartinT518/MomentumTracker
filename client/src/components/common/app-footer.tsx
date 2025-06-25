@@ -23,7 +23,7 @@ export function AppFooter() {
   return (
     <div className="border-t border-white/20 bg-white/10 backdrop-blur-lg shadow-xl">
       <div className="max-w-6xl mx-auto py-10 md:py-12 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Information */}
           <div>
             <h4 className="text-lg font-semibold mb-4 text-white drop-shadow-lg">AetherRun</h4>
@@ -50,28 +50,6 @@ export function AppFooter() {
                 </svg>
               </a>
             </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4 text-white drop-shadow-lg">Quick Links</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-sm text-white/80 hover:text-white transition-all duration-300 hover:translate-x-1">Home</Link>
-              </li>
-              <li>
-                <Link href="/activities" className="text-sm text-white/80 hover:text-white transition-all duration-300 hover:translate-x-1">Activities</Link>
-              </li>
-              <li>
-                <Link href="/coaches" className="text-sm text-white/80 hover:text-white transition-all duration-300 hover:translate-x-1">Coaches</Link>
-              </li>
-              <li>
-                <Link href="/nutrition" className="text-sm text-white/80 hover:text-white transition-all duration-300 hover:translate-x-1">Nutrition</Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="text-sm text-white/80 hover:text-white transition-all duration-300 hover:translate-x-1">Pricing</Link>
-              </li>
-            </ul>
           </div>
 
           {/* Legal & Info */}
