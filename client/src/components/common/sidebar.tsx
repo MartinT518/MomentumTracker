@@ -40,6 +40,9 @@ export function Sidebar({ className, style }: SidebarProps) {
     logoutMutation.mutate();
   };
 
+  // Check if user is an admin
+  const isAdmin = user?.is_admin;
+
 
 
   const navItems = [
@@ -109,6 +112,21 @@ export function Sidebar({ className, style }: SidebarProps) {
       active: location === "/settings",
     },
   ];
+  
+  const adminItems = [
+    {
+      title: "Admin Panel",
+      href: "/admin",
+      icon: Crown,
+      active: location === "/admin",
+    },
+    {
+      title: "Coach Management",
+      href: "/admin/coaches",
+      icon: UserCog,
+      active: location === "/admin/coaches",
+    },
+  ];
 
   return (
     <aside className={cn("hidden lg:flex flex-col w-64 bg-white/10 backdrop-blur-xl border-r border-white/20", className)} style={style}>
@@ -126,7 +144,17 @@ export function Sidebar({ className, style }: SidebarProps) {
       <div className="px-4 py-3 border-b border-white/20">
         <SearchButton />
       </div>
-
+      {/* Admin quick access for admin users */}
+      {isAdmin && (
+        <div className="px-4 py-3 border-b border-white/20">
+          <Link href="/admin">
+            <div className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-purple-500/20 to-pink-600/20 border border-purple-500/30 rounded-lg text-purple-300 hover:from-purple-500/30 hover:to-pink-600/30 hover:text-purple-200 transition-all">
+              <Crown className="h-4 w-4 mr-2" />
+              <span className="text-sm font-medium">Admin Panel</span>
+            </div>
+          </Link>
+        </div>
+      )}
       <nav className="flex-grow overflow-y-auto">
         <div className="px-4 pt-6 pb-2">
           <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Main</p>
@@ -206,6 +234,33 @@ export function Sidebar({ className, style }: SidebarProps) {
             </Link>
           </li>
         </ul>
+        
+        {/* Only show admin section to admin users */}
+        {isAdmin && (
+          <>
+            <div className="px-4 pt-6 pb-2">
+              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Admin</p>
+            </div>
+            <ul>
+              {adminItems.map((item) => (
+                <li key={item.title}>
+                  <Link href={item.href}>
+                    <div className={cn(
+                      "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                      item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+                    )}>
+                      <item.icon className={cn(
+                        "h-5 w-5 mr-3 text-white/60",
+                        item.active && "text-cyan-300"
+                      )} />
+                      {item.title}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </nav>
       <div className="p-4 border-t border-white/20">
         <button 
