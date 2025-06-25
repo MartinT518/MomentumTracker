@@ -19,6 +19,8 @@ import { USER_ROLE_DESCRIPTIONS, UserRole } from "@shared/user-roles";
 import { ImpersonationPanel } from "@/components/admin/impersonation-panel";
 import { Users, UserCheck, Settings, BarChart3, Shield, Crown, Star, ArrowLeft, Home, UserPlus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import { Sidebar } from "@/components/common/sidebar";
+import { MobileMenu } from "@/components/common/mobile-menu";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -346,11 +348,19 @@ export default function AdminPanelPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      <div className="container mx-auto max-w-7xl p-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Admin Panel</h1>
-          <p className="text-white/70">Manage users, roles, and platform settings</p>
-        </div>
+      <div className="flex h-screen max-w-full overflow-hidden">
+        <Sidebar />
+        <MobileMenu />
+
+        <main className="flex-1 overflow-y-auto pt-0 md:pt-4 pb-16 md:pb-4 px-4 md:px-6">
+          {/* For mobile view padding to account for fixed header */}
+          <div className="md:hidden pt-20"></div>
+          
+          <div className="container mx-auto max-w-7xl">
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold text-white mb-2">Admin Panel</h1>
+              <p className="text-white/70">Manage users, roles, and platform settings</p>
+            </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-white/10 backdrop-blur-lg border border-white/20 h-auto p-1 grid grid-cols-3 md:grid-cols-6 gap-1 md:gap-0 md:flex md:flex-wrap">
@@ -888,34 +898,34 @@ export default function AdminPanelPage() {
             <DialogHeader>
               <DialogTitle className="text-white">Edit User Role</DialogTitle>
               <DialogDescription className="text-white/70">
-                Update user role and permissions
+                Update user permissions and access level
               </DialogDescription>
             </DialogHeader>
             
             {selectedUser && (
               <div className="space-y-4">
-                <div>
-                  <Label className="text-white">Username</Label>
-                  <Input 
-                    value={selectedUser.username} 
-                    disabled 
-                    className="bg-white/10 border-white/20 text-white"
-                  />
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <Label className="text-white">Username</Label>
+                    <div className="text-white/70">{selectedUser.username}</div>
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-white">Email</Label>
+                    <div className="text-white/70">{selectedUser.email || 'No email'}</div>
+                  </div>
                 </div>
                 
-                <div>
+                <div className="space-y-2">
                   <Label className="text-white">Role</Label>
                   <Select 
                     value={selectedUser.role} 
-                    onValueChange={(value: UserRole) => 
-                      setSelectedUser({...selectedUser, role: value})
-                    }
+                    onValueChange={(value: UserRole) => setSelectedUser({...selectedUser, role: value})}
                   >
                     <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">Regular User</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
                       <SelectItem value="coach">Coach</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
@@ -923,18 +933,11 @@ export default function AdminPanelPage() {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="admin-checkbox"
+                  <Switch
                     checked={selectedUser.is_admin}
-                    onChange={(e) => 
-                      setSelectedUser({...selectedUser, is_admin: e.target.checked})
-                    }
-                    className="rounded border-white/20"
+                    onCheckedChange={(checked) => setSelectedUser({...selectedUser, is_admin: checked})}
                   />
-                  <Label htmlFor="admin-checkbox" className="text-white">
-                    Grant admin privileges
-                  </Label>
+                  <Label className="text-white">Administrator Privileges</Label>
                 </div>
               </div>
             )}
@@ -956,6 +959,8 @@ export default function AdminPanelPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+          </div>
+        </main>
       </div>
     </div>
   );
