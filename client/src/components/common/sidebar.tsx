@@ -40,8 +40,7 @@ export function Sidebar({ className, style }: SidebarProps) {
     logoutMutation.mutate();
   };
 
-  // Check if user is an admin
-  const isAdmin = user?.is_admin;
+
 
   const navItems = [
     {
@@ -95,27 +94,6 @@ export function Sidebar({ className, style }: SidebarProps) {
 
 
   ];
-  
-  const accountNavItems = [
-    {
-      title: "Profile",
-      href: "/profile",
-      icon: User,
-      active: location === "/profile",
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: Settings,
-      active: location === "/settings",
-    },
-    {
-      title: "Subscription",
-      href: "/subscription",
-      icon: CreditCard,
-      active: location === "/subscription",
-    },
-  ];
 
   const accountItems = [
     {
@@ -129,21 +107,6 @@ export function Sidebar({ className, style }: SidebarProps) {
       href: "/settings",
       icon: Settings,
       active: location === "/settings",
-    },
-  ];
-  
-  const adminItems = [
-    {
-      title: "Admin Panel",
-      href: "/admin",
-      icon: Crown,
-      active: location === "/admin",
-    },
-    {
-      title: "Coach Management",
-      href: "/admin/coaches",
-      icon: UserCog,
-      active: location === "/admin/coaches",
     },
   ];
 
@@ -243,8 +206,6 @@ export function Sidebar({ className, style }: SidebarProps) {
             </Link>
           </li>
         </ul>
-        
-
       </nav>
       <div className="p-4 border-t border-white/20">
         <button 
