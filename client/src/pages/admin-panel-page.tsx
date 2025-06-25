@@ -353,77 +353,50 @@ export default function AdminPanelPage() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          {/* Desktop Tabs */}
-          <div className="hidden md:block">
-            <TabsList className="bg-white/10 backdrop-blur-lg border border-white/20 w-full h-auto flex-wrap p-1">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 flex-shrink-0">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-white/20 flex-shrink-0">
-                <Users className="h-4 w-4 mr-2" />
-                User Management
-              </TabsTrigger>
-              <TabsTrigger value="roles" className="data-[state=active]:bg-white/20 flex-shrink-0">
-                <Shield className="h-4 w-4 mr-2" />
-                Role Definitions
-              </TabsTrigger>
-              <TabsTrigger value="coaches" className="data-[state=active]:bg-white/20 flex-shrink-0">
-                <Star className="h-4 w-4 mr-2" />
-                Coach Management
-              </TabsTrigger>
-              <TabsTrigger value="impersonation" className="data-[state=active]:bg-white/20 flex-shrink-0">
-                <UserCheck className="h-4 w-4 mr-2" />
-                User Impersonation
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-white/20 flex-shrink-0">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          
-          {/* Mobile Tabs - Stacked Grid */}
-          <div className="block md:hidden">
-            <div className="grid grid-cols-2 gap-2 bg-white/10 backdrop-blur-lg border border-white/20 p-2 rounded-lg">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 h-auto py-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <BarChart3 className="h-4 w-4 mb-1" />
-                  <span>Overview</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-white/20 h-auto py-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <Users className="h-4 w-4 mb-1" />
-                  <span>Users</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="roles" className="data-[state=active]:bg-white/20 h-auto py-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <Shield className="h-4 w-4 mb-1" />
-                  <span>Roles</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="coaches" className="data-[state=active]:bg-white/20 h-auto py-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <Star className="h-4 w-4 mb-1" />
-                  <span>Coaches</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="impersonation" className="data-[state=active]:bg-white/20 h-auto py-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <UserCheck className="h-4 w-4 mb-1" />
-                  <span>Users</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-white/20 h-auto py-3 text-xs">
-                <div className="flex flex-col items-center">
-                  <Settings className="h-4 w-4 mb-1" />
-                  <span>Settings</span>
-                </div>
-              </TabsTrigger>
-            </div>
-          </div>
+          <TabsList className="bg-white/10 backdrop-blur-lg border border-white/20 h-auto p-1 grid grid-cols-3 md:grid-cols-6 gap-1 md:gap-0 md:flex md:flex-wrap">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <BarChart3 className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">Overview</span>
+                <span className="md:hidden">Stats</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <Users className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">User Management</span>
+                <span className="md:hidden">Users</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="roles" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <Shield className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">Role Definitions</span>
+                <span className="md:hidden">Roles</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="coaches" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <Star className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">Coach Management</span>
+                <span className="md:hidden">Coaches</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="impersonation" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <UserCheck className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">User Impersonation</span>
+                <span className="md:hidden">Switch</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <Settings className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">Settings</span>
+                <span className="md:hidden">Config</span>
+              </div>
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
