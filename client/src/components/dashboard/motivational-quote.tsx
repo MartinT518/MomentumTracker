@@ -256,7 +256,7 @@ export function DailyMotivation() {
   const todayMotivation = motivationMap[dayOfWeek];
   
   return (
-    <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-5 rounded-xl mb-6 shadow-xl overflow-hidden relative pl-[20px] pr-[20px] ml-[240px] mr-[240px] text-left">
+    <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-5 rounded-xl shadow-xl overflow-hidden relative text-left mt-[0px] mb-[0px] pt-[0px] pb-[0px] pl-[0px] pr-[0px] ml-[0px] mr-[0px]">
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <path d="M50,10 L90,50 L50,90 L10,50 Z" fill="currentColor" className="text-white/20" />
