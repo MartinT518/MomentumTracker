@@ -149,7 +149,7 @@ export function MobileMenu() {
             <img 
               src={sinine_musttaust} 
               alt="AetherRun Logo" 
-              className="w-full h-32 object-contain max-w-96 mt-[-44px] mb-[-44px] pt-[0px] pb-[0px] pl-[0px] pr-[0px] ml-[0px] mr-[0px]"
+              className="w-full h-64 object-contain max-w-none mt-[-88px] mb-[-88px] pt-[0px] pb-[0px] pl-[0px] pr-[0px] ml-[0px] mr-[0px]"
             />
           </div>
           <button 
