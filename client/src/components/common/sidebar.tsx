@@ -25,6 +25,8 @@ import {
 import { SearchButton } from "@/components/common/search-dialog-fixed";
 import catholicRunLogo from "@assets/688bcfbe-f276-4711-8a45-55f25a921b52_20250624_231034_0000_1750795883864.png";
 
+import sinine_musttaust from "@assets/sinine_musttaust.png";
+
 interface SidebarProps {
   className?: string;
   style?: React.CSSProperties;
@@ -151,18 +153,16 @@ export function Sidebar({ className, style }: SidebarProps) {
         <Link href="/dashboard">
           <div className="flex items-center">
             <img 
-              src={catholicRunLogo} 
+              src={sinine_musttaust} 
               alt="AetherRun Logo" 
-              className="w-full h-96 object-contain"
+              className="w-full h-96 object-contain mt-[-174px] mb-[-174px] pt-[0px] pb-[0px] pl-[0px] pr-[0px] ml-[0px] mr-[0px]"
             />
           </div>
         </Link>
       </div>
-      
       <div className="px-4 py-3 border-b border-white/20">
         <SearchButton />
       </div>
-      
       {/* Admin quick access for admin users */}
       {isAdmin && (
         <div className="px-4 py-3 border-b border-white/20">
@@ -174,7 +174,6 @@ export function Sidebar({ className, style }: SidebarProps) {
           </Link>
         </div>
       )}
-      
       <nav className="flex-grow overflow-y-auto">
         <div className="px-4 pt-6 pb-2">
           <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Main</p>
@@ -282,7 +281,6 @@ export function Sidebar({ className, style }: SidebarProps) {
           </>
         )}
       </nav>
-      
       <div className="p-4 border-t border-white/20">
         <button 
           onClick={handleLogout}
