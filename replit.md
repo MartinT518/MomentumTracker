@@ -142,7 +142,12 @@ AetherRun is a comprehensive health and wellness platform that combines intellig
 
 ## Changelog
 
-- June 24, 2025. Initial setup
+- June 25, 2025: Standardized mobile and desktop UI consistency
+  - Fixed admin panel tabs to use responsive grid layout without horizontal scrolling
+  - Unified label consistency between mobile and desktop views across all components
+  - Resolved React Radix UI component structure errors
+  - Ensured identical terminology in navigation elements (desktop sidebar matches mobile menu)
+- June 24, 2025: Initial setup
 
 ## User Preferences
 
