@@ -357,8 +357,7 @@ export default function AdminPanelPage() {
             <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
               <div className="flex flex-col md:flex-row items-center">
                 <BarChart3 className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="hidden md:inline">Overview</span>
-                <span className="md:hidden">Stats</span>
+                <span>Overview</span>
               </div>
             </TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
@@ -386,14 +385,13 @@ export default function AdminPanelPage() {
               <div className="flex flex-col md:flex-row items-center">
                 <UserCheck className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
                 <span className="hidden md:inline">User Impersonation</span>
-                <span className="md:hidden">Switch</span>
+                <span className="md:hidden">Impersonation</span>
               </div>
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
               <div className="flex flex-col md:flex-row items-center">
                 <Settings className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
-                <span className="hidden md:inline">Settings</span>
-                <span className="md:hidden">Config</span>
+                <span>Settings</span>
               </div>
             </TabsTrigger>
           </TabsList>
