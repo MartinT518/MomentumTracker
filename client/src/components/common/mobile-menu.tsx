@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { SearchButton } from "@/components/common/search-dialog-fixed";
 
+import sinine_musttaust from "@assets/sinine_musttaust.png";
+
 export function MobileMenu() {
   const [location] = useLocation();
   const { logoutMutation, user } = useAuth();
@@ -145,9 +147,9 @@ export function MobileMenu() {
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center">
             <img 
-              src={catholicRunLogo} 
+              src={sinine_musttaust} 
               alt="AetherRun Logo" 
-              className="w-full h-32 object-contain max-w-96"
+              className="w-full h-32 object-contain max-w-96 mt-[-44px] mb-[-44px] pt-[0px] pb-[0px] pl-[0px] pr-[0px] ml-[0px] mr-[0px]"
             />
           </div>
           <button 
@@ -159,7 +161,6 @@ export function MobileMenu() {
           </button>
         </div>
       </div>
-
       {/* Mobile Menu Overlay */}
       <div 
         className={cn(
@@ -168,7 +169,6 @@ export function MobileMenu() {
         )}
         onClick={closeMenu}
       />
-
       {/* Mobile Menu Panel */}
       <div 
         className={cn(
