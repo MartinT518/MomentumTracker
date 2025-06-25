@@ -54,20 +54,7 @@ export function MobileMenu() {
     setIsOpen(false);
   };
   
-  const adminItems = [
-    {
-      title: "Admin Panel",
-      href: "/admin",
-      icon: Crown,
-      active: location === "/admin",
-    },
-    {
-      title: "Coach Management",
-      href: "/admin/coaches",
-      icon: UserCog,
-      active: location === "/admin/coaches",
-    },
-  ];
+
 
   const navItems = [
     {
@@ -135,7 +122,7 @@ export function MobileMenu() {
     },
   ];
 
-  const infoItems = [
+  const supportItems = [
     {
       title: "FAQ & Support",
       href: "/faq",
@@ -268,10 +255,10 @@ export function MobileMenu() {
             </ul>
             
             <div className="px-4 pt-6 pb-2">
-              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Information</p>
+              <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Support</p>
             </div>
             <ul>
-              {infoItems.map((item) => (
+              {supportItems.map((item) => (
                 <li key={item.title}>
                   <Link 
                     href={item.href}
