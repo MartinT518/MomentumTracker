@@ -250,26 +250,46 @@ export default function TrainingPlanPage() {
 
         {/* Training Plan Content */}
         <Tabs defaultValue="overview" value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          <TabsList className="bg-white/10 backdrop-blur-lg border border-white/20 h-auto p-1 grid grid-cols-3 md:grid-cols-5 gap-1 md:gap-0 md:flex md:flex-wrap mb-6">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <span>Overview</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <span>Schedule</span>
+              </div>
+            </TabsTrigger>
             
             {/* AI Plan tab - available to all users */}
-            <TabsTrigger value="ai-plan">AI Plan</TabsTrigger>
+            <TabsTrigger value="ai-plan" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <Sparkles className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">AI Plan</span>
+                <span className="md:hidden">AI Plan</span>
+              </div>
+            </TabsTrigger>
             
             {/* Adjust Plan tab - only for regular users and admins, NOT coaches */}
             {(isRegularUser || isAdmin) && (
-              <TabsTrigger value="adjust-plan" className="flex items-center">
-                <Zap className="w-4 h-4 mr-2" />
-                Adjust Plan
+              <TabsTrigger value="adjust-plan" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+                <div className="flex flex-col md:flex-row items-center">
+                  <Zap className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                  <span className="hidden md:inline">Adjust Plan</span>
+                  <span className="md:hidden">Adjust</span>
+                </div>
               </TabsTrigger>
             )}
             
             {/* Human Coach tab - only for coaches and admins, NOT regular users */}
             {(isCoach || isAdmin) && (
-              <TabsTrigger value="coach" className="flex items-center">
-                <BookUser className="w-4 h-4 mr-2" />
-                Human Coach
+              <TabsTrigger value="coach" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+                <div className="flex flex-col md:flex-row items-center">
+                  <BookUser className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                  <span className="hidden md:inline">Human Coach</span>
+                  <span className="md:hidden">Coach</span>
+                </div>
               </TabsTrigger>
             )}
           </TabsList>

@@ -142,6 +142,11 @@ AetherRun is a comprehensive health and wellness platform that combines intellig
 
 ## Changelog
 
+- June 26, 2025: Enhanced mobile tab navigation consistency
+  - Applied responsive grid layout to training plan page tabs, eliminating horizontal scrolling
+  - Standardized tab design pattern across admin panel and training plan pages
+  - Mobile tabs now use 3-column grid with stacked icons and shortened labels
+  - Desktop maintains horizontal flex layout with full labels and inline icons
 - June 25, 2025: Standardized mobile and desktop UI consistency
   - Fixed admin panel tabs to use responsive grid layout without horizontal scrolling
   - Unified label consistency between mobile and desktop views across all components
