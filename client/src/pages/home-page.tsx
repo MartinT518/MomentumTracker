@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { LoginModal, RegisterModal } from "@/components/auth/auth-modal";
 import { AppFooter } from "@/components/common/app-footer";
+import aetherRunLogo from "@assets/688bcfbe-f276-4711-8a45-55f25a921b52_20250624_231034_0000_1750795883864.png";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
@@ -417,9 +418,12 @@ export default function HomePage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center relative">
-              <div className="text-3xl font-bold relative bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
-                <span className="text-orange-400">Aether</span>
-                <span className="text-white drop-shadow-lg">Run</span>
+              <div className="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+                <img 
+                  src={aetherRunLogo} 
+                  alt="AetherRun Logo" 
+                  className="h-10 w-auto"
+                />
               </div>
             </div>
             <nav className="hidden md:flex space-x-2">
