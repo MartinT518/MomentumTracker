@@ -421,7 +421,7 @@ export default function HomePage() {
               <img 
                 src={aetherRunLogo} 
                 alt="AetherRun Logo" 
-                className="h-32 w-auto max-w-xs"
+                className="h-80 w-auto max-w-lg"
               />
             </div>
             <nav className="hidden md:flex space-x-2">
