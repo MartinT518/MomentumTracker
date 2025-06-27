@@ -406,7 +406,6 @@ export default function HomePage() {
           mix-blend-mode: overlay;
         }
       `}</style>
-
       {/* Floating Background Shapes */}
       <div className="floating-shapes">
         <div className="floating-shape"></div>
@@ -421,7 +420,7 @@ export default function HomePage() {
               <img 
                 src={aetherRunLogo} 
                 alt="AetherRun Logo" 
-                className="h-80 w-auto max-w-lg"
+                className="h-80 w-auto max-w-lg pt-[0px] pb-[0px] mt-[-150px] mb-[-150px] ml-[-52px] mr-[-52px] pl-[0px] pr-[0px]"
               />
             </div>
             <nav className="hidden md:flex space-x-2">
@@ -446,7 +445,6 @@ export default function HomePage() {
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="pt-24 pb-12">
         <div className="container mx-auto px-6">
@@ -689,7 +687,6 @@ export default function HomePage() {
           </section>
         </div>
       </main>
-
       {/* Auth Modals */}
       <LoginModal 
         isOpen={isLoginModalOpen} 
@@ -707,7 +704,6 @@ export default function HomePage() {
           setIsLoginModalOpen(true);
         }}
       />
-      
     </div>
   );
 }
