@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { LoginModal, RegisterModal } from "@/components/auth/auth-modal";
 import { AppFooter } from "@/components/common/app-footer";
-import aetherRunLogo from "@assets/688bcfbe-f276-4711-8a45-55f25a921b52_20250624_231034_0000_1750795883864.png";
+import aetherRunLogo from "@assets/sinine_musttaust.png";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
