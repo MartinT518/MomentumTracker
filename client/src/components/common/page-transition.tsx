@@ -40,7 +40,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   const [location] = useLocation();
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location}
@@ -49,7 +49,7 @@ export function PageTransition({ children }: PageTransitionProps) {
           exit="out"
           variants={pageVariants}
           transition={pageTransition}
-          style={pageStyle}
+          className="w-full min-h-screen"
         >
           {children}
         </motion.div>
