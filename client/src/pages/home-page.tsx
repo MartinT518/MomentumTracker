@@ -405,6 +405,181 @@ export default function HomePage() {
           background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
           mix-blend-mode: overlay;
         }
+
+        /* Animated Logo Reveal Effect */
+        .logo-reveal {
+          position: relative;
+          opacity: 0;
+          transform: scale(0.8) translateY(20px);
+          animation: logoReveal 2s ease-out 0.5s forwards;
+        }
+
+        .logo-glow {
+          position: relative;
+          filter: drop-shadow(0 0 20px rgba(14, 165, 233, 0.4)) 
+                  drop-shadow(0 0 40px rgba(6, 182, 212, 0.3))
+                  drop-shadow(0 0 60px rgba(0, 212, 170, 0.2));
+          animation: logoGlow 3s ease-in-out infinite alternate;
+        }
+
+        .logo-reveal::before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          left: -10px;
+          right: -10px;
+          bottom: -10px;
+          background: radial-gradient(
+            ellipse at center,
+            rgba(14, 165, 233, 0.15) 0%,
+            rgba(6, 182, 212, 0.1) 40%,
+            rgba(0, 212, 170, 0.05) 70%,
+            transparent 100%
+          );
+          border-radius: 50%;
+          opacity: 0;
+          animation: haloGlow 2.5s ease-in-out 1s infinite alternate;
+          z-index: -1;
+        }
+
+        .logo-shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .logo-shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            transparent 100%
+          );
+          animation: shimmerPass 3s ease-in-out 2s infinite;
+        }
+
+        @keyframes logoReveal {
+          0% {
+            opacity: 0;
+            transform: scale(0.8) translateY(20px) rotateY(-15deg);
+            filter: blur(5px);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(0.95) translateY(10px) rotateY(-5deg);
+            filter: blur(2px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0px) rotateY(0deg);
+            filter: blur(0px);
+          }
+        }
+
+        @keyframes logoGlow {
+          0% {
+            filter: drop-shadow(0 0 20px rgba(14, 165, 233, 0.4)) 
+                    drop-shadow(0 0 40px rgba(6, 182, 212, 0.3))
+                    drop-shadow(0 0 60px rgba(0, 212, 170, 0.2));
+          }
+          100% {
+            filter: drop-shadow(0 0 30px rgba(14, 165, 233, 0.6)) 
+                    drop-shadow(0 0 60px rgba(6, 182, 212, 0.4))
+                    drop-shadow(0 0 90px rgba(0, 212, 170, 0.3));
+          }
+        }
+
+        @keyframes haloGlow {
+          0% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          100% {
+            opacity: 0.8;
+            transform: scale(1.1);
+          }
+        }
+
+        @keyframes shimmerPass {
+          0% {
+            left: -100%;
+          }
+          100% {
+            left: 100%;
+          }
+        }
+
+        /* Hover enhancement for logo */
+        .logo-container:hover .logo-glow {
+          animation: logoGlowHover 0.6s ease-out forwards;
+        }
+
+        @keyframes logoGlowHover {
+          0% {
+            filter: drop-shadow(0 0 30px rgba(14, 165, 233, 0.6)) 
+                    drop-shadow(0 0 60px rgba(6, 182, 212, 0.4))
+                    drop-shadow(0 0 90px rgba(0, 212, 170, 0.3));
+            transform: scale(1);
+          }
+          100% {
+            filter: drop-shadow(0 0 40px rgba(14, 165, 233, 0.8)) 
+                    drop-shadow(0 0 80px rgba(6, 182, 212, 0.6))
+                    drop-shadow(0 0 120px rgba(0, 212, 170, 0.4));
+            transform: scale(1.05);
+          }
+        }
+
+        /* Logo pulse effect for added visual interest */
+        .logo-pulse {
+          animation: logoPulse 4s ease-in-out 3s infinite;
+        }
+
+        @keyframes logoPulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.85;
+          }
+        }
+
+        /* Enhanced glow ring effect */
+        .logo-container::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 200%;
+          height: 200%;
+          transform: translate(-50%, -50%);
+          background: radial-gradient(
+            circle at center,
+            rgba(14, 165, 233, 0.1) 0%,
+            rgba(6, 182, 212, 0.05) 30%,
+            transparent 70%
+          );
+          border-radius: 50%;
+          opacity: 0;
+          animation: ringGlow 4s ease-in-out 2.5s infinite;
+          z-index: -1;
+          pointer-events: none;
+        }
+
+        @keyframes ringGlow {
+          0%, 100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+          }
+          50% {
+            opacity: 0.6;
+            transform: translate(-50%, -50%) scale(1.2);
+          }
+        }
       `}</style>
       {/* Floating Background Shapes */}
       <div className="floating-shapes">
@@ -416,11 +591,11 @@ export default function HomePage() {
       <header className="modern-header">
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center relative">
+            <div className="flex items-center relative logo-container">
               <img 
                 src={aetherRunLogo} 
                 alt="AetherRun Logo" 
-                className="h-80 w-auto max-w-lg pt-[0px] pb-[0px] mt-[-150px] mb-[-150px] ml-[-52px] mr-[-52px] pl-[0px] pr-[0px]"
+                className="h-80 w-auto max-w-lg pt-[0px] pb-[0px] mt-[-150px] mb-[-150px] ml-[-52px] mr-[-52px] pl-[0px] pr-[0px] logo-reveal logo-glow logo-shimmer logo-pulse"
               />
             </div>
             <nav className="hidden md:flex space-x-2">
