@@ -39,7 +39,7 @@ const supportTopics = [
   { title: 'Health metrics', url: '/health-metrics' },
   { title: 'Account settings', url: '/profile' },
   { title: 'Human Coaches', url: '/coaches' },
-  { title: 'Video Analysis', url: '/video-analysis' }
+  { title: 'Activities tracking', url: '/activities' }
 ];
 
 export function SupportChatBot() {
