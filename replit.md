@@ -148,6 +148,8 @@ AetherRun is a comprehensive health and wellness platform that combines intellig
   - Mobile tabs now use 3-column grid with stacked icons and shortened labels
   - Desktop maintains horizontal flex layout with full labels and inline icons
   - Updated landing page header to use AetherRun logo image instead of text-based branding
+  - Landing page logo sizing: h-80 (320px height) with max-w-lg for optimal visibility
+  - Logo file: sinine_musttaust.png (correct AetherRun branding)
 - June 25, 2025: Standardized mobile and desktop UI consistency
   - Fixed admin panel tabs to use responsive grid layout without horizontal scrolling
   - Unified label consistency between mobile and desktop views across all components
