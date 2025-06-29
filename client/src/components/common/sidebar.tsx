@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
   BarChart3,
   ListTodo,
@@ -149,21 +150,31 @@ export function Sidebar({ className, style }: SidebarProps) {
           <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Main</p>
         </div>
         <ul>
-          {navItems.map((item) => (
-            <li key={item.title}>
+          {navItems.map((item, index) => (
+            <motion.li 
+              key={item.title}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+            >
               <Link href={item.href}>
-                <div className={cn(
-                  "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
-                  item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
-                )}>
+                <motion.div 
+                  className={cn(
+                    "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                    item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+                  )}
+                  whileHover={{ scale: 1.02, x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
                   <item.icon className={cn(
                     "h-5 w-5 mr-3 text-white/60",
                     item.active && "text-cyan-300"
                   )} />
                   {item.title}
-                </div>
+                </motion.div>
               </Link>
-            </li>
+            </motion.li>
           ))}
         </ul>
         
@@ -171,21 +182,31 @@ export function Sidebar({ className, style }: SidebarProps) {
           <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Account</p>
         </div>
         <ul>
-          {accountItems.map((item) => (
-            <li key={item.title}>
+          {accountItems.map((item, index) => (
+            <motion.li 
+              key={item.title}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: (index + navItems.length) * 0.05 }}
+            >
               <Link href={item.href}>
-                <div className={cn(
-                  "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
-                  item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
-                )}>
+                <motion.div 
+                  className={cn(
+                    "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                    item.active && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+                  )}
+                  whileHover={{ scale: 1.02, x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
                   <item.icon className={cn(
                     "h-5 w-5 mr-3 text-white/60",
                     item.active && "text-cyan-300"
                   )} />
                   {item.title}
-                </div>
+                </motion.div>
               </Link>
-            </li>
+            </motion.li>
           ))}
         </ul>
         
@@ -194,34 +215,52 @@ export function Sidebar({ className, style }: SidebarProps) {
           <p className="text-xs font-medium text-white/70 tracking-wider uppercase drop-shadow-sm">Support</p>
         </div>
         <ul>
-          <li>
+          <motion.li
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: (navItems.length + accountItems.length) * 0.05 }}
+          >
             <Link href="/faq">
-              <div className={cn(
-                "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
-                location === "/faq" && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
-              )}>
+              <motion.div 
+                className={cn(
+                  "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                  location === "/faq" && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+                )}
+                whileHover={{ scale: 1.02, x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <HelpCircle className={cn(
                   "h-5 w-5 mr-3 text-white/60",
                   location === "/faq" && "text-cyan-300"
                 )} />
                 FAQ & Support
-              </div>
+              </motion.div>
             </Link>
-          </li>
-          <li>
+          </motion.li>
+          <motion.li
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: (navItems.length + accountItems.length + 1) * 0.05 }}
+          >
             <Link href="/pricing">
-              <div className={cn(
-                "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
-                location === "/pricing" && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
-              )}>
+              <motion.div 
+                className={cn(
+                  "flex items-center px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer transition-all duration-200 rounded-lg mx-2",
+                  location === "/pricing" && "bg-white/20 border-l-4 border-cyan-300 font-medium text-white"
+                )}
+                whileHover={{ scale: 1.02, x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <DollarSign className={cn(
                   "h-5 w-5 mr-3 text-white/60",
                   location === "/pricing" && "text-cyan-300"
                 )} />
                 Pricing
-              </div>
+              </motion.div>
             </Link>
-          </li>
+          </motion.li>
         </ul>
       </nav>
       <div className="p-4 border-t border-white/20">
