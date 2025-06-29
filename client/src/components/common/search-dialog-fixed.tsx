@@ -325,8 +325,12 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const handleSelect = (item: SearchResult) => {
     console.log('Navigating to:', item.url);
     onOpenChange(false);
-    // Use immediate navigation instead of setTimeout
-    setLocation(item.url);
+    // Clear query to reset search state
+    setQuery('');
+    // Navigate immediately after closing dialog
+    requestAnimationFrame(() => {
+      setLocation(item.url);
+    });
   };
 
   const groupedResults = results.reduce((acc, item) => {
@@ -361,7 +365,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                   <CommandItem 
                     key={item.id} 
                     onSelect={() => handleSelect(item)}
-                    className="flex items-center"
+                    onClick={() => handleSelect(item)}
+                    className="flex items-center cursor-pointer"
                   >
                     <div className="mr-2 flex-shrink-0">{item.icon}</div>
                     <div className="flex flex-col">
