@@ -2622,22 +2622,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             });
 
-            // Simulate coach response after a delay
-            setTimeout(() => {
-              const coachResponse = {
-                type: 'message',
-                id: (Date.now() + 1).toString(),
-                from: 'coach',
-                text: generateCoachResponse(message.text),
-                timestamp: new Date().toISOString(),
-                status: 'delivered'
-              };
+            // Generate coach response with AI after a delay
+            setTimeout(async () => {
+              try {
+                const responseText = await generateCoachResponse(message.text);
+                const coachResponse = {
+                  type: 'message',
+                  id: (Date.now() + 1).toString(),
+                  from: 'coach',
+                  text: responseText,
+                  timestamp: new Date().toISOString(),
+                  status: 'delivered'
+                };
 
-              sessionConnections.forEach(conn => {
-                if (conn.readyState === WebSocket.OPEN) {
-                  conn.send(JSON.stringify(coachResponse));
-                }
-              });
+                sessionConnections.forEach(conn => {
+                  if (conn.readyState === WebSocket.OPEN) {
+                    conn.send(JSON.stringify(coachResponse));
+                  }
+                });
+              } catch (error) {
+                console.error('Error generating coach response:', error);
+                // Send fallback response if AI fails
+                const fallbackResponse = {
+                  type: 'message',
+                  id: (Date.now() + 1).toString(),
+                  from: 'coach',
+                  text: "I'm here to help with your training! Could you tell me more about what you're looking for?",
+                  timestamp: new Date().toISOString(),
+                  status: 'delivered'
+                };
+
+                sessionConnections.forEach(conn => {
+                  if (conn.readyState === WebSocket.OPEN) {
+                    conn.send(JSON.stringify(fallbackResponse));
+                  }
+                });
+              }
             }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
             break;
 
@@ -2692,44 +2712,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Helper function to generate coach responses
-  function generateCoachResponse(userMessage: string): string {
+  // Helper function to generate coach responses with AI
+  async function generateCoachResponse(userMessage: string): Promise<string> {
     const lowerMessage = userMessage.toLowerCase();
     
+    // Quick responses for simple greetings to maintain responsiveness
     if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
       return "Hello! Great to hear from you. How can I help with your training today?";
-    }
-    
-    if (lowerMessage.includes('training') || lowerMessage.includes('workout')) {
-      return "I'd be happy to help with your training! Can you tell me more about your current goals and what specific areas you'd like to focus on?";
-    }
-    
-    if (lowerMessage.includes('pace') || lowerMessage.includes('speed')) {
-      return "Pacing is crucial for improvement. What's your current training pace, and what are you hoping to achieve?";
-    }
-    
-    if (lowerMessage.includes('injury') || lowerMessage.includes('pain')) {
-      return "I'm sorry to hear about your concerns. It's important to address any pain or injury properly. Have you consulted with a medical professional? I can help adjust your training plan accordingly.";
-    }
-    
-    if (lowerMessage.includes('race') || lowerMessage.includes('marathon') || lowerMessage.includes('5k') || lowerMessage.includes('10k')) {
-      return "That's exciting! Race preparation is one of my specialties. What's your target race and current fitness level?";
     }
     
     if (lowerMessage.includes('thank')) {
       return "You're very welcome! I'm here to support your running journey. Keep up the great work!";
     }
     
-    // Default responses
-    const defaultResponses = [
-      "That's a great question! Based on your training history, I'd recommend focusing on building a solid base first.",
-      "I understand your concern. Let's work together to find the best approach for your situation.",
-      "Every runner's journey is unique. Can you share more details so I can give you more specific advice?",
-      "That's something we can definitely work on. What's your current experience level with this?",
-      "I'm here to help you succeed! Let's break this down into manageable steps."
-    ];
+    // Use OpenAI for more complex responses
+    try {
+      if (process.env.OPENAI_API_KEY) {
+        const OpenAI = (await import('openai')).default;
+        const openai = new OpenAI({ 
+          apiKey: process.env.OPENAI_API_KEY 
+        });
+        
+        const systemPrompt = `You are a professional running coach with expertise in endurance training, injury prevention, and performance optimization. 
+
+Your coaching style:
+- Encouraging and supportive
+- Evidence-based advice
+- Practical and actionable guidance
+- Safety-focused approach
+- Personalized recommendations
+
+Keep responses conversational, helpful, and under 150 words. Always prioritize safety and suggest medical consultation for injury concerns.`;
+
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage }
+          ],
+          temperature: 0.7,
+          max_tokens: 200,
+        });
+        
+        return completion.choices[0].message.content || "I'm here to help with your training. What specific questions do you have?";
+      }
+    } catch (error) {
+      console.error("OpenAI coach response error:", error);
+    }
     
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+    // Fallback responses if OpenAI is not available
+    const contextualResponses = {
+      training: "I'd be happy to help with your training! Can you tell me more about your current goals and what specific areas you'd like to focus on?",
+      pace: "Pacing is crucial for improvement. What's your current training pace, and what are you hoping to achieve?",
+      injury: "I'm sorry to hear about your concerns. It's important to address any pain or injury properly. Have you consulted with a medical professional? I can help adjust your training plan accordingly.",
+      race: "That's exciting! Race preparation is one of my specialties. What's your target race and current fitness level?"
+    };
+    
+    // Check for keywords and provide contextual responses
+    for (const [keyword, response] of Object.entries(contextualResponses)) {
+      if (lowerMessage.includes(keyword)) {
+        return response;
+      }
+    }
+    
+    // Default helpful response
+    return "I'm here to help with your running journey! Whether you have questions about training plans, pacing strategies, or preparation tips, feel free to ask. What would you like to know?";
   }
 
   return httpServer;

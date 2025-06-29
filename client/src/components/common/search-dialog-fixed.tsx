@@ -260,15 +260,7 @@ const searchData: SearchResult[] = [
     icon: <MessageCircle className="h-4 w-4" />,
     keywords: ['communication', 'chat', 'message', 'conversation', 'support', 'advice', 'guidance', 'questions', 'feedback']
   },
-  {
-    id: 'community',
-    title: 'Community',
-    category: 'Features',
-    description: 'Connect with other runners',
-    url: '/community',
-    icon: <Users className="h-4 w-4" />,
-    keywords: ['social', 'forum', 'chat', 'members', 'runners', 'athletes', 'groups', 'friends', 'teams', 'leaderboard']
-  },
+
   {
     id: 'support',
     title: 'Support Chat',
