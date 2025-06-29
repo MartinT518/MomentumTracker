@@ -323,8 +323,10 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, [query]);
 
   const handleSelect = (item: SearchResult) => {
+    console.log('Navigating to:', item.url);
     onOpenChange(false);
-    setTimeout(() => setLocation(item.url), 10);
+    // Use immediate navigation instead of setTimeout
+    setLocation(item.url);
   };
 
   const groupedResults = results.reduce((acc, item) => {

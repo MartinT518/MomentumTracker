@@ -44,38 +44,36 @@ import { AdminProtectedRoute } from "./lib/admin-protected-route";
 
 function Router() {
   return (
-    <PageTransition>
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/pricing" component={PricingPage} />
-        <ProtectedRoute path="/dashboard" component={DashboardPage} />
-        <ProtectedRoute path="/onboarding" component={OnboardingPage} />
-        <ProtectedRoute path="/training-plan" component={TrainingPlanPage} />
-        <ProtectedRoute path="/activities" component={ActivitiesPage} />
-        <ProtectedRoute path="/goals" component={GoalsPage} />
-        <ProtectedRoute path="/profile" component={ProfilePage} />
-        <ProtectedRoute path="/settings" component={SettingsPage} />
-        <ProtectedRoute path="/subscription" component={SubscriptionPage} />
-        <ProtectedRoute path="/subscription/success" component={SubscriptionPage} />
-        <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
-        <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
-        <ProtectedRoute path="/nutrition" component={NutritionPage} />
+    <Switch>
+      <Route path="/" component={HomePage} />
+      <Route path="/pricing" component={PricingPage} />
+      <ProtectedRoute path="/dashboard" component={DashboardPage} />
+      <ProtectedRoute path="/onboarding" component={OnboardingPage} />
+      <ProtectedRoute path="/training-plan" component={TrainingPlanPage} />
+      <ProtectedRoute path="/activities" component={ActivitiesPage} />
+      <ProtectedRoute path="/goals" component={GoalsPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/subscription" component={SubscriptionPage} />
+      <ProtectedRoute path="/subscription/success" component={SubscriptionPage} />
+      <ProtectedRoute path="/strength-exercises" component={StrengthExercisesPage} />
+      <ProtectedRoute path="/health-metrics" component={HealthMetricsPage} />
+      <ProtectedRoute path="/nutrition" component={NutritionPage} />
 
-        {/* Information pages */}
-        <Route path="/faq" component={FAQPage} />
-        <Route path="/terms" component={TermsPage} />
-        <Route path="/privacy" component={PrivacyPage} />
-        {/* Annual subscription feature routes */}
-        <ProtectedRoute path="/coaches" component={CoachesPage} />
-        <ProtectedRoute path="/coaches/:id" component={CoachDetailPage} />
-        <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
-        <AdminProtectedRoute path="/admin/coaches" component={CoachManagementPage} />
-        <AdminProtectedRoute path="/admin-panel" component={AdminPanelPage} />
-        <AdminProtectedRoute path="/admin" component={AdminPanelPage} />
-        <Route path="/integrations/:platform/callback" component={IntegrationCallbackPage} />
-        <Route component={NotFound} />
-      </Switch>
-    </PageTransition>
+      {/* Information pages */}
+      <Route path="/faq" component={FAQPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      {/* Annual subscription feature routes */}
+      <ProtectedRoute path="/coaches" component={CoachesPage} />
+      <ProtectedRoute path="/coaches/:id" component={CoachDetailPage} />
+      <ProtectedRoute path="/video-analysis" component={VideoAnalysisPage} />
+      <AdminProtectedRoute path="/admin/coaches" component={CoachManagementPage} />
+      <AdminProtectedRoute path="/admin-panel" component={AdminPanelPage} />
+      <AdminProtectedRoute path="/admin" component={AdminPanelPage} />
+      <Route path="/integrations/:platform/callback" component={IntegrationCallbackPage} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
