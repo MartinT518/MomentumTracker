@@ -78,6 +78,13 @@ export default function TrainingPlanPage() {
   // Check if user already has a generated plan
   const hasExistingPlan = savedTrainingPlan && (savedTrainingPlan as any)?.plan_data;
   
+  // Load saved training plan into state when component mounts
+  useEffect(() => {
+    if (hasExistingPlan && savedTrainingPlan && (savedTrainingPlan as any)?.plan_data) {
+      setAiPlan((savedTrainingPlan as any).plan_data);
+    }
+  }, [hasExistingPlan, savedTrainingPlan]);
+  
   // Mutation to clear saved training plan
   const clearTrainingPlan = useMutation({
     mutationFn: async () => {
@@ -384,35 +391,98 @@ export default function TrainingPlanPage() {
           </TabsContent>
           
           <TabsContent value="ai-plan">
-            <TrainingPlanRestrictions 
-              hasExistingPlan={hasExistingPlan}
-              isPremiumUser={isPremiumUser}
-              onClearPlan={() => clearTrainingPlan.mutate()}
-            />
-            
-            {/* Show generator only if user has premium access and no existing plan */}
-            {isPremiumUser && !hasExistingPlan && (
-              <div className="mt-6">
-                <AIPlanGenerator 
-                  onPlanGenerated={(plan) => {
-                    handlePlanGenerated(plan);
-                    setIsGeneratingPlan(true);
-                  }} 
+            {!hasExistingPlan ? (
+              // Show generator when no plan exists
+              <>
+                <TrainingPlanRestrictions 
+                  hasExistingPlan={hasExistingPlan}
+                  isPremiumUser={isPremiumUser}
+                  onClearPlan={() => clearTrainingPlan.mutate()}
                 />
-              </div>
-            )}
-            
-            {/* If user has existing plan, redirect to adjust plan tab for new generation */}
-            {hasExistingPlan && (
-              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-8 text-center max-w-2xl mx-auto mt-6">
-                <Sparkles className="h-12 w-12 mx-auto text-white/60 drop-shadow-md mb-4" />
-                <h2 className="text-2xl font-bold mb-2 text-white drop-shadow-md">Plan Already Generated</h2>
-                <p className="text-white/70 drop-shadow-md mb-6">
-                  You already have a training plan. To generate a new plan or make adjustments, please use the Adjust Plan tab.
-                </p>
-                <Button variant="default" onClick={() => setSelectedTab('adjust-plan')} className="bg-blue-500 hover:bg-blue-400 text-white">
-                  Go to Adjust Plan
-                </Button>
+                
+                {/* Show generator only if user has premium access and no existing plan */}
+                {isPremiumUser && (
+                  <div className="mt-6">
+                    <AIPlanGenerator 
+                      onPlanGenerated={(plan) => {
+                        handlePlanGenerated(plan);
+                        setIsGeneratingPlan(true);
+                      }} 
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              // Show saved plan when plan exists
+              <div className="space-y-6">
+                <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="h-6 w-6 text-green-400 drop-shadow-md" />
+                      <div>
+                        <h2 className="text-xl font-semibold text-white drop-shadow-md">Your AI Training Plan</h2>
+                        <p className="text-white/70 drop-shadow-md">
+                          Generated on {savedTrainingPlan ? new Date(savedTrainingPlan.created_at).toLocaleDateString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => clearTrainingPlan.mutate()}
+                      className="border-white/20 bg-white/10 text-white hover:bg-white/20"
+                    >
+                      Generate New Plan
+                    </Button>
+                  </div>
+                  
+                  {aiPlan && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                          <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Weekly Mileage</div>
+                          <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan.overview?.weeklyMileage || "Not set"}</div>
+                        </div>
+                        <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                          <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Workouts Per Week</div>
+                          <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan.overview?.workoutsPerWeek || "Not set"}</div>
+                        </div>
+                        <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                          <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Long Run</div>
+                          <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan.overview?.longRunDistance || "Not set"}</div>
+                        </div>
+                        <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                          <div className="text-sm text-white/80 font-medium mb-1 drop-shadow-md">Quality Workouts</div>
+                          <div className="text-2xl font-bold text-white drop-shadow-md">{aiPlan.overview?.qualityWorkouts || "Not set"}</div>
+                        </div>
+                      </div>
+                      
+                      {aiPlan.philosophy && (
+                        <div className="mt-6">
+                          <h3 className="text-lg font-medium mb-3 text-white drop-shadow-md">Training Philosophy</h3>
+                          <p className="text-white/80 drop-shadow-md">{aiPlan.philosophy}</p>
+                        </div>
+                      )}
+                      
+                      <div className="mt-6 flex gap-3">
+                        <Button 
+                          onClick={() => setSelectedTab('schedule')}
+                          className="bg-blue-500 hover:bg-blue-400 text-white"
+                        >
+                          View Schedule
+                        </Button>
+                        {isPremiumUser && (
+                          <Button 
+                            onClick={() => setSelectedTab('adjust-plan')}
+                            variant="outline"
+                            className="border-white/20 bg-white/10 text-white hover:bg-white/20"
+                          >
+                            Adjust Plan
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </TabsContent>
