@@ -21,7 +21,7 @@ import axios from "axios";
 import { Request, Response, NextFunction } from "express";
 import { selectMealPlan } from "./predefined-meal-plans";
 import { generateSimpleMealPlan } from "./simple-meal-plan";
-import { requireAuth, requireAdmin, requireCoach } from "./middleware/auth-middleware";
+import { sendContactFormEmail } from "./brevo-service";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -2710,6 +2710,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('error', (error) => {
       console.error('WebSocket error:', error);
     });
+  });
+
+  // Contact form email route
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, subject, message } = req.body;
+      
+      // Validate required fields
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ 
+          error: "All fields are required" 
+        });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          error: "Please provide a valid email address" 
+        });
+      }
+      
+      // Send email using Brevo
+      const emailSent = await sendContactFormEmail({
+        name,
+        email,
+        subject,
+        message
+      });
+      
+      if (emailSent) {
+        res.json({ 
+          success: true, 
+          message: "Your message has been sent successfully! We'll get back to you soon." 
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to send message. Please try again later." 
+        });
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      res.status(500).json({ 
+        error: "An error occurred while sending your message. Please try again later." 
+      });
+    }
   });
 
   // Helper function to generate coach responses with AI
