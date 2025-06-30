@@ -22,12 +22,13 @@ const initialMessages: Message[] = [
   {
     id: '1',
     sender: 'bot',
-    text: 'Hi there! 👋 I\'m your AetherRun assistant. How can I help you today with your training or app questions?',
+    text: 'Hi there! I\'m your AetherRun assistant. How can I help you today with your training or app questions? For complex issues, you can also contact our support team directly.',
     timestamp: new Date(),
     links: [
       { title: 'Training Plans', url: '/training-plan' },
       { title: 'Subscription', url: '/subscription' },
-      { title: 'Health Metrics', url: '/health-metrics' }
+      { title: 'Health Metrics', url: '/health-metrics' },
+      { title: 'Contact Support', url: 'mailto:support@aetherrun.com' }
     ]
   }
 ];
@@ -39,7 +40,8 @@ const supportTopics = [
   { title: 'Health metrics', url: '/health-metrics' },
   { title: 'Account settings', url: '/profile' },
   { title: 'Human Coaches', url: '/coaches' },
-  { title: 'Activities tracking', url: '/activities' }
+  { title: 'Activities tracking', url: '/activities' },
+  { title: 'Contact Support', url: 'mailto:support@aetherrun.com' }
 ];
 
 export function SupportChatBot() {
@@ -150,9 +152,16 @@ export function SupportChatBot() {
         botResponse = 'AetherRun offers training plans, activity tracking, health metrics, nutrition guidance, and goal setting. Premium features include AI-generated plans, while annual subscribers get exclusive access to human coaches and video analysis.';
         links = supportTopics;
       }
+      else if (lcMessage.includes('contact') || lcMessage.includes('email') || lcMessage.includes('human support') || lcMessage.includes('speak to someone') || lcMessage.includes('real person')) {
+        botResponse = 'For direct support, you can email our team at support@aetherrun.com. We\'ll get back to you as soon as possible!';
+        links = [{ title: 'Email Support', url: 'mailto:support@aetherrun.com' }];
+      }
       else {
-        botResponse = 'I\'m not sure I understand. Would you like to browse some common topics to get help?';
-        links = supportTopics;
+        botResponse = 'I\'m not sure I understand. You can browse common topics below or contact our support team directly at support@aetherrun.com for personalized help.';
+        links = [
+          ...supportTopics,
+          { title: 'Email Support', url: 'mailto:support@aetherrun.com' }
+        ];
       }
       
       const botMessage: Message = {
@@ -170,8 +179,9 @@ export function SupportChatBot() {
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: 'Sorry, I encountered an error. Please try again later.',
-        timestamp: new Date()
+        text: 'Sorry, I encountered an error. Please try again later or contact our support team at support@aetherrun.com for assistance.',
+        timestamp: new Date(),
+        links: [{ title: 'Email Support', url: 'mailto:support@aetherrun.com' }]
       }]);
     } finally {
       setIsLoading(false);

@@ -6,7 +6,7 @@ This is proprietary software. All rights reserved.
 
 ## Terms of Use
 
-1. **Ownership**: This software is owned exclusively by [Your Name/Company]
+1. **Ownership**: This software is owned exclusively by MTapplications OÜ
 2. **Access**: Access is granted only to authorized users
 3. **Restrictions**: 
    - No copying, modification, or distribution
@@ -17,6 +17,6 @@ This is proprietary software. All rights reserved.
 
 ## Contact
 
-For licensing or permissions: [your-email@example.com]
+For licensing or permissions: [martin.tamm@aetherrun.com]
 
 Date: May 30, 2025

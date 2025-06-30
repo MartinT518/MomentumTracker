@@ -142,6 +142,12 @@ AetherRun is a comprehensive health and wellness platform that combines intellig
 
 ## Changelog
 
+- June 30, 2025: Fixed auto-scroll issues in coaching tabs
+  - Resolved AI Coach and Human Coach tabs auto-scrolling to bottom on tab switch
+  - Implemented smooth scroll-to-top behavior when switching between tabs
+  - Modified coach chat component to only auto-scroll on new messages, not initial load
+  - Fixed support chat bot interference with page scrolling behavior
+  - Enhanced user experience with proper scroll management across all tab content
 - June 26, 2025: Enhanced mobile tab navigation consistency and branding
   - Applied responsive grid layout to training plan page tabs, eliminating horizontal scrolling
   - Standardized tab design pattern across admin panel and training plan pages

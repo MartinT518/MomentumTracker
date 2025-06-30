@@ -213,4 +213,4 @@ The application uses a PostgreSQL database with the following main entities:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Proprietary License - see the PROPRIETARY_LICENSE file for details.
