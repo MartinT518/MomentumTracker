@@ -44,17 +44,48 @@ export default function FAQPage() {
   });
 
   const onContactSubmit = async (values: ContactValues) => {
-    // Create mailto link for direct email
-    const subject = encodeURIComponent(values.subject);
-    const body = encodeURIComponent(`Name: ${values.name}\nEmail: ${values.email}\n\nMessage:\n${values.message}`);
-    const mailtoLink = `mailto:support@aetherrun.com?subject=${subject}&body=${body}`;
-    
-    window.location.href = mailtoLink;
-    
-    toast({
-      title: "Email client opened",
-      description: "Your default email client should open with the message pre-filled."
-    });
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Message sent successfully!",
+          description: result.message || "We'll get back to you soon."
+        });
+        contactForm.reset();
+      } else {
+        const error = await response.json();
+        
+        // If email service is unavailable, provide fallback options
+        if (error.error?.includes("Failed to send message")) {
+          toast({
+            title: "Email service temporarily unavailable",
+            description: "Please email us directly at support@aetherrun.com or try again later.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error sending message",
+            description: error.error || "Please try again later.",
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast({
+        title: "Unable to send message",
+        description: "Please email us directly at support@aetherrun.com",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
