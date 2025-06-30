@@ -148,9 +148,13 @@ export function CoachChat({ coach, sessionId }: CoachChatProps) {
     };
   }, [sessionId, coach.name, toast]);
   
-  // Scroll to bottom when new messages arrive
+  // Scroll to bottom when new messages arrive (but not on initial load)
+  const prevMessagesCount = useRef(0);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > prevMessagesCount.current && prevMessagesCount.current > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevMessagesCount.current = messages.length;
   }, [messages]);
   
   const sendMessage = () => {
