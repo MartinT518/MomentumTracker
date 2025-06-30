@@ -62,6 +62,17 @@ export function AIPlanGenerator({ onPlanGenerated }: AIPlanGeneratorProps) {
   // Check for saved training plan first
   const { data: savedTrainingPlan } = useQuery({
     queryKey: ['/api/training/saved-plan', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const response = await apiRequest('GET', `/api/training/saved-plan/${user.id}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // No saved plan found
+        }
+        throw new Error('Failed to fetch saved training plan');
+      }
+      return response.json();
+    },
     enabled: !!user?.id,
     retry: false,
   });
