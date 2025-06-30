@@ -53,11 +53,11 @@ export function SupportChatBot() {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Scroll to bottom of messages when messages change
-    if (messagesEndRef.current) {
+    // Only scroll if chat is open and not minimized
+    if (isOpen && !isMinimized && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isOpen, isMinimized]);
 
   useEffect(() => {
     // Focus input when chat is opened
