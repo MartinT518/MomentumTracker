@@ -282,13 +282,22 @@ export default function TrainingPlanPage() {
               </TabsTrigger>
             )}
             
+            {/* AI Coach tab - available to all users */}
+            <TabsTrigger value="ai-coach" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
+              <div className="flex flex-col md:flex-row items-center">
+                <Sparkles className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
+                <span className="hidden md:inline">AI Coach</span>
+                <span className="md:hidden">Coach</span>
+              </div>
+            </TabsTrigger>
+            
             {/* Human Coach tab - only for coaches and admins, NOT regular users */}
             {(isCoach || isAdmin) && (
               <TabsTrigger value="coach" className="data-[state=active]:bg-white/20 h-auto py-2 md:py-2 text-xs md:text-sm flex-shrink-0">
                 <div className="flex flex-col md:flex-row items-center">
                   <BookUser className="h-4 w-4 mb-1 md:mb-0 md:mr-2" />
                   <span className="hidden md:inline">Human Coach</span>
-                  <span className="md:hidden">Coach</span>
+                  <span className="md:hidden">Human</span>
                 </div>
               </TabsTrigger>
             )}
@@ -492,6 +501,27 @@ export default function TrainingPlanPage() {
                 />
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="ai-coach">
+            <div className="h-[calc(100vh-12rem)]">
+              <CoachChat 
+                coach={{
+                  id: 0,
+                  user_id: 0,
+                  name: "AI Coach",
+                  bio: "Your personal AI running coach, powered by advanced AI technology",
+                  specialty: "AI-Powered Training",
+                  experience: "Advanced AI Training System",
+                  rate: 0,
+                  available: true,
+                  profile_image: null,
+                  created_at: new Date(),
+                  updated_at: new Date()
+                }}
+                sessionId={`ai-coach-${user?.id || 'anonymous'}-${Date.now()}`}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="coach">
