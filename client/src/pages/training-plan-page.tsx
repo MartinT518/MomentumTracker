@@ -95,6 +95,11 @@ export default function TrainingPlanPage() {
       setAiPlan((savedTrainingPlan as any).plan_data);
     }
   }, [hasExistingPlan, savedTrainingPlan]);
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedTab]);
   
   // Mutation to clear saved training plan
   const clearTrainingPlan = useMutation({
