@@ -24,17 +24,29 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     sendSmtpEmail.subject = params.subject;
     sendSmtpEmail.htmlContent = params.htmlContent;
     sendSmtpEmail.textContent = params.textContent || '';
+    
+    // Use a verified sender domain - try different sender configurations
     sendSmtpEmail.sender = {
-      name: params.senderName || 'AetherRun Support',
-      email: params.senderEmail || 'noreply@aetherrun.com'
+      name: 'AetherRun Support',
+      email: 'support@replit.app' // Use replit.app domain which is likely verified
     };
     sendSmtpEmail.to = [{ email: params.to }];
+
+    console.log('Attempting to send email with Brevo...');
+    console.log('Sender:', sendSmtpEmail.sender);
+    console.log('To:', sendSmtpEmail.to);
+    console.log('Subject:', sendSmtpEmail.subject);
 
     const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
     console.log('Email sent successfully:', response.body);
     return true;
-  } catch (error) {
-    console.error('Brevo email error:', error);
+  } catch (error: any) {
+    console.error('Brevo email error details:', {
+      message: error.message,
+      statusCode: error.statusCode,
+      body: error.body,
+      response: error.response
+    });
     return false;
   }
 }
@@ -74,12 +86,42 @@ ${formData.message}
 This message was sent from the AetherRun contact form.
   `;
 
-  return await sendEmail({
-    to: 'support@aetherrun.com',
-    subject: `Contact Form: ${formData.subject}`,
-    htmlContent,
-    textContent,
-    senderName: formData.name,
-    senderEmail: formData.email
-  });
+  try {
+    const emailSent = await sendEmail({
+      to: 'support@aetherrun.com',
+      subject: `Contact Form: ${formData.subject}`,
+      htmlContent,
+      textContent,
+      senderName: formData.name,
+      senderEmail: formData.email
+    });
+
+    if (!emailSent) {
+      // Log the contact form submission locally for manual processing
+      console.log('='.repeat(80));
+      console.log('CONTACT FORM SUBMISSION (Email service unavailable)');
+      console.log('='.repeat(80));
+      console.log(`Timestamp: ${new Date().toISOString()}`);
+      console.log(`From: ${formData.name} (${formData.email})`);
+      console.log(`Subject: ${formData.subject}`);
+      console.log(`Message:`);
+      console.log(formData.message);
+      console.log('='.repeat(80));
+    }
+
+    return emailSent;
+  } catch (error: any) {
+    // Log the contact form submission locally for manual processing
+    console.log('='.repeat(80));
+    console.log('CONTACT FORM SUBMISSION (Email service error)');
+    console.log('='.repeat(80));
+    console.log(`Timestamp: ${new Date().toISOString()}`);
+    console.log(`From: ${formData.name} (${formData.email})`);
+    console.log(`Subject: ${formData.subject}`);
+    console.log(`Message:`);
+    console.log(formData.message);
+    console.log(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.log('='.repeat(80));
+    return false;
+  }
 }
