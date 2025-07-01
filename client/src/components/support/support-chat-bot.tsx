@@ -229,11 +229,19 @@ export function SupportChatBot() {
             {message.links && message.links.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {message.links.map((link, i) => (
-                  <Link key={i} href={link.url}>
-                    <Badge variant="outline" className="cursor-pointer hover:bg-accent">
-                      {link.title}
-                    </Badge>
-                  </Link>
+                  link.url.startsWith('mailto:') ? (
+                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer">
+                      <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                        {link.title}
+                      </Badge>
+                    </a>
+                  ) : (
+                    <Link key={i} href={link.url}>
+                      <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                        {link.title}
+                      </Badge>
+                    </Link>
+                  )
                 ))}
               </div>
             )}
