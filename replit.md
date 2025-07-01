@@ -142,6 +142,13 @@ AetherRun is a comprehensive health and wellness platform that combines intellig
 
 ## Changelog
 
+- July 1, 2025: Integrated Brevo email service for contact form functionality
+  - Created server-side Brevo API integration with proper error handling
+  - Added contact form API endpoint with validation and fallback logging
+  - Updated FAQ page contact form to use server-side email service
+  - Implemented comprehensive logging system for contact submissions when email service is unavailable
+  - Enhanced support chat bot with direct email contact options
+  - Contact form gracefully handles email service unavailability with helpful user feedback
 - June 30, 2025: Fixed auto-scroll issues in coaching tabs
   - Resolved AI Coach and Human Coach tabs auto-scrolling to bottom on tab switch
   - Implemented smooth scroll-to-top behavior when switching between tabs
