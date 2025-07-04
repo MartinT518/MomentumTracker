@@ -21,7 +21,7 @@ import axios from "axios";
 import { Request, Response, NextFunction } from "express";
 import { selectMealPlan } from "./predefined-meal-plans";
 import { generateSimpleMealPlan } from "./simple-meal-plan";
-import { sendContactFormEmail } from "./brevo-service";
+import { sendContactFormEmail } from "./gmail-service";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -2732,7 +2732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Send email using Brevo
+      // Send email using Gmail
       const emailSent = await sendContactFormEmail({
         name,
         email,
