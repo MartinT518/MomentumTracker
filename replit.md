@@ -142,6 +142,13 @@ AetherRun is a comprehensive health and wellness platform that combines intellig
 
 ## Changelog
 
+- July 2, 2025: Prepared project for Railway deployment as cost-effective alternative to Replit
+  - Created Railway deployment configuration files (railway.json, Dockerfile, .dockerignore)
+  - Updated port configuration to work with Railway's dynamic port assignment
+  - Switched from Brevo to Gmail API for more reliable email service
+  - Created comprehensive deployment guide with step-by-step instructions
+  - Configured environment variables setup for Railway deployment
+  - Estimated monthly cost: $5-10 (significantly cheaper than Replit's €50)
 - July 1, 2025: Integrated Brevo email service for contact form functionality
   - Created server-side Brevo API integration with proper error handling
   - Added contact form API endpoint with validation and fallback logging
